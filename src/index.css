@@ -1,0 +1,414 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #f3f4f6;
+  background-color: #050608;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Theme Colors */
+  --bg-gradient: radial-gradient(circle at 50% 50%, #0c0f17 0%, #030406 100%);
+  --panel-bg: rgba(18, 22, 33, 0.4);
+  --panel-border: rgba(255, 255, 255, 0.06);
+  --panel-border-hover: rgba(255, 255, 255, 0.12);
+  
+  --primary: #00f0ff;
+  --primary-glow: rgba(0, 240, 255, 0.25);
+  --secondary: #8b5cf6;
+  --secondary-glow: rgba(139, 92, 246, 0.25);
+  
+  --success: #10b981;
+  --success-glow: rgba(16, 185, 129, 0.25);
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.25);
+
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+/* Elegant Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-panel:hover {
+  border-color: var(--panel-border-hover);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.glass-card.active {
+  background: rgba(0, 240, 255, 0.04);
+  border-color: var(--primary);
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+/* Interactive Elements */
+.btn {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, #00b0ff 100%);
+  color: #030406;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 4px 15px var(--primary-glow);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #33f3ff 0%, #33c0ff 100%);
+  box-shadow: 0 6px 20px rgba(0, 240, 255, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--secondary) 0%, #6d28d9 100%);
+  color: var(--text-primary);
+  border: none;
+  box-shadow: 0 4px 15px var(--secondary-glow);
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+/* App Shell Layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Piano Keyboard styles */
+.keyboard-container {
+  display: flex;
+  position: relative;
+  background: #0f1219;
+  padding: 1.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+  user-select: none;
+  overflow-x: auto;
+}
+
+.piano-key {
+  position: relative;
+  cursor: pointer;
+  transition: background 0.1s ease, box-shadow 0.1s ease;
+}
+
+.piano-key.white {
+  width: 42px;
+  height: 160px;
+  background: linear-gradient(to bottom, #ffffff 0%, #e2e8f0 100%);
+  border-radius: 0 0 4px 4px;
+  border: 1px solid #94a3b8;
+  border-right: none;
+  z-index: 1;
+}
+
+.piano-key.white:last-child {
+  border-right: 1px solid #94a3b8;
+}
+
+.piano-key.white:hover {
+  background: linear-gradient(to bottom, #f8fafc 0%, #cbd5e1 100%);
+}
+
+.piano-key.white.active {
+  background: linear-gradient(to bottom, #a5f3fc 0%, var(--primary) 100%);
+  box-shadow: 0 5px 15px var(--primary-glow);
+  z-index: 2;
+}
+
+.piano-key.white.highlight-correct {
+  background: linear-gradient(to bottom, #a7f3d0 0%, var(--success) 100%);
+  box-shadow: 0 5px 15px var(--success-glow);
+  z-index: 2;
+}
+
+.piano-key.black {
+  width: 26px;
+  height: 100px;
+  background: linear-gradient(to bottom, #1e293b 0%, #0f172a 100%);
+  border-radius: 0 0 3px 3px;
+  border: 1px solid #020617;
+  margin-left: -13px;
+  margin-right: -13px;
+  z-index: 3;
+}
+
+.piano-key.black:hover {
+  background: linear-gradient(to bottom, #334155 0%, #1e293b 100%);
+}
+
+.piano-key.black.active {
+  background: linear-gradient(to bottom, #8b5cf6 0%, #6d28d9 100%);
+  box-shadow: 0 3px 10px var(--secondary-glow);
+}
+
+.piano-key.black.highlight-correct {
+  background: linear-gradient(to bottom, #10b981 0%, #047857 100%);
+  box-shadow: 0 3px 10px var(--success-glow);
+}
+
+/* Guitar Fretboard Styles */
+.fretboard-container {
+  background: #181412;
+  border-radius: 12px;
+  border: 4px solid #2d1a10;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  padding: 1rem 0;
+  position: relative;
+  overflow-x: auto;
+  user-select: none;
+}
+
+.fretboard-strings-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-width: 900px;
+}
+
+.fret-marker-row {
+  display: flex;
+  height: 20px;
+  border-bottom: 2px solid transparent;
+}
+
+.fret-marker-cell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.fret-dot {
+  width: 8px;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+.guitar-string-row {
+  display: flex;
+  height: 40px;
+  position: relative;
+  align-items: center;
+}
+
+/* Fretboard Frets */
+.fret-cell {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  border-right: 2px solid #b45309; /* fret wire */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.fret-cell:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.fret-cell:first-child {
+  flex: 0 0 60px; /* Open string */
+  border-right: 4px solid #f59e0b; /* Nut */
+  background: rgba(255,255,255,0.01);
+}
+
+/* Fretboard String Line overlay */
+.guitar-string-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #94a3b8;
+  pointer-events: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Make lower strings thicker */
+.string-thickness-6 { height: 3.5px; }
+.string-thickness-5 { height: 2.8px; }
+.string-thickness-4 { height: 2.2px; }
+.string-thickness-3 { height: 1.8px; }
+.string-thickness-2 { height: 1.2px; }
+.string-thickness-1 { height: 0.8px; }
+
+/* Guitar Note Marker */
+.guitar-note-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 10;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.fret-cell:hover .guitar-note-marker {
+  transform: scale(1.15);
+  background: rgba(255,255,255,0.25);
+  border-color: var(--text-primary);
+}
+
+.guitar-note-marker.active {
+  background: var(--primary);
+  border-color: var(--text-primary);
+  color: #030406;
+  box-shadow: 0 0 10px var(--primary-glow);
+  transform: scale(1.1);
+}
+
+.guitar-note-marker.highlight-correct {
+  background: var(--success);
+  border-color: var(--text-primary);
+  color: #030406;
+  box-shadow: 0 0 10px var(--success-glow);
+  transform: scale(1.1);
+}
+
+/* Dashboard Header & Cards */
+.lab-header {
+  margin-bottom: 2rem;
+}
+
+.lab-title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.lab-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* Animations */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 5px var(--primary-glow); }
+  50% { box-shadow: 0 0 20px var(--primary-glow); }
+  100% { box-shadow: 0 0 5px var(--primary-glow); }
+}
+
+.pulse-primary {
+  animation: pulseGlow 2s infinite;
+}
+
+/* Custom Grid layouts */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
