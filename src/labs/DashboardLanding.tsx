@@ -1,11 +1,88 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { ActiveTab } from '../components/Sidebar';
+import { audio } from '../utils/audio';
 
 interface DashboardLandingProps {
   setActiveTab: (tab: ActiveTab) => void;
 }
 
+interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  actionText: string;
+  targetTab: ActiveTab;
+  isCompleted: boolean;
+}
+
 export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab }) => {
+  // Load quests status from localStorage, default to new checklist
+  const [quests, setQuests] = useState<Quest[]>(() => {
+    const saved = localStorage.getItem('cadenza_quests');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse saved quests:', e);
+      }
+    }
+    return [
+      {
+        id: 'tuning',
+        title: 'Quest 1: The Tuning Challenge 🎸',
+        description: 'Tune your guitar strings (E2, A2, D3, G3, B3, E4) or hum clean notes. Open the Tuner, allow microphone access, and get the needle in the green!',
+        actionText: 'Launch Pitch Tuner',
+        targetTab: 'tuner',
+        isCompleted: false
+      },
+      {
+        id: 'middle_c',
+        title: 'Quest 2: Locate Middle C 🔍',
+        description: 'Find and play C4 (Middle C) in the Theory Lab. Click the key labeled C4 on the virtual piano or fret 3 on the 5th string (A) of the fretboard.',
+        actionText: 'Open Theory Explorer',
+        targetTab: 'theory',
+        isCompleted: false
+      },
+      {
+        id: 'happy_sad',
+        title: 'Quest 3: Happy or Sad? 🎭',
+        description: 'Test your musical intuition. Open the Ear Training Lab, select "Super Beginner" difficulty, and identify 5 happy (Major) vs sad (Minor) chords in a row.',
+        actionText: 'Start Ear Training',
+        targetTab: 'ear-training',
+        isCompleted: false
+      },
+      {
+        id: 'tapping_100',
+        title: 'Quest 4: The 100 BPM Challenge ⏱️',
+        description: 'Practice timing accuracy. Set the metronome to 100 BPM in Rhythm Lab, turn on "Game" mode, and press Spacebar to match the beats.',
+        actionText: 'Open Rhythm Lab',
+        targetTab: 'rhythm',
+        isCompleted: false
+      }
+    ];
+  });
+
+  const toggleQuest = (id: string) => {
+    audio.init();
+    const updated = quests.map(q => q.id === id ? { ...q, isCompleted: !q.isCompleted } : q);
+    setQuests(updated);
+    localStorage.setItem('cadenza_quests', JSON.stringify(updated));
+
+    // Play a satisfying major arpeggio chime if a quest is marked completed
+    const quest = updated.find(q => q.id === id);
+    if (quest?.isCompleted) {
+      const now = audio.getCurrentTime();
+      // E4 -> G#4 -> B4 -> E5 arpeggio
+      audio.playMidi(64, 0.25, now);
+      audio.playMidi(68, 0.25, now + 0.08);
+      audio.playMidi(71, 0.25, now + 0.16);
+      audio.playMidi(76, 0.5, now + 0.24);
+    }
+  };
+
+  const completedCount = quests.filter(q => q.isCompleted).length;
+  const progressPercentage = Math.round((completedCount / quests.length) * 100);
+
   const learningPaths = [
     {
       id: 'theory' as ActiveTab,
@@ -80,10 +157,10 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: '600px' }}>
           <h2 style={{ fontSize: '2.2rem', fontWeight: 700, lineHeight: 1.2 }}>
-            Welcome back to <span style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Cadenza Lab</span>
+            Welcome to your <span style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Cadenza Lab</span>
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
-            Your personal dashboard for learning guitar fretboard geography, relative pitch training, metronome speed building, and vocal singing accuracy.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
+            No music experience required. Follow the guided quests below to learn notes on your guitar fretboard, train your ears, and master rhythm.
           </p>
         </div>
         <div style={{ padding: '1rem 1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
@@ -92,9 +169,120 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         </div>
       </div>
 
+      {/* Beginner Quests checklist */}
+      <section className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>Beginner Training Quests</span>
+              <span style={{ fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                {completedCount} of {quests.length} Completed
+              </span>
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+              Complete these hands-on challenges to learn the basics of guitar playing and music theory.
+            </p>
+          </div>
+          
+          {/* Progress bar */}
+          <div style={{ width: '180px', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              <span>Total Progress:</span>
+              <strong>{progressPercentage}%</strong>
+            </div>
+            <div style={{ height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ width: `${progressPercentage}%`, height: '100%', background: 'var(--success)', boxShadow: '0 0 8px var(--success-glow)', transition: 'width 0.3s ease' }}></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quests Cards Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+          {quests.map((quest) => (
+            <div
+              key={quest.id}
+              className="glass-card"
+              style={{
+                display: 'flex',
+                gap: '1rem',
+                alignItems: 'flex-start',
+                cursor: 'default',
+                background: quest.isCompleted ? 'rgba(16, 185, 129, 0.02)' : 'rgba(255,255,255,0.01)',
+                borderColor: quest.isCompleted ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.04)',
+                transform: 'none'
+              }}
+            >
+              {/* Checkbox */}
+              <button
+                onClick={() => toggleQuest(quest.id)}
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '6px',
+                  background: quest.isCompleted ? 'var(--success)' : 'transparent',
+                  border: quest.isCompleted ? '1px solid var(--success)' : '2px solid var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                  transition: 'all 0.15s ease',
+                  flexShrink: 0,
+                  marginTop: '2px'
+                }}
+                title={quest.isCompleted ? 'Mark Incomplete' : 'Mark Completed'}
+              >
+                {quest.isCompleted && (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#030406" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Card Details */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+                <h4 style={{ 
+                  fontWeight: 600, 
+                  fontSize: '0.95rem',
+                  textDecoration: quest.isCompleted ? 'line-through' : 'none',
+                  color: quest.isCompleted ? 'var(--text-secondary)' : 'var(--text-primary)'
+                }}>
+                  {quest.title}
+                </h4>
+                <p style={{ 
+                  fontSize: '0.8rem', 
+                  color: 'var(--text-secondary)', 
+                  lineHeight: 1.4,
+                  opacity: quest.isCompleted ? 0.6 : 1
+                }}>
+                  {quest.description}
+                </p>
+                
+                {/* Navigation CTA button */}
+                <button
+                  onClick={() => setActiveTab(quest.targetTab)}
+                  className="btn"
+                  style={{
+                    padding: '0.35rem 0.75rem',
+                    fontSize: '0.75rem',
+                    width: 'fit-content',
+                    marginTop: '0.25rem',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    borderColor: 'rgba(255, 255, 255, 0.08)'
+                  }}
+                >
+                  {quest.actionText}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Quick Overview Section */}
       <div>
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 600 }}>Active Training Modules</h3>
+        <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 600 }}>Explore Labs Individually</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
           
           {learningPaths.map((path) => (

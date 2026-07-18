@@ -13,12 +13,12 @@ import type {
 } from '../utils/musicTheory';
 
 type QuizMode = 'intervals' | 'chords';
-type Difficulty = 'easy' | 'medium' | 'hard';
+type Difficulty = 'super-beginner' | 'easy' | 'medium' | 'hard';
 type PlaybackStyle = 'melodic' | 'harmonic';
 
 export const EarTrainingLab: React.FC = () => {
   const [quizMode, setQuizMode] = useState<QuizMode>('intervals');
-  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
+  const [difficulty, setDifficulty] = useState<Difficulty>('super-beginner');
   const [playbackStyle, setPlaybackStyle] = useState<PlaybackStyle>('melodic');
 
   // Game States
@@ -26,6 +26,7 @@ export const EarTrainingLab: React.FC = () => {
   const [score, setScore] = useState<number>(0);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [streak, setStreak] = useState<number>(0);
+  const [showCheatSheet, setShowCheatSheet] = useState<boolean>(false);
   
   // Question details
   const [currentRoot, setCurrentRoot] = useState<number>(60); // Default C4
@@ -39,6 +40,9 @@ export const EarTrainingLab: React.FC = () => {
   // Configure options based on difficulty and mode
   const getPossibleIntervals = (): IntervalInfo[] => {
     switch (difficulty) {
+      case 'super-beginner':
+        // Very basic leaps: Unison, Perfect 5th (Star Wars), Octave
+        return INTERVALS.filter(i => [0, 7, 12].includes(i.semitones));
       case 'easy':
         return INTERVALS.filter(i => [0, 4, 7, 12].includes(i.semitones)); // Unison, Maj3, P5, Octave
       case 'medium':
@@ -51,6 +55,7 @@ export const EarTrainingLab: React.FC = () => {
 
   const getPossibleChords = (): ChordQualityInfo[] => {
     switch (difficulty) {
+      case 'super-beginner':
       case 'easy':
         return CHORD_QUALITIES.filter(c => ['Major Triad', 'Minor Triad'].includes(c.name));
       case 'medium':
@@ -142,6 +147,24 @@ export const EarTrainingLab: React.FC = () => {
     }
   };
 
+  // Play reference sound from cheat sheet list
+  const playCheatSheetInterval = (semitones: number) => {
+    audio.init();
+    const now = audio.getCurrentTime();
+    const referenceRoot = 60; // C4 Middle C
+    audio.playMidi(referenceRoot, 1.2, now);
+    audio.playMidi(referenceRoot + semitones, 1.2, now + 0.55);
+  };
+
+  // Translates complex terms to beginner-friendly labels
+  const getDisplayOptionName = (opt: string) => {
+    if (difficulty === 'super-beginner' && quizMode === 'chords') {
+      if (opt === 'Major Triad') return 'Happy (Major)';
+      if (opt === 'Minor Triad') return 'Sad (Minor)';
+    }
+    return opt;
+  };
+
   // Handle choice submission
   const handleAnswerSubmit = (option: string) => {
     if (isAnswered) return;
@@ -227,15 +250,15 @@ export const EarTrainingLab: React.FC = () => {
 
           <div>
             <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Difficulty Level</span>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {(['easy', 'medium', 'hard'] as Difficulty[]).map((level) => (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {(['super-beginner', 'easy', 'medium', 'hard'] as Difficulty[]).map((level) => (
                 <button
                   key={level}
                   onClick={() => setDifficulty(level)}
                   className={`btn ${difficulty === level ? 'btn-secondary' : ''}`}
-                  style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem', textTransform: 'capitalize' }}
+                  style={{ flex: '1 1 45%', padding: '0.4rem', fontSize: '0.8rem', textTransform: 'none' }}
                 >
-                  {level}
+                  {level === 'super-beginner' ? 'Super Beginner' : level.charAt(0).toUpperCase() + level.slice(1)}
                 </button>
               ))}
             </div>
@@ -286,7 +309,9 @@ export const EarTrainingLab: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 600 }}>Ready to train your ears?</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '300px' }}>Listen to interval gaps or chord qualities, then make your selection. The app will play acoustic guitar synthesized reference chords.</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '300px' }}>
+                Listen to interval gaps or chord qualities, then make your selection. Defaulting to <strong>Super Beginner</strong> mode for basic song association practice!
+              </p>
               <button onClick={handleStartQuiz} className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
                 Start Training Session
               </button>
@@ -300,11 +325,20 @@ export const EarTrainingLab: React.FC = () => {
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button onClick={playSound} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                    Replay Sound
+                    Replay
                   </button>
+                  {quizMode === 'intervals' && (
+                    <button 
+                      onClick={() => setShowCheatSheet(!showCheatSheet)} 
+                      className={`btn ${showCheatSheet ? 'active' : ''}`}
+                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                    >
+                      🎵 Songs Reference
+                    </button>
+                  )}
                   {isAnswered && (
                     <button onClick={generateQuestion} className="btn btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-                      Next Question
+                      Next
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     </button>
                   )}
@@ -354,7 +388,7 @@ export const EarTrainingLab: React.FC = () => {
                       className={borderClass}
                       style={cardStyle}
                     >
-                      <span>{opt}</span>
+                      <span>{getDisplayOptionName(opt)}</span>
                       {isAnswered && isCorrectOpt && (
                         <span style={{ fontSize: '0.65rem', color: 'var(--success)', marginTop: '2px' }}>Correct</span>
                       )}
@@ -366,6 +400,54 @@ export const EarTrainingLab: React.FC = () => {
                 })}
               </div>
 
+              {/* Collapsible Melody Cheat Sheet Drawer */}
+              {showCheatSheet && quizMode === 'intervals' && (
+                <div 
+                  className="glass-panel" 
+                  style={{ 
+                    padding: '1rem', 
+                    background: 'rgba(255,255,255,0.01)', 
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    maxHeight: '200px',
+                    overflowY: 'auto'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    <span>Melody Clue Reference</span>
+                    <span>Click 🔊 to hear reference</span>
+                  </div>
+                  {getPossibleIntervals().map((interval) => (
+                    <div 
+                      key={interval.name} 
+                      style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        fontSize: '0.8rem',
+                        padding: '2px 0'
+                      }}
+                    >
+                      <div>
+                        <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{interval.name} ({interval.shortName}):</span>
+                        <span style={{ color: 'var(--text-secondary)', marginLeft: '6px' }}>{interval.songClue}</span>
+                      </div>
+                      <button 
+                        onClick={() => playCheatSheetInterval(interval.semitones)} 
+                        className="btn" 
+                        style={{ padding: '2px 6px', fontSize: '0.7rem' }}
+                        title="Hear reference interval"
+                      >
+                        🔊
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Status Message */}
               {isAnswered && (
                 <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.01)', border: '1px dashed rgba(255,255,255,0.06)', padding: '0.75rem', borderRadius: '8px' }}>
@@ -376,15 +458,16 @@ export const EarTrainingLab: React.FC = () => {
                       return (
                         <div style={{ fontSize: '0.85rem' }}>
                           Root note was <strong style={{ color: 'var(--primary)' }}>{rootNote.name}{rootNote.octave}</strong>. 
-                          Interval is {correctInterval.name} to <strong style={{ color: 'var(--secondary)' }}>{secondNote.name}{secondNote.octave}</strong>.
+                          Interval is {correctInterval.name} ({correctInterval.songClue}) to <strong style={{ color: 'var(--secondary)' }}>{secondNote.name}{secondNote.octave}</strong>.
                         </div>
                       );
                     } else if (correctChord) {
                       const chordNotes = correctChord.intervals.map(offset => midiToNoteName(currentRoot + offset).name).join(' - ');
+                      const label = getDisplayOptionName(correctChord.name);
                       return (
                         <div style={{ fontSize: '0.85rem' }}>
-                          Root was <strong style={{ color: 'var(--primary)' }}>{rootNote.name}{rootNote.octave}</strong>. 
-                          Chord formula notes: <strong style={{ color: 'var(--secondary)' }}>{chordNotes}</strong>.
+                          Root note was <strong style={{ color: 'var(--primary)' }}>{rootNote.name}{rootNote.octave}</strong>. 
+                          It is a <strong style={{ color: 'var(--secondary)' }}>{label}</strong> chord: <strong style={{ color: 'var(--secondary)' }}>{chordNotes}</strong>.
                         </div>
                       );
                     }

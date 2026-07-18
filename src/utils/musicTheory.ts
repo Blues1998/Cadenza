@@ -26,22 +26,23 @@ export interface IntervalInfo {
   name: string;
   semitones: number;
   shortName: string;
+  songClue: string;
 }
 
 export const INTERVALS: IntervalInfo[] = [
-  { name: 'Unison', semitones: 0, shortName: 'P1' },
-  { name: 'Minor 2nd', semitones: 1, shortName: 'm2' },
-  { name: 'Major 2nd', semitones: 2, shortName: 'M2' },
-  { name: 'Minor 3rd', semitones: 3, shortName: 'm3' },
-  { name: 'Major 3rd', semitones: 4, shortName: 'M3' },
-  { name: 'Perfect 4th', semitones: 5, shortName: 'P4' },
-  { name: 'Tritone', semitones: 6, shortName: 'd5' },
-  { name: 'Perfect 5th', semitones: 7, shortName: 'P5' },
-  { name: 'Minor 6th', semitones: 8, shortName: 'm6' },
-  { name: 'Major 6th', semitones: 9, shortName: 'M6' },
-  { name: 'Minor 7th', semitones: 10, shortName: 'm7' },
-  { name: 'Major 7th', semitones: 11, shortName: 'M7' },
-  { name: 'Octave', semitones: 12, shortName: 'P8' }
+  { name: 'Unison', semitones: 0, shortName: 'P1', songClue: 'Same exact pitch' },
+  { name: 'Minor 2nd', semitones: 1, shortName: 'm2', songClue: 'Jaws Theme ("dum-dum...")' },
+  { name: 'Major 2nd', semitones: 2, shortName: 'M2', songClue: 'Happy Birthday ("Hap-py")' },
+  { name: 'Minor 3rd', semitones: 3, shortName: 'm3', songClue: 'Lullaby / Greensleeves' },
+  { name: 'Major 3rd', semitones: 4, shortName: 'M3', songClue: 'Oh When the Saints ("Oh when...")' },
+  { name: 'Perfect 4th', semitones: 5, shortName: 'P4', songClue: 'Here Comes the Bride ("Here comes...")' },
+  { name: 'Tritone', semitones: 6, shortName: 'd5', songClue: 'The Simpsons Theme ("The Simp-...")' },
+  { name: 'Perfect 5th', semitones: 7, shortName: 'P5', songClue: 'Star Wars Theme ("Star Wars...")' },
+  { name: 'Minor 6th', semitones: 8, shortName: 'm6', songClue: 'The Entertainer / Love Story' },
+  { name: 'Major 6th', semitones: 9, shortName: 'M6', songClue: 'NBC Chimes / Bonnie Lies Over Ocean' },
+  { name: 'Minor 7th', semitones: 10, shortName: 'm7', songClue: 'Star Trek Theme ("Star Trek...")' },
+  { name: 'Major 7th', semitones: 11, shortName: 'M7', songClue: 'Take On Me ("Take on...")' },
+  { name: 'Octave', semitones: 12, shortName: 'P8', songClue: 'Somewhere Over the Rainbow' }
 ];
 
 // Interface for chord qualities
