@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export type ActiveTab = 'dashboard' | 'ear-training' | 'theory' | 'play' | 'physics' | 'rhythm' | 'tuner';
 
@@ -7,7 +7,27 @@ interface SidebarProps {
   setActiveTab: (tab: ActiveTab) => void;
 }
 
+const COLLAPSED_KEY = 'sidebar-collapsed';
+
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+  // Collapsed = icon-only rail; the preference persists across sessions
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(COLLAPSED_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleCollapsed = () => {
+    setCollapsed(prev => {
+      try {
+        localStorage.setItem(COLLAPSED_KEY, prev ? '0' : '1');
+      } catch { /* private browsing */ }
+      return !prev;
+    });
+  };
+
   const menuItems = [
     {
       id: 'dashboard' as ActiveTab,
@@ -85,20 +105,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
   ];
 
   return (
-    <aside className="glass-panel" style={{ width: '260px', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', gap: '2rem', borderRight: '1px solid var(--panel-border)', borderRadius: '0 16px 16px 0', height: '100vh', position: 'sticky', top: 0, left: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '0.75rem' }}>
-        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0, 240, 255, 0.3)' }}>
+    <aside className="glass-panel" style={{ width: collapsed ? '76px' : '260px', padding: collapsed ? '2rem 0.6rem' : '2rem 1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', borderRight: '1px solid var(--panel-border)', borderRadius: '0 16px 16px 0', height: '100vh', position: 'sticky', top: 0, left: 0, transition: 'width 0.2s ease, padding 0.2s ease', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: collapsed ? 0 : '0.75rem', justifyContent: collapsed ? 'center' : 'flex-start' }}>
+        <div title="CADENZA Music Lab" style={{ width: '36px', height: '36px', flexShrink: 0, borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0, 240, 255, 0.3)' }}>
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#030406" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 18V5l12-2v13" />
             <circle cx="6" cy="18" r="3" />
             <circle cx="18" cy="16" r="3" />
           </svg>
         </div>
-        <div>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '0.5px' }}>CADENZA</h1>
-          <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Music Lab</span>
-        </div>
+        {!collapsed && (
+          <div style={{ whiteSpace: 'nowrap' }}>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '0.5px' }}>CADENZA</h1>
+            <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Music Lab</span>
+          </div>
+        )}
       </div>
+
+      {/* Collapse / expand toggle */}
+      <button
+        onClick={toggleCollapsed}
+        className="btn"
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        style={{ width: '100%', justifyContent: 'center', padding: '0.35rem', color: 'var(--text-secondary)', borderColor: 'rgba(255,255,255,0.06)' }}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}>
+          <polyline points="11 17 6 12 11 7" />
+          <polyline points="18 17 13 12 18 7" />
+        </svg>
+        {!collapsed && <span style={{ fontSize: '0.75rem' }}>Hide panel</span>}
+      </button>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
         {menuItems.map((item) => {
@@ -108,9 +144,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className="btn"
+              title={item.label}
               style={{
-                justifyContent: 'flex-start',
+                justifyContent: collapsed ? 'center' : 'flex-start',
                 width: '100%',
+                padding: collapsed ? '0.6rem 0' : undefined,
                 background: isActive ? 'rgba(0, 240, 255, 0.06)' : 'transparent',
                 borderColor: isActive ? 'var(--primary)' : 'transparent',
                 color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -120,17 +158,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
               <span style={{ color: isActive ? 'var(--primary)' : 'inherit', display: 'flex', alignItems: 'center' }}>
                 {item.icon}
               </span>
-              <span>{item.label}</span>
+              {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
             </button>
           );
         })}
       </nav>
 
-      <div style={{ padding: '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Status:</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success-glow)' }}></span>
-          <span>Audio Engine Ready</span>
+      <div title="Audio Engine Ready" style={{ padding: collapsed ? '0.6rem 0' : '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: collapsed ? 'center' : 'stretch' }}>
+        {!collapsed && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Status:</div>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', justifyContent: collapsed ? 'center' : 'flex-start' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success-glow)', flexShrink: 0 }}></span>
+          {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>Audio Engine Ready</span>}
         </div>
       </div>
     </aside>
