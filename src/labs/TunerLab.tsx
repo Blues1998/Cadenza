@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { detectPitch } from '../utils/pitch';
+import { detectPitch, PitchStabilizer } from '../utils/pitch';
 import type { PitchResult } from '../utils/pitch';
 import { audio } from '../utils/audio';
 import { noteNameToMidi } from '../utils/musicTheory';
@@ -23,7 +23,9 @@ export const TunerLab: React.FC = () => {
   const animationFrameId = useRef<number | null>(null);
 
   const bufferRef = useRef<Float32Array | null>(null);
-  const holdTimerRef = useRef<number>(0); // measures how long user held note
+  const stabilizerRef = useRef<PitchStabilizer>(new PitchStabilizer());
+  const holdMsRef = useRef<number>(0); // milliseconds the target note has been held
+  const lastTickRef = useRef<number>(0); // timestamp of the previous game tick
 
   // Possible target notes for the matching game (Standard range)
   const targetNotesList = ['E2', 'G2', 'A2', 'C3', 'E3', 'G3', 'A3', 'C4', 'E4', 'G4', 'A4'];
@@ -57,6 +59,7 @@ export const TunerLab: React.FC = () => {
       const bufferLength = analyser.fftSize;
       bufferRef.current = new Float32Array(bufferLength);
 
+      stabilizerRef.current.reset();
       setIsMicrophoneActive(true);
       startPitchDetectionLoop();
     } catch (err) {
@@ -86,9 +89,10 @@ export const TunerLab: React.FC = () => {
       audioContextRef.current = null;
     }
 
+    stabilizerRef.current.reset();
     setPitchData(null);
     setHoldProgress(0);
-    holdTimerRef.current = 0;
+    holdMsRef.current = 0;
   };
 
   const startPitchDetectionLoop = () => {
@@ -100,9 +104,12 @@ export const TunerLab: React.FC = () => {
 
     const updatePitch = () => {
       analyser.getFloatTimeDomainData(buffer as any);
-      const result = detectPitch(buffer, sampleRate);
-      
-      setPitchData(result);
+      const raw = detectPitch(buffer, sampleRate);
+      // Stabilize: hysteresis on note changes + smoothing, so the reading
+      // doesn't flicker on every animation frame
+      const stable = stabilizerRef.current.update(raw);
+
+      setPitchData(stable);
       animationFrameId.current = requestAnimationFrame(updatePitch);
     };
 
@@ -114,48 +121,59 @@ export const TunerLab: React.FC = () => {
     const randomNote = remaining[Math.floor(Math.random() * remaining.length)];
     setTargetNote(randomNote);
     setHoldProgress(0);
-    holdTimerRef.current = 0;
+    holdMsRef.current = 0;
+  };
+
+  // Parse a note name like "C4" or "F#3" into its MIDI number
+  const parseNoteToMidi = (name: string): number | null => {
+    const match = name.match(/^([A-G]#?)([0-9])$/);
+    if (!match) return null;
+    return noteNameToMidi(match[1], Number(match[2]));
   };
 
   // Play reference sound for target note
   const playTargetReference = () => {
     audio.init();
-    // Parse note and octave, e.g. "A4" -> "A", 4
-    const match = targetNote.match(/^([A-G]#?)([0-9])$/);
-    if (!match) return;
-    
-    const root = match[1];
-    const octave = Number(match[2]);
-    const midi = noteNameToMidi(root, octave);
-    
+    const midi = parseNoteToMidi(targetNote);
+    if (midi === null) return;
     audio.playMidi(midi, 2.5);
   };
 
   // Game loop: check pitch matching logic
   useEffect(() => {
-    if (!gameMode || !pitchData || !isMicrophoneActive) {
+    if (!gameMode || !isMicrophoneActive) {
       setHoldProgress(0);
-      holdTimerRef.current = 0;
+      holdMsRef.current = 0;
+      lastTickRef.current = 0;
       return;
     }
 
-    // Standardize comparison format (strip octave for raw pitch name if needed, but here we do exact note matching)
-    // Note names are e.g. "A4"
-    const isNoteMatch = pitchData.note === targetNote;
-    const isInTune = Math.abs(pitchData.cents) <= 8; // within 8 cents of accuracy
+    // Time-based hold, so progress speed doesn't depend on frame rate
+    const now = performance.now();
+    const elapsed = lastTickRef.current === 0 ? 16 : Math.min(100, now - lastTickRef.current);
+    lastTickRef.current = now;
 
-    if (isNoteMatch && isInTune) {
-      holdTimerRef.current += 1; // Increment duration ticks (~60fps standard)
-      
-      const requiredTicks = 70; // ~1.1 seconds hold
-      const percentage = Math.min(100, Math.round((holdTimerRef.current / requiredTicks) * 100));
+    const REQUIRED_HOLD_MS = 1200;
+    const CENTS_TOLERANCE = 30; // realistic for fretted guitar notes and singing
+
+    // Compare MIDI numbers (robust) instead of exact note-name strings
+    const targetMidi = parseNoteToMidi(targetNote);
+    const isMatch =
+      pitchData !== null &&
+      targetMidi !== null &&
+      pitchData.midi === targetMidi &&
+      Math.abs(pitchData.cents) <= CENTS_TOLERANCE;
+
+    if (isMatch) {
+      holdMsRef.current += elapsed;
+      const percentage = Math.min(100, Math.round((holdMsRef.current / REQUIRED_HOLD_MS) * 100));
       setHoldProgress(percentage);
 
-      if (holdTimerRef.current >= requiredTicks) {
+      if (holdMsRef.current >= REQUIRED_HOLD_MS) {
         // Match Successful!
         setMatchScore(prev => prev + 1);
         setMatchStreak(prev => prev + 1);
-        
+
         // Play success tone
         audio.init();
         audio.playMidi(72, 0.4); // C5 quick ping
@@ -165,9 +183,9 @@ export const TunerLab: React.FC = () => {
         selectRandomTargetNote();
       }
     } else {
-      // Decay progress if they drift off key
-      holdTimerRef.current = Math.max(0, holdTimerRef.current - 2);
-      setHoldProgress(Math.round((holdTimerRef.current / 70) * 100));
+      // Decay progress gently if they drift off key or go silent
+      holdMsRef.current = Math.max(0, holdMsRef.current - elapsed);
+      setHoldProgress(Math.round((holdMsRef.current / REQUIRED_HOLD_MS) * 100));
     }
   }, [pitchData, gameMode, targetNote, isMicrophoneActive]);
 
@@ -178,7 +196,7 @@ export const TunerLab: React.FC = () => {
       setMatchStreak(0);
     } else {
       setHoldProgress(0);
-      holdTimerRef.current = 0;
+      holdMsRef.current = 0;
     }
   }, [gameMode]);
 
@@ -356,7 +374,7 @@ export const TunerLab: React.FC = () => {
                   />
                 </div>
                 <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                  Sing or play standard {targetNote} in tune for 1.2 seconds to progress
+                  Sing or play {targetNote} (within ±30 cents) for 1.2 seconds to progress
                 </span>
               </div>
 

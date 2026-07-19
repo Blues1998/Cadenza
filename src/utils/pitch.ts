@@ -1,4 +1,7 @@
-// Real-time Pitch Detection using Autocorrelation with parabolic interpolation
+// Real-time pitch detection using the YIN algorithm (de Cheveigné & Kawahara, 2002).
+// YIN picks the FIRST lag whose normalized difference dips below a threshold,
+// which resists the octave-up errors that plain autocorrelation peak-picking
+// suffers on harmonic-rich sources like guitar.
 
 export interface PitchResult {
   frequency: number;
@@ -7,101 +10,164 @@ export interface PitchResult {
   midi: number;
 }
 
+const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+const MIN_FREQUENCY = 50;   // below guitar drop-D territory
+const MAX_FREQUENCY = 1600; // above typical singing / fretted range
+
+function frequencyToResult(frequency: number): PitchResult {
+  // MIDI formula: n = 12 * log2(f / 440) + 69
+  const midiDouble = 12 * Math.log2(frequency / 440) + 69;
+  const midi = Math.round(midiDouble);
+  const cents = Math.round((midiDouble - midi) * 100);
+  const octave = Math.floor(midi / 12) - 1;
+  return {
+    frequency,
+    note: NOTE_NAMES[midi % 12] + octave,
+    cents,
+    midi
+  };
+}
+
 export function detectPitch(buffer: Float32Array, sampleRate: number): PitchResult | null {
-  // 1. Check volume level using Root Mean Square (RMS)
+  // 1. Noise gate: skip frames that are too quiet to contain a real note
   let rmsSum = 0;
   for (let i = 0; i < buffer.length; i++) {
     rmsSum += buffer[i] * buffer[i];
   }
   const rms = Math.sqrt(rmsSum / buffer.length);
-  
-  // If the signal is too quiet, don't try to detect a pitch (noise gating)
   if (rms < 0.008) {
     return null;
   }
 
-  // 2. Perform Autocorrelation (correlating the signal with delayed versions of itself)
-  const len = buffer.length;
-  const maxLags = Math.floor(len / 2);
-  const r = new Float32Array(maxLags);
+  const halfLen = Math.floor(buffer.length / 2);
 
-  for (let lag = 0; lag < maxLags; lag++) {
+  // 2. YIN difference function: d[tau] = sum of squared differences at lag tau
+  const diff = new Float32Array(halfLen);
+  for (let tau = 1; tau < halfLen; tau++) {
     let sum = 0;
-    for (let i = 0; i < maxLags; i++) {
-      sum += buffer[i] * buffer[i + lag];
+    for (let i = 0; i < halfLen; i++) {
+      const delta = buffer[i] - buffer[i + tau];
+      sum += delta * delta;
     }
-    r[lag] = sum;
+    diff[tau] = sum;
   }
 
-  // 3. Skip the primary autocorrelation peak at lag = 0
-  // Find the first point where correlation starts going back up (local minimum)
-  let firstMinIndex = 0;
-  for (let i = 0; i < maxLags - 1; i++) {
-    if (r[i] < r[i + 1]) {
-      firstMinIndex = i;
+  // 3. Cumulative mean normalized difference — dips toward 0 at the true period
+  const cmnd = new Float32Array(halfLen);
+  cmnd[0] = 1;
+  let runningSum = 0;
+  for (let tau = 1; tau < halfLen; tau++) {
+    runningSum += diff[tau];
+    cmnd[tau] = runningSum === 0 ? 1 : (diff[tau] * tau) / runningSum;
+  }
+
+  // 4. Absolute threshold: take the FIRST dip below threshold, then walk down
+  // to its local minimum. Restrict the lag search to the musical range.
+  const threshold = 0.12;
+  const minTau = Math.max(2, Math.floor(sampleRate / MAX_FREQUENCY));
+  const maxTau = Math.min(halfLen - 2, Math.ceil(sampleRate / MIN_FREQUENCY));
+
+  let tauEstimate = -1;
+  for (let tau = minTau; tau <= maxTau; tau++) {
+    if (cmnd[tau] < threshold) {
+      while (tau + 1 <= maxTau && cmnd[tau + 1] < cmnd[tau]) {
+        tau++;
+      }
+      tauEstimate = tau;
       break;
     }
   }
 
-  // If we never find a local minimum, the signal is not periodic enough
-  if (firstMinIndex === 0) {
+  // No clear periodicity found — treat as unpitched noise
+  if (tauEstimate === -1) {
     return null;
   }
 
-  // 4. Find the highest peak (local maximum) after the local minimum
-  let peakIndex = -1;
-  let peakValue = -1;
-  for (let i = firstMinIndex; i < maxLags - 1; i++) {
-    if (r[i] > r[i - 1] && r[i] > r[i + 1]) {
-      if (r[i] > peakValue) {
-        peakValue = r[i];
-        peakIndex = i;
-      }
-    }
-  }
-
-  // If no peak is found, or the peak is extremely weak, return null
-  if (peakIndex === -1 || peakValue < 0.05 * r[0]) {
-    return null;
-  }
-
-  // 5. Apply Parabolic Interpolation to find a sub-sample peak position
-  // This gives high-precision frequency values even with small buffers
-  let interpolatedPeak = peakIndex;
-  const alpha = r[peakIndex - 1];
-  const beta = r[peakIndex];
-  const gamma = r[peakIndex + 1];
-  
+  // 5. Parabolic interpolation around the dip for sub-sample period accuracy
+  let betterTau = tauEstimate;
+  const alpha = cmnd[tauEstimate - 1];
+  const beta = cmnd[tauEstimate];
+  const gamma = cmnd[tauEstimate + 1];
   const denominator = alpha - 2 * beta + gamma;
   if (denominator !== 0) {
-    const offset = 0.5 * (alpha - gamma) / denominator;
-    interpolatedPeak = peakIndex + offset;
+    betterTau = tauEstimate + 0.5 * (alpha - gamma) / denominator;
   }
 
-  // Calculate fundamental frequency
-  const frequency = sampleRate / interpolatedPeak;
-
-  // Filter out frequencies outside the reasonable singing/instrument range
-  if (frequency < 50 || frequency > 1600) {
+  const frequency = sampleRate / betterTau;
+  if (frequency < MIN_FREQUENCY || frequency > MAX_FREQUENCY) {
     return null;
   }
 
-  // 6. Map frequency to MIDI note and cents offset
-  // MIDI formula: n = 12 * log2(f / 440) + 69
-  const midiDouble = 12 * Math.log2(frequency / 440) + 69;
-  const midi = Math.round(midiDouble);
-  const cents = Math.round((midiDouble - midi) * 100);
+  return frequencyToResult(frequency);
+}
 
-  // Note mapping
-  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const noteIndex = midi % 12;
-  const octave = Math.floor(midi / 12) - 1;
-  const noteName = noteNames[noteIndex] + octave;
+// Smooths raw per-frame detections into a stable reading:
+// - the displayed note only switches after several consecutive frames agree
+//   (hysteresis), so it no longer flickers every 1/60th of a second
+// - frequency/cents are exponentially smoothed while the note is held
+// - brief dropouts (e.g. between guitar pluck cycles) hold the last reading
+export class PitchStabilizer {
+  private displayed: PitchResult | null = null;
+  private smoothedFrequency = 0;
+  private candidateMidi: number | null = null;
+  private candidateFrames = 0;
+  private silentFrames = 0;
 
-  return {
-    frequency,
-    note: noteName,
-    cents,
-    midi
-  };
+  // Frames of agreement required before switching to a new note
+  private static readonly SWITCH_FRAMES = 3;
+  // Frames of silence tolerated before clearing the reading
+  private static readonly HOLD_FRAMES = 8;
+  // EMA factor for frequency smoothing (higher = more responsive)
+  private static readonly SMOOTHING = 0.3;
+
+  update(raw: PitchResult | null): PitchResult | null {
+    if (!raw) {
+      this.silentFrames++;
+      if (this.silentFrames > PitchStabilizer.HOLD_FRAMES) {
+        this.reset();
+      }
+      return this.displayed ? { ...this.displayed } : null;
+    }
+    this.silentFrames = 0;
+
+    if (this.displayed !== null && raw.midi === this.displayed.midi) {
+      // Same note: smooth the frequency and recompute cents against it
+      this.candidateMidi = null;
+      this.candidateFrames = 0;
+      this.smoothedFrequency += PitchStabilizer.SMOOTHING * (raw.frequency - this.smoothedFrequency);
+      const midiDouble = 12 * Math.log2(this.smoothedFrequency / 440) + 69;
+      this.displayed = {
+        ...this.displayed,
+        frequency: this.smoothedFrequency,
+        cents: Math.round((midiDouble - this.displayed.midi) * 100)
+      };
+    } else {
+      // Different note: only switch after consecutive frames agree
+      if (raw.midi === this.candidateMidi) {
+        this.candidateFrames++;
+      } else {
+        this.candidateMidi = raw.midi;
+        this.candidateFrames = 1;
+      }
+
+      const required = this.displayed === null ? 2 : PitchStabilizer.SWITCH_FRAMES;
+      if (this.candidateFrames >= required) {
+        this.displayed = { ...raw };
+        this.smoothedFrequency = raw.frequency;
+        this.candidateMidi = null;
+        this.candidateFrames = 0;
+      }
+    }
+
+    return this.displayed ? { ...this.displayed } : null;
+  }
+
+  reset(): void {
+    this.displayed = null;
+    this.smoothedFrequency = 0;
+    this.candidateMidi = null;
+    this.candidateFrames = 0;
+    this.silentFrames = 0;
+  }
 }
