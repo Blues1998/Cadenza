@@ -9,6 +9,15 @@ interface TapHit {
   rating: 'perfect' | 'good' | 'imprecise' | 'miss';
 }
 
+const getTempoLabel = (bpmVal: number): string => {
+  if (bpmVal < 60) return 'Largo (Very Slow)';
+  if (bpmVal < 76) return 'Adagio (Slow)';
+  if (bpmVal < 108) return 'Andante (Walking)';
+  if (bpmVal < 120) return 'Moderato (Moderate)';
+  if (bpmVal < 156) return 'Allegro (Fast)';
+  return 'Presto (Very Fast)';
+};
+
 export const RhythmLab: React.FC = () => {
   const [bpm, setBpm] = useState<number>(100);
   const [timeSignature, setTimeSignature] = useState<number>(4); // beats per bar
@@ -388,6 +397,32 @@ export const RhythmLab: React.FC = () => {
                 <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: overallAccuracy > 80 ? 'var(--success)' : 'var(--primary)' }}>
                   {overallAccuracy}%
                 </span>
+              </div>
+
+              {/* Interactive Game Pace Control Row */}
+              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Game Pace:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <button 
+                    onClick={() => setBpm(prev => Math.max(40, prev - 10))} 
+                    className="btn" 
+                    style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                    title="Slower (-10 BPM)"
+                  >
+                    Slower
+                  </button>
+                  <strong style={{ color: 'var(--primary)', fontSize: '0.9rem', fontFamily: 'monospace' }}>
+                    {bpm} BPM ({getTempoLabel(bpm)})
+                  </strong>
+                  <button 
+                    onClick={() => setBpm(prev => Math.min(220, prev + 10))} 
+                    className="btn" 
+                    style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
+                    title="Faster (+10 BPM)"
+                  >
+                    Faster
+                  </button>
+                </div>
               </div>
 
               {/* Tap Target Zone */}
