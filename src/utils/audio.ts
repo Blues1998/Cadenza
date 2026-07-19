@@ -30,6 +30,18 @@ class AudioEngine {
     return this.ctx ? this.ctx.currentTime : 0;
   }
 
+  // Total delay between scheduling a sound and it reaching the listener's ears.
+  // Sounds scheduled at audio-clock time T are physically heard at T + this value.
+  // Queried live because it changes when the output device changes (e.g. Bluetooth).
+  public getOutputLatency(): number {
+    this.init();
+    if (!this.ctx) return 0;
+    const base = this.ctx.baseLatency ?? 0;
+    // outputLatency is not implemented in all browsers (e.g. Safari)
+    const output = (this.ctx as AudioContext & { outputLatency?: number }).outputLatency ?? 0;
+    return base + output;
+  }
+
   // Play a single note using standard MIDI index number
   public playMidi(midi: number, duration: number = 2.0, time?: number) {
     const freq = midiToFreq(midi);

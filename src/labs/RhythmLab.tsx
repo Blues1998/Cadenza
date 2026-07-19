@@ -9,6 +9,164 @@ interface TapHit {
   rating: 'perfect' | 'good' | 'imprecise' | 'miss';
 }
 
+// Events plotted on the live timing graph. All times are audio-clock seconds.
+interface TimelineBeat {
+  time: number;      // when the click is HEARD (scheduled time + output latency)
+  accented: boolean; // beat 1 of the bar
+}
+interface TimelineTap {
+  time: number;        // when the press landed on the audio clock
+  matchedTime: number; // heard time of the beat this tap was graded against
+  differenceMs: number;
+  rating: TapHit['rating'];
+}
+
+// Scrolling oscilloscope-style strip: metronome clicks (as heard) and taps
+// drift right-to-left; the horizontal gap between paired spikes IS the timing
+// error. Draws from refs via requestAnimationFrame — no React state per frame.
+const TimingGraph: React.FC<{
+  beatsRef: React.MutableRefObject<TimelineBeat[]>;
+  tapsRef: React.MutableRefObject<TimelineTap[]>;
+}> = ({ beatsRef, tapsRef }) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const g = canvas.getContext('2d');
+    if (!g) return;
+
+    const css = getComputedStyle(document.documentElement);
+    const cssColor = (name: string, fallback: string) =>
+      css.getPropertyValue(name).trim() || fallback;
+    const colors = {
+      beat: cssColor('--primary', '#818cf8'),
+      tap: cssColor('--warning', '#fbbf24'),
+      perfect: cssColor('--success', '#34d399'),
+      good: cssColor('--primary', '#818cf8'),
+      imprecise: cssColor('--warning', '#fbbf24'),
+      miss: cssColor('--danger', '#ef4444'),
+      grid: 'rgba(255,255,255,0.07)',
+      text: cssColor('--text-muted', '#8b93a7')
+    };
+
+    const WINDOW_S = 4; // seconds of history shown
+    let rafId = 0;
+
+    const draw = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+      }
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.clearRect(0, 0, w, h);
+
+      const now = audio.getCurrentTime();
+      const pxPerSec = w / WINDOW_S;
+      const xFor = (t: number) => w - (now - t) * pxPerSec;
+      const baseline = h - 16;
+
+      // Prune events that scrolled out of view
+      beatsRef.current = beatsRef.current.filter(b => b.time > now - WINDOW_S - 0.5);
+      tapsRef.current = tapsRef.current.filter(t => t.time > now - WINDOW_S - 0.5);
+
+      // Faint gridline each second
+      g.strokeStyle = colors.grid;
+      g.lineWidth = 1;
+      for (let t = Math.floor(now); t > now - WINDOW_S; t--) {
+        const x = xFor(t);
+        g.beginPath();
+        g.moveTo(x, 6);
+        g.lineTo(x, baseline);
+        g.stroke();
+      }
+      // Baseline
+      g.beginPath();
+      g.moveTo(0, baseline);
+      g.lineTo(w, baseline);
+      g.stroke();
+
+      // Metronome spikes at their HEARD time (only once actually audible)
+      for (const b of beatsRef.current) {
+        if (b.time > now) continue;
+        const x = xFor(b.time);
+        g.strokeStyle = colors.beat;
+        g.lineWidth = b.accented ? 3 : 2;
+        g.globalAlpha = 0.9;
+        g.beginPath();
+        g.moveTo(x, baseline);
+        g.lineTo(x, b.accented ? 10 : 24);
+        g.stroke();
+      }
+      g.globalAlpha = 1;
+
+      // Tap spikes + dashed connector to their matched beat + ms label
+      for (const t of tapsRef.current) {
+        const x = xFor(t.time);
+        g.strokeStyle = colors.tap;
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(x, baseline);
+        g.lineTo(x, 38);
+        g.stroke();
+
+        const mx = xFor(t.matchedTime);
+        g.strokeStyle = colors[t.rating];
+        g.lineWidth = 1;
+        g.setLineDash([3, 3]);
+        g.beginPath();
+        g.moveTo(mx, 38);
+        g.lineTo(x, 38);
+        g.stroke();
+        g.setLineDash([]);
+
+        g.fillStyle = colors[t.rating];
+        g.font = '10px monospace';
+        g.textAlign = 'center';
+        const label = `${t.differenceMs > 0 ? '+' : ''}${t.differenceMs}ms`;
+        g.fillText(label, (x + mx) / 2, 34);
+      }
+
+      // Live latency readout (what the grader is compensating for)
+      g.fillStyle = colors.text;
+      g.font = '9px monospace';
+      g.textAlign = 'left';
+      g.fillText(`output latency: ${Math.round(audio.getOutputLatency() * 1000)}ms`, 6, h - 4);
+      g.textAlign = 'right';
+      g.fillText('now ▶', w - 4, 12);
+
+      rafId = requestAnimationFrame(draw);
+    };
+
+    rafId = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(rafId);
+  }, [beatsRef, tapsRef]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+      <canvas
+        ref={canvasRef}
+        style={{
+          width: '100%',
+          height: '110px',
+          display: 'block',
+          background: 'rgba(255,255,255,0.015)',
+          border: '1px solid rgba(255,255,255,0.05)',
+          borderRadius: '10px'
+        }}
+      />
+      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.65rem', color: 'var(--text-muted)', justifyContent: 'center' }}>
+        <span><span style={{ color: 'var(--primary)' }}>▌</span> Metronome (as heard)</span>
+        <span><span style={{ color: 'var(--warning)' }}>▌</span> Your taps</span>
+        <span>gap = your timing error</span>
+      </div>
+    </div>
+  );
+};
+
 const getTempoLabel = (bpmVal: number): string => {
   if (bpmVal < 60) return 'Largo (Very Slow)';
   if (bpmVal < 76) return 'Adagio (Slow)';
@@ -40,6 +198,10 @@ export const RhythmLab: React.FC = () => {
   const beatIndex = useRef<number>(0);         // current beat counter within the measure
   const scheduledBeats = useRef<{ index: number; audioTime: number; expired: boolean }[]>([]);
 
+  // Live timing-graph event logs (drawn by TimingGraph, pruned there too)
+  const timelineBeats = useRef<TimelineBeat[]>([]);
+  const timelineTaps = useRef<TimelineTap[]>([]);
+
   // Update refs when state changes so the background scheduler timer sees them instantly
   useEffect(() => {
     isPlayingRef.current = isPlaying;
@@ -60,6 +222,7 @@ export const RhythmLab: React.FC = () => {
     const ctxTime = audio.getCurrentTime();
     const scheduleAheadTime = 0.12; // schedule 120ms ahead
     const secondsPerBeat = 60.0 / bpmRef.current;
+    const outputLatency = audio.getOutputLatency();
 
     while (nextBeatTime.current < ctxTime + scheduleAheadTime) {
       const beatNum = beatIndex.current % timeSignatureRef.current;
@@ -75,10 +238,11 @@ export const RhythmLab: React.FC = () => {
         expired: false
       });
 
-      // Keep array size reasonable (prune old beats older than 2 seconds)
-      if (scheduledBeats.current.length > 30) {
-        scheduledBeats.current.shift();
-      }
+      // Log for the timing graph at the moment the click will be HEARD
+      timelineBeats.current.push({
+        time: nextBeatTime.current + outputLatency,
+        accented: isAccented
+      });
 
       // Sync active beat visualization with the UI
       const currentScheduledTime = nextBeatTime.current;
@@ -95,6 +259,9 @@ export const RhythmLab: React.FC = () => {
       nextBeatTime.current += secondsPerBeat;
       beatIndex.current++;
     }
+
+    // Prune beats older than 2 seconds — long past any grading window
+    scheduledBeats.current = scheduledBeats.current.filter(b => b.audioTime > ctxTime - 2);
   };
 
   const startMetronome = () => {
@@ -103,6 +270,8 @@ export const RhythmLab: React.FC = () => {
     
     // Clear scheduled tracking
     scheduledBeats.current = [];
+    timelineBeats.current = [];
+    timelineTaps.current = [];
     nextBeatTime.current = audio.getCurrentTime() + 0.05;
     beatIndex.current = 0;
     setCurrentBeat(0);
@@ -140,24 +309,33 @@ export const RhythmLab: React.FC = () => {
     }
 
     const tapAudioTime = audio.getCurrentTime();
-    
-    // Find the closest scheduled beat in our window (+/- 1 beat width)
-    let closestBeat: typeof scheduledBeats.current[0] | null = null;
-    let minDifference = Infinity;
 
-    // Search active beats in the queue
-    scheduledBeats.current.forEach((beat) => {
-      const diff = Math.abs(tapAudioTime - beat.audioTime);
+    // Latency compensation: a click scheduled at audio time T is physically
+    // HEARD at T + outputLatency. The player taps in sync with what they hear,
+    // so shift the tap back by that latency before comparing to schedule times.
+    const outputLatency = audio.getOutputLatency();
+    const perceivedTapTime = tapAudioTime - outputLatency;
+
+    // Candidate beats: everything scheduled recently, PLUS the predicted next
+    // beat. The next beat only gets scheduled ~120ms ahead of time, so without
+    // it an early tap would be graded against the PREVIOUS beat as a huge miss.
+    const candidateTimes = scheduledBeats.current.map(b => b.audioTime);
+    candidateTimes.push(nextBeatTime.current);
+
+    let closestTime: number | null = null;
+    let minDifference = Infinity;
+    for (const beatTime of candidateTimes) {
+      const diff = Math.abs(perceivedTapTime - beatTime);
       if (diff < minDifference) {
         minDifference = diff;
-        closestBeat = beat;
+        closestTime = beatTime;
       }
-    });
+    }
 
-    if (!closestBeat) return;
+    if (closestTime === null) return;
 
     // Calculate timing difference in milliseconds
-    const difference = tapAudioTime - (closestBeat as any).audioTime;
+    const difference = perceivedTapTime - closestTime;
     const differenceMs = Math.round(difference * 1000);
     const absDiff = Math.abs(differenceMs);
 
@@ -166,15 +344,15 @@ export const RhythmLab: React.FC = () => {
     let text = 'MISS';
     let color = 'var(--danger)';
 
-    if (absDiff <= 30) {
+    if (absDiff <= 45) {
       rating = 'perfect';
       text = 'PERFECT!';
       color = 'var(--success)';
-    } else if (absDiff <= 65) {
+    } else if (absDiff <= 90) {
       rating = 'good';
       text = 'GOOD';
       color = 'var(--primary)';
-    } else if (absDiff <= 140) {
+    } else if (absDiff <= 160) {
       rating = 'imprecise';
       text = differenceMs > 0 ? 'LATE' : 'EARLY';
       color = 'var(--warning)';
@@ -187,27 +365,33 @@ export const RhythmLab: React.FC = () => {
       offset: differenceMs
     });
 
+    // Log for the timing graph: raw press time vs the heard time of its beat
+    timelineTaps.current.push({
+      time: tapAudioTime,
+      matchedTime: closestTime + outputLatency,
+      differenceMs,
+      rating
+    });
+
     const newHit: TapHit = {
       id: Date.now(),
-      expectedTime: (closestBeat as any).audioTime,
-      actualTime: tapAudioTime,
+      expectedTime: closestTime,
+      actualTime: perceivedTapTime,
       differenceMs,
       rating
     };
 
     setTapHistory((prev) => {
       const updated = [newHit, ...prev].slice(0, 20); // Keep last 20 hits
-      
-      // Calculate average accuracy score
-      const ratedHits = updated.filter(h => h.rating !== 'miss');
-      if (ratedHits.length > 0) {
-        const sumScore = ratedHits.reduce((acc, h) => {
-          if (h.rating === 'perfect') return acc + 100;
-          if (h.rating === 'good') return acc + 75;
-          return acc + 40; // imprecise
-        }, 0);
-        setOverallAccuracy(Math.round(sumScore / ratedHits.length));
-      }
+
+      // Calculate average accuracy score (misses count as 0)
+      const sumScore = updated.reduce((acc, h) => {
+        if (h.rating === 'perfect') return acc + 100;
+        if (h.rating === 'good') return acc + 75;
+        if (h.rating === 'imprecise') return acc + 40;
+        return acc; // miss
+      }, 0);
+      setOverallAccuracy(Math.round(sumScore / updated.length));
       return updated;
     });
   };
@@ -217,6 +401,7 @@ export const RhythmLab: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault(); // Prevent page scrolling
+        if (e.repeat) return; // Ignore OS key-repeat while holding the bar
         if (isGameMode) {
           handleTap();
         } else {
@@ -426,8 +611,8 @@ export const RhythmLab: React.FC = () => {
               </div>
 
               {/* Tap Target Zone */}
-              <div 
-                onClick={handleTap}
+              <div
+                onPointerDown={handleTap}
                 style={{
                   height: '100px',
                   background: 'rgba(255,255,255,0.01)',
@@ -461,6 +646,9 @@ export const RhythmLab: React.FC = () => {
                 )}
               </div>
 
+              {/* Live latency timeline graph */}
+              <TimingGraph beatsRef={timelineBeats} tapsRef={timelineTaps} />
+
               {/* Hit History Scrolling track */}
               <div>
                 <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Timing Log (Recent hits)</h4>
@@ -473,7 +661,8 @@ export const RhythmLab: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '110px', overflowY: 'auto', paddingRight: '0.2rem' }}>
                     {tapHistory.map((hit) => {
                       const color = hit.rating === 'perfect' ? 'var(--success)' :
-                                    hit.rating === 'good' ? 'var(--primary)' : 'var(--warning)';
+                                    hit.rating === 'good' ? 'var(--primary)' :
+                                    hit.rating === 'imprecise' ? 'var(--warning)' : 'var(--danger)';
 
                       return (
                         <div 
