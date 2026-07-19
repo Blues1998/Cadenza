@@ -107,7 +107,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
   return (
     <aside className="glass-panel" style={{ width: collapsed ? '76px' : '260px', padding: collapsed ? '2rem 0.6rem' : '2rem 1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', borderRight: '1px solid var(--panel-border)', borderRadius: '0 16px 16px 0', height: '100vh', position: 'sticky', top: 0, left: 0, transition: 'width 0.2s ease, padding 0.2s ease', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: collapsed ? 0 : '0.75rem', justifyContent: collapsed ? 'center' : 'flex-start' }}>
-        <div title="CADENZA Music Lab" style={{ width: '36px', height: '36px', flexShrink: 0, borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0, 240, 255, 0.3)' }}>
+        <div
+          onClick={toggleCollapsed}
+          role="button"
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          style={{ width: '36px', height: '36px', flexShrink: 0, borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0, 240, 255, 0.3)', cursor: 'pointer' }}
+        >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#030406" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 18V5l12-2v13" />
             <circle cx="6" cy="18" r="3" />
@@ -121,20 +126,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
           </div>
         )}
       </div>
-
-      {/* Collapse / expand toggle */}
-      <button
-        onClick={toggleCollapsed}
-        className="btn"
-        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        style={{ width: '100%', justifyContent: 'center', padding: '0.35rem', color: 'var(--text-secondary)', borderColor: 'rgba(255,255,255,0.06)' }}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}>
-          <polyline points="11 17 6 12 11 7" />
-          <polyline points="18 17 13 12 18 7" />
-        </svg>
-        {!collapsed && <span style={{ fontSize: '0.75rem' }}>Hide panel</span>}
-      </button>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
         {menuItems.map((item) => {
