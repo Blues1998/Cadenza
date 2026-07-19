@@ -1,16 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Keyboard } from '../components/Keyboard';
 import { Fretboard } from '../components/Fretboard';
+import { Term } from '../components/Term';
 import { audio } from '../utils/audio';
-import { 
-  NOTE_NAMES, 
-  CIRCLE_OF_FIFTHS, 
-  CHORD_QUALITIES, 
-  noteNameToMidi 
+import {
+  NOTE_NAMES,
+  CIRCLE_OF_FIFTHS,
+  CHORD_QUALITIES,
+  noteNameToMidi
 } from '../utils/musicTheory';
-import type { 
-  CircleKeyInfo 
+import type {
+  CircleKeyInfo
 } from '../utils/musicTheory';
+import { SCALE_FEELINGS, CHORD_FEELINGS } from '../utils/glossary';
+
+const INTRO_DISMISSED_KEY = 'theory-intro-dismissed';
+
+// Color legend explaining the keyboard/fretboard highlights
+const HighlightLegend: React.FC<{ mode: 'scale' | 'chord' }> = ({ mode }) => {
+  const dot = (color: string): React.CSSProperties => ({
+    display: 'inline-block',
+    width: '10px',
+    height: '10px',
+    borderRadius: '50%',
+    background: color,
+    marginRight: '0.35rem',
+    verticalAlign: 'middle'
+  });
+  return (
+    <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+      <span><span style={dot('var(--warning)')} />Root — the home note</span>
+      <span><span style={dot('var(--success)')} />Notes in this {mode}</span>
+      <span><span style={dot('var(--primary)')} />Playing right now</span>
+    </div>
+  );
+};
 
 interface ScaleFormula {
   name: string;
@@ -34,7 +58,23 @@ export const TheoryLab: React.FC = () => {
 
   const [activeMidis, setActiveMidis] = useState<number[]>([]);
   const [highlightedMidis, setHighlightedMidis] = useState<number[]>([]);
-  
+  const [rootMidis, setRootMidis] = useState<number[]>([]);
+
+  // "Start here" intro card — shown until the user dismisses it once
+  const [showIntro, setShowIntro] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(INTRO_DISMISSED_KEY) !== '1';
+    } catch {
+      return true;
+    }
+  });
+  const dismissIntro = () => {
+    setShowIntro(false);
+    try {
+      localStorage.setItem(INTRO_DISMISSED_KEY, '1');
+    } catch { /* private browsing — just hide for this session */ }
+  };
+
   // Circle of Fifths State
   const [selectedCircleKey, setSelectedCircleKey] = useState<CircleKeyInfo>(CIRCLE_OF_FIFTHS[0]);
 
@@ -64,10 +104,23 @@ export const TheoryLab: React.FC = () => {
         });
       }
       setHighlightedMidis(highlighted.filter(midi => midi >= 40 && midi <= 84));
+
+      // The root itself gets its own color in every visible octave
+      const roots = [rootMidi - 12, rootMidi, rootMidi + 12, rootMidi + 24];
+      setRootMidis(roots.filter(midi => midi >= 40 && midi <= 84));
     } catch (e) {
       console.error(e);
     }
   }, [selectedRoot, selectedOctave, selectedScale, selectedChordQuality]);
+
+  // Note names of the current selection, in playing order (for the caption)
+  const currentNoteNames = (): string[] => {
+    const rootIndex = NOTE_NAMES.indexOf(selectedRoot);
+    const offsets = selectedChordQuality !== -1
+      ? CHORD_QUALITIES[selectedChordQuality].intervals
+      : selectedScale.steps;
+    return offsets.map(off => NOTE_NAMES[(rootIndex + off) % 12]);
+  };
 
   const handlePlayNote = (midi: number) => {
     audio.playMidi(midi, 1.5);
@@ -247,8 +300,35 @@ export const TheoryLab: React.FC = () => {
       {/* Header */}
       <div className="lab-header">
         <h2 className="lab-title">Visual Theory & Scale Explorer</h2>
-        <p className="lab-description">Explore scale patterns, chords, and the Circle of Fifths. Visualize notes on the piano keyboard and guitar fretboard simultaneously.</p>
+        <p className="lab-description">
+          See and hear how music works — no theory knowledge needed.
+          Pick a <Term k="scale">scale</Term> or <Term k="chordQuality">chord</Term> below
+          and the same notes light up on the piano and guitar at once.
+          Anything with a dotted underline can be hovered or tapped for a plain-English explanation.
+        </p>
       </div>
+
+      {/* Dismissible "Start here" guide for first-time visitors */}
+      {showIntro && (
+        <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', borderColor: 'rgba(0, 240, 255, 0.25)' }}>
+          <div style={{ flex: '1 1 380px', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            <h3 style={{ fontSize: '1rem', color: 'var(--primary)' }}>New here? Try this first</h3>
+            {[
+              ['1', 'Pick a feeling below — start with "Happy & Bright" (that’s the Major scale).'],
+              ['2', 'Press Play and just listen. Does it match the feeling on the label?'],
+              ['3', 'Watch the same notes light up on the piano and guitar — the amber note is "home".']
+            ].map(([num, text]) => (
+              <div key={num} style={{ display: 'flex', gap: '0.6rem', alignItems: 'baseline', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                <span style={{ flexShrink: 0, width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(0,240,255,0.15)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, alignSelf: 'center' }}>{num}</span>
+                <span>{text}</span>
+              </div>
+            ))}
+          </div>
+          <button onClick={dismissIntro} className="btn" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+            Got it — hide this
+          </button>
+        </section>
+      )}
 
       <div className="grid-2">
         
@@ -263,7 +343,9 @@ export const TheoryLab: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>Root Note</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                <Term k="rootNote">Root Note</Term> <span style={{ color: 'var(--text-muted)' }}>— the home note</span>
+              </label>
               <select 
                 value={selectedRoot} 
                 onChange={(e) => setSelectedRoot(e.target.value)}
@@ -274,7 +356,9 @@ export const TheoryLab: React.FC = () => {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>Octave</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                <Term k="octave">Octave</Term> <span style={{ color: 'var(--text-muted)' }}>— how high or low</span>
+              </label>
               <select 
                 value={selectedOctave} 
                 onChange={(e) => setSelectedOctave(Number(e.target.value))}
@@ -288,7 +372,9 @@ export const TheoryLab: React.FC = () => {
           </div>
 
           <div>
-            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Select Scale Formula</span>
+            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+              Pick a <Term k="scale">scale</Term> by its feeling
+            </span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
               {SCALE_FORMULAS.map((scale) => (
                 <button
@@ -298,28 +384,54 @@ export const TheoryLab: React.FC = () => {
                     setSelectedChordQuality(-1);
                   }}
                   className={`btn ${selectedScale.name === scale.name && selectedChordQuality === -1 ? 'btn-primary' : ''}`}
-                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                  style={{ padding: '0.45rem 0.8rem', fontSize: '0.8rem', flexDirection: 'column', gap: '1px', alignItems: 'flex-start' }}
                 >
-                  {scale.name}
+                  <span style={{ fontWeight: 600 }}>{SCALE_FEELINGS[scale.name]?.feeling ?? scale.name}</span>
+                  <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{scale.name}</span>
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Or Select Chord Quality</span>
+            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+              …or pick a <Term k="chordQuality">chord</Term> by its feeling
+            </span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
               {CHORD_QUALITIES.map((chord, idx) => (
                 <button
                   key={chord.name}
                   onClick={() => setSelectedChordQuality(idx)}
                   className={`btn ${selectedChordQuality === idx ? 'btn-secondary' : ''}`}
-                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                  style={{ padding: '0.45rem 0.8rem', fontSize: '0.8rem', flexDirection: 'column', gap: '1px', alignItems: 'flex-start' }}
                 >
-                  {chord.name} ({chord.symbols[0]})
+                  <span style={{ fontWeight: 600 }}>{CHORD_FEELINGS[chord.name] ?? chord.name}</span>
+                  <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{chord.name} ({chord.symbols[0]})</span>
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Dynamic plain-English caption for the current selection */}
+          <div style={{ background: 'rgba(0, 240, 255, 0.04)', border: '1px solid rgba(0, 240, 255, 0.15)', borderRadius: '10px', padding: '0.85rem 1rem', fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
+            <span style={{ display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--primary)', marginBottom: '0.3rem' }}>
+              What you're seeing & hearing
+            </span>
+            {selectedChordQuality !== -1 ? (
+              <>
+                <strong style={{ color: '#fff' }}>{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</strong>
+                {' '}sounds <strong style={{ color: 'var(--secondary)' }}>{(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}</strong>.
+                {' '}It's the notes <strong style={{ color: '#fff' }}>{currentNoteNames().join(' · ')}</strong> played
+                at the same time, built up from the home note {selectedRoot}. Press play and listen for that feeling.
+              </>
+            ) : (
+              <>
+                <strong style={{ color: '#fff' }}>{selectedRoot} {selectedScale.name}</strong> — start
+                at the home note <strong style={{ color: 'var(--warning)' }}>{selectedRoot}</strong> and
+                climb: <strong style={{ color: '#fff' }}>{currentNoteNames().join(' · ')}</strong>.
+                {' '}Listen for {SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}
+              </>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: 'auto', paddingTop: '1rem' }}>
@@ -339,9 +451,15 @@ export const TheoryLab: React.FC = () => {
 
         {/* Interactive Circle of Fifths */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', width: '100%' }}>
-            Circle of Fifths
-          </h3>
+          <div style={{ width: '100%', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.15rem' }}>
+              <Term k="circleOfFifths">Circle of Fifths</Term>
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
+              A map of all 12 musical <Term k="musicalKey">keys</Term>. Neighboring slices share almost
+              all their notes, so they blend well together — click any slice to hear its home chord.
+            </p>
+          </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
             {/* SVG Circle */}
@@ -357,19 +475,21 @@ export const TheoryLab: React.FC = () => {
             {/* Key signature info */}
             <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <h4 style={{ color: 'var(--primary)', marginBottom: '0.4rem' }}>Key Signatures</h4>
+                <h4 style={{ color: 'var(--primary)', marginBottom: '0.4rem' }}>About this Key</h4>
                 <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <div>Relative Minor: <span style={{ color: 'var(--secondary)' }}>{selectedCircleKey.relativeMinor}</span></div>
-                  <div>Accidentals: <span>
-                    {selectedCircleKey.sharps > 0 ? `${selectedCircleKey.sharps} ♯ (Sharps)` : 
-                     selectedCircleKey.sharps < 0 ? `${Math.abs(selectedCircleKey.sharps)} ♭ (Flats)` : 
+                  <div><Term k="relativeMinor">Relative Minor</Term>: <span style={{ color: 'var(--secondary)' }}>{selectedCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
+                  <div><Term k="accidentals">Accidentals</Term>: <span>
+                    {selectedCircleKey.sharps > 0 ? `${selectedCircleKey.sharps} ♯ (Sharps)` :
+                     selectedCircleKey.sharps < 0 ? `${Math.abs(selectedCircleKey.sharps)} ♭ (Flats)` :
                      'None (Natural Key)'}
                   </span></div>
                 </div>
               </div>
 
               <div>
-                <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Diatonic Chords in Key of {selectedCircleKey.name}</h4>
+                <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                  <Term k="diatonicChords">Chords that belong</Term> in the Key of {selectedCircleKey.name}
+                </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
                   {selectedCircleKey.chords.map((chordName, i) => {
                     const degrees = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
@@ -386,6 +506,11 @@ export const TheoryLab: React.FC = () => {
                     );
                   })}
                 </div>
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem', lineHeight: 1.5 }}>
+                  The <Term k="romanNumerals">Roman numerals</Term> tell you each chord's role:
+                  UPPERCASE = happy major, lowercase = sad minor, ° = tense. Click a few in a
+                  row — congratulations, you're writing a chord progression.
+                </p>
               </div>
             </div>
           </div>
@@ -397,11 +522,16 @@ export const TheoryLab: React.FC = () => {
       <section className="glass-panel" style={{ padding: '1.5rem' }}>
         <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
           3-Octave Piano Keyboard
+          <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            Click any key to hear it — colored keys belong to your selection above.
+          </span>
         </h3>
-        <Keyboard 
-          activeMidis={activeMidis} 
+        <HighlightLegend mode={selectedChordQuality !== -1 ? 'chord' : 'scale'} />
+        <Keyboard
+          activeMidis={activeMidis}
           highlightCorrectMidis={highlightedMidis}
-          onPlayNote={handlePlayNote} 
+          rootMidis={rootMidis}
+          onPlayNote={handlePlayNote}
         />
       </section>
 
@@ -417,9 +547,14 @@ export const TheoryLab: React.FC = () => {
             Strum Guitar
           </button>
         </h3>
-        <Fretboard 
-          activeMidis={activeMidis} 
-          highlightCorrectMidis={highlightedMidis} 
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '-0.75rem', marginBottom: '0.75rem' }}>
+          The exact same notes as the piano above, mapped onto the guitar neck — one note can live in several places on a guitar.
+        </p>
+        <HighlightLegend mode={selectedChordQuality !== -1 ? 'chord' : 'scale'} />
+        <Fretboard
+          activeMidis={activeMidis}
+          highlightCorrectMidis={highlightedMidis}
+          rootMidis={rootMidis}
           onPlayNote={handlePlayNote}
           showAllNoteNames={true}
         />
