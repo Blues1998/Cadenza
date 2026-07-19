@@ -45,6 +45,21 @@ export const INTERVALS: IntervalInfo[] = [
   { name: 'Octave', semitones: 12, shortName: 'P8', songClue: 'Somewhere Over the Rainbow' }
 ];
 
+// Scale formulas as semitone offsets from the root
+export interface ScaleFormula {
+  name: string;
+  steps: number[];
+}
+
+export const SCALE_FORMULAS: ScaleFormula[] = [
+  { name: 'Major (Ionian)', steps: [0, 2, 4, 5, 7, 9, 11, 12] },
+  { name: 'Natural Minor (Aeolian)', steps: [0, 2, 3, 5, 7, 8, 10, 12] },
+  { name: 'Harmonic Minor', steps: [0, 2, 3, 5, 7, 8, 11, 12] },
+  { name: 'Pentatonic Major', steps: [0, 2, 4, 7, 9, 12] },
+  { name: 'Pentatonic Minor', steps: [0, 3, 5, 7, 10, 12] },
+  { name: 'Blues Scale', steps: [0, 3, 5, 6, 7, 10, 12] }
+];
+
 // Interface for chord qualities
 export interface ChordQualityInfo {
   name: string;
