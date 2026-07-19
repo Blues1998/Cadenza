@@ -42,6 +42,14 @@ class AudioEngine {
     return base + output;
   }
 
+  // Expose the context + master input so labs can run custom nodes
+  // (e.g. sustained oscillators) while still respecting the master volume
+  public getMasterBus(): { ctx: AudioContext; input: AudioNode } | null {
+    this.init();
+    if (!this.ctx || !this.masterGain) return null;
+    return { ctx: this.ctx, input: this.masterGain };
+  }
+
   // Play a single note using standard MIDI index number
   public playMidi(midi: number, duration: number = 2.0, time?: number) {
     const freq = midiToFreq(midi);

@@ -5,6 +5,7 @@ import { DashboardLanding } from './labs/DashboardLanding';
 import { EarTrainingLab } from './labs/EarTrainingLab';
 import { TheoryLab } from './labs/TheoryLab';
 import { PlayLab } from './labs/PlayLab';
+import { PhysicsLab } from './labs/PhysicsLab';
 import { RhythmLab } from './labs/RhythmLab';
 import { TunerLab } from './labs/TunerLab';
 
@@ -21,6 +22,8 @@ function App() {
         return <TheoryLab />;
       case 'play':
         return <PlayLab />;
+      case 'physics':
+        return <PhysicsLab />;
       case 'rhythm':
         return <RhythmLab />;
       case 'tuner':

@@ -125,6 +125,18 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       )
     },
     {
+      id: 'physics' as ActiveTab,
+      title: 'Sound Physics',
+      description: 'Why chords work, why 12 notes, why the circle of fifths exists — interactive waveforms, beating tones, and modular arithmetic instead of memorization.',
+      buttonText: 'See the Physics',
+      color: '#38bdf8',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="2 12 5 12 8 4 12 20 15 9 17 12 22 12" />
+        </svg>
+      )
+    },
+    {
       id: 'rhythm' as ActiveTab,
       title: 'Rhythm Metronome & Game',
       description: 'Test your timing precision against a rock-solid, low-latency audio metronome. Get millisecond-accuracy feedback.',

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ActiveTab = 'dashboard' | 'ear-training' | 'theory' | 'play' | 'rhythm' | 'tuner';
+export type ActiveTab = 'dashboard' | 'ear-training' | 'theory' | 'play' | 'physics' | 'rhythm' | 'tuner';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -49,6 +49,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
           <circle cx="12" cy="12" r="10" />
           <circle cx="12" cy="12" r="6" />
           <circle cx="12" cy="12" r="2" />
+        </svg>
+      )
+    },
+    {
+      id: 'physics' as ActiveTab,
+      label: 'Sound Physics',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="2 12 5 12 8 4 12 20 15 9 17 12 22 12" />
         </svg>
       )
     },
