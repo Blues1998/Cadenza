@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { detectPitch, PitchStabilizer } from '../utils/pitch';
-import type { PitchResult } from '../utils/pitch';
+import { useMicPitch } from '../hooks/useMicPitch';
 import { audio } from '../utils/audio';
 import { noteNameToMidi } from '../utils/musicTheory';
 
 export const TunerLab: React.FC = () => {
-  const [isMicrophoneActive, setIsMicrophoneActive] = useState<boolean>(false);
-  const [pitchData, setPitchData] = useState<PitchResult | null>(null);
+  // Shared microphone + YIN pitch detection pipeline
+  const {
+    pitch: pitchData,
+    isActive: isMicrophoneActive,
+    error: micError,
+    start: initMicrophone,
+    stop: stopMicrophone
+  } = useMicPitch();
 
   // Pitch matching game states
   const [gameMode, setGameMode] = useState<boolean>(false);
@@ -15,106 +20,11 @@ export const TunerLab: React.FC = () => {
   const [matchStreak, setMatchStreak] = useState<number>(0);
   const [holdProgress, setHoldProgress] = useState<number>(0); // 0 to 100%
 
-  // Web Audio microphone stream refs
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const animationFrameId = useRef<number | null>(null);
-
-  const bufferRef = useRef<Float32Array | null>(null);
-  const stabilizerRef = useRef<PitchStabilizer>(new PitchStabilizer());
   const holdMsRef = useRef<number>(0); // milliseconds the target note has been held
   const lastTickRef = useRef<number>(0); // timestamp of the previous game tick
 
   // Possible target notes for the matching game (Standard range)
   const targetNotesList = ['E2', 'G2', 'A2', 'C3', 'E3', 'G3', 'A3', 'C4', 'E4', 'G4', 'A4'];
-
-  const initMicrophone = async () => {
-    try {
-      // 1. Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false
-        } 
-      });
-      streamRef.current = stream;
-
-      // 2. Initialize Web Audio Context
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioContextClass();
-      audioContextRef.current = ctx;
-
-      // 3. Connect nodes
-      const source = ctx.createMediaStreamSource(stream);
-      sourceRef.current = source;
-
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 2048; // High FFT size for low frequency resolution
-      analyserRef.current = analyser;
-      source.connect(analyser);
-
-      const bufferLength = analyser.fftSize;
-      bufferRef.current = new Float32Array(bufferLength);
-
-      stabilizerRef.current.reset();
-      setIsMicrophoneActive(true);
-      startPitchDetectionLoop();
-    } catch (err) {
-      console.error('Microphone initialization failed:', err);
-      alert('Could not access microphone. Please check system permissions.');
-    }
-  };
-
-  const stopMicrophone = () => {
-    setIsMicrophoneActive(false);
-    
-    // Stop mic capture loop
-    if (animationFrameId.current !== null) {
-      cancelAnimationFrame(animationFrameId.current);
-      animationFrameId.current = null;
-    }
-
-    // Release microphone tracks
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-
-    // Close AudioContext
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-
-    stabilizerRef.current.reset();
-    setPitchData(null);
-    setHoldProgress(0);
-    holdMsRef.current = 0;
-  };
-
-  const startPitchDetectionLoop = () => {
-    if (!analyserRef.current || !bufferRef.current || !audioContextRef.current) return;
-
-    const analyser = analyserRef.current;
-    const buffer = bufferRef.current;
-    const sampleRate = audioContextRef.current.sampleRate;
-
-    const updatePitch = () => {
-      analyser.getFloatTimeDomainData(buffer as any);
-      const raw = detectPitch(buffer, sampleRate);
-      // Stabilize: hysteresis on note changes + smoothing, so the reading
-      // doesn't flicker on every animation frame
-      const stable = stabilizerRef.current.update(raw);
-
-      setPitchData(stable);
-      animationFrameId.current = requestAnimationFrame(updatePitch);
-    };
-
-    animationFrameId.current = requestAnimationFrame(updatePitch);
-  };
 
   const selectRandomTargetNote = () => {
     const remaining = targetNotesList.filter(n => n !== targetNote);
@@ -200,17 +110,7 @@ export const TunerLab: React.FC = () => {
     }
   }, [gameMode]);
 
-  // Clean up animation frames and audio contexts on unmount
-  useEffect(() => {
-    return () => {
-      if (animationFrameId.current !== null) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
+  // (Mic teardown on unmount is handled inside useMicPitch)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -236,6 +136,9 @@ export const TunerLab: React.FC = () => {
               <button onClick={initMicrophone} className="btn btn-secondary" style={{ marginTop: '0.5rem' }}>
                 Allow Microphone Access
               </button>
+              {micError && (
+                <p style={{ color: 'var(--danger)', fontSize: '0.8rem', maxWidth: '300px' }}>{micError}</p>
+              )}
             </div>
           ) : (
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
