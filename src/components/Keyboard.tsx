@@ -4,6 +4,7 @@ import { NOTE_NAMES, PIANO_START_MIDI, PIANO_END_MIDI } from '../utils/musicTheo
 interface KeyboardProps {
   activeMidis?: number[];
   highlightCorrectMidis?: number[];
+  rootMidis?: number[]; // the scale/chord root — drawn in its own color
   interactive?: boolean;
   onPlayNote?: (midi: number) => void;
 }
@@ -11,6 +12,7 @@ interface KeyboardProps {
 export const Keyboard: React.FC<KeyboardProps> = ({
   activeMidis = [],
   highlightCorrectMidis = [],
+  rootMidis = [],
   interactive = true,
   onPlayNote
 }) => {
@@ -40,12 +42,16 @@ export const Keyboard: React.FC<KeyboardProps> = ({
         {keys.map(({ midi, isBlack, name }) => {
           const isActive = activeMidis.includes(midi);
           const isCorrect = highlightCorrectMidis.includes(midi);
-          
+          const isRoot = rootMidis.includes(midi);
+
+          // "Playing" flash wins so scale sweeps stay visible over static highlights
           let className = `piano-key ${isBlack ? 'black' : 'white'}`;
-          if (isCorrect) {
-            className += ' highlight-correct';
-          } else if (isActive) {
+          if (isActive) {
             className += ' active';
+          } else if (isRoot) {
+            className += ' highlight-root';
+          } else if (isCorrect) {
+            className += ' highlight-correct';
           }
 
           return (

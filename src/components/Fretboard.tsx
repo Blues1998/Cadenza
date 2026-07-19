@@ -4,6 +4,7 @@ import { GUITAR_STRINGS, midiToNoteName } from '../utils/musicTheory';
 interface FretboardProps {
   activeMidis?: number[];
   highlightCorrectMidis?: number[];
+  rootMidis?: number[]; // the scale/chord root — drawn in its own color
   interactive?: boolean;
   onPlayNote?: (midi: number) => void;
   showAllNoteNames?: boolean; // Highlight all notes on the neck
@@ -12,6 +13,7 @@ interface FretboardProps {
 export const Fretboard: React.FC<FretboardProps> = ({
   activeMidis = [],
   highlightCorrectMidis = [],
+  rootMidis = [],
   interactive = true,
   onPlayNote,
   showAllNoteNames = false
@@ -86,18 +88,13 @@ export const Fretboard: React.FC<FretboardProps> = ({
                     <span style={{ fontSize: '0.65rem', verticalAlign: 'sub' }}>{str.octave}</span>
                   </span>
                   
-                  {/* Highlight indicator if open string is playing */}
-                  {activeMidis.includes(str.midi) && (
-                    <div 
-                      className={`guitar-note-marker active`}
-                      style={{ position: 'absolute', right: '-12px', top: '8px' }}
-                    >
-                      {str.note}
-                    </div>
-                  )}
-                  {highlightCorrectMidis.includes(str.midi) && (
-                    <div 
-                      className={`guitar-note-marker highlight-correct`}
+                  {/* Highlight indicator if open string is playing / in scale */}
+                  {(activeMidis.includes(str.midi) || rootMidis.includes(str.midi) || highlightCorrectMidis.includes(str.midi)) && (
+                    <div
+                      className={`guitar-note-marker ${
+                        activeMidis.includes(str.midi) ? 'active' :
+                        rootMidis.includes(str.midi) ? 'highlight-root' : 'highlight-correct'
+                      }`}
                       style={{ position: 'absolute', right: '-12px', top: '8px' }}
                     >
                       {str.note}
@@ -113,8 +110,9 @@ export const Fretboard: React.FC<FretboardProps> = ({
                   
                   const isActive = activeMidis.includes(midiNote);
                   const isCorrect = highlightCorrectMidis.includes(midiNote);
-                  
-                  const showNote = showAllNoteNames || isActive || isCorrect;
+                  const isRoot = rootMidis.includes(midiNote);
+
+                  const showNote = showAllNoteNames || isActive || isCorrect || isRoot;
 
                   return (
                     <div
@@ -123,7 +121,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
                       onClick={() => handleCellClick(str.midi, fret)}
                     >
                       {showNote && (
-                        <div className={`guitar-note-marker ${isCorrect ? 'highlight-correct' : isActive ? 'active' : ''}`}>
+                        <div className={`guitar-note-marker ${isActive ? 'active' : isRoot ? 'highlight-root' : isCorrect ? 'highlight-correct' : ''}`}>
                           {noteInfo.name}
                         </div>
                       )}

@@ -242,6 +242,17 @@ body {
   box-shadow: 0 3px 10px var(--success-glow);
 }
 
+.piano-key.white.highlight-root {
+  background: linear-gradient(to bottom, #fde68a 0%, var(--warning) 100%);
+  box-shadow: 0 5px 15px rgba(245, 158, 11, 0.35);
+  z-index: 2;
+}
+
+.piano-key.black.highlight-root {
+  background: linear-gradient(to bottom, #f59e0b 0%, #b45309 100%);
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.35);
+}
+
 /* Guitar Fretboard Styles */
 .fretboard-container {
   background: #181412;
@@ -368,6 +379,14 @@ body {
   color: #030406;
   box-shadow: 0 0 10px var(--success-glow);
   transform: scale(1.1);
+}
+
+.guitar-note-marker.highlight-root {
+  background: var(--warning);
+  border-color: var(--text-primary);
+  color: #030406;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+  transform: scale(1.15);
 }
 
 /* Dashboard Header & Cards */
