@@ -111,6 +111,20 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       )
     },
     {
+      id: 'play' as ActiveTab,
+      title: 'Play Challenges (Mic-Verified)',
+      description: 'Play scales, intervals, and chords on your real instrument — the app hears every note and confirms it live. Theory you play, not memorize.',
+      buttonText: 'Start Playing',
+      color: '#f472b6',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f472b6" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="6" />
+          <circle cx="12" cy="12" r="2" />
+        </svg>
+      )
+    },
+    {
       id: 'rhythm' as ActiveTab,
       title: 'Rhythm Metronome & Game',
       description: 'Test your timing precision against a rock-solid, low-latency audio metronome. Get millisecond-accuracy feedback.',

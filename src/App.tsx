@@ -4,6 +4,7 @@ import type { ActiveTab } from './components/Sidebar';
 import { DashboardLanding } from './labs/DashboardLanding';
 import { EarTrainingLab } from './labs/EarTrainingLab';
 import { TheoryLab } from './labs/TheoryLab';
+import { PlayLab } from './labs/PlayLab';
 import { RhythmLab } from './labs/RhythmLab';
 import { TunerLab } from './labs/TunerLab';
 
@@ -18,6 +19,8 @@ function App() {
         return <EarTrainingLab />;
       case 'theory':
         return <TheoryLab />;
+      case 'play':
+        return <PlayLab />;
       case 'rhythm':
         return <RhythmLab />;
       case 'tuner':
