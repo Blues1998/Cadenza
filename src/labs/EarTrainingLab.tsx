@@ -158,9 +158,29 @@ export const EarTrainingLab: React.FC = () => {
 
   // Translates complex terms to beginner-friendly labels
   const getDisplayOptionName = (opt: string) => {
-    if (difficulty === 'super-beginner' && quizMode === 'chords') {
-      if (opt === 'Major Triad') return 'Happy (Major)';
-      if (opt === 'Minor Triad') return 'Sad (Minor)';
+    if (quizMode === 'chords') {
+      switch (opt) {
+        case 'Major Triad':
+          return 'Happy (Major)';
+        case 'Minor Triad':
+          return 'Sad (Minor)';
+        case 'Diminished Triad':
+          return 'Mysterious (Diminished)';
+        case 'Augmented Triad':
+          return 'Tense (Augmented)';
+        case 'Major 7th':
+          return 'Dreamy (Major 7th)';
+        case 'Minor 7th':
+          return 'Mellow (Minor 7th)';
+        case 'Dominant 7th':
+          return 'Bluesy (Dominant 7th)';
+        case 'Half-Diminished 7th':
+          return 'Complex (Half-Dim)';
+        case 'Diminished 7th':
+          return 'Suspenseful (Dim 7th)';
+        default:
+          return opt;
+      }
     }
     return opt;
   };
