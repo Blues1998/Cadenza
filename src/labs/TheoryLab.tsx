@@ -8,7 +8,8 @@ import {
   CIRCLE_OF_FIFTHS,
   CHORD_QUALITIES,
   SCALE_FORMULAS,
-  noteNameToMidi
+  noteNameToMidi,
+  normalizeNoteName
 } from '../utils/musicTheory';
 import type {
   CircleKeyInfo,
@@ -168,7 +169,7 @@ export const TheoryLab: React.FC = () => {
   const handleCircleKeyClick = (keyInfo: CircleKeyInfo) => {
     reportProgress('theory-circle-key-clicked');
     setSelectedCircleKey(keyInfo);
-    setSelectedRoot(keyInfo.name.replace('m', ''));
+    setSelectedRoot(normalizeNoteName(keyInfo.name.replace('m', '')));
     setSelectedOctave(3);
     setSelectedChordQuality(-1); // Switch to scale mode for key
     

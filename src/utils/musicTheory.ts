@@ -2,6 +2,23 @@
 
 export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
+// Maps every enharmonic spelling (sharp and flat) to its pitch-class index,
+// so flat-spelled keys like Db/Ab/Eb/Bb resolve just like their sharp twins.
+const NOTE_NAME_TO_INDEX: Record<string, number> = {
+  'C': 0, 'B#': 0,
+  'C#': 1, 'Db': 1,
+  'D': 2,
+  'D#': 3, 'Eb': 3,
+  'E': 4, 'Fb': 4,
+  'E#': 5, 'F': 5,
+  'F#': 6, 'Gb': 6,
+  'G': 7,
+  'G#': 8, 'Ab': 8,
+  'A': 9,
+  'A#': 10, 'Bb': 10,
+  'B': 11, 'Cb': 11
+};
+
 // Convert MIDI note number to frequency
 export function midiToFreq(midi: number): number {
   return 440 * Math.pow(2, (midi - 69) / 12);
@@ -16,9 +33,18 @@ export function midiToNoteName(midi: number): { name: string; octave: number } {
 
 // Convert note name and octave to MIDI number
 export function noteNameToMidi(name: string, octave: number): number {
-  const noteIndex = NOTE_NAMES.indexOf(name);
-  if (noteIndex === -1) throw new Error(`Invalid note name: ${name}`);
+  const noteIndex = NOTE_NAME_TO_INDEX[name];
+  if (noteIndex === undefined) throw new Error(`Invalid note name: ${name}`);
   return (octave + 1) * 12 + noteIndex;
+}
+
+// Canonicalize any enharmonic spelling (flat or sharp) to the sharp/natural
+// spelling used by NOTE_NAMES, so flat-spelled keys (Db, Ab, Eb, Bb, Gb...)
+// still match dropdowns and lookups built off NOTE_NAMES.
+export function normalizeNoteName(name: string): string {
+  const noteIndex = NOTE_NAME_TO_INDEX[name];
+  if (noteIndex === undefined) throw new Error(`Invalid note name: ${name}`);
+  return NOTE_NAMES[noteIndex];
 }
 
 // Interface for intervals
