@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { audio } from '../utils/audio';
+import { reportProgress } from '../utils/progress';
 
 interface TapHit {
   id: number;
@@ -348,6 +349,7 @@ export const RhythmLab: React.FC = () => {
       rating = 'perfect';
       text = 'PERFECT!';
       color = 'var(--success)';
+      reportProgress('rhythm-perfect-tap');
     } else if (absDiff <= 90) {
       rating = 'good';
       text = 'GOOD';

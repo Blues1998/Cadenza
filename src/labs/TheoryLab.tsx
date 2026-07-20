@@ -15,6 +15,7 @@ import type {
   ScaleFormula
 } from '../utils/musicTheory';
 import { SCALE_FEELINGS, CHORD_FEELINGS } from '../utils/glossary';
+import { reportProgress } from '../utils/progress';
 
 const INTRO_DISMISSED_KEY = 'theory-intro-dismissed';
 
@@ -121,6 +122,9 @@ export const TheoryLab: React.FC = () => {
   // Play the entire scale in an ascending sweep sequence
   const playScaleSweep = () => {
     audio.init();
+    reportProgress('theory-scale-played');
+    if (selectedScale.name === 'Major (Ionian)') reportProgress('theory-scale-played:major');
+    if (selectedScale.name === 'Natural Minor (Aeolian)') reportProgress('theory-scale-played:minor');
     const rootMidi = noteNameToMidi(selectedRoot, selectedOctave);
     const steps = selectedScale.steps;
     const now = audio.getCurrentTime();
@@ -162,6 +166,7 @@ export const TheoryLab: React.FC = () => {
 
   // Click on a key segment in the Circle of Fifths
   const handleCircleKeyClick = (keyInfo: CircleKeyInfo) => {
+    reportProgress('theory-circle-key-clicked');
     setSelectedCircleKey(keyInfo);
     setSelectedRoot(keyInfo.name.replace('m', ''));
     setSelectedOctave(3);
@@ -181,6 +186,7 @@ export const TheoryLab: React.FC = () => {
   // Play a diatonic chord from the selected Circle of Fifths key
   const playDiatonicChord = (chordName: string, _degreeIdx: number) => {
     audio.init();
+    reportProgress('theory-diatonic-played');
     
     // Parse chord name, e.g. "Dm", "F#dim", "C"
     let cleanRoot = chordName;

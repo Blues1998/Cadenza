@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMicPitch } from '../hooks/useMicPitch';
 import { audio } from '../utils/audio';
 import { noteNameToMidi } from '../utils/musicTheory';
+import { reportProgress } from '../utils/progress';
 
 export const TunerLab: React.FC = () => {
   // Shared microphone + YIN pitch detection pipeline
@@ -22,6 +23,15 @@ export const TunerLab: React.FC = () => {
 
   const holdMsRef = useRef<number>(0); // milliseconds the target note has been held
   const lastTickRef = useRef<number>(0); // timestamp of the previous game tick
+  const reportedPitchRef = useRef<boolean>(false); // journey event fired this session
+
+  // Journey: the first time the tuner successfully hears a pitch
+  useEffect(() => {
+    if (pitchData && !reportedPitchRef.current) {
+      reportedPitchRef.current = true;
+      reportProgress('tuner-pitch-detected');
+    }
+  }, [pitchData]);
 
   // Possible target notes for the matching game (Standard range)
   const targetNotesList = ['E2', 'G2', 'A2', 'C3', 'E3', 'G3', 'A3', 'C4', 'E4', 'G4', 'A4'];
@@ -83,6 +93,7 @@ export const TunerLab: React.FC = () => {
         // Match Successful!
         setMatchScore(prev => prev + 1);
         setMatchStreak(prev => prev + 1);
+        reportProgress('tuner-note-matched');
 
         // Play success tone
         audio.init();

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { audio } from '../utils/audio';
 import { NOTE_NAMES } from '../utils/musicTheory';
+import { reportProgress } from '../utils/progress';
 
 // ---- Shared drawing helpers ----
 const COLORS = {
@@ -133,6 +134,7 @@ const HarmonicExplorer: React.FC = () => {
     gain.connect(input);
     osc.start(now);
     osc.stop(now + 1.9);
+    reportProgress('physics-harmonic-played');
   };
 
   return (
@@ -314,6 +316,11 @@ const RatioExplorer: React.FC = () => {
   // Kill oscillators when leaving the lab
   useEffect(() => stopDuo, [stopDuo]);
 
+  // Journey: locking onto a simple ratio while the tones are sounding
+  useEffect(() => {
+    if (locked && sounding) reportProgress('physics-ratio-locked');
+  }, [locked, sounding]);
+
   return (
     <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
@@ -475,6 +482,13 @@ const ModularCircle: React.FC = () => {
 
   // Reset the walk when the step size changes
   useEffect(() => { reset(); }, [stepSize, reset]);
+
+  // Journey: completing the full circle-of-fifths walk
+  useEffect(() => {
+    if (complete && stepSize === 7 && new Set(visited).size === 12) {
+      reportProgress('physics-circle-completed');
+    }
+  }, [complete, stepSize, visited]);
 
   const cx = 150, cy = 150, r = 115;
   const pos = (pc: number) => {

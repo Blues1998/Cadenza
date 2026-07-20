@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Keyboard } from '../components/Keyboard';
 import { Fretboard } from '../components/Fretboard';
 import { audio } from '../utils/audio';
+import { reportProgress } from '../utils/progress';
 import { 
   INTERVALS, 
   CHORD_QUALITIES, 
@@ -200,6 +201,7 @@ export const EarTrainingLab: React.FC = () => {
     if (isCorrect) {
       setScore(prev => prev + 1);
       setStreak(prev => prev + 1);
+      reportProgress(quizMode === 'intervals' ? 'ear-interval-correct' : 'ear-chord-correct');
     } else {
       setStreak(0);
     }

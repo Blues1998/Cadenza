@@ -9,6 +9,7 @@ import {
   SCALE_FORMULAS
 } from '../utils/musicTheory';
 import { SCALE_FEELINGS, CHORD_FEELINGS } from '../utils/glossary';
+import { reportProgress } from '../utils/progress';
 
 // ---- Challenge tuning constants ----
 const CONFIRM_MS = 350;  // how long the correct note must be held to count
@@ -217,6 +218,10 @@ export const PlayLab: React.FC = () => {
     setScore(s => s + ROUND_BONUS);
     setStreak(s => s + 1);
     setPhase('complete');
+    reportProgress(`play-${mode}-completed`);
+    if (mode === 'scale' && SCALE_FORMULAS[scaleIdx].name.includes('Pentatonic')) {
+      reportProgress('play-scale-completed:pentatonic');
+    }
     setFeedback({ type: 'ok', text: 'Nailed it! Here is how it sounds together…' });
 
     // Reward: hear what you just built
