@@ -7,12 +7,16 @@ interface JourneyProps {
   setActiveTab: (tab: ActiveTab) => void;
 }
 
-// The Guided Journey panel: a linear curriculum whose levels complete
-// automatically when the labs report the required progress events.
+// The Guided Journey panel: a curriculum whose levels complete automatically
+// when the labs report the required progress events. The order is a
+// suggestion, not a gate — every level is open and redoable at any time.
 export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
   // Re-render whenever any lab reports progress (covers other tabs too)
   const [, setTick] = useState(0);
   useEffect(() => subscribeProgress(() => setTick(t => t + 1)), []);
+
+  // Which level card is expanded; null = default to the suggested next level
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const completedCount = ALL_LEVELS.filter(isLevelComplete).length;
   const currentIdx = getCurrentLevelIndex();
@@ -35,7 +39,9 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
             </span>
           </h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-            One idea at a time, learned by doing. Levels complete <em>automatically</em> when you do the task in the lab — no checkboxes.
+            One idea at a time, learned by doing. Levels complete <em>automatically</em> when you do
+            the task in the lab — no checkboxes. The order is just a suggestion: click any level to
+            jump in, or redo one you've finished.
           </p>
         </div>
         <div style={{ width: '200px', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -73,51 +79,70 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
               {chapter.levels.map(level => {
                 flatIdx++;
                 const done = isLevelComplete(level);
-                const isCurrent = flatIdx === currentIdx;
-                const locked = flatIdx > currentIdx;
+                const isSuggested = flatIdx === currentIdx;
                 const [met, needed] = levelProgress(level);
+                // The suggested next level is expanded by default; clicking
+                // any header opens that level instead (clicking again closes)
+                const isExpanded = expandedId === null ? isSuggested : expandedId === level.id;
 
-                if (!isCurrent) {
-                  // Compact row for done / locked levels
-                  return (
-                    <div key={level.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.4rem 0.75rem', borderRadius: '8px', background: done ? 'rgba(16,185,129,0.04)' : 'rgba(255,255,255,0.01)', border: '1px solid ' + (done ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)'), opacity: locked ? 0.55 : 1 }}>
-                      <span style={{ width: '20px', textAlign: 'center', flexShrink: 0 }}>
-                        {done ? '✅' : '🔒'}
-                      </span>
-                      <span style={{ fontSize: '0.85rem', color: done ? 'var(--text-secondary)' : 'var(--text-muted)', textDecoration: done ? 'line-through' : 'none' }}>
-                        {level.title}
-                      </span>
-                    </div>
-                  );
-                }
-
-                // Expanded card for the current level
                 return (
-                  <div key={level.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', padding: '1rem 1.25rem', borderRadius: '12px', background: 'rgba(0, 240, 255, 0.04)', border: '1px solid rgba(0, 240, 255, 0.25)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.05)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      <span style={{ fontSize: '0.7rem', background: 'var(--primary)', color: '#030406', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', flexShrink: 0 }}>
-                        UP NEXT
+                  <div
+                    key={level.id}
+                    style={{
+                      display: 'flex', flexDirection: 'column', gap: isExpanded ? '0.6rem' : 0,
+                      padding: isExpanded ? '1rem 1.25rem' : '0.4rem 0.75rem',
+                      borderRadius: isExpanded ? '12px' : '8px',
+                      background: isExpanded ? 'rgba(0, 240, 255, 0.04)' : done ? 'rgba(16,185,129,0.04)' : 'rgba(255,255,255,0.01)',
+                      border: '1px solid ' + (isExpanded ? 'rgba(0, 240, 255, 0.25)' : done ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)'),
+                      boxShadow: isExpanded ? '0 0 20px rgba(0, 240, 255, 0.05)' : 'none',
+                      transition: 'background 0.15s ease, border-color 0.15s ease'
+                    }}
+                  >
+                    {/* Header row — always clickable to expand/collapse */}
+                    <div
+                      onClick={() => setExpandedId(isExpanded ? '' : level.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', userSelect: 'none' }}
+                    >
+                      <span style={{ width: '20px', textAlign: 'center', flexShrink: 0 }}>
+                        {done ? '✅' : '○'}
                       </span>
-                      <h5 style={{ fontSize: '1rem', fontWeight: 700 }}>{level.title}</h5>
-                    </div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-                      {level.idea}
-                    </p>
-                    <p style={{ fontSize: '0.85rem', color: '#fff', lineHeight: 1.5 }}>
-                      <strong style={{ color: 'var(--warning)' }}>Your task:</strong> {level.task}
-                    </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                      <button onClick={() => setActiveTab(level.tab)} className="btn btn-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}>
-                        {level.buttonText}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                      </button>
-                      {needed > 1 && (
-                        <span style={{ fontSize: '0.78rem', color: met > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>
-                          Progress: {met}/{needed}
+                      {isSuggested && !done && (
+                        <span style={{ fontSize: '0.65rem', background: 'var(--primary)', color: '#030406', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', flexShrink: 0 }}>
+                          UP NEXT
                         </span>
                       )}
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+{XP_PER_LEVEL} XP</span>
+                      <span style={{ fontSize: isExpanded ? '1rem' : '0.85rem', fontWeight: isExpanded ? 700 : 400, color: isExpanded ? 'var(--text-primary)' : 'var(--text-secondary)', flex: 1 }}>
+                        {level.title}
+                      </span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease', flexShrink: 0 }}>
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
                     </div>
+
+                    {isExpanded && (
+                      <>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+                          {level.idea}
+                        </p>
+                        <p style={{ fontSize: '0.85rem', color: '#fff', lineHeight: 1.5 }}>
+                          <strong style={{ color: 'var(--warning)' }}>Your task:</strong> {level.task}
+                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                          <button onClick={() => setActiveTab(level.tab)} className={`btn ${done ? '' : 'btn-primary'}`} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}>
+                            {done ? 'Do it again' : level.buttonText}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                          </button>
+                          {needed > 1 && !done && (
+                            <span style={{ fontSize: '0.78rem', color: met > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>
+                              Progress: {met}/{needed}
+                            </span>
+                          )}
+                          <span style={{ fontSize: '0.75rem', color: done ? 'var(--success)' : 'var(--text-muted)' }}>
+                            {done ? `+${XP_PER_LEVEL} XP earned` : `+${XP_PER_LEVEL} XP`}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 );
               })}
