@@ -3,6 +3,15 @@ import { createPortal } from 'react-dom';
 import { AlphaTabApi, synth, model, FileLoadError } from '@coderline/alphatab';
 import { Term } from '../components/Term';
 import { TAB_TECHNIQUES } from '../utils/glossary';
+import {
+  tabIdForFileName,
+  saveTabToLibrary,
+  updateTabMeta,
+  listLibraryTabs,
+  loadTabBlob,
+  deleteTabFromLibrary
+} from '../utils/tabLibrary';
+import type { TabLibraryEntry } from '../utils/tabLibrary';
 
 const ACCEPTED_EXTENSIONS = '.gp,.gp3,.gp4,.gp5,.gpx,.musicxml,.xml';
 
@@ -54,6 +63,18 @@ function formatTime(ms: number): string {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function formatRelativeTime(ms: number): string {
+  const diff = Date.now() - ms;
+  if (diff < 60_000) return 'just now';
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return `${Math.floor(days / 30)}mo ago`;
 }
 
 // The hoverable region for a beat is a full-height column: horizontally a
@@ -158,6 +179,45 @@ export const TabPlayerLab: React.FC = () => {
   });
   const tooltipsEnabledRef = useRef(tooltipsEnabled);
   const highlightElRef = useRef<HTMLDivElement | null>(null);
+
+  // Local library: recently opened tabs persisted in IndexedDB (see
+  // src/utils/tabLibrary.ts) so a piece doesn't need re-dragging every
+  // session, and reopening one resumes its saved position/tempo/tone.
+  const [libraryEntries, setLibraryEntries] = useState<TabLibraryEntry[]>([]);
+  const currentTabIdRef = useRef<string | null>(null);
+  const pendingImportRef = useRef<{ fileName: string; data: ArrayBuffer } | null>(null);
+  const pendingRestoreRef = useRef<{
+    lastPositionMs: number;
+    tempoPct: number;
+    guitarTone: { bank: number; program: number };
+  } | null>(null);
+  const guitarToneRef = useRef(guitarTone);
+  useEffect(() => {
+    guitarToneRef.current = guitarTone;
+  }, [guitarTone]);
+
+  const refreshLibrary = useCallback(() => {
+    listLibraryTabs().then(setLibraryEntries).catch(() => {});
+  }, []);
+  useEffect(() => {
+    refreshLibrary();
+  }, [refreshLibrary]);
+
+  // Reads live playback state straight off the api (always current, unlike
+  // React state closed over at mount), so this can be called from a
+  // setInterval, a pause event, or a tempo/tone change alike.
+  const persistCurrentTab = useCallback((overrides?: { guitarTone?: { bank: number; program: number }; tempoPct?: number }) => {
+    const id = currentTabIdRef.current;
+    const api = apiRef.current;
+    if (!id || !api?.score) return;
+    updateTabMeta(id, {
+      lastPositionMs: api.timePosition,
+      durationMs: api.endTime,
+      tempoPct: overrides?.tempoPct ?? Math.round(api.playbackSpeed * 100),
+      guitarTone: overrides?.guitarTone ?? guitarToneRef.current,
+      lastOpenedAt: Date.now()
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     tooltipsEnabledRef.current = tooltipsEnabled;
@@ -417,10 +477,38 @@ export const TabPlayerLab: React.FC = () => {
       highlightEl.style.opacity = '0';
 
       // Every loaded tab defaults to the nylon classical tone regardless of
-      // what the file itself specifies — this player is for guitar practice.
-      setScoreInstrument(score, DEFAULT_GUITAR_TONE.bank, DEFAULT_GUITAR_TONE.program);
-      setGuitarTone(DEFAULT_GUITAR_TONE);
+      // what the file itself specifies — this player is for guitar practice —
+      // unless we're reopening a piece that had a different tone/tempo saved.
+      const restore = pendingRestoreRef.current;
+      const tone = restore?.guitarTone ?? DEFAULT_GUITAR_TONE;
+      setScoreInstrument(score, tone.bank, tone.program);
+      setGuitarTone(GUITAR_TONES.find(t => t.bank === tone.bank && t.program === tone.program) ?? DEFAULT_GUITAR_TONE);
+      const tempoToUse = restore?.tempoPct ?? 100;
+      setTempoPct(tempoToUse);
+      api.playbackSpeed = tempoToUse / 100;
       api.loadMidiForScore();
+
+      const pending = pendingImportRef.current;
+      if (pending) {
+        // Freshly dropped/browsed file — save it into the library now that
+        // the score's title/artist are known for nicer display.
+        pendingImportRef.current = null;
+        saveTabToLibrary(pending.fileName, pending.data, {
+          title: score.title || pending.fileName,
+          artist: score.artist || '',
+          lastOpenedAt: Date.now(),
+          lastPositionMs: restore?.lastPositionMs ?? 0,
+          durationMs: 0,
+          tempoPct: tempoToUse,
+          guitarTone: tone
+        }).then((id) => {
+          currentTabIdRef.current = id;
+          refreshLibrary();
+        }).catch(() => {});
+      } else if (currentTabIdRef.current) {
+        // Reopened from the library — bump it to the top of the list.
+        updateTabMeta(currentTabIdRef.current, { lastOpenedAt: Date.now() }).then(refreshLibrary).catch(() => {});
+      }
     });
     api.playerStateChanged.on((args) => {
       const playing = args.state === synth.PlayerState.Playing;
@@ -429,13 +517,30 @@ export const TabPlayerLab: React.FC = () => {
       // Reorient immediately when playback (re)starts, in case the user
       // browsed away while paused.
       if (playing && !userBrowsingRef.current) api.scrollToCursor();
+      if (!playing) persistCurrentTab();
     });
-    api.playerReady.on(() => setIsReady(true));
+    api.playerReady.on(() => {
+      setIsReady(true);
+      // Resume where we left off, if this score was reopened from the library.
+      const restore = pendingRestoreRef.current;
+      pendingRestoreRef.current = null;
+      if (restore && restore.lastPositionMs > 0) {
+        api.timePosition = restore.lastPositionMs;
+        api.scrollToCursor();
+      }
+    });
     api.playerPositionChanged.on((args) => {
       setPosition({ current: args.currentTime, end: args.endTime });
     });
 
+    // Best-effort autosave of position/tempo/tone while a library-tracked
+    // tab is open, so "continue where you left off" stays accurate even if
+    // the tab is just closed outright instead of explicitly paused.
+    const persistInterval = window.setInterval(persistCurrentTab, 5000);
+
     return () => {
+      window.clearInterval(persistInterval);
+      persistCurrentTab();
       viewport.removeEventListener('scroll', handleManualScroll);
       viewport.removeEventListener('mousemove', handleMouseMove);
       viewport.removeEventListener('mouseleave', handleMouseLeave);
@@ -450,10 +555,36 @@ export const TabPlayerLab: React.FC = () => {
     };
   }, []);
 
-  const loadFile = useCallback(async (file: File) => {
+  const loadFile = async (file: File) => {
     const buf = await file.arrayBuffer();
+    // Re-dropping a file already in the library should resume its saved
+    // progress rather than reset it — check before scoreLoaded fires.
+    const existing = libraryEntries.find(e => e.id === tabIdForFileName(file.name));
+    pendingImportRef.current = { fileName: file.name, data: buf };
+    pendingRestoreRef.current = existing
+      ? { lastPositionMs: existing.lastPositionMs, tempoPct: existing.tempoPct, guitarTone: existing.guitarTone }
+      : null;
+    currentTabIdRef.current = existing?.id ?? null;
     apiRef.current?.load(new Uint8Array(buf));
-  }, []);
+  };
+
+  const loadFromLibrary = async (entry: TabLibraryEntry) => {
+    const data = await loadTabBlob(entry.id);
+    if (!data || !apiRef.current) return;
+    pendingImportRef.current = null;
+    pendingRestoreRef.current = {
+      lastPositionMs: entry.lastPositionMs,
+      tempoPct: entry.tempoPct,
+      guitarTone: entry.guitarTone
+    };
+    currentTabIdRef.current = entry.id;
+    apiRef.current.load(new Uint8Array(data));
+  };
+
+  const handleDeleteFromLibrary = (id: string) => {
+    if (currentTabIdRef.current === id) currentTabIdRef.current = null;
+    deleteTabFromLibrary(id).then(refreshLibrary).catch(() => {});
+  };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -470,6 +601,7 @@ export const TabPlayerLab: React.FC = () => {
   const handleTempoChange = (pct: number) => {
     setTempoPct(pct);
     if (apiRef.current) apiRef.current.playbackSpeed = pct / 100;
+    persistCurrentTab({ tempoPct: pct });
   };
 
   const toggleLoop = () => {
@@ -493,6 +625,7 @@ export const TabPlayerLab: React.FC = () => {
     api.loadMidiForScore();
     const tone = GUITAR_TONES.find(t => t.bank === bank && t.program === program);
     if (tone) setGuitarTone(tone);
+    persistCurrentTab({ guitarTone: { bank, program } });
   };
 
   const hasScore = scoreTitle !== '';
@@ -506,6 +639,44 @@ export const TabPlayerLab: React.FC = () => {
           slow the tempo down to isolate the hard parts, loop them, and practice along on your real instrument.
         </p>
       </div>
+
+      {libraryEntries.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Your Library</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            {libraryEntries.map(entry => (
+              <div
+                key={entry.id}
+                onClick={() => loadFromLibrary(entry)}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem',
+                  padding: '0.65rem 0.9rem', borderRadius: '10px', cursor: 'pointer',
+                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)'
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {entry.title || entry.fileName}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {entry.artist ? `${entry.artist} · ` : ''}
+                    {entry.durationMs > 0 ? `${formatTime(entry.lastPositionMs)} / ${formatTime(entry.durationMs)} · ` : ''}
+                    {formatRelativeTime(entry.lastOpenedAt)}
+                  </div>
+                </div>
+                <button
+                  className="btn"
+                  onClick={(e) => { e.stopPropagation(); handleDeleteFromLibrary(entry.id); }}
+                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', flexShrink: 0 }}
+                  title="Remove from library"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Drop zone / file picker */}
       <label
