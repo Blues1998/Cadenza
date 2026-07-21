@@ -3,24 +3,30 @@ import { Keyboard } from '../components/Keyboard';
 import { Fretboard } from '../components/Fretboard';
 import { audio } from '../utils/audio';
 import { reportProgress } from '../utils/progress';
-import { 
-  INTERVALS, 
-  CHORD_QUALITIES, 
-  midiToNoteName 
+import {
+  INTERVALS,
+  CHORD_QUALITIES,
+  midiToNoteName
 } from '../utils/musicTheory';
-import type { 
-  IntervalInfo, 
-  ChordQualityInfo 
+import type {
+  IntervalInfo,
+  ChordQualityInfo
 } from '../utils/musicTheory';
+import { useTabIntervalSource } from '../hooks/useTabIntervalSource';
+import type { TabIntervalCandidate } from '../utils/tabIntervalSource';
 
 type QuizMode = 'intervals' | 'chords';
 type Difficulty = 'super-beginner' | 'easy' | 'medium' | 'hard';
 type PlaybackStyle = 'melodic' | 'harmonic';
+type SourceMode = 'random' | 'tab';
 
 export const EarTrainingLab: React.FC = () => {
   const [quizMode, setQuizMode] = useState<QuizMode>('intervals');
   const [difficulty, setDifficulty] = useState<Difficulty>('super-beginner');
   const [playbackStyle, setPlaybackStyle] = useState<PlaybackStyle>('melodic');
+  const [sourceMode, setSourceMode] = useState<SourceMode>('random');
+  const tabSource = useTabIntervalSource();
+  const [currentCandidate, setCurrentCandidate] = useState<TabIntervalCandidate | null>(null);
 
   // Game States
   const [hasStarted, setHasStarted] = useState<boolean>(false);
@@ -28,7 +34,7 @@ export const EarTrainingLab: React.FC = () => {
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [streak, setStreak] = useState<number>(0);
   const [showCheatSheet, setShowCheatSheet] = useState<boolean>(false);
-  
+
   // Question details
   const [currentRoot, setCurrentRoot] = useState<number>(60); // Default C4
   const [correctInterval, setCorrectInterval] = useState<IntervalInfo | null>(null);
@@ -73,6 +79,37 @@ export const EarTrainingLab: React.FC = () => {
     setIsAnswered(false);
     setUserAnswer(null);
     setCorrectMidis([]);
+    setCurrentCandidate(null);
+
+    if (sourceMode === 'tab') {
+      const possible = getPossibleIntervals();
+      const allowedSemitones = new Set(possible.map(i => i.semitones));
+      // Prefer jumps matching the current difficulty; fall back to whatever
+      // this piece actually has rather than showing nothing.
+      const matchingCandidates = tabSource.candidates.filter(c => allowedSemitones.has(Math.abs(c.toMidi - c.fromMidi)));
+      const pool = matchingCandidates.length > 0 ? matchingCandidates : tabSource.candidates;
+      if (pool.length === 0) return;
+
+      const candidate = pool[Math.floor(Math.random() * pool.length)];
+      setCurrentCandidate(candidate);
+
+      const semitones = Math.abs(candidate.toMidi - candidate.fromMidi);
+      const matchedInterval = INTERVALS.find(i => i.semitones === semitones) ?? INTERVALS[0];
+      setCorrectInterval(matchedInterval);
+      setCorrectChord(null);
+
+      const lo = Math.min(candidate.fromMidi, candidate.toMidi);
+      const hi = Math.max(candidate.fromMidi, candidate.toMidi);
+      setCurrentRoot(lo);
+      setCorrectMidis([lo, hi]);
+
+      const distOptions = new Set<string>([matchedInterval.name]);
+      while (distOptions.size < Math.min(4, possible.length)) {
+        distOptions.add(possible[Math.floor(Math.random() * possible.length)].name);
+      }
+      setOptions(Array.from(distOptions).sort(() => Math.random() - 0.5));
+      return;
+    }
 
     // Random root between C3 (48) and C5 (72)
     const rootMidi = Math.floor(Math.random() * 24) + 48;
@@ -120,9 +157,13 @@ export const EarTrainingLab: React.FC = () => {
 
   // Trigger sound playback for the current question
   const playSound = () => {
+    if (sourceMode === 'tab') {
+      if (currentCandidate) tabSource.playCandidate(currentCandidate);
+      return;
+    }
     if (correctMidis.length === 0) return;
     audio.init();
-    
+
     const now = audio.getCurrentTime();
 
     if (quizMode === 'intervals') {
@@ -223,7 +264,7 @@ export const EarTrainingLab: React.FC = () => {
     if (hasStarted) {
       generateQuestion();
     }
-  }, [quizMode, difficulty, playbackStyle]);
+  }, [quizMode, difficulty, playbackStyle, sourceMode, tabSource.candidates]);
 
   // Autoplay new question sound when ready
   useEffect(() => {
@@ -249,26 +290,84 @@ export const EarTrainingLab: React.FC = () => {
         {/* Settings Panel */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>Quiz Settings</h3>
-          
+
           <div>
-            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Quiz Type</span>
+            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Question Source</span>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button 
-                onClick={() => setQuizMode('intervals')} 
-                className={`btn ${quizMode === 'intervals' ? 'btn-primary' : ''}`}
+              <button
+                onClick={() => setSourceMode('random')}
+                className={`btn ${sourceMode === 'random' ? 'btn-primary' : ''}`}
                 style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }}
               >
-                Intervals
+                Random Tones
               </button>
-              <button 
-                onClick={() => setQuizMode('chords')} 
-                className={`btn ${quizMode === 'chords' ? 'btn-primary' : ''}`}
+              <button
+                onClick={() => { setSourceMode('tab'); setQuizMode('intervals'); }}
+                className={`btn ${sourceMode === 'tab' ? 'btn-primary' : ''}`}
                 style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }}
               >
-                Chord Qualities
+                From My Tabs
               </button>
             </div>
           </div>
+
+          {sourceMode === 'tab' && (
+            <div>
+              <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Practice From</span>
+              {tabSource.libraryEntries.length === 0 ? (
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
+                  No tabs saved yet. Import one in the Tab Player lab, then come back here to practice with it.
+                </p>
+              ) : (
+                <select
+                  value={tabSource.selectedTab?.id ?? ''}
+                  onChange={(e) => {
+                    const entry = tabSource.libraryEntries.find(t => t.id === e.target.value);
+                    if (entry) tabSource.selectTab(entry);
+                  }}
+                  style={{ width: '100%', background: '#0b0c10', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 0.6rem', borderRadius: '6px', color: '#fff', outline: 'none', fontSize: '0.85rem' }}
+                >
+                  <option value="" disabled>Choose a piece…</option>
+                  {tabSource.libraryEntries.map(entry => (
+                    <option key={entry.id} value={entry.id}>{entry.title || entry.fileName}</option>
+                  ))}
+                </select>
+              )}
+              {tabSource.isLoading && (
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>Loading…</p>
+              )}
+              {tabSource.error && (
+                <p style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '0.4rem' }}>{tabSource.error}</p>
+              )}
+              {tabSource.selectedTab && !tabSource.isLoading && !tabSource.error && tabSource.candidates.length === 0 && (
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                  This piece doesn't have clear single-note melodic jumps to quiz on — try a different piece.
+                </p>
+              )}
+            </div>
+          )}
+
+          {sourceMode === 'random' && (
+            <div>
+              <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Quiz Type</span>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => setQuizMode('intervals')}
+                  className={`btn ${quizMode === 'intervals' ? 'btn-primary' : ''}`}
+                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }}
+                >
+                  Intervals
+                </button>
+                <button
+                  onClick={() => setQuizMode('chords')}
+                  className={`btn ${quizMode === 'chords' ? 'btn-primary' : ''}`}
+                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }}
+                >
+                  Chord Qualities
+                </button>
+              </div>
+            </div>
+          )}
 
           <div>
             <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Difficulty Level</span>
@@ -286,25 +385,27 @@ export const EarTrainingLab: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Playback Style</span>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button 
-                onClick={() => setPlaybackStyle('melodic')} 
-                className={`btn ${playbackStyle === 'melodic' ? 'btn-primary' : ''}`}
-                style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}
-              >
-                Melodic (Stepwise)
-              </button>
-              <button 
-                onClick={() => setPlaybackStyle('harmonic')} 
-                className={`btn ${playbackStyle === 'harmonic' ? 'btn-primary' : ''}`}
-                style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}
-              >
-                Harmonic (Together)
-              </button>
+          {sourceMode === 'random' && (
+            <div>
+              <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Playback Style</span>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => setPlaybackStyle('melodic')}
+                  className={`btn ${playbackStyle === 'melodic' ? 'btn-primary' : ''}`}
+                  style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}
+                >
+                  Melodic (Stepwise)
+                </button>
+                <button
+                  onClick={() => setPlaybackStyle('harmonic')}
+                  className={`btn ${playbackStyle === 'harmonic' ? 'btn-primary' : ''}`}
+                  style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}
+                >
+                  Harmonic (Together)
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {hasStarted && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: 'auto', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.04)' }}>
@@ -332,9 +433,16 @@ export const EarTrainingLab: React.FC = () => {
               </div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 600 }}>Ready to train your ears?</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '300px' }}>
-                Listen to interval gaps or chord qualities, then make your selection. Defaulting to <strong>Super Beginner</strong> mode for basic song association practice!
+                {sourceMode === 'tab'
+                  ? 'Listen to a real jump pulled straight from the piece you picked, then name the interval.'
+                  : <>Listen to interval gaps or chord qualities, then make your selection. Defaulting to <strong>Super Beginner</strong> mode for basic song association practice!</>}
               </p>
-              <button onClick={handleStartQuiz} className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
+              <button
+                onClick={handleStartQuiz}
+                className="btn btn-primary"
+                disabled={sourceMode === 'tab' && tabSource.candidates.length === 0}
+                style={{ marginTop: '0.5rem' }}
+              >
                 Start Training Session
               </button>
             </div>
@@ -479,8 +587,20 @@ export const EarTrainingLab: React.FC = () => {
                       const secondNote = midiToNoteName(currentRoot + correctInterval.semitones);
                       return (
                         <div style={{ fontSize: '0.85rem' }}>
-                          Root note was <strong style={{ color: 'var(--primary)' }}>{rootNote.name}{rootNote.octave}</strong>. 
-                          Interval is {correctInterval.name} ({correctInterval.songClue}) to <strong style={{ color: 'var(--secondary)' }}>{secondNote.name}{secondNote.octave}</strong>.
+                          <div>
+                            Root note was <strong style={{ color: 'var(--primary)' }}>{rootNote.name}{rootNote.octave}</strong>.
+                            Interval is {correctInterval.name} ({correctInterval.songClue}) to <strong style={{ color: 'var(--secondary)' }}>{secondNote.name}{secondNote.octave}</strong>.
+                          </div>
+                          {sourceMode === 'tab' && currentCandidate && tabSource.selectedTab && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                              From <strong>{tabSource.selectedTab.title || tabSource.selectedTab.fileName}</strong>, bar {currentCandidate.barNumber}
+                              {currentCandidate.toMidi > currentCandidate.fromMidi
+                                ? ' (ascending)'
+                                : currentCandidate.toMidi < currentCandidate.fromMidi
+                                  ? ' (descending)'
+                                  : ''}
+                            </div>
+                          )}
                         </div>
                       );
                     } else if (correctChord) {
