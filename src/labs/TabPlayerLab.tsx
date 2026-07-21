@@ -121,18 +121,28 @@ export const TabPlayerLab: React.FC = () => {
   const dragStartBeatRef = useRef<model.Beat | null>(null);
   const [hoverInfo, setHoverInfo] = useState<{ x: number; y: number; techniques: string[] } | null>(null);
   const [showLegend, setShowLegend] = useState(false);
-  const [tooltipsEnabled, setTooltipsEnabled] = useState(
-    () => localStorage.getItem(TOOLTIPS_ENABLED_STORAGE_KEY) !== 'false'
-  );
+  const [tooltipsEnabled, setTooltipsEnabled] = useState(() => {
+    try {
+      return localStorage.getItem(TOOLTIPS_ENABLED_STORAGE_KEY) !== 'false';
+    } catch {
+      return true;
+    }
+  });
   const tooltipsEnabledRef = useRef(tooltipsEnabled);
   const highlightElRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     tooltipsEnabledRef.current = tooltipsEnabled;
-    localStorage.setItem(TOOLTIPS_ENABLED_STORAGE_KEY, String(tooltipsEnabled));
     if (!tooltipsEnabled) {
       setHoverInfo(null);
       if (highlightElRef.current) highlightElRef.current.style.opacity = '0';
+    }
+    // Best-effort only: a storage exception (private-browsing quirks, etc.)
+    // must never block clearing the tooltip/highlight state above.
+    try {
+      localStorage.setItem(TOOLTIPS_ENABLED_STORAGE_KEY, String(tooltipsEnabled));
+    } catch {
+      // ignore
     }
   }, [tooltipsEnabled]);
 
@@ -251,7 +261,10 @@ export const TabPlayerLab: React.FC = () => {
     highlightEl.style.boxShadow = '0 0 12px rgba(0, 240, 255, 0.45)';
     highlightEl.style.opacity = '0';
     highlightEl.style.transition = 'opacity 0.12s ease';
-    highlightEl.style.zIndex = '40';
+    // alphaTab's own cursor overlay wrapper (.at-cursors) is explicitly
+    // z-index 1000, so this needs to clear that to actually be visible on
+    // top of it rather than silently render underneath.
+    highlightEl.style.zIndex = '1001';
     viewport.appendChild(highlightEl);
     highlightElRef.current = highlightEl;
     const HIGHLIGHT_PADDING = 4;
@@ -283,7 +296,10 @@ export const TabPlayerLab: React.FC = () => {
         return;
       }
       setHoverInfo({ x: clientX, y: clientY, techniques });
-      const box = boundsLookup.findBeat(beat)?.visualBounds;
+      // realBounds (not visualBounds) — the same property already proven
+      // reliable for the auto-scroll feature above, whereas visualBounds is
+      // sometimes left empty depending on what's rendered in a beat.
+      const box = boundsLookup.findBeat(beat)?.realBounds;
       if (box) {
         highlightEl.style.left = `${box.x - HIGHLIGHT_PADDING}px`;
         highlightEl.style.top = `${box.y - HIGHLIGHT_PADDING}px`;
@@ -672,7 +688,7 @@ export const TabPlayerLab: React.FC = () => {
           backdrop-filter, which (per spec) makes it the containing block for
           any position:fixed descendant — without the portal, "fixed" ends up
           anchored to the panel's own box instead of the real viewport. */}
-      {hoverInfo && createPortal(
+      {tooltipsEnabled && hoverInfo && createPortal(
         <div
           style={{
             position: 'fixed',
