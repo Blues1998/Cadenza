@@ -77,6 +77,8 @@ export const TabPlayerLab: React.FC = () => {
   const [position, setPosition] = useState({ current: 0, end: 0 });
   const [guitarTone, setGuitarTone] = useState(DEFAULT_GUITAR_TONE);
   const [guitarSoundfontMissing, setGuitarSoundfontMissing] = useState(false);
+  const [sectionRange, setSectionRange] = useState<{ startBar: number; endBar: number } | null>(null);
+  const dragStartBeatRef = useRef<model.Beat | null>(null);
 
   // Set up the AlphaTabApi instance once against the viewport div.
   useEffect(() => {
@@ -202,11 +204,36 @@ export const TabPlayerLab: React.FC = () => {
         setError(e.message || 'Could not load this file.');
       }
     });
+    // alphaTab's default mouse interaction (on by default via
+    // player.enableUserInteraction) already turns click-drag on the notation
+    // into a real api.playbackRange, and a plain click clears it — we just
+    // track the same start/end beat identities ourselves to know the bar
+    // numbers for our own display, and to auto-enable looping once a section
+    // is actually selected (a drag, not a plain click-to-seek).
+    api.beatMouseDown.on((beat) => {
+      dragStartBeatRef.current = beat;
+    });
+    api.beatMouseUp.on((beat) => {
+      const startBeat = dragStartBeatRef.current;
+      dragStartBeatRef.current = null;
+      if (startBeat && beat && startBeat !== beat) {
+        setSectionRange({
+          startBar: Math.min(startBeat.voice.bar.index, beat.voice.bar.index),
+          endBar: Math.max(startBeat.voice.bar.index, beat.voice.bar.index)
+        });
+        setLooping(true);
+        api.isLooping = true;
+      } else {
+        setSectionRange(null);
+      }
+    });
+
     api.scoreLoaded.on((score) => {
       setScoreTitle(score.title || 'Untitled');
       setScoreArtist(score.artist || '');
       setTrackNames(score.tracks.map(t => t.name || 'Track'));
       setError(null);
+      setSectionRange(null);
 
       // Every loaded tab defaults to the nylon classical tone regardless of
       // what the file itself specifies — this player is for guitar practice.
@@ -262,6 +289,14 @@ export const TabPlayerLab: React.FC = () => {
     const next = !looping;
     setLooping(next);
     if (apiRef.current) apiRef.current.isLooping = next;
+  };
+
+  const clearSection = () => {
+    const api = apiRef.current;
+    if (!api) return;
+    api.playbackRange = null;
+    api.clearPlaybackRangeHighlight();
+    setSectionRange(null);
   };
 
   const applyGuitarTone = (bank: number, program: number) => {
@@ -359,8 +394,18 @@ export const TabPlayerLab: React.FC = () => {
                   color: looping ? 'var(--primary)' : undefined
                 }}
               >
-                Loop {looping ? 'On' : 'Off'}
+                {sectionRange ? 'Loop Section' : 'Loop'} {looping ? 'On' : 'Off'}
               </button>
+              {sectionRange && (
+                <button
+                  className="btn"
+                  onClick={clearSection}
+                  style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem' }}
+                  title="Clear the selected section and loop the whole song instead"
+                >
+                  Clear Bars {sectionRange.startBar + 1}–{sectionRange.endBar + 1}
+                </button>
+              )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '260px' }}>
@@ -400,6 +445,11 @@ export const TabPlayerLab: React.FC = () => {
 
           <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
             Guitar samples: "Nylon and Steel Guitars" by Soundfonts4U, CC BY-NC-SA 4.0
+          </div>
+
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            Tip: click-drag across the notation below to select a passage — it'll loop just that
+            section, so you can isolate and repeat the hard parts instead of the whole song.
           </div>
         </>
       )}
