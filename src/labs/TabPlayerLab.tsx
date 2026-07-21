@@ -13,6 +13,8 @@ import {
 } from '../utils/tabLibrary';
 import type { TabLibraryEntry } from '../utils/tabLibrary';
 import { GUITAR_SOUNDFONT_URL, GUITAR_TONES, DEFAULT_GUITAR_TONE, toneKey, setScoreInstrument } from '../utils/guitarTones';
+import { useMicPitch } from '../hooks/useMicPitch';
+import { NOTE_NAMES } from '../utils/musicTheory';
 
 const ACCEPTED_EXTENSIONS = '.gp,.gp3,.gp4,.gp5,.gpx,.musicxml,.xml';
 
@@ -48,6 +50,9 @@ function formatRelativeTime(ms: number): string {
 const HOVER_WIDTH_FOCUS = 0.5; // fraction of the beat's own width to keep, centered
 const HOVER_MIN_WIDTH = 18;
 const HOVER_MARGIN = 4;
+// Shared by both the hover-explanation box and the mic play-along grading
+// box below — both are the same kind of "outline this beat" overlay.
+const HIGHLIGHT_PADDING = 4;
 
 type Box = { x: number; y: number; w: number; h: number };
 function beatHoverColumn(beatBox: Box, barBox: Box): Box {
@@ -105,6 +110,57 @@ function detectBeatTechniques(beat: model.Beat): string[] {
   return found;
 }
 
+// ---- Mic-verified play-along ----
+// Reuses the same mic -> YIN pitch-detection pipeline as Play Challenges,
+// but instead of the player pacing themselves note-by-note, grading is
+// paced by the tab's own moving cursor: alphaTab's activeBeatsChanged event
+// fires in real time, in sync with actual audio playback, whenever the set
+// of currently-sounding beats changes — exactly the same signal that drives
+// alphaTab's own built-in cursor highlight. Driving grading off that event
+// (rather than pre-computing tick-based time windows ourselves) means it
+// automatically accounts for tempo, playback-speed changes, and repeats
+// with zero extra bookkeeping, and sidesteps the whole class of
+// structural-vs-repeat-expanded-tick bug this session already had to fix
+// once for the Ear Training tab source.
+const GRADE_CENTS_TOLERANCE = 45; // matches Play Challenges' own matching tolerance
+const RECENT_RESULTS_CAP = 24;
+
+interface GradeTarget {
+  beat: model.Beat;
+  pitchClass: number; // 0-11, matched ignoring octave — mic octave detection
+                       // errors are common enough on guitar that Play
+                       // Challenges already treats "any octave counts" as a
+                       // deliberate, forgiving default; this keeps that
+                       // convention rather than inventing a stricter one.
+  label: string; // e.g. "E4", for the recent-results strip
+}
+
+interface GradeResult {
+  id: number; // beat.id, React key
+  label: string;
+  hit: boolean;
+}
+
+// Reads grading info straight off whatever Beat instance the playback
+// engine hands us via activeBeatsChanged, rather than pre-matching against
+// beats collected by walking api.score ourselves — Beat carries a
+// @clone_ignore'd id, so a beat handed back by the player isn't guaranteed
+// to share identity (or even .id) with the one found by tree-walking the
+// score, but it always carries the same notes/voice/bar data either way.
+// Only single, freshly-picked notes are gradable: a chord can't be verified
+// note-by-note through one monophonic pitch detector, a rest has nothing to
+// play, and a tied note isn't something the player re-picks (they just let
+// the previous note ring) — grading any of those would be meaningless.
+function gradeTargetFromBeat(beat: model.Beat): GradeTarget | null {
+  if (beat.voice.bar.staff.track.index !== 0) return null;
+  if (beat.isRest || beat.notes.length !== 1) return null;
+  const note = beat.notes[0];
+  if (note.isTieDestination) return null;
+  const pitchClass = ((note.realValue % 12) + 12) % 12;
+  const octave = Math.floor(note.realValue / 12) - 1;
+  return { beat, pitchClass, label: `${NOTE_NAMES[pitchClass]}${octave}` };
+}
+
 export const TabPlayerLab: React.FC = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<AlphaTabApi | null>(null);
@@ -138,6 +194,128 @@ export const TabPlayerLab: React.FC = () => {
   });
   const tooltipsEnabledRef = useRef(tooltipsEnabled);
   const highlightElRef = useRef<HTMLDivElement | null>(null);
+
+  // Mic-verified play-along: see the "Mic-verified play-along" comment block
+  // above gradeTargetFromBeat for the overall design.
+  const { pitch: micPitch, isActive: micActive, error: micError, start: startMic, stop: stopMic } = useMicPitch();
+  const [micGradingEnabled, setMicGradingEnabled] = useState(false);
+  // True only once the toggle is on AND the mic has actually come online —
+  // the single gate both the activeBeatsChanged handler and the live pitch
+  // effect check, so neither has to separately track both conditions.
+  const micGradingLiveRef = useRef(false);
+  const [gradeStats, setGradeStats] = useState({ hits: 0, misses: 0 });
+  const [recentResults, setRecentResults] = useState<GradeResult[]>([]);
+  const [currentTargetLabel, setCurrentTargetLabel] = useState<string | null>(null);
+  const pendingTargetRef = useRef<GradeTarget | null>(null);
+  const pendingResolvedRef = useRef(false);
+  const gradeHighlightElRef = useRef<HTMLDivElement | null>(null);
+  const gradeFadeTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    micGradingLiveRef.current = micGradingEnabled && micActive;
+  }, [micGradingEnabled, micActive]);
+
+  const positionGradeBox = useCallback((beat: model.Beat): boolean => {
+    const api = apiRef.current;
+    const el = gradeHighlightElRef.current;
+    if (!api?.boundsLookup || !el) return false;
+    const beatBounds = api.boundsLookup.findBeat(beat);
+    if (!beatBounds) return false;
+    const box = beatHoverColumn(beatBounds.realBounds, beatBounds.barBounds.masterBarBounds.visualBounds);
+    el.style.left = `${box.x - HIGHLIGHT_PADDING}px`;
+    el.style.top = `${box.y - HIGHLIGHT_PADDING}px`;
+    el.style.width = `${box.w + HIGHLIGHT_PADDING * 2}px`;
+    el.style.height = `${box.h + HIGHLIGHT_PADDING * 2}px`;
+    return true;
+  }, []);
+
+  const hideGradeHighlight = useCallback(() => {
+    if (gradeFadeTimeoutRef.current !== null) {
+      window.clearTimeout(gradeFadeTimeoutRef.current);
+      gradeFadeTimeoutRef.current = null;
+    }
+    if (gradeHighlightElRef.current) gradeHighlightElRef.current.style.opacity = '0';
+  }, []);
+
+  // "Listening" state: amber outline drawn the moment a gradable beat
+  // becomes current, before we know yet whether it'll be hit or missed.
+  const showPendingBox = useCallback((beat: model.Beat) => {
+    if (gradeFadeTimeoutRef.current !== null) {
+      window.clearTimeout(gradeFadeTimeoutRef.current);
+      gradeFadeTimeoutRef.current = null;
+    }
+    const el = gradeHighlightElRef.current;
+    if (!el || !positionGradeBox(beat)) return;
+    el.style.borderColor = 'rgba(245, 158, 11, 0.9)';
+    el.style.background = 'rgba(245, 158, 11, 0.12)';
+    el.style.boxShadow = '0 0 12px rgba(245, 158, 11, 0.4)';
+    el.style.opacity = '1';
+  }, [positionGradeBox]);
+
+  // Flashes green/red over the box already positioned by showPendingBox,
+  // then fades it out — a brief result flash rather than a mark left
+  // sitting on the notation forever, since the cursor keeps moving on.
+  const flashResultBox = useCallback((hit: boolean) => {
+    const el = gradeHighlightElRef.current;
+    if (!el) return;
+    el.style.borderColor = hit ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)';
+    el.style.background = hit ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)';
+    el.style.boxShadow = hit ? '0 0 14px rgba(16, 185, 129, 0.5)' : '0 0 14px rgba(239, 68, 68, 0.5)';
+    el.style.opacity = '1';
+    if (gradeFadeTimeoutRef.current !== null) window.clearTimeout(gradeFadeTimeoutRef.current);
+    gradeFadeTimeoutRef.current = window.setTimeout(() => {
+      el.style.opacity = '0';
+      gradeFadeTimeoutRef.current = null;
+    }, 400);
+  }, []);
+
+  // Resolves the currently-open grading window exactly once — called either
+  // the instant a correct pitch is heard (see the pitch-matching effect
+  // below), or when the window closes without one (a new beat became
+  // current, or playback paused/stopped) with no match ever recorded.
+  const resolvePending = useCallback((hit: boolean) => {
+    const target = pendingTargetRef.current;
+    if (!target || pendingResolvedRef.current) return;
+    pendingResolvedRef.current = true;
+    setGradeStats(s => (hit ? { ...s, hits: s.hits + 1 } : { ...s, misses: s.misses + 1 }));
+    setRecentResults(prev => {
+      const next = [...prev, { id: target.beat.id, label: target.label, hit }];
+      return next.length > RECENT_RESULTS_CAP ? next.slice(next.length - RECENT_RESULTS_CAP) : next;
+    });
+    flashResultBox(hit);
+  }, [flashResultBox]);
+
+  // Grades in real time as pitch readings arrive (~60/s while the mic is
+  // active) rather than waiting for the window to close, so a correctly
+  // played note flashes green immediately instead of a beat later.
+  useEffect(() => {
+    if (!micGradingLiveRef.current || !isPlayingRef.current) return;
+    const target = pendingTargetRef.current;
+    if (!target || pendingResolvedRef.current || !micPitch) return;
+    const heardPc = ((micPitch.midi % 12) + 12) % 12;
+    if (heardPc === target.pitchClass && Math.abs(micPitch.cents) <= GRADE_CENTS_TOLERANCE) {
+      resolvePending(true);
+    }
+  }, [micPitch, resolvePending]);
+
+  const toggleMicGrading = () => {
+    if (micGradingEnabled) {
+      setMicGradingEnabled(false);
+      stopMic();
+    } else {
+      setMicGradingEnabled(true);
+      startMic();
+    }
+    pendingTargetRef.current = null;
+    pendingResolvedRef.current = false;
+    setCurrentTargetLabel(null);
+    hideGradeHighlight();
+  };
+
+  const resetGradeStats = () => {
+    setGradeStats({ hits: 0, misses: 0 });
+    setRecentResults([]);
+  };
 
   // Local library: recently opened tabs persisted in IndexedDB (see
   // src/utils/tabLibrary.ts) so a piece doesn't need re-dragging every
@@ -314,7 +492,22 @@ export const TabPlayerLab: React.FC = () => {
     highlightEl.style.zIndex = '1001';
     viewport.appendChild(highlightEl);
     highlightElRef.current = highlightEl;
-    const HIGHLIGHT_PADDING = 4;
+
+    // Mic play-along's own grading box — same imperative overlay pattern as
+    // the hover-explanation box above, kept as a separate element (rather
+    // than repurposing highlightEl) since the two are shown for unrelated
+    // reasons and could otherwise legitimately need to be visible together.
+    // One layer above the hover box so a result flash never hides under it.
+    const gradeHighlightEl = document.createElement('div');
+    gradeHighlightEl.style.position = 'absolute';
+    gradeHighlightEl.style.pointerEvents = 'none';
+    gradeHighlightEl.style.border = '2px solid transparent';
+    gradeHighlightEl.style.borderRadius = '6px';
+    gradeHighlightEl.style.opacity = '0';
+    gradeHighlightEl.style.transition = 'opacity 0.15s ease';
+    gradeHighlightEl.style.zIndex = '1002';
+    viewport.appendChild(gradeHighlightEl);
+    gradeHighlightElRef.current = gradeHighlightEl;
 
     // Explains tab notation on hover: alphaTab's own mouse-move event only
     // fires while a beat is already pressed (used for drag-to-select above),
@@ -426,6 +619,44 @@ export const TabPlayerLab: React.FC = () => {
       }
     });
 
+    // Mic play-along grading: fires in real time, synced to actual audio
+    // playback, whenever the set of currently-sounding beats changes — the
+    // same signal that drives alphaTab's own cursor. See the design comment
+    // above gradeTargetFromBeat for why this beats pre-computed tick windows.
+    api.activeBeatsChanged.on((args) => {
+      if (!micGradingLiveRef.current || !isPlayingRef.current) return;
+
+      let matched: GradeTarget | null = null;
+      for (const b of args.activeBeats) {
+        const t = gradeTargetFromBeat(b);
+        if (t) {
+          matched = t;
+          break;
+        }
+      }
+
+      // Known limitation: a section loop of exactly one gradable note re-
+      // triggers this same id on every lap, which reads identically to "the
+      // one ongoing note hasn't changed yet" — so only the first lap grades.
+      // Looping two or more notes (the realistic case) is unaffected, since
+      // the loop's own first beat always differs in id from its last.
+      const openId = pendingTargetRef.current?.beat.id ?? null;
+      const matchedId = matched?.beat.id ?? null;
+      if (matchedId === openId) return; // same target still current, nothing to resolve or open
+
+      if (openId !== null && !pendingResolvedRef.current) resolvePending(false);
+
+      pendingTargetRef.current = matched;
+      pendingResolvedRef.current = false;
+      if (matched) {
+        setCurrentTargetLabel(matched.label);
+        showPendingBox(matched.beat);
+      } else {
+        setCurrentTargetLabel(null);
+        hideGradeHighlight();
+      }
+    });
+
     api.scoreLoaded.on((score) => {
       setScoreTitle(score.title || 'Untitled');
       setScoreArtist(score.artist || '');
@@ -434,6 +665,15 @@ export const TabPlayerLab: React.FC = () => {
       setSectionRange(null);
       setHoverInfo(null);
       highlightEl.style.opacity = '0';
+
+      // A new score invalidates any in-flight grading window and starts a
+      // fresh scoreboard — stats from a previous piece shouldn't bleed in.
+      pendingTargetRef.current = null;
+      pendingResolvedRef.current = false;
+      setCurrentTargetLabel(null);
+      hideGradeHighlight();
+      setGradeStats({ hits: 0, misses: 0 });
+      setRecentResults([]);
 
       // Every loaded tab defaults to the nylon classical tone regardless of
       // what the file itself specifies — this player is for guitar practice —
@@ -476,7 +716,18 @@ export const TabPlayerLab: React.FC = () => {
       // Reorient immediately when playback (re)starts, in case the user
       // browsed away while paused.
       if (playing && !userBrowsingRef.current) api.scrollToCursor();
-      if (!playing) persistCurrentTab();
+      if (!playing) {
+        persistCurrentTab();
+        // Every opened grading window must resolve exactly once — pausing
+        // or stopping mid-note closes it out as a miss rather than leaving
+        // it dangling (which would otherwise either silently eat the next
+        // window's open, or double-count if playback resumes later).
+        if (pendingTargetRef.current && !pendingResolvedRef.current) resolvePending(false);
+        pendingTargetRef.current = null;
+        pendingResolvedRef.current = false;
+        setCurrentTargetLabel(null);
+        hideGradeHighlight();
+      }
     });
     api.playerReady.on(() => {
       setIsReady(true);
@@ -509,6 +760,9 @@ export const TabPlayerLab: React.FC = () => {
       if (hoverFrame !== null) cancelAnimationFrame(hoverFrame);
       highlightEl.remove();
       highlightElRef.current = null;
+      if (gradeFadeTimeoutRef.current !== null) window.clearTimeout(gradeFadeTimeoutRef.current);
+      gradeHighlightEl.remove();
+      gradeHighlightElRef.current = null;
       api.destroy();
       apiRef.current = null;
     };
@@ -588,6 +842,8 @@ export const TabPlayerLab: React.FC = () => {
   };
 
   const hasScore = scoreTitle !== '';
+  const gradedTotal = gradeStats.hits + gradeStats.misses;
+  const gradeAccuracyPct = gradedTotal > 0 ? Math.round((gradeStats.hits / gradedTotal) * 100) : null;
 
   return (
     <section className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -811,6 +1067,76 @@ export const TabPlayerLab: React.FC = () => {
               ))}
             </div>
           )}
+
+          {/* Mic-verified play-along: grades single-note melodic beats in
+              real time against the mic as the cursor advances, using the
+              exact same pitch-detection pipeline as Play Challenges. */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem 1.25rem', borderRadius: '10px', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Mic Play-Along</div>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem', maxWidth: '480px', lineHeight: 1.5 }}>
+                  Play along on your real guitar as the cursor moves — each single note lights up green the instant your mic hears it, or red if the cursor moves on first.
+                  Best with headphones: the mic can't otherwise tell your guitar apart from this tab's own backing track.
+                </p>
+              </div>
+              <button
+                className="btn"
+                onClick={toggleMicGrading}
+                style={{
+                  padding: '0.4rem 0.85rem', fontSize: '0.75rem', whiteSpace: 'nowrap',
+                  borderColor: micGradingEnabled ? 'var(--primary)' : undefined,
+                  color: micGradingEnabled ? 'var(--primary)' : undefined
+                }}
+              >
+                Mic Play-Along: {micGradingEnabled ? 'On' : 'Off'}
+              </button>
+            </div>
+
+            {micError && (
+              <div style={{ fontSize: '0.78rem', color: '#f87171' }}>{micError}</div>
+            )}
+
+            {micGradingEnabled && !micActive && !micError && (
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Waiting for microphone access…</div>
+            )}
+
+            {micGradingEnabled && micActive && (
+              <>
+                <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--success)' }}>Hits: <strong>{gradeStats.hits}</strong></span>
+                  <span style={{ color: 'var(--danger)' }}>Misses: <strong>{gradeStats.misses}</strong></span>
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    Accuracy: <strong>{gradeAccuracyPct === null ? '—' : `${gradeAccuracyPct}%`}</strong>
+                  </span>
+                  {currentTargetLabel && (
+                    <span style={{ color: 'var(--text-muted)' }}>Now: <strong style={{ color: 'var(--warning)' }}>{currentTargetLabel}</strong></span>
+                  )}
+                  <button className="btn" onClick={resetGradeStats} style={{ padding: '0.3rem 0.7rem', fontSize: '0.72rem' }}>
+                    Reset Stats
+                  </button>
+                </div>
+
+                {recentResults.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                    {recentResults.map((r, i) => (
+                      <span
+                        key={`${r.id}-${i}`}
+                        style={{
+                          padding: '0.25rem 0.5rem', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 600,
+                          border: `1px solid ${r.hit ? 'var(--success)' : 'var(--danger)'}`,
+                          background: r.hit ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                          color: r.hit ? 'var(--success)' : 'var(--danger)'
+                        }}
+                      >
+                        {r.hit ? '✓' : '✕'} {r.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </>
       )}
 
