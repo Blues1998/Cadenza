@@ -56,9 +56,6 @@ function formatTime(ms: number): string {
 // How long the user gets to browse freely after a manual scroll before
 // playback auto-follow resumes.
 const BROWSE_GRACE_PERIOD_MS = 2000;
-// Only re-check whether the cursor needs following this often, so it's a
-// smooth, occasional nudge rather than a scroll fight on every beat.
-const FOLLOW_CHECK_THROTTLE_MS = 250;
 
 export const TabPlayerLab: React.FC = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -67,7 +64,6 @@ export const TabPlayerLab: React.FC = () => {
   const userBrowsingRef = useRef(false);
   const browsingTimeoutRef = useRef<number | null>(null);
   const isAutoScrollingRef = useRef(false);
-  const lastFollowCheckRef = useRef(0);
 
   const [scoreTitle, setScoreTitle] = useState<string>('');
   const [scoreArtist, setScoreArtist] = useState<string>('');
@@ -97,30 +93,53 @@ export const TabPlayerLab: React.FC = () => {
         playerMode: 'EnabledAutomatic',
         soundFont: '/soundfont/sonivox.sf2',
         enableCursor: true,
-        // alphaTab's built-in auto-scroll only knows "always snap to the
-        // cursor", which fights any attempt to browse away while playing.
-        // We want "follow, but let the user look around and only pull them
-        // back after a pause" — that needs custom scroll handling below, so
-        // the built-in follow behavior stays off.
-        scrollMode: 'Off'
+        // A non-Off mode is required for alphaTab to dispatch scroll updates
+        // at all, but the actual behavior comes entirely from
+        // customScrollHandler below — it implements "follow, but pause while
+        // the user is browsing", not alphaTab's built-in "always snap to
+        // the cursor" (which would fight any attempt to scroll away).
+        scrollMode: 'Continuous',
+        scrollElement: viewport
       }
     });
     apiRef.current = api;
 
-    // Smoothly scrolls the viewport so the currently playing beat is nicely
-    // in view (about a third of the way down), without fighting a scroll
-    // that's already in flight or one the user just triggered themselves.
-    const scrollToCurrentBeat = () => {
-      const beatCursor = viewport.querySelector('.at-cursor-beat') as HTMLElement | null;
-      if (!beatCursor) return;
-      const containerRect = viewport.getBoundingClientRect();
-      const beatRect = beatCursor.getBoundingClientRect();
-      const currentAbsoluteTop = beatRect.top - containerRect.top + viewport.scrollTop;
-      const targetScrollTop = Math.max(0, currentAbsoluteTop - viewport.clientHeight * 0.3);
-      if (Math.abs(targetScrollTop - viewport.scrollTop) < 2) return;
+    // Scrolls so the given bar lands about a third of the way down the
+    // viewport. Uses alphaTab's own authoritative layout bounds (the Y
+    // position it just computed for this exact beat) rather than reading
+    // the cursor element's DOM position back out, which can briefly lag a
+    // frame behind — that mismatch was the cause of scrolls overshooting
+    // and compounding worse on each subsequent auto-scroll.
+    const scrollToBarY = (barY: number, durationMs: number) => {
+      const target = Math.max(0, barY - viewport.clientHeight * 0.3);
+      if (Math.abs(target - viewport.scrollTop) < 2) return;
       isAutoScrollingRef.current = true;
-      viewport.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
-      window.setTimeout(() => { isAutoScrollingRef.current = false; }, 700);
+      viewport.scrollTo({ top: target, behavior: 'smooth' });
+      // We know exactly how long we're telling it to take, so the guard
+      // clears right after — no guessing at a native animation's duration.
+      window.setTimeout(() => { isAutoScrollingRef.current = false; }, durationMs + 150);
+    };
+
+    api.customScrollHandler = {
+      // Deliberate "jump to the cursor now" — used by our own
+      // api.scrollToCursor() calls below, always honored.
+      forceScrollTo(currentBeatBounds) {
+        scrollToBarY(currentBeatBounds.barBounds.masterBarBounds.realBounds.y, 400);
+      },
+      // Fires continuously as the beat cursor advances during playback.
+      // Only act if the user isn't browsing, nothing's already animating
+      // (never stack a new scroll on top of one still in flight), and the
+      // bar has actually drifted near the edge of the visible pane.
+      onBeatCursorUpdating(startBeat) {
+        if (userBrowsingRef.current || isAutoScrollingRef.current) return;
+        const barY = startBeat.barBounds.masterBarBounds.realBounds.y;
+        const relativeY = barY - viewport.scrollTop;
+        const margin = viewport.clientHeight * 0.15;
+        if (relativeY < margin || relativeY > viewport.clientHeight - margin) {
+          scrollToBarY(barY, 300);
+        }
+      },
+      [Symbol.dispose]() { /* nothing to release */ }
     };
 
     const handleManualScroll = () => {
@@ -129,7 +148,7 @@ export const TabPlayerLab: React.FC = () => {
       if (browsingTimeoutRef.current !== null) window.clearTimeout(browsingTimeoutRef.current);
       browsingTimeoutRef.current = window.setTimeout(() => {
         userBrowsingRef.current = false;
-        if (isPlayingRef.current) scrollToCurrentBeat();
+        if (isPlayingRef.current) api.scrollToCursor();
       }, BROWSE_GRACE_PERIOD_MS);
     };
     viewport.addEventListener('scroll', handleManualScroll);
@@ -174,26 +193,11 @@ export const TabPlayerLab: React.FC = () => {
       setIsPlaying(playing);
       // Reorient immediately when playback (re)starts, in case the user
       // browsed away while paused.
-      if (playing && !userBrowsingRef.current) scrollToCurrentBeat();
+      if (playing && !userBrowsingRef.current) api.scrollToCursor();
     });
     api.playerReady.on(() => setIsReady(true));
     api.playerPositionChanged.on((args) => {
       setPosition({ current: args.currentTime, end: args.endTime });
-
-      if (userBrowsingRef.current) return;
-      const now = performance.now();
-      if (now - lastFollowCheckRef.current < FOLLOW_CHECK_THROTTLE_MS) return;
-      lastFollowCheckRef.current = now;
-
-      const beatCursor = viewport.querySelector('.at-cursor-beat') as HTMLElement | null;
-      if (!beatCursor) return;
-      const containerRect = viewport.getBoundingClientRect();
-      const beatRect = beatCursor.getBoundingClientRect();
-      const relativeTop = beatRect.top - containerRect.top;
-      const margin = viewport.clientHeight * 0.15;
-      if (relativeTop < margin || relativeTop > viewport.clientHeight - margin) {
-        scrollToCurrentBeat();
-      }
     });
 
     return () => {
