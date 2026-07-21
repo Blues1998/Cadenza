@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { AlphaTabApi, synth, model, FileLoadError } from '@coderline/alphatab';
+import { Term } from '../components/Term';
+import { TAB_TECHNIQUES } from '../utils/glossary';
 
 const ACCEPTED_EXTENSIONS = '.gp,.gp3,.gp4,.gp5,.gpx,.musicxml,.xml';
 
@@ -57,6 +59,39 @@ function formatTime(ms: number): string {
 // playback auto-follow resumes.
 const BROWSE_GRACE_PERIOD_MS = 2000;
 
+// Fixed display order for the always-visible legend strip.
+const LEGEND_KEYS = Object.keys(TAB_TECHNIQUES);
+
+// Reads which technique markings apply to a beat, so hovering a note can
+// explain exactly what's drawn on it (hammer-on vs. pull-off share the same
+// underlying flag and are told apart by comparing fret numbers).
+function detectBeatTechniques(beat: model.Beat): string[] {
+  const found: string[] = [];
+  const add = (key: string) => { if (!found.includes(key)) found.push(key); };
+
+  if (beat.isPalmMute) add('palmMute');
+  if (beat.isLetRing) add('letRing');
+  if (beat.isTremolo) add('tremoloPicking');
+
+  for (const note of beat.notes) {
+    if (note.isHammerPullOrigin) {
+      const dest = note.hammerPullDestination;
+      add(!dest || dest.fret >= note.fret ? 'hammerOn' : 'pullOff');
+    }
+    if (note.slideInType !== model.SlideInType.None || note.slideOutType !== model.SlideOutType.None) add('slide');
+    if (note.hasBend) add(note.bendType === model.BendType.Release ? 'bendRelease' : 'bend');
+    if (note.vibrato !== model.VibratoType.None) add('vibrato');
+    if (note.isGhost) add('ghostNote');
+    if (note.isDead) add('deadNote');
+    if (note.isHarmonic) add('harmonic');
+    if (note.isTieDestination) add('tie');
+    if (note.isStaccato) add('staccato');
+    if (note.isTrill) add('trill');
+  }
+
+  return found;
+}
+
 export const TabPlayerLab: React.FC = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<AlphaTabApi | null>(null);
@@ -79,6 +114,8 @@ export const TabPlayerLab: React.FC = () => {
   const [guitarSoundfontMissing, setGuitarSoundfontMissing] = useState(false);
   const [sectionRange, setSectionRange] = useState<{ startBar: number; endBar: number } | null>(null);
   const dragStartBeatRef = useRef<model.Beat | null>(null);
+  const [hoverInfo, setHoverInfo] = useState<{ x: number; y: number; techniques: string[] } | null>(null);
+  const [showLegend, setShowLegend] = useState(false);
 
   // Set up the AlphaTabApi instance once against the viewport div.
   useEffect(() => {
@@ -182,6 +219,54 @@ export const TabPlayerLab: React.FC = () => {
     };
     viewport.addEventListener('scroll', handleManualScroll);
 
+    // Explains tab notation on hover: alphaTab's own mouse-move event only
+    // fires while a beat is already pressed (used for drag-to-select above),
+    // so a plain hover has to be done ourselves via api.boundsLookup, which
+    // maps a raw x/y position back to the beat rendered there. Coordinates
+    // are relative to the unscrolled content, matching the scroll-position
+    // math above, so we add the viewport's own scroll offset back in.
+    let hoverFrame: number | null = null;
+    const updateHoverAt = (clientX: number, clientY: number) => {
+      const boundsLookup = api.boundsLookup;
+      if (!boundsLookup) return;
+      const rect = viewport.getBoundingClientRect();
+      const contentX = clientX - rect.left + viewport.scrollLeft;
+      const contentY = clientY - rect.top + viewport.scrollTop;
+      const beat = boundsLookup.getBeatAtPos(contentX, contentY);
+      if (!beat) {
+        setHoverInfo(null);
+        return;
+      }
+      const techniques = detectBeatTechniques(beat);
+      if (techniques.length === 0) {
+        setHoverInfo(null);
+        return;
+      }
+      setHoverInfo({ x: clientX, y: clientY, techniques });
+    };
+    const handleMouseMove = (e: MouseEvent) => {
+      if (hoverFrame !== null) return;
+      const { clientX, clientY } = e;
+      hoverFrame = requestAnimationFrame(() => {
+        hoverFrame = null;
+        updateHoverAt(clientX, clientY);
+      });
+    };
+    const handleMouseLeave = () => {
+      if (hoverFrame !== null) {
+        cancelAnimationFrame(hoverFrame);
+        hoverFrame = null;
+      }
+      setHoverInfo(null);
+    };
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) updateHoverAt(touch.clientX, touch.clientY);
+    };
+    viewport.addEventListener('mousemove', handleMouseMove);
+    viewport.addEventListener('mouseleave', handleMouseLeave);
+    viewport.addEventListener('touchstart', handleTouchStart);
+
     // loadSoundFont() silently no-ops until the internal player exists,
     // which isn't the case yet right after construction — so wait for the
     // base GM soundfont to actually finish loading before appending the
@@ -234,6 +319,7 @@ export const TabPlayerLab: React.FC = () => {
       setTrackNames(score.tracks.map(t => t.name || 'Track'));
       setError(null);
       setSectionRange(null);
+      setHoverInfo(null);
 
       // Every loaded tab defaults to the nylon classical tone regardless of
       // what the file itself specifies — this player is for guitar practice.
@@ -256,8 +342,12 @@ export const TabPlayerLab: React.FC = () => {
 
     return () => {
       viewport.removeEventListener('scroll', handleManualScroll);
+      viewport.removeEventListener('mousemove', handleMouseMove);
+      viewport.removeEventListener('mouseleave', handleMouseLeave);
+      viewport.removeEventListener('touchstart', handleTouchStart);
       if (browsingTimeoutRef.current !== null) window.clearTimeout(browsingTimeoutRef.current);
       if (scrollAnimationFrame !== null) cancelAnimationFrame(scrollAnimationFrame);
+      if (hoverFrame !== null) cancelAnimationFrame(hoverFrame);
       api.destroy();
       apiRef.current = null;
     };
@@ -447,10 +537,39 @@ export const TabPlayerLab: React.FC = () => {
             Guitar samples: "Nylon and Steel Guitars" by Soundfonts4U, CC BY-NC-SA 4.0
           </div>
 
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Tip: click-drag across the notation below to select a passage — it'll loop just that
-            section, so you can isolate and repeat the hard parts instead of the whole song.
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              Tip: click-drag across the notation to loop a passage, and hover any note to see what
+              its markings (hammer-on, slide, palm mute…) mean.
+            </div>
+            <button
+              className="btn"
+              onClick={() => setShowLegend(v => !v)}
+              style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+            >
+              {showLegend ? 'Hide' : 'Show'} Tab Symbol Legend
+            </button>
           </div>
+
+          {showLegend && (
+            <div
+              style={{
+                display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1.5rem',
+                padding: '0.85rem 1rem', borderRadius: '10px',
+                background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
+                fontSize: '0.82rem', color: 'var(--text-secondary)'
+              }}
+            >
+              {LEGEND_KEYS.map(key => (
+                <Term key={key} k={key} source={TAB_TECHNIQUES}>
+                  <span style={{ fontFamily: 'monospace', color: 'var(--primary)', fontWeight: 700, marginRight: '0.35rem' }}>
+                    {TAB_TECHNIQUES[key].symbol}
+                  </span>
+                  {TAB_TECHNIQUES[key].title}
+                </Term>
+              ))}
+            </div>
+          )}
         </>
       )}
 
@@ -478,6 +597,58 @@ export const TabPlayerLab: React.FC = () => {
           padding: hasScore ? '1rem' : 0
         }}
       />
+
+      {/* Floating explanation for whatever technique marking is under the
+          cursor right now — same visual language as the <Term> tooltips
+          above, just following the mouse instead of being pinned to static
+          text, since alphaTab renders the notation itself (not our JSX). */}
+      {hoverInfo && (
+        <div
+          style={{
+            position: 'fixed',
+            left: Math.min(hoverInfo.x + 16, window.innerWidth - 300),
+            top: Math.min(Math.max(hoverInfo.y - 12, 12), window.innerHeight - 40),
+            width: '280px',
+            maxWidth: '85vw',
+            maxHeight: '60vh',
+            overflowY: 'auto',
+            background: '#10131c',
+            border: '1px solid rgba(0, 240, 255, 0.3)',
+            borderRadius: '10px',
+            padding: '0.7rem 0.85rem',
+            fontSize: '0.78rem',
+            lineHeight: 1.5,
+            color: 'var(--text-secondary)',
+            boxShadow: '0 8px 25px rgba(0, 0, 0, 0.6)',
+            pointerEvents: 'none',
+            zIndex: 500,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.6rem'
+          }}
+        >
+          {hoverInfo.techniques.map(key => {
+            const entry = TAB_TECHNIQUES[key];
+            if (!entry) return null;
+            return (
+              <div key={key}>
+                <strong style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontSize: '0.82rem', marginBottom: '2px' }}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    minWidth: '1.6rem', padding: '0.1rem 0.35rem',
+                    background: 'rgba(0,240,255,0.12)', borderRadius: '4px',
+                    fontFamily: 'monospace', fontSize: '0.72rem'
+                  }}>
+                    {entry.symbol}
+                  </span>
+                  {entry.title}
+                </strong>
+                {entry.definition}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 };

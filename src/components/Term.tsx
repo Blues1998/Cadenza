@@ -1,15 +1,17 @@
 import React from 'react';
 import { GLOSSARY } from '../utils/glossary';
+import type { GlossaryEntry } from '../utils/glossary';
 
 interface TermProps {
-  k: string; // key into GLOSSARY
+  k: string; // key into `source`
+  source?: Record<string, GlossaryEntry>; // defaults to the shared theory GLOSSARY
   children: React.ReactNode;
 }
 
 // Wraps a piece of jargon with a dotted underline and a plain-English tooltip.
 // Hover (desktop) or tap/focus (touch, keyboard) reveals the explanation.
-export const Term: React.FC<TermProps> = ({ k, children }) => {
-  const entry = GLOSSARY[k];
+export const Term: React.FC<TermProps> = ({ k, source = GLOSSARY, children }) => {
+  const entry = source[k];
   if (!entry) return <>{children}</>;
 
   return (
