@@ -223,15 +223,20 @@ export const TabPlayerLab: React.FC = () => {
     // fires while a beat is already pressed (used for drag-to-select above),
     // so a plain hover has to be done ourselves via api.boundsLookup, which
     // maps a raw x/y position back to the beat rendered there. Coordinates
-    // are relative to the unscrolled content, matching the scroll-position
-    // math above, so we add the viewport's own scroll offset back in.
+    // are relative to the unscrolled content's own origin, which sits inset
+    // from the viewport's border-box (what getBoundingClientRect reports) by
+    // the viewport's own padding — that inset has to be subtracted back out,
+    // or every hit-test lands a few pixels away from whatever was clicked.
     let hoverFrame: number | null = null;
     const updateHoverAt = (clientX: number, clientY: number) => {
       const boundsLookup = api.boundsLookup;
       if (!boundsLookup) return;
       const rect = viewport.getBoundingClientRect();
-      const contentX = clientX - rect.left + viewport.scrollLeft;
-      const contentY = clientY - rect.top + viewport.scrollTop;
+      const style = getComputedStyle(viewport);
+      const insetLeft = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.borderLeftWidth) || 0);
+      const insetTop = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.borderTopWidth) || 0);
+      const contentX = clientX - rect.left - insetLeft + viewport.scrollLeft;
+      const contentY = clientY - rect.top - insetTop + viewport.scrollTop;
       const beat = boundsLookup.getBeatAtPos(contentX, contentY);
       if (!beat) {
         setHoverInfo(null);
