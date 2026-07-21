@@ -60,6 +60,10 @@ function formatTime(ms: number): string {
 // playback auto-follow resumes.
 const BROWSE_GRACE_PERIOD_MS = 2000;
 
+// Remembers the hover-tooltip on/off preference across visits — most people
+// only need the explanations a handful of times before they've learned them.
+const TOOLTIPS_ENABLED_STORAGE_KEY = 'cadenza-tab-player-tooltips-enabled';
+
 // Fixed display order for the always-visible legend strip.
 const LEGEND_KEYS = Object.keys(TAB_TECHNIQUES);
 
@@ -117,6 +121,20 @@ export const TabPlayerLab: React.FC = () => {
   const dragStartBeatRef = useRef<model.Beat | null>(null);
   const [hoverInfo, setHoverInfo] = useState<{ x: number; y: number; techniques: string[] } | null>(null);
   const [showLegend, setShowLegend] = useState(false);
+  const [tooltipsEnabled, setTooltipsEnabled] = useState(
+    () => localStorage.getItem(TOOLTIPS_ENABLED_STORAGE_KEY) !== 'false'
+  );
+  const tooltipsEnabledRef = useRef(tooltipsEnabled);
+  const highlightElRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    tooltipsEnabledRef.current = tooltipsEnabled;
+    localStorage.setItem(TOOLTIPS_ENABLED_STORAGE_KEY, String(tooltipsEnabled));
+    if (!tooltipsEnabled) {
+      setHoverInfo(null);
+      if (highlightElRef.current) highlightElRef.current.style.opacity = '0';
+    }
+  }, [tooltipsEnabled]);
 
   // Set up the AlphaTabApi instance once against the viewport div.
   useEffect(() => {
@@ -220,6 +238,24 @@ export const TabPlayerLab: React.FC = () => {
     };
     viewport.addEventListener('scroll', handleManualScroll);
 
+    // Highlights whichever note the hover tooltip is currently explaining.
+    // Plain, imperatively-managed DOM (not React-rendered) since it lives
+    // inside the same container alphaTab itself injects its cursor/selection
+    // overlays into — React never gets a say over that div's children.
+    const highlightEl = document.createElement('div');
+    highlightEl.style.position = 'absolute';
+    highlightEl.style.pointerEvents = 'none';
+    highlightEl.style.border = '2px solid rgba(0, 240, 255, 0.9)';
+    highlightEl.style.borderRadius = '6px';
+    highlightEl.style.background = 'rgba(0, 240, 255, 0.1)';
+    highlightEl.style.boxShadow = '0 0 12px rgba(0, 240, 255, 0.45)';
+    highlightEl.style.opacity = '0';
+    highlightEl.style.transition = 'opacity 0.12s ease';
+    highlightEl.style.zIndex = '40';
+    viewport.appendChild(highlightEl);
+    highlightElRef.current = highlightEl;
+    const HIGHLIGHT_PADDING = 4;
+
     // Explains tab notation on hover: alphaTab's own mouse-move event only
     // fires while a beat is already pressed (used for drag-to-select above),
     // so a plain hover has to be done ourselves via api.boundsLookup, which
@@ -230,6 +266,7 @@ export const TabPlayerLab: React.FC = () => {
     // or every hit-test lands a few pixels away from whatever was clicked.
     let hoverFrame: number | null = null;
     const updateHoverAt = (clientX: number, clientY: number) => {
+      if (!tooltipsEnabledRef.current) return;
       const boundsLookup = api.boundsLookup;
       if (!boundsLookup) return;
       const rect = viewport.getBoundingClientRect();
@@ -239,16 +276,21 @@ export const TabPlayerLab: React.FC = () => {
       const contentX = clientX - rect.left - insetLeft + viewport.scrollLeft;
       const contentY = clientY - rect.top - insetTop + viewport.scrollTop;
       const beat = boundsLookup.getBeatAtPos(contentX, contentY);
-      if (!beat) {
+      const techniques = beat ? detectBeatTechniques(beat) : [];
+      if (!beat || techniques.length === 0) {
         setHoverInfo(null);
-        return;
-      }
-      const techniques = detectBeatTechniques(beat);
-      if (techniques.length === 0) {
-        setHoverInfo(null);
+        highlightEl.style.opacity = '0';
         return;
       }
       setHoverInfo({ x: clientX, y: clientY, techniques });
+      const box = boundsLookup.findBeat(beat)?.visualBounds;
+      if (box) {
+        highlightEl.style.left = `${box.x - HIGHLIGHT_PADDING}px`;
+        highlightEl.style.top = `${box.y - HIGHLIGHT_PADDING}px`;
+        highlightEl.style.width = `${box.w + HIGHLIGHT_PADDING * 2}px`;
+        highlightEl.style.height = `${box.h + HIGHLIGHT_PADDING * 2}px`;
+        highlightEl.style.opacity = '1';
+      }
     };
     const handleMouseMove = (e: MouseEvent) => {
       if (hoverFrame !== null) return;
@@ -264,6 +306,7 @@ export const TabPlayerLab: React.FC = () => {
         hoverFrame = null;
       }
       setHoverInfo(null);
+      highlightEl.style.opacity = '0';
     };
     const handleTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
@@ -326,6 +369,7 @@ export const TabPlayerLab: React.FC = () => {
       setError(null);
       setSectionRange(null);
       setHoverInfo(null);
+      highlightEl.style.opacity = '0';
 
       // Every loaded tab defaults to the nylon classical tone regardless of
       // what the file itself specifies — this player is for guitar practice.
@@ -354,6 +398,8 @@ export const TabPlayerLab: React.FC = () => {
       if (browsingTimeoutRef.current !== null) window.clearTimeout(browsingTimeoutRef.current);
       if (scrollAnimationFrame !== null) cancelAnimationFrame(scrollAnimationFrame);
       if (hoverFrame !== null) cancelAnimationFrame(hoverFrame);
+      highlightEl.remove();
+      highlightElRef.current = null;
       api.destroy();
       apiRef.current = null;
     };
@@ -545,16 +591,30 @@ export const TabPlayerLab: React.FC = () => {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Tip: click-drag across the notation to loop a passage, and hover any note to see what
-              its markings (hammer-on, slide, palm mute…) mean.
+              Tip: click-drag across the notation to loop a passage
+              {tooltipsEnabled && ', and hover any note to see what its markings (hammer-on, slide, palm mute…) mean'}.
             </div>
-            <button
-              className="btn"
-              onClick={() => setShowLegend(v => !v)}
-              style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
-            >
-              {showLegend ? 'Hide' : 'Show'} Tab Symbol Legend
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="btn"
+                onClick={() => setTooltipsEnabled(v => !v)}
+                title="Explanations that pop up when you hover a note's technique marking"
+                style={{
+                  padding: '0.4rem 0.85rem', fontSize: '0.75rem', whiteSpace: 'nowrap',
+                  borderColor: tooltipsEnabled ? 'var(--primary)' : undefined,
+                  color: tooltipsEnabled ? 'var(--primary)' : undefined
+                }}
+              >
+                Hover Tips: {tooltipsEnabled ? 'On' : 'Off'}
+              </button>
+              <button
+                className="btn"
+                onClick={() => setShowLegend(v => !v)}
+                style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+              >
+                {showLegend ? 'Hide' : 'Show'} Tab Symbol Legend
+              </button>
+            </div>
           </div>
 
           {showLegend && (
