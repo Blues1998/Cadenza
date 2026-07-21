@@ -53,9 +53,21 @@ function formatTime(ms: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+// How long the user gets to browse freely after a manual scroll before
+// playback auto-follow resumes.
+const BROWSE_GRACE_PERIOD_MS = 2000;
+// Only re-check whether the cursor needs following this often, so it's a
+// smooth, occasional nudge rather than a scroll fight on every beat.
+const FOLLOW_CHECK_THROTTLE_MS = 250;
+
 export const TabPlayerLab: React.FC = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<AlphaTabApi | null>(null);
+  const isPlayingRef = useRef(false);
+  const userBrowsingRef = useRef(false);
+  const browsingTimeoutRef = useRef<number | null>(null);
+  const isAutoScrollingRef = useRef(false);
+  const lastFollowCheckRef = useRef(0);
 
   const [scoreTitle, setScoreTitle] = useState<string>('');
   const [scoreArtist, setScoreArtist] = useState<string>('');
@@ -74,7 +86,9 @@ export const TabPlayerLab: React.FC = () => {
   useEffect(() => {
     if (!viewportRef.current) return;
 
-    const api = new AlphaTabApi(viewportRef.current, {
+    const viewport = viewportRef.current;
+
+    const api = new AlphaTabApi(viewport, {
       core: {
         fontDirectory: '/font/'
       },
@@ -83,12 +97,42 @@ export const TabPlayerLab: React.FC = () => {
         playerMode: 'EnabledAutomatic',
         soundFont: '/soundfont/sonivox.sf2',
         enableCursor: true,
-        // Default scrolls html,body — but the notation lives in its own
-        // internally-scrolling div, so point it at that instead.
-        scrollElement: viewportRef.current
+        // alphaTab's built-in auto-scroll only knows "always snap to the
+        // cursor", which fights any attempt to browse away while playing.
+        // We want "follow, but let the user look around and only pull them
+        // back after a pause" — that needs custom scroll handling below, so
+        // the built-in follow behavior stays off.
+        scrollMode: 'Off'
       }
     });
     apiRef.current = api;
+
+    // Smoothly scrolls the viewport so the currently playing beat is nicely
+    // in view (about a third of the way down), without fighting a scroll
+    // that's already in flight or one the user just triggered themselves.
+    const scrollToCurrentBeat = () => {
+      const beatCursor = viewport.querySelector('.at-cursor-beat') as HTMLElement | null;
+      if (!beatCursor) return;
+      const containerRect = viewport.getBoundingClientRect();
+      const beatRect = beatCursor.getBoundingClientRect();
+      const currentAbsoluteTop = beatRect.top - containerRect.top + viewport.scrollTop;
+      const targetScrollTop = Math.max(0, currentAbsoluteTop - viewport.clientHeight * 0.3);
+      if (Math.abs(targetScrollTop - viewport.scrollTop) < 2) return;
+      isAutoScrollingRef.current = true;
+      viewport.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+      window.setTimeout(() => { isAutoScrollingRef.current = false; }, 700);
+    };
+
+    const handleManualScroll = () => {
+      if (isAutoScrollingRef.current) return; // our own scroll, not the user's
+      userBrowsingRef.current = true;
+      if (browsingTimeoutRef.current !== null) window.clearTimeout(browsingTimeoutRef.current);
+      browsingTimeoutRef.current = window.setTimeout(() => {
+        userBrowsingRef.current = false;
+        if (isPlayingRef.current) scrollToCurrentBeat();
+      }, BROWSE_GRACE_PERIOD_MS);
+    };
+    viewport.addEventListener('scroll', handleManualScroll);
 
     // loadSoundFont() silently no-ops until the internal player exists,
     // which isn't the case yet right after construction — so wait for the
@@ -125,14 +169,36 @@ export const TabPlayerLab: React.FC = () => {
       api.loadMidiForScore();
     });
     api.playerStateChanged.on((args) => {
-      setIsPlaying(args.state === synth.PlayerState.Playing);
+      const playing = args.state === synth.PlayerState.Playing;
+      isPlayingRef.current = playing;
+      setIsPlaying(playing);
+      // Reorient immediately when playback (re)starts, in case the user
+      // browsed away while paused.
+      if (playing && !userBrowsingRef.current) scrollToCurrentBeat();
     });
     api.playerReady.on(() => setIsReady(true));
     api.playerPositionChanged.on((args) => {
       setPosition({ current: args.currentTime, end: args.endTime });
+
+      if (userBrowsingRef.current) return;
+      const now = performance.now();
+      if (now - lastFollowCheckRef.current < FOLLOW_CHECK_THROTTLE_MS) return;
+      lastFollowCheckRef.current = now;
+
+      const beatCursor = viewport.querySelector('.at-cursor-beat') as HTMLElement | null;
+      if (!beatCursor) return;
+      const containerRect = viewport.getBoundingClientRect();
+      const beatRect = beatCursor.getBoundingClientRect();
+      const relativeTop = beatRect.top - containerRect.top;
+      const margin = viewport.clientHeight * 0.15;
+      if (relativeTop < margin || relativeTop > viewport.clientHeight - margin) {
+        scrollToCurrentBeat();
+      }
     });
 
     return () => {
+      viewport.removeEventListener('scroll', handleManualScroll);
+      if (browsingTimeoutRef.current !== null) window.clearTimeout(browsingTimeoutRef.current);
       api.destroy();
       apiRef.current = null;
     };
@@ -322,6 +388,7 @@ export const TabPlayerLab: React.FC = () => {
         ref={viewportRef}
         style={{
           minHeight: hasScore ? '400px' : '120px',
+          maxHeight: hasScore ? '65vh' : undefined,
           overflow: 'auto',
           background: hasScore ? '#ffffff' : '#0b0c10',
           borderRadius: '12px',
