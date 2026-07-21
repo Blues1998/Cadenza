@@ -82,7 +82,10 @@ export const TabPlayerLab: React.FC = () => {
         enablePlayer: true,
         playerMode: 'EnabledAutomatic',
         soundFont: '/soundfont/sonivox.sf2',
-        enableCursor: true
+        enableCursor: true,
+        // Default scrolls html,body — but the notation lives in its own
+        // internally-scrolling div, so point it at that instead.
+        scrollElement: viewportRef.current
       }
     });
     apiRef.current = api;
@@ -302,6 +305,16 @@ export const TabPlayerLab: React.FC = () => {
           </div>
         </>
       )}
+
+      {/* alphaTab's playback cursor divs (.at-cursor-bar/.at-cursor-beat) are
+          injected into the DOM with no default styling at all — invisible
+          until given a color, same story as the notation background. */}
+      <style>{`
+        .at-cursor-bar { background: rgba(0, 240, 255, 0.12); }
+        .at-cursor-beat { background: #0090a8; width: 3px; }
+        .at-highlight * { fill: #0090a8; stroke: #0090a8; }
+        .at-selection div { background: rgba(0, 240, 255, 0.1); }
+      `}</style>
 
       {/* alphaTab draws notation in dark ink meant for a page, so this stays
           white regardless of the app's dark theme */}
