@@ -91,13 +91,18 @@ export function useTabIntervalSource(): TabIntervalSource {
 
     api.scoreLoaded.on((score) => {
       setScoreInstrument(score, DEFAULT_GUITAR_TONE.bank, DEFAULT_GUITAR_TONE.program);
-      setCandidates(extractIntervalCandidates(score));
-      setIsLoading(false);
       midiReadyRef.current = false;
       api.loadMidiForScore();
     });
     api.midiLoaded.on(() => {
       midiReadyRef.current = true;
+      // Candidates need tickCache (built from the generated MIDI, which
+      // accounts for repeats) for their tick ranges to actually correspond
+      // to the analyzed notes during real playback — see the comment in
+      // extractIntervalCandidates for why the structural ticks alone aren't
+      // enough.
+      if (api.score) setCandidates(extractIntervalCandidates(api.score, api.tickCache));
+      setIsLoading(false);
     });
     api.error.on((e) => {
       console.error('Ear Training tab source error', e);
