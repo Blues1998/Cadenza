@@ -56,6 +56,14 @@ function formatTime(ms: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+// getBeatAtPos() hit-tests against a beat's full rhythmic-slot width
+// (its realBounds, which explicitly includes surrounding whitespace) — great
+// for "which beat is this", far too generous for "am I actually pointing at
+// this note". This tightens that back up to the beat's own visible glyphs.
+function isNearBounds(x: number, y: number, box: { x: number; y: number; w: number; h: number }, margin: number): boolean {
+  return x >= box.x - margin && x <= box.x + box.w + margin && y >= box.y - margin && y <= box.y + box.h + margin;
+}
+
 // How long the user gets to browse freely after a manual scroll before
 // playback auto-follow resumes.
 const BROWSE_GRACE_PERIOD_MS = 2000;
@@ -289,17 +297,21 @@ export const TabPlayerLab: React.FC = () => {
       const contentX = clientX - rect.left - insetLeft + viewport.scrollLeft;
       const contentY = clientY - rect.top - insetTop + viewport.scrollTop;
       const beat = boundsLookup.getBeatAtPos(contentX, contentY);
-      const techniques = beat ? detectBeatTechniques(beat) : [];
-      if (!beat || techniques.length === 0) {
+      const beatBounds = beat ? boundsLookup.findBeat(beat) : null;
+      // Prefer the tight visualBounds (actual glyphs) so hovering only
+      // triggers near what's really drawn; realBounds (whole rhythmic slot,
+      // including whitespace) is a fallback for the rare beat where
+      // visualBounds comes back empty, so the feature still works there.
+      const visual = beatBounds?.visualBounds;
+      const box = visual && visual.w > 0 && visual.h > 0 ? visual : beatBounds?.realBounds;
+      const isNear = box ? isNearBounds(contentX, contentY, box, 6) : false;
+      const techniques = beat && isNear ? detectBeatTechniques(beat) : [];
+      if (!beat || !isNear || techniques.length === 0) {
         setHoverInfo(null);
         highlightEl.style.opacity = '0';
         return;
       }
       setHoverInfo({ x: clientX, y: clientY, techniques });
-      // realBounds (not visualBounds) — the same property already proven
-      // reliable for the auto-scroll feature above, whereas visualBounds is
-      // sometimes left empty depending on what's rendered in a beat.
-      const box = boundsLookup.findBeat(beat)?.realBounds;
       if (box) {
         highlightEl.style.left = `${box.x - HIGHLIGHT_PADDING}px`;
         highlightEl.style.top = `${box.y - HIGHLIGHT_PADDING}px`;
