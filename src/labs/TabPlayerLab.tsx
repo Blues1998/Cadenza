@@ -57,11 +57,28 @@ function formatTime(ms: number): string {
 }
 
 // getBeatAtPos() hit-tests against a beat's full rhythmic-slot width
-// (its realBounds, which explicitly includes surrounding whitespace) — great
-// for "which beat is this", far too generous for "am I actually pointing at
-// this note". This tightens that back up to the beat's own visible glyphs.
-function isNearBounds(x: number, y: number, box: { x: number; y: number; w: number; h: number }, margin: number): boolean {
-  return x >= box.x - margin && x <= box.x + box.w + margin && y >= box.y - margin && y <= box.y + box.h + margin;
+// (its realBounds), which explicitly includes the whitespace gaps that
+// separate it from neighboring notes — great for "which beat is this", too
+// generous for "am I actually pointing at this note". Shrinking that down to
+// a centered, narrower slice (used for both the trigger check and the
+// highlight box, so what's outlined always matches what you can hover) keeps
+// this to roughly where the note itself is drawn.
+const HOVER_WIDTH_FOCUS = 0.5; // fraction of the beat's own width to keep, centered
+const HOVER_MIN_WIDTH = 18;
+const HOVER_MARGIN = 4;
+type Box = { x: number; y: number; w: number; h: number };
+function shrinkBoxHorizontally(box: Box): Box {
+  const focusWidth = Math.max(Math.min(box.w, HOVER_MIN_WIDTH), box.w * HOVER_WIDTH_FOCUS);
+  const insetX = (box.w - focusWidth) / 2;
+  return { x: box.x + insetX, y: box.y, w: box.w - insetX * 2, h: box.h };
+}
+function isNearBounds(x: number, y: number, box: Box): boolean {
+  return (
+    x >= box.x - HOVER_MARGIN &&
+    x <= box.x + box.w + HOVER_MARGIN &&
+    y >= box.y - HOVER_MARGIN &&
+    y <= box.y + box.h + HOVER_MARGIN
+  );
 }
 
 // How long the user gets to browse freely after a manual scroll before
@@ -297,14 +314,9 @@ export const TabPlayerLab: React.FC = () => {
       const contentX = clientX - rect.left - insetLeft + viewport.scrollLeft;
       const contentY = clientY - rect.top - insetTop + viewport.scrollTop;
       const beat = boundsLookup.getBeatAtPos(contentX, contentY);
-      const beatBounds = beat ? boundsLookup.findBeat(beat) : null;
-      // Prefer the tight visualBounds (actual glyphs) so hovering only
-      // triggers near what's really drawn; realBounds (whole rhythmic slot,
-      // including whitespace) is a fallback for the rare beat where
-      // visualBounds comes back empty, so the feature still works there.
-      const visual = beatBounds?.visualBounds;
-      const box = visual && visual.w > 0 && visual.h > 0 ? visual : beatBounds?.realBounds;
-      const isNear = box ? isNearBounds(contentX, contentY, box, 6) : false;
+      const rawBox = beat ? boundsLookup.findBeat(beat)?.realBounds : undefined;
+      const box = rawBox ? shrinkBoxHorizontally(rawBox) : undefined;
+      const isNear = box ? isNearBounds(contentX, contentY, box) : false;
       const techniques = beat && isNear ? detectBeatTechniques(beat) : [];
       if (!beat || !isNear || techniques.length === 0) {
         setHoverInfo(null);
