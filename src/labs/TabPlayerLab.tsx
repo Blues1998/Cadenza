@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { AlphaTabApi, synth, model, FileLoadError } from '@coderline/alphatab';
 import { Term } from '../components/Term';
 import { TAB_TECHNIQUES } from '../utils/glossary';
@@ -606,8 +607,12 @@ export const TabPlayerLab: React.FC = () => {
       {/* Floating explanation for whatever technique marking is under the
           cursor right now — same visual language as the <Term> tooltips
           above, just following the mouse instead of being pinned to static
-          text, since alphaTab renders the notation itself (not our JSX). */}
-      {hoverInfo && (
+          text, since alphaTab renders the notation itself (not our JSX).
+          Portaled straight to <body>: the panel this section lives in uses
+          backdrop-filter, which (per spec) makes it the containing block for
+          any position:fixed descendant — without the portal, "fixed" ends up
+          anchored to the panel's own box instead of the real viewport. */}
+      {hoverInfo && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -652,7 +657,8 @@ export const TabPlayerLab: React.FC = () => {
               </div>
             );
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );
