@@ -58,19 +58,30 @@ function formatTime(ms: number): string {
 
 // getBeatAtPos() hit-tests against a beat's full rhythmic-slot width
 // (its realBounds), which explicitly includes the whitespace gaps that
-// separate it from neighboring notes — great for "which beat is this", too
-// generous for "am I actually pointing at this note". Shrinking that down to
-// a centered, narrower slice (used for both the trigger check and the
-// highlight box, so what's outlined always matches what you can hover) keeps
-// this to roughly where the note itself is drawn.
+// separate it from neighboring notes — too generous horizontally for "am I
+// actually pointing at this note". Narrowing that to a centered slice fixes
+// the horizontal side of it.
+//
+// Vertically, a guitar staff with both standard notation and tab enabled
+// renders as ONE staff (Staff.showStandardNotation + showTablature both
+// true) sharing one beat, but realBounds's own vertical extent tracks only
+// part of that combined rendering — technique markings (hammer-on/pull-off
+// letters, dynamics) drawn in the notation staff sit above realBounds's own
+// top edge entirely. So the hoverable area has to extend upward well past
+// the box's top, not just by a small forgiving margin, to actually reach
+// those markings — the tab staff below is where realBounds itself sits.
 const HOVER_WIDTH_FOCUS = 0.5; // fraction of the beat's own width to keep, centered
 const HOVER_MIN_WIDTH = 18;
-const HOVER_MARGIN = 4;
+const HOVER_MARGIN = 4; // forgiving margin on the sides and bottom
+const HOVER_TOP_EXTRA_FACTOR = 1.2; // extend upward by this multiple of the box's own height
+const HOVER_TOP_EXTRA_MIN = 50; // and never less than this many pixels
+
 type Box = { x: number; y: number; w: number; h: number };
-function shrinkBoxHorizontally(box: Box): Box {
+function adjustBoxForHover(box: Box): Box {
   const focusWidth = Math.max(Math.min(box.w, HOVER_MIN_WIDTH), box.w * HOVER_WIDTH_FOCUS);
   const insetX = (box.w - focusWidth) / 2;
-  return { x: box.x + insetX, y: box.y, w: box.w - insetX * 2, h: box.h };
+  const topExtra = Math.max(box.h * HOVER_TOP_EXTRA_FACTOR, HOVER_TOP_EXTRA_MIN);
+  return { x: box.x + insetX, y: box.y - topExtra, w: box.w - insetX * 2, h: box.h + topExtra };
 }
 function isNearBounds(x: number, y: number, box: Box): boolean {
   return (
@@ -315,7 +326,7 @@ export const TabPlayerLab: React.FC = () => {
       const contentY = clientY - rect.top - insetTop + viewport.scrollTop;
       const beat = boundsLookup.getBeatAtPos(contentX, contentY);
       const rawBox = beat ? boundsLookup.findBeat(beat)?.realBounds : undefined;
-      const box = rawBox ? shrinkBoxHorizontally(rawBox) : undefined;
+      const box = rawBox ? adjustBoxForHover(rawBox) : undefined;
       const isNear = box ? isNearBounds(contentX, contentY, box) : false;
       const techniques = beat && isNear ? detectBeatTechniques(beat) : [];
       if (!beat || !isNear || techniques.length === 0) {
