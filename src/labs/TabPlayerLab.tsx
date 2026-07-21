@@ -104,42 +104,69 @@ export const TabPlayerLab: React.FC = () => {
     });
     apiRef.current = api;
 
-    // Scrolls so the given bar lands about a third of the way down the
+    // Animates scrollTop ourselves (instead of the native
+    // scrollTo({behavior:'smooth'}), whose actual duration is entirely
+    // browser-determined and not something we can know) so we always know
+    // exactly when our own scroll starts and ends — that precision is what
+    // lets the manual-scroll guard below be exact instead of guessed.
+    let scrollAnimationFrame: number | null = null;
+    const animateScrollTo = (targetTop: number, durationMs: number) => {
+      if (scrollAnimationFrame !== null) cancelAnimationFrame(scrollAnimationFrame);
+      const startTop = viewport.scrollTop;
+      const distance = targetTop - startTop;
+      const startTime = performance.now();
+      isAutoScrollingRef.current = true;
+      const step = (now: number) => {
+        const t = Math.min(1, (now - startTime) / durationMs);
+        const eased = 1 - (1 - t) ** 3; // ease-out cubic
+        viewport.scrollTop = startTop + distance * eased;
+        if (t < 1) {
+          scrollAnimationFrame = requestAnimationFrame(step);
+        } else {
+          scrollAnimationFrame = null;
+          isAutoScrollingRef.current = false;
+        }
+      };
+      scrollAnimationFrame = requestAnimationFrame(step);
+    };
+
+    // Scrolls so the given bar lands about a quarter of the way down the
     // viewport. Uses alphaTab's own authoritative layout bounds (the Y
     // position it just computed for this exact beat) rather than reading
     // the cursor element's DOM position back out, which can briefly lag a
-    // frame behind — that mismatch was the cause of scrolls overshooting
-    // and compounding worse on each subsequent auto-scroll.
-    const scrollToBarY = (barY: number, durationMs: number) => {
-      const target = Math.max(0, barY - viewport.clientHeight * 0.3);
+    // frame behind.
+    const scrollToBar = (barY: number, durationMs: number) => {
+      const target = Math.max(0, barY - viewport.clientHeight * 0.25);
       if (Math.abs(target - viewport.scrollTop) < 2) return;
-      isAutoScrollingRef.current = true;
-      viewport.scrollTo({ top: target, behavior: 'smooth' });
-      // We know exactly how long we're telling it to take, so the guard
-      // clears right after — no guessing at a native animation's duration.
-      window.setTimeout(() => { isAutoScrollingRef.current = false; }, durationMs + 150);
+      animateScrollTo(target, durationMs);
     };
 
     api.customScrollHandler = {
       // Deliberate "jump to the cursor now" — used by our own
       // api.scrollToCursor() calls below, always honored.
       forceScrollTo(currentBeatBounds) {
-        scrollToBarY(currentBeatBounds.barBounds.masterBarBounds.realBounds.y, 400);
+        scrollToBar(currentBeatBounds.barBounds.masterBarBounds.realBounds.y, 400);
       },
       // Fires continuously as the beat cursor advances during playback.
       // Only act if the user isn't browsing, nothing's already animating
       // (never stack a new scroll on top of one still in flight), and the
-      // bar has actually drifted near the edge of the visible pane.
+      // bar has actually drifted near the edge of the visible pane — checked
+      // at both its top and bottom edge, so a tall system (lots of
+      // fingerings/annotations) triggers a follow as soon as either end
+      // gets close, not only once its top edge does.
       onBeatCursorUpdating(startBeat) {
         if (userBrowsingRef.current || isAutoScrollingRef.current) return;
-        const barY = startBeat.barBounds.masterBarBounds.realBounds.y;
-        const relativeY = barY - viewport.scrollTop;
+        const bounds = startBeat.barBounds.masterBarBounds.realBounds;
+        const relativeTop = bounds.y - viewport.scrollTop;
+        const relativeBottom = bounds.y + bounds.h - viewport.scrollTop;
         const margin = viewport.clientHeight * 0.15;
-        if (relativeY < margin || relativeY > viewport.clientHeight - margin) {
-          scrollToBarY(barY, 300);
+        if (relativeTop < margin || relativeBottom > viewport.clientHeight - margin) {
+          scrollToBar(bounds.y, 350);
         }
       },
-      [Symbol.dispose]() { /* nothing to release */ }
+      [Symbol.dispose]() {
+        if (scrollAnimationFrame !== null) cancelAnimationFrame(scrollAnimationFrame);
+      }
     };
 
     const handleManualScroll = () => {
@@ -203,6 +230,7 @@ export const TabPlayerLab: React.FC = () => {
     return () => {
       viewport.removeEventListener('scroll', handleManualScroll);
       if (browsingTimeoutRef.current !== null) window.clearTimeout(browsingTimeoutRef.current);
+      if (scrollAnimationFrame !== null) cancelAnimationFrame(scrollAnimationFrame);
       api.destroy();
       apiRef.current = null;
     };
