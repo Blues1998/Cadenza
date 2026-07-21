@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Copied from @coderline/alphatab at dev/build time by the vite plugin
+public/font
+public/soundfont
+
+# Guitar soundfont (~37MB, too big to commit) — run `npm run setup:soundfont`
+public/instruments
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

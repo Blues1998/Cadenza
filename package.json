@@ -7,9 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup:soundfont": "node scripts/fetch-guitar-soundfont.mjs"
   },
   "dependencies": {
+    "@coderline/alphatab": "^1.8.4",
+    "@coderline/alphatab-vite": "^1.8.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
