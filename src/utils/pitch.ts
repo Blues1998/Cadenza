@@ -42,9 +42,21 @@ export function detectPitch(buffer: Float32Array, sampleRate: number): PitchResu
 
   const halfLen = Math.floor(buffer.length / 2);
 
+  // Lags outside the musical range are never consulted by the search below
+  // (step 4) or its interpolation (step 5), which together only ever read
+  // up to index maxTau + 1 — so the two O(halfLen) x O(halfLen) loops below
+  // only need to compute that far instead of all the way to halfLen, saving
+  // a meaningful fraction of this function's dominant cost on every
+  // animation frame it runs on. minTau/maxTau are computed here (rather than
+  // after, alongside the threshold search that originally used them) purely
+  // so computeLen can be derived before the loops that need it.
+  const minTau = Math.max(2, Math.floor(sampleRate / MAX_FREQUENCY));
+  const maxTau = Math.min(halfLen - 2, Math.ceil(sampleRate / MIN_FREQUENCY));
+  const computeLen = maxTau + 2; // +1 for the inclusive bound, +1 for gamma's lookahead in step 5
+
   // 2. YIN difference function: d[tau] = sum of squared differences at lag tau
-  const diff = new Float32Array(halfLen);
-  for (let tau = 1; tau < halfLen; tau++) {
+  const diff = new Float32Array(computeLen);
+  for (let tau = 1; tau < computeLen; tau++) {
     let sum = 0;
     for (let i = 0; i < halfLen; i++) {
       const delta = buffer[i] - buffer[i + tau];
@@ -54,10 +66,10 @@ export function detectPitch(buffer: Float32Array, sampleRate: number): PitchResu
   }
 
   // 3. Cumulative mean normalized difference — dips toward 0 at the true period
-  const cmnd = new Float32Array(halfLen);
+  const cmnd = new Float32Array(computeLen);
   cmnd[0] = 1;
   let runningSum = 0;
-  for (let tau = 1; tau < halfLen; tau++) {
+  for (let tau = 1; tau < computeLen; tau++) {
     runningSum += diff[tau];
     cmnd[tau] = runningSum === 0 ? 1 : (diff[tau] * tau) / runningSum;
   }
@@ -65,8 +77,6 @@ export function detectPitch(buffer: Float32Array, sampleRate: number): PitchResu
   // 4. Absolute threshold: take the FIRST dip below threshold, then walk down
   // to its local minimum. Restrict the lag search to the musical range.
   const threshold = 0.12;
-  const minTau = Math.max(2, Math.floor(sampleRate / MAX_FREQUENCY));
-  const maxTau = Math.min(halfLen - 2, Math.ceil(sampleRate / MIN_FREQUENCY));
 
   let tauEstimate = -1;
   for (let tau = minTau; tau <= maxTau; tau++) {
