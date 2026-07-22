@@ -95,7 +95,7 @@ const HarmonicExplorer: React.FC = () => {
       ctx.beginPath();
       for (let px = 0; px <= w; px++) {
         const y = yFor(a * Math.sin(2 * Math.PI * (n + 1) * CYCLES * (px / w)));
-        px === 0 ? ctx.moveTo(px, y) : ctx.lineTo(px, y);
+        if (px === 0) ctx.moveTo(px, y); else ctx.lineTo(px, y);
       }
       ctx.stroke();
     });
@@ -108,7 +108,7 @@ const HarmonicExplorer: React.FC = () => {
     ctx.beginPath();
     for (let px = 0; px <= w; px++) {
       const y = yFor(sum(px / w));
-      px === 0 ? ctx.moveTo(px, y) : ctx.lineTo(px, y);
+      if (px === 0) ctx.moveTo(px, y); else ctx.lineTo(px, y);
     }
     ctx.stroke();
     ctx.shadowBlur = 0;
@@ -233,7 +233,7 @@ const RatioExplorer: React.FC = () => {
         const t = (px / w) * T;
         const y = (Math.sin(2 * Math.PI * BASE_HZ * t) + Math.sin(2 * Math.PI * f2 * t)) / 2;
         const yPix = h / 2 - y * (h / 2 - 6);
-        px === 0 ? ctx.moveTo(px, yPix) : ctx.lineTo(px, yPix);
+        if (px === 0) ctx.moveTo(px, yPix); else ctx.lineTo(px, yPix);
       }
       ctx.stroke();
     }
