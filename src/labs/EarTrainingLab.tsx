@@ -14,6 +14,16 @@ import type {
 } from '../utils/musicTheory';
 import { useTabIntervalSource } from '../hooks/useTabIntervalSource';
 import type { TabIntervalCandidate } from '../utils/tabIntervalSource';
+import { CHORD_FEELINGS } from '../utils/glossary';
+
+// Two of the longer 7th-chord names get an abbreviated parenthetical
+// (everything else is short enough to show in full) — the feeling word
+// itself always comes from CHORD_FEELINGS so it can't drift out of sync
+// with the rest of the app's chord-quality labeling.
+const CHORD_SHORT_LABEL_OVERRIDES: Record<string, string> = {
+  'Half-Diminished 7th': 'Half-Dim',
+  'Diminished 7th': 'Dim 7th'
+};
 
 type QuizMode = 'intervals' | 'chords';
 type Difficulty = 'super-beginner' | 'easy' | 'medium' | 'hard';
@@ -201,28 +211,10 @@ export const EarTrainingLab: React.FC = () => {
   // Translates complex terms to beginner-friendly labels
   const getDisplayOptionName = (opt: string) => {
     if (quizMode === 'chords') {
-      switch (opt) {
-        case 'Major Triad':
-          return 'Happy (Major)';
-        case 'Minor Triad':
-          return 'Sad (Minor)';
-        case 'Diminished Triad':
-          return 'Mysterious (Diminished)';
-        case 'Augmented Triad':
-          return 'Tense (Augmented)';
-        case 'Major 7th':
-          return 'Dreamy (Major 7th)';
-        case 'Minor 7th':
-          return 'Mellow (Minor 7th)';
-        case 'Dominant 7th':
-          return 'Bluesy (Dominant 7th)';
-        case 'Half-Diminished 7th':
-          return 'Complex (Half-Dim)';
-        case 'Diminished 7th':
-          return 'Suspenseful (Dim 7th)';
-        default:
-          return opt;
-      }
+      const feeling = CHORD_FEELINGS[opt];
+      if (!feeling) return opt;
+      const shortLabel = CHORD_SHORT_LABEL_OVERRIDES[opt] ?? opt.replace(' Triad', '');
+      return `${feeling} (${shortLabel})`;
     }
     return opt;
   };
@@ -259,12 +251,21 @@ export const EarTrainingLab: React.FC = () => {
     generateQuestion();
   };
 
-  // Watch for quiz criteria changes and update quiz question automatically
+  // Watch for quiz criteria changes and update quiz question automatically.
+  // If tab mode runs dry mid-session (switching the library pick to a piece
+  // with no gradable candidates), generateQuestion() would otherwise bail
+  // out early having already cleared the old candidate/correctMidis while
+  // leaving the previous correctInterval/options on screen — an unanswerable
+  // stale question. Bounce back to the start screen instead, same as the
+  // already-disabled Start button for that same empty-candidates case.
   useEffect(() => {
-    if (hasStarted) {
-      generateQuestion();
+    if (!hasStarted) return;
+    if (sourceMode === 'tab' && !tabSource.isLoading && tabSource.candidates.length === 0) {
+      setHasStarted(false);
+      return;
     }
-  }, [quizMode, difficulty, playbackStyle, sourceMode, tabSource.candidates]);
+    generateQuestion();
+  }, [quizMode, difficulty, playbackStyle, sourceMode, tabSource.candidates, tabSource.isLoading]);
 
   // Autoplay new question sound when ready
   useEffect(() => {
@@ -515,8 +516,16 @@ export const EarTrainingLab: React.FC = () => {
                     <div
                       key={opt}
                       onClick={() => handleAnswerSubmit(opt)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleAnswerSubmit(opt);
+                        }
+                      }}
                       className={borderClass}
-                      style={cardStyle}
+                      style={{ ...cardStyle, cursor: 'pointer' }}
                     >
                       <span>{getDisplayOptionName(opt)}</span>
                       {isAnswered && isCorrectOpt && (
