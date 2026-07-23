@@ -434,6 +434,61 @@ body {
   transform: scale(1.15);
 }
 
+/* Mobile fretboard: compressed cell sizes so more of the neck fits per
+   screen, plus scroll-snap so a swipe lands on a fret "position" (a
+   marker-inlay fret) instead of stopping mid-cell. The nut/string-label
+   column pins in place while scrolling so you always know which string
+   you're looking at. */
+@media (max-width: 640px) {
+  .fretboard-container {
+    padding: 0.8rem 0.4rem;
+    scroll-snap-type: x proximity;
+  }
+
+  .fretboard-strings-container {
+    min-width: 560px;
+  }
+
+  .inlay-layer {
+    left: 44px;
+  }
+
+  .guitar-string-row {
+    height: 32px;
+  }
+
+  .nut-cell {
+    flex-basis: 44px;
+    width: 44px;
+    position: sticky;
+    left: 0;
+    z-index: 6;
+    background: #1b120b;
+    scroll-snap-align: start;
+  }
+
+  .guitar-note-marker {
+    width: 19px;
+    height: 19px;
+    font-size: 0.62rem;
+  }
+
+  .inlay-dot {
+    width: 9px;
+    height: 9px;
+  }
+
+  /* Snap to the fret positions players actually think in (open, 3rd, 5th,
+     7th, 9th, 12th) rather than every single fret */
+  .fret-area .fret-cell:nth-child(3),
+  .fret-area .fret-cell:nth-child(5),
+  .fret-area .fret-cell:nth-child(7),
+  .fret-area .fret-cell:nth-child(9),
+  .fret-area .fret-cell:nth-child(12) {
+    scroll-snap-align: start;
+  }
+}
+
 /* Dashboard Header & Cards */
 .lab-header {
   margin-bottom: 2rem;
