@@ -433,8 +433,8 @@ export const PlayLab: React.FC = () => {
                           borderRadius: '8px',
                           fontSize: '0.78rem',
                           fontWeight: current ? 700 : 500,
-                          border: `1px solid ${done ? 'var(--success)' : current ? 'var(--warning)' : 'rgba(255,255,255,0.1)'}`,
-                          background: done ? 'rgba(16,185,129,0.12)' : current ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${done ? 'var(--success)' : current ? 'var(--warning)' : 'rgba(var(--surface-tint-rgb),0.1)'}`,
+                          background: done ? 'rgba(16,185,129,0.12)' : current ? 'rgba(245,158,11,0.12)' : 'rgba(var(--surface-tint-rgb),0.02)',
                           color: done ? 'var(--success)' : current ? 'var(--warning)' : 'var(--text-muted)',
                           display: 'inline-flex', alignItems: 'center', gap: '0.3rem'
                         }}
@@ -462,7 +462,7 @@ export const PlayLab: React.FC = () => {
               </div>
 
               {/* Mode-specific settings */}
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              <div style={{ borderTop: '1px solid rgba(var(--surface-tint-rgb),0.06)', paddingTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                 {mode === 'scale' && (
                   <>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -470,7 +470,8 @@ export const PlayLab: React.FC = () => {
                       <select
                         value={String(scaleRootPc)}
                         onChange={e => setScaleRootPc(e.target.value === 'random' ? 'random' : Number(e.target.value))}
-                        style={{ background: '#0b0c10', border: '1px solid rgba(255,255,255,0.1)', padding: '0.3rem', borderRadius: '6px', color: '#fff' }}
+                        className="input-field"
+                        style={{ padding: '0.3rem' }}
                       >
                         {NOTE_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}
                         <option value="random">Surprise me</option>
@@ -481,7 +482,8 @@ export const PlayLab: React.FC = () => {
                       <select
                         value={scaleIdx}
                         onChange={e => setScaleIdx(Number(e.target.value))}
-                        style={{ background: '#0b0c10', border: '1px solid rgba(255,255,255,0.1)', padding: '0.3rem', borderRadius: '6px', color: '#fff' }}
+                        className="input-field"
+                        style={{ padding: '0.3rem' }}
                       >
                         {SCALE_FORMULAS.map((s, i) => (
                           <option key={s.name} value={i}>{SCALE_FEELINGS[s.name]?.feeling ?? s.name} — {s.name}</option>
@@ -523,7 +525,7 @@ export const PlayLab: React.FC = () => {
                   <span>Hold to confirm</span>
                   <span>{holdPct}%</span>
                 </div>
-                <div style={{ height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ height: '8px', background: 'rgba(var(--surface-tint-rgb),0.08)', borderRadius: '4px', overflow: 'hidden' }}>
                   <div style={{ width: `${holdPct}%`, height: '100%', background: 'var(--success)', boxShadow: '0 0 10px var(--success-glow)', transition: 'width 0.08s linear' }} />
                 </div>
               </div>
@@ -536,7 +538,7 @@ export const PlayLab: React.FC = () => {
 
           {/* Fretboard */}
           <section className="glass-panel" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.15rem', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.15rem', marginBottom: '0.75rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <span>Guitar Fretboard Guide</span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-secondary)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={showTargets} onChange={e => setShowTargets(e.target.checked)} />

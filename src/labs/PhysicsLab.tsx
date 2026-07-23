@@ -140,17 +140,17 @@ const HarmonicExplorer: React.FC = () => {
 
   return (
     <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
         1 · Why instruments sound different: the harmonic series
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
         Every musical note is not one frequency but a stack: the fundamental <em>f</em> plus overtones
         at exactly 2f, 3f, 4f… A guitar and a flute playing the same note differ only in the
-        <strong style={{ color: '#fff' }}> recipe of overtone amplitudes</strong> — that recipe is what
+        <strong style={{ color: 'var(--text-primary)' }}> recipe of overtone amplitudes</strong> — that recipe is what
         we call timbre. Mix your own below (faint lines = individual harmonics, bright line = their sum).
       </p>
 
-      <canvas ref={canvasRef} style={{ width: '100%', height: '130px', background: 'rgba(0,0,0,0.25)', borderRadius: '10px' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: '130px', background: '#0f1219', borderRadius: '10px' }} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.75rem' }}>
         {amps.map((a, n) => (
@@ -324,14 +324,14 @@ const RatioExplorer: React.FC = () => {
 
   return (
     <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
         2 · Why some notes sound good together: simple ratios & beating
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-        Two tones sound <strong style={{ color: '#fff' }}>consonant</strong> when their frequencies form a
+        Two tones sound <strong style={{ color: 'var(--text-primary)' }}>consonant</strong> when their frequencies form a
         simple ratio (2:1, 3:2, 5:4…): the combined wave repeats in a short, tidy pattern. In between,
         the waves drift in and out of phase and the loudness wobbles at |f₂ − f₁| Hz — that wobble is
-        <strong style={{ color: '#fff' }}> beating</strong>, the physical thing you hear as "out of tune".
+        <strong style={{ color: 'var(--text-primary)' }}> beating</strong>, the physical thing you hear as "out of tune".
         Turn the sound on and drag the slider slowly.
       </p>
 
@@ -358,11 +358,11 @@ const RatioExplorer: React.FC = () => {
 
       <div>
         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Combined wave, zoomed to 35 ms — simple ratios repeat neatly:</span>
-        <canvas ref={waveCanvasRef} style={{ width: '100%', height: '80px', background: 'rgba(0,0,0,0.25)', borderRadius: '10px', marginTop: '0.25rem' }} />
+        <canvas ref={waveCanvasRef} style={{ width: '100%', height: '80px', background: '#0f1219', borderRadius: '10px', marginTop: '0.25rem' }} />
       </div>
       <div>
         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Same signal over 1 full second — beating shows up as slow loudness waves:</span>
-        <canvas ref={envCanvasRef} style={{ width: '100%', height: '80px', background: 'rgba(0,0,0,0.25)', borderRadius: '10px', marginTop: '0.25rem' }} />
+        <canvas ref={envCanvasRef} style={{ width: '100%', height: '80px', background: '#0f1219', borderRadius: '10px', marginTop: '0.25rem' }} />
       </div>
       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
         The tritone sits at √2 ≈ 1.414 — a famously irrational spot with no tidy pattern, which is
@@ -387,7 +387,7 @@ const TEMPER_ROWS: { name: string; semis: number; p: number; q: number }[] = [
 
 const TemperamentTable: React.FC = () => (
   <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-    <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+    <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
       3 · Why 12 notes? Equal temperament is a floating-point hack
     </h3>
     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
@@ -395,7 +395,7 @@ const TemperamentTable: React.FC = () => (
       in C sounds sour in E. The fix (≈1600s): split the octave into 12 <em>equal</em> steps of
       2<sup>1/12</sup> ≈ 1.0595 each. Then every interval is slightly wrong in <em>every</em> key by the
       same tiny amount — a lossy compression scheme trading perfection for universality. It works because of a
-      numerical coincidence: <span style={{ fontFamily: 'monospace', color: '#fff' }}>2^(7/12) = 1.4983 ≈ 3/2</span>.
+      numerical coincidence: <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>2^(7/12) = 1.4983 ≈ 3/2</span>.
       The error, measured in cents (1 semitone = 100¢):
     </p>
 
@@ -404,7 +404,7 @@ const TemperamentTable: React.FC = () => (
         <thead>
           <tr style={{ color: 'var(--text-muted)', textAlign: 'left' }}>
             {['Interval', 'Pure ratio', 'Pure (¢)', '12-TET (¢)', 'Error', 'Hear the difference'].map(hd => (
-              <th key={hd} style={{ padding: '0.4rem 0.6rem', borderBottom: '1px solid rgba(255,255,255,0.08)', fontWeight: 600 }}>{hd}</th>
+              <th key={hd} style={{ padding: '0.4rem 0.6rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', fontWeight: 600 }}>{hd}</th>
             ))}
           </tr>
         </thead>
@@ -414,7 +414,7 @@ const TemperamentTable: React.FC = () => (
             const error = row.semis * 100 - justCents;
             const bad = Math.abs(error) > 10;
             return (
-              <tr key={row.name} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <tr key={row.name} style={{ borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
                 <td style={{ padding: '0.4rem 0.6rem', fontWeight: 600 }}>{row.name}</td>
                 <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'monospace' }}>{row.p}:{row.q}</td>
                 <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'monospace' }}>{justCents.toFixed(1)}</td>
@@ -500,12 +500,12 @@ const ModularCircle: React.FC = () => {
 
   return (
     <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
         4 · The circle of fifths is just (n + 7) mod 12
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
         Arrange the 12 notes in a circle (chromatic order) and repeatedly jump up a perfect fifth —
-        7 semitones. Because <span style={{ fontFamily: 'monospace', color: '#fff' }}>gcd(7, 12) = 1</span>,
+        7 semitones. Because <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>gcd(7, 12) = 1</span>,
         the walk visits <em>every</em> note exactly once before returning home: that's the entire reason the
         circle of fifths exists. Try other step sizes and watch composite steps get stuck in small subgroups.
       </p>
@@ -532,12 +532,12 @@ const ModularCircle: React.FC = () => {
               <g key={name}>
                 <circle
                   cx={p.x} cy={p.y} r={isCurrent ? 17 : 14}
-                  fill={isCurrent ? 'rgba(245,158,11,0.25)' : isVisited ? 'rgba(0,240,255,0.12)' : 'rgba(255,255,255,0.03)'}
-                  stroke={isCurrent ? COLORS.warning : isVisited ? COLORS.primary : 'rgba(255,255,255,0.12)'}
+                  fill={isCurrent ? 'rgba(245,158,11,0.25)' : isVisited ? 'rgba(0,240,255,0.12)' : 'rgba(var(--surface-tint-rgb),0.03)'}
+                  stroke={isCurrent ? COLORS.warning : isVisited ? COLORS.primary : 'rgba(var(--surface-tint-rgb),0.12)'}
                   strokeWidth={isCurrent ? 2 : 1}
                 />
                 <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize="11" fontWeight={isVisited ? 700 : 400}
-                  fill={isCurrent ? COLORS.warning : isVisited ? '#fff' : 'var(--text-muted)'}>
+                  fill={isCurrent ? COLORS.warning : isVisited ? 'var(--text-primary)' : 'var(--text-muted)'}>
                   {name}
                 </text>
               </g>
@@ -569,7 +569,7 @@ const ModularCircle: React.FC = () => {
             </button>
           </div>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            Step size <strong style={{ color: '#fff' }}>+{stepSize}</strong>: gcd({stepSize}, 12) = {gcd(stepSize, 12)},
+            Step size <strong style={{ color: 'var(--text-primary)' }}>+{stepSize}</strong>: gcd({stepSize}, 12) = {gcd(stepSize, 12)},
             so the walk reaches <strong style={{ color: uniqueVisited === 12 || reachable === 12 ? 'var(--success)' : 'var(--warning)' }}>{reachable} of 12</strong> notes
             before looping. {stepSize === 7 ? 'Full coverage — this walk, spelled out, is C G D A E B F♯ D♭ A♭ E♭ B♭ F: the circle of fifths.' :
             stepSize === 5 ? 'Also full coverage — stepping by fourths is the same circle walked backwards.' :

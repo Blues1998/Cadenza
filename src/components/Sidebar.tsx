@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
+import type { Theme } from '../hooks/useTheme';
+import { IconSun, IconMoon } from './Icons';
 
 export type ActiveTab = 'dashboard' | 'ear-training' | 'theory' | 'play' | 'physics' | 'rhythm' | 'tuner' | 'tabs';
 
 interface SidebarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
+  theme: Theme;
+  toggleTheme: () => void;
 }
 
 const COLLAPSED_KEY = 'sidebar-collapsed';
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme, toggleTheme }) => {
   // Collapsed = icon-only rail; the preference persists across sessions
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try {
@@ -124,7 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{ width: '36px', height: '36px', flexShrink: 0, borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0, 240, 255, 0.3)', cursor: 'pointer' }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#030406" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-on-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 18V5l12-2v13" />
             <circle cx="6" cy="18" r="3" />
             <circle cx="18" cy="16" r="3" />
@@ -166,13 +170,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         })}
       </nav>
 
-      <div title="Audio Engine Ready" style={{ padding: collapsed ? '0.6rem 0' : '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: collapsed ? 'center' : 'stretch' }}>
+      <div title="Audio Engine Ready" style={{ padding: collapsed ? '0.6rem 0' : '0.75rem', borderRadius: '12px', background: 'rgba(var(--surface-tint-rgb),0.02)', border: '1px solid rgba(var(--surface-tint-rgb),0.04)', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: collapsed ? 'center' : 'stretch' }}>
         {!collapsed && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Status:</div>}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', justifyContent: collapsed ? 'center' : 'flex-start' }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success-glow)', flexShrink: 0 }}></span>
           {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>Audio Engine Ready</span>}
         </div>
       </div>
+
+      <button
+        onClick={toggleTheme}
+        className="theme-toggle"
+        title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+        style={{ alignSelf: collapsed ? 'center' : 'flex-start' }}
+      >
+        {theme === 'dark' ? <IconSun size={17} /> : <IconMoon size={17} />}
+      </button>
     </aside>
   );
 };

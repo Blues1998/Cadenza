@@ -114,7 +114,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
             learned by playing, and completes automatically the moment you do it.
           </p>
         </div>
-        <div style={{ padding: '1rem 1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
+        <div style={{ padding: '1rem 1.5rem', background: 'rgba(var(--surface-tint-rgb),0.02)', borderRadius: '12px', border: '1px solid rgba(var(--surface-tint-rgb),0.06)', textAlign: 'center' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Focus Instrument</span>
           <h3 style={{ color: 'var(--primary)', marginTop: '0.2rem', fontSize: '1.25rem' }}>Acoustic Guitar 🎸</h3>
         </div>
@@ -129,25 +129,20 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
           
           {learningPaths.map((path) => (
-            <div 
-              key={path.id} 
-              className="glass-panel" 
-              style={{ 
-                padding: '1.5rem', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '1rem', 
-                transition: 'transform 0.2s ease, border-color 0.2s ease' 
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = path.color;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--panel-border)';
+            <div
+              key={path.id}
+              className="glass-panel path-card"
+              style={{
+                padding: '1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                transition: 'transform 0.2s ease, border-color 0.2s ease',
+                ['--card-accent' as string]: path.color
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(var(--surface-tint-rgb),0.02)', border: '1px solid rgba(var(--surface-tint-rgb),0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {path.icon}
                 </div>
                 <h4 style={{ fontSize: '1.1rem', fontWeight: 600 }}>{path.title}</h4>
@@ -157,8 +152,8 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
                 onClick={() => setActiveTab(path.id)} 
                 className="btn"
                 style={{ 
-                  background: 'rgba(255,255,255,0.02)', 
-                  borderColor: 'rgba(255,255,255,0.08)',
+                  background: 'rgba(var(--surface-tint-rgb),0.02)', 
+                  borderColor: 'rgba(var(--surface-tint-rgb),0.08)',
                   justifyContent: 'center',
                   fontSize: '0.85rem'
                 }}

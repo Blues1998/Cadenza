@@ -37,18 +37,21 @@ const TimingGraph: React.FC<{
     const g = canvas.getContext('2d');
     if (!g) return;
 
-    const css = getComputedStyle(document.documentElement);
-    const cssColor = (name: string, fallback: string) =>
-      css.getPropertyValue(name).trim() || fallback;
+    // Fixed palette, independent of the app theme — this canvas is a
+    // "stage" surface (like the Sound Physics waveforms) that stays dark
+    // regardless of light/dark mode, so its colors can't be sourced from
+    // the live --primary/--warning/etc theme tokens (those shift to darker,
+    // low-contrast values in light mode, which would read fine as page text
+    // but muddy against this canvas's own always-dark background).
     const colors = {
-      beat: cssColor('--primary', '#818cf8'),
-      tap: cssColor('--warning', '#fbbf24'),
-      perfect: cssColor('--success', '#34d399'),
-      good: cssColor('--primary', '#818cf8'),
-      imprecise: cssColor('--warning', '#fbbf24'),
-      miss: cssColor('--danger', '#ef4444'),
+      beat: '#00f0ff',
+      tap: '#f59e0b',
+      perfect: '#10b981',
+      good: '#00f0ff',
+      imprecise: '#f59e0b',
+      miss: '#ef4444',
       grid: 'rgba(255,255,255,0.07)',
-      text: cssColor('--text-muted', '#8b93a7')
+      text: '#8b93a7'
     };
 
     const WINDOW_S = 4; // seconds of history shown
@@ -162,7 +165,7 @@ const TimingGraph: React.FC<{
           width: '100%',
           height: '110px',
           display: 'block',
-          background: 'rgba(255,255,255,0.015)',
+          background: '#0f1219',
           border: '1px solid rgba(255,255,255,0.05)',
           borderRadius: '10px'
         }}
@@ -446,7 +449,7 @@ export const RhythmLab: React.FC = () => {
         
         {/* Metronome Console */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
             <span>Metronome Console</span>
             <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{bpm} BPM</span>
           </h3>
@@ -485,7 +488,8 @@ export const RhythmLab: React.FC = () => {
               <select
                 value={timeSignature}
                 onChange={(e) => setTimeSignature(Number(e.target.value))}
-                style={{ width: '100%', background: '#0b0c10', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '6px', color: '#fff', outline: 'none' }}
+                className="input-field"
+                style={{ width: '100%', padding: '0.5rem' }}
               >
                 <option value={2}>2/4 (Duple)</option>
                 <option value={3}>3/4 (Triple / Waltz)</option>
@@ -530,11 +534,11 @@ export const RhythmLab: React.FC = () => {
                     borderRadius: '50%',
                     background: isActive 
                       ? (isFirstBeat ? 'var(--success)' : 'var(--primary)') 
-                      : 'rgba(255, 255, 255, 0.05)',
+                      : 'rgba(var(--surface-tint-rgb), 0.05)',
                     border: '1px solid',
                     borderColor: isActive
                       ? (isFirstBeat ? 'var(--success)' : 'var(--primary)')
-                      : 'rgba(255, 255, 255, 0.1)',
+                      : 'rgba(var(--surface-tint-rgb), 0.1)',
                     boxShadow: isActive
                       ? (isFirstBeat ? '0 0 15px var(--success-glow)' : '0 0 15px var(--primary-glow)')
                       : 'none',
@@ -544,7 +548,7 @@ export const RhythmLab: React.FC = () => {
                     justifyContent: 'center',
                     fontSize: '0.75rem',
                     fontWeight: 'bold',
-                    color: isActive ? '#030406' : 'var(--text-muted)'
+                    color: isActive ? 'var(--text-on-primary)' : 'var(--text-muted)'
                   }}
                 >
                   {idx + 1}
@@ -574,7 +578,7 @@ export const RhythmLab: React.FC = () => {
 
         {/* Tapping Game Console */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', minHeight: '340px' }}>
-          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
             {isGameMode ? 'Tapping Accuracy Game' : 'Metronome Guide'}
           </h3>
 
@@ -587,7 +591,7 @@ export const RhythmLab: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: 1, gap: '1rem' }}>
               
               {/* Score / Accuracy Banner */}
-              <div style={{ display: 'flex', justifyItems: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', justifyItems: 'space-between', alignItems: 'center', background: 'rgba(var(--surface-tint-rgb),0.02)', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Session Accuracy:</span>
                 <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: overallAccuracy > 80 ? 'var(--success)' : 'var(--primary)' }}>
                   {overallAccuracy}%
@@ -595,7 +599,7 @@ export const RhythmLab: React.FC = () => {
               </div>
 
               {/* Interactive Game Pace Control Row */}
-              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(var(--surface-tint-rgb),0.02)', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Game Pace:</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <button 
@@ -625,8 +629,8 @@ export const RhythmLab: React.FC = () => {
                 onPointerDown={handleTap}
                 style={{
                   height: '100px',
-                  background: 'rgba(255,255,255,0.01)',
-                  border: '2px dashed rgba(255,255,255,0.1)',
+                  background: 'rgba(var(--surface-tint-rgb),0.01)',
+                  border: '2px dashed rgba(var(--surface-tint-rgb),0.1)',
                   borderRadius: '12px',
                   cursor: 'pointer',
                   display: 'flex',
@@ -681,7 +685,7 @@ export const RhythmLab: React.FC = () => {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            background: 'rgba(255,255,255,0.02)',
+                            background: 'rgba(var(--surface-tint-rgb),0.02)',
                             padding: '0.4rem 0.6rem',
                             borderRadius: '6px',
                             fontSize: '0.8rem',

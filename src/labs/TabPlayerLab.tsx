@@ -904,7 +904,7 @@ export const TabPlayerLab: React.FC = () => {
                 style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem',
                   padding: '0.65rem 0.9rem', borderRadius: '10px', cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)'
+                  background: 'rgba(var(--surface-tint-rgb),0.02)', border: '1px solid rgba(var(--surface-tint-rgb),0.06)'
                 }}
               >
                 <div style={{ minWidth: 0 }}>
@@ -939,8 +939,8 @@ export const TabPlayerLab: React.FC = () => {
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
           padding: '1.25rem', borderRadius: '12px', cursor: 'pointer',
-          border: `2px dashed ${isDragging ? 'var(--primary)' : 'rgba(255,255,255,0.12)'}`,
-          background: isDragging ? 'rgba(0, 240, 255, 0.05)' : 'rgba(255,255,255,0.015)',
+          border: `2px dashed ${isDragging ? 'var(--primary)' : 'rgba(var(--surface-tint-rgb),0.12)'}`,
+          background: isDragging ? 'rgba(0, 240, 255, 0.05)' : 'rgba(var(--surface-tint-rgb),0.015)',
           transition: 'border-color 0.15s ease, background 0.15s ease'
         }}
       >
@@ -956,7 +956,7 @@ export const TabPlayerLab: React.FC = () => {
       </label>
 
       {error && (
-        <div style={{ padding: '0.85rem 1rem', borderRadius: '10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontSize: '0.85rem' }}>
+        <div style={{ padding: '0.85rem 1rem', borderRadius: '10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', fontSize: '0.85rem' }}>
           {error}
         </div>
       )}
@@ -1043,7 +1043,8 @@ export const TabPlayerLab: React.FC = () => {
                   const [bank, program] = e.target.value.split(':').map(Number);
                   applyGuitarTone(bank, program);
                 }}
-                style={{ background: '#0b0c10', border: '1px solid rgba(255,255,255,0.1)', padding: '0.4rem 0.6rem', borderRadius: '6px', color: '#fff', outline: 'none', fontSize: '0.8rem' }}
+                className="input-field"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
               >
                 {GUITAR_TONES.map(t => <option key={toneKey(t.bank, t.program)} value={toneKey(t.bank, t.program)}>{t.label}</option>)}
               </select>
@@ -1091,7 +1092,7 @@ export const TabPlayerLab: React.FC = () => {
               style={{
                 display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1.5rem',
                 padding: '0.85rem 1rem', borderRadius: '10px',
-                background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
+                background: 'rgba(var(--surface-tint-rgb),0.015)', border: '1px solid rgba(var(--surface-tint-rgb),0.06)',
                 fontSize: '0.82rem', color: 'var(--text-secondary)'
               }}
             >
@@ -1109,7 +1110,7 @@ export const TabPlayerLab: React.FC = () => {
           {/* Mic-verified play-along: grades single-note melodic beats in
               real time against the mic as the cursor advances, using the
               exact same pitch-detection pipeline as Play Challenges. */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem 1.25rem', borderRadius: '10px', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem 1.25rem', borderRadius: '10px', background: 'rgba(var(--surface-tint-rgb),0.015)', border: '1px solid rgba(var(--surface-tint-rgb),0.06)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Mic Play-Along</div>
@@ -1132,7 +1133,7 @@ export const TabPlayerLab: React.FC = () => {
             </div>
 
             {micError && (
-              <div style={{ fontSize: '0.78rem', color: '#f87171' }}>{micError}</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--danger)' }}>{micError}</div>
             )}
 
             {micGradingEnabled && !micActive && !micError && (
@@ -1199,7 +1200,7 @@ export const TabPlayerLab: React.FC = () => {
           overflow: 'auto',
           background: hasScore ? '#ffffff' : '#0b0c10',
           borderRadius: '12px',
-          border: '1px solid rgba(255,255,255,0.06)',
+          border: '1px solid rgba(var(--surface-tint-rgb),0.06)',
           padding: hasScore ? '1rem' : 0
         }}
       />
@@ -1222,8 +1223,8 @@ export const TabPlayerLab: React.FC = () => {
             maxWidth: '85vw',
             maxHeight: '60vh',
             overflowY: 'auto',
-            background: '#10131c',
-            border: '1px solid rgba(0, 240, 255, 0.3)',
+            background: 'var(--tooltip-bg)',
+            border: '1px solid var(--tooltip-border)',
             borderRadius: '10px',
             padding: '0.7rem 0.85rem',
             fontSize: '0.78rem',

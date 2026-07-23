@@ -281,8 +281,8 @@ export const TheoryLab: React.FC = () => {
           <path
             onClick={handleMajorClick}
             d={`M ${x1_mid} ${y1_mid} L ${x1_out} ${y1_out} A ${outerR} ${outerR} 0 0 1 ${x2_out} ${y2_out} L ${x2_mid} ${y2_mid} A ${midR} ${midR} 0 0 0 ${x1_mid} ${y1_mid}`}
-            fill={isSelected ? 'rgba(0, 240, 255, 0.2)' : 'rgba(255, 255, 255, 0.02)'}
-            stroke={isSelected ? 'var(--primary)' : 'rgba(255, 255, 255, 0.08)'}
+            fill={isSelected ? 'rgba(0, 240, 255, 0.2)' : 'rgba(var(--surface-tint-rgb), 0.02)'}
+            stroke={isSelected ? 'var(--primary)' : 'rgba(var(--surface-tint-rgb), 0.08)'}
             strokeWidth={isSelected ? '2' : '1'}
             className="sector-path"
           />
@@ -290,13 +290,13 @@ export const TheoryLab: React.FC = () => {
           <path
             onClick={handleMinorClick}
             d={`M ${x1_in} ${y1_in} L ${x1_mid} ${y1_mid} A ${midR} ${midR} 0 0 1 ${x2_mid} ${y2_mid} L ${x2_in} ${y2_in} A ${innerR} ${innerR} 0 0 0 ${x1_in} ${y1_in}`}
-            fill={isSelected ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255, 255, 255, 0.01)'}
-            stroke={isSelected ? 'var(--secondary)' : 'rgba(255, 255, 255, 0.05)'}
+            fill={isSelected ? 'rgba(139, 92, 246, 0.15)' : 'rgba(var(--surface-tint-rgb), 0.01)'}
+            stroke={isSelected ? 'var(--secondary)' : 'rgba(var(--surface-tint-rgb), 0.05)'}
             strokeWidth={isSelected ? '1.5' : '0.5'}
           />
 
           {/* Text Labels */}
-          <text onClick={handleMajorClick} x={labelX_maj} y={labelY_maj} fill={isSelected ? 'var(--primary)' : '#fff'} fontSize="13.5" fontWeight={isSelected ? 'bold' : 'normal'} textAnchor="middle">
+          <text onClick={handleMajorClick} x={labelX_maj} y={labelY_maj} fill={isSelected ? 'var(--primary)' : 'var(--text-primary)'} fontSize="13.5" fontWeight={isSelected ? 'bold' : 'normal'} textAnchor="middle">
             {keyInfo.name}
           </text>
           <text onClick={handleMinorClick} x={labelX_min} y={labelY_min} fill={isSelected ? 'var(--secondary)' : 'var(--text-secondary)'} fontSize="10.5" textAnchor="middle">
@@ -347,7 +347,7 @@ export const TheoryLab: React.FC = () => {
         
         {/* Scale/Chord Config Panel */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
             <span>Explorer Settings</span>
             <span style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>
               Mode: {selectedChordQuality !== -1 ? 'Chord' : 'Scale'}
@@ -362,7 +362,8 @@ export const TheoryLab: React.FC = () => {
               <select 
                 value={selectedRoot} 
                 onChange={(e) => setSelectedRoot(e.target.value)}
-                style={{ width: '100%', background: '#0b0c10', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '6px', color: '#fff', outline: 'none' }}
+                className="input-field"
+                style={{ width: '100%', padding: '0.5rem' }}
               >
                 {NOTE_NAMES.map(n => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -375,7 +376,8 @@ export const TheoryLab: React.FC = () => {
               <select 
                 value={selectedOctave} 
                 onChange={(e) => setSelectedOctave(Number(e.target.value))}
-                style={{ width: '100%', background: '#0b0c10', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '6px', color: '#fff', outline: 'none' }}
+                className="input-field"
+                style={{ width: '100%', padding: '0.5rem' }}
               >
                 <option value={2}>Low (2)</option>
                 <option value={3}>Mid (3)</option>
@@ -432,16 +434,16 @@ export const TheoryLab: React.FC = () => {
             </span>
             {selectedChordQuality !== -1 ? (
               <>
-                <strong style={{ color: '#fff' }}>{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</strong>
+                <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</strong>
                 {' '}sounds <strong style={{ color: 'var(--secondary)' }}>{(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}</strong>.
-                {' '}It's the notes <strong style={{ color: '#fff' }}>{currentNoteNames().join(' · ')}</strong> played
+                {' '}It's the notes <strong style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong> played
                 at the same time, built up from the home note {selectedRoot}. Press play and listen for that feeling.
               </>
             ) : (
               <>
-                <strong style={{ color: '#fff' }}>{selectedRoot} {selectedScale.name}</strong> — start
+                <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {selectedScale.name}</strong> — start
                 at the home note <strong style={{ color: 'var(--warning)' }}>{selectedRoot}</strong> and
-                climb: <strong style={{ color: '#fff' }}>{currentNoteNames().join(' · ')}</strong>.
+                climb: <strong style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>.
                 {' '}Listen for {SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}
               </>
             )}
@@ -464,7 +466,7 @@ export const TheoryLab: React.FC = () => {
 
         {/* Interactive Circle of Fifths */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          <div style={{ width: '100%', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+          <div style={{ width: '100%', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
             <h3 style={{ fontSize: '1.15rem' }}>
               <Term k="circleOfFifths">Circle of Fifths</Term>
             </h3>
@@ -487,7 +489,7 @@ export const TheoryLab: React.FC = () => {
 
             {/* Key signature info */}
             <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
+              <div style={{ background: 'rgba(var(--surface-tint-rgb),0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
                 <h4 style={{ color: 'var(--primary)', marginBottom: '0.4rem' }}>About this Key</h4>
                 <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                   <div><Term k="relativeMinor">Relative Minor</Term>: <span style={{ color: 'var(--secondary)' }}>{selectedCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
@@ -511,7 +513,7 @@ export const TheoryLab: React.FC = () => {
                         key={chordName}
                         onClick={() => playDiatonicChord(chordName, i)}
                         className="btn"
-                        style={{ padding: '0.4rem', fontSize: '0.75rem', flexDirection: 'column', gap: '2px', background: 'rgba(255,255,255,0.02)' }}
+                        style={{ padding: '0.4rem', fontSize: '0.75rem', flexDirection: 'column', gap: '2px', background: 'rgba(var(--surface-tint-rgb),0.02)' }}
                       >
                         <span style={{ fontWeight: 'bold' }}>{chordName}</span>
                         <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{degrees[i]}</span>
@@ -533,7 +535,7 @@ export const TheoryLab: React.FC = () => {
 
       {/* Piano View */}
       <section className="glass-panel" style={{ padding: '1.5rem' }}>
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+        <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
           3-Octave Piano Keyboard
           <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '0.25rem' }}>
             Click any key to hear it — colored keys belong to your selection above.
@@ -550,7 +552,7 @@ export const TheoryLab: React.FC = () => {
 
       {/* Fretboard View */}
       <section className="glass-panel" style={{ padding: '1.5rem' }}>
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+        <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
           <span>Guitar Fretboard (Standard Tuning EADGBE)</span>
           <button 
             onClick={() => handlePlayNote(noteNameToMidi('E', 2))} 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import type { ActiveTab } from './components/Sidebar';
+import { useTheme } from './hooks/useTheme';
 import { DashboardLanding } from './labs/DashboardLanding';
 import { EarTrainingLab } from './labs/EarTrainingLab';
 import { TheoryLab } from './labs/TheoryLab';
@@ -12,6 +13,7 @@ import { TabPlayerLab } from './labs/TabPlayerLab';
 
 function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const { theme, toggleTheme } = useTheme();
 
   const renderActiveContent = () => {
     switch (activeTab) {
@@ -39,7 +41,7 @@ function App() {
   return (
     <div className="app-container">
       {/* Sidebar Navigation */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} toggleTheme={toggleTheme} />
 
       {/* Main Panel Content Area */}
       <main className="main-content">

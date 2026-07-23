@@ -5,35 +5,101 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: dark;
-  color: #f3f4f6;
-  background-color: #050608;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
 
-  /* Theme Colors */
+/* ===== Theme tokens =====
+   Everything theme-dependent is a custom property so components never branch
+   on light/dark directly. --surface-tint-rgb is the one non-obvious token:
+   it's the "elevation" tint used everywhere as rgba(var(--surface-tint-rgb), X)
+   — white-on-black in the dark theme, near-black-on-parchment in the light
+   theme — so every existing translucent card/border/divider inverts for free
+   without needing a distinct named token per opacity level.
+   Instrument/canvas surfaces (fretboard wood & metal, piano keys, and the
+   waveform/timing-graph/tab-notation canvases) are intentionally exempt —
+   they keep their own literal dark colors in both themes, like a mixing
+   console's meter bridge. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  color: #f3f4f6;
+  background-color: #050608;
+
   --bg-gradient: radial-gradient(circle at 50% 50%, #0c0f17 0%, #030406 100%);
   --panel-bg: rgba(18, 22, 33, 0.4);
   --panel-border: rgba(255, 255, 255, 0.06);
   --panel-border-hover: rgba(255, 255, 255, 0.12);
-  
+
   --primary: #00f0ff;
   --primary-glow: rgba(0, 240, 255, 0.25);
+  --primary-end: #00b0ff;
   --secondary: #8b5cf6;
   --secondary-glow: rgba(139, 92, 246, 0.25);
-  
+  --secondary-end: #6d28d9;
+
   --success: #10b981;
   --success-glow: rgba(16, 185, 129, 0.25);
   --warning: #f59e0b;
+  --warning-glow: rgba(245, 158, 11, 0.35);
   --danger: #ef4444;
   --danger-glow: rgba(239, 68, 68, 0.25);
 
   --text-primary: #ffffff;
   --text-secondary: #9ca3af;
   --text-muted: #6b7280;
+  --text-on-primary: #030406;
+
+  --surface-tint-rgb: 255, 255, 255;
+  --shadow-panel: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --input-bg: #0b0c10;
+  --input-text: #ffffff;
+  --tooltip-bg: #10131c;
+  --tooltip-border: rgba(0, 240, 255, 0.3);
+  --scrollbar-track: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  color: #1c2129;
+  background-color: #f4f0e6;
+
+  --bg-gradient: radial-gradient(circle at 50% 0%, #fffdf8 0%, #f1ead8 55%, #e8dfc6 100%);
+  --panel-bg: rgba(255, 253, 248, 0.7);
+  --panel-border: rgba(40, 32, 16, 0.09);
+  --panel-border-hover: rgba(40, 32, 16, 0.18);
+
+  --primary: #0e7a86;
+  --primary-glow: rgba(14, 122, 134, 0.18);
+  --primary-end: #0a5f6e;
+  --secondary: #6d28d9;
+  --secondary-glow: rgba(109, 40, 217, 0.16);
+  --secondary-end: #55199e;
+
+  --success: #047857;
+  --success-glow: rgba(4, 120, 87, 0.16);
+  --warning: #b45309;
+  --warning-glow: rgba(180, 83, 9, 0.2);
+  --danger: #dc2626;
+  --danger-glow: rgba(220, 38, 38, 0.18);
+
+  --text-primary: #17191f;
+  --text-secondary: #565c6b;
+  --text-muted: #7c8294;
+  --text-on-primary: #ffffff;
+
+  --surface-tint-rgb: 23, 18, 8;
+  --shadow-panel: 0 8px 28px 0 rgba(80, 62, 30, 0.12);
+  --input-bg: #fffdf8;
+  --input-text: var(--text-primary);
+  --tooltip-bg: #1c2129;
+  --tooltip-border: rgba(14, 122, 134, 0.35);
+  --scrollbar-track: rgba(23, 18, 8, 0.05);
+  --scrollbar-thumb: rgba(23, 18, 8, 0.14);
+  --scrollbar-thumb-hover: rgba(23, 18, 8, 0.22);
 }
 
 * {
@@ -57,14 +123,14 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Glassmorphism Styles */
@@ -74,7 +140,7 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--panel-border);
   border-radius: 16px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-panel);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -83,8 +149,8 @@ body {
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(var(--surface-tint-rgb), 0.02);
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.04);
   border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -92,13 +158,13 @@ body {
 }
 
 .glass-card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--surface-tint-rgb), 0.05);
+  border-color: rgba(var(--surface-tint-rgb), 0.1);
   transform: translateY(-2px);
 }
 
 .glass-card.active {
-  background: rgba(0, 240, 255, 0.04);
+  background: var(--primary-glow);
   border-color: var(--primary);
   box-shadow: 0 0 15px var(--primary-glow);
 }
@@ -110,8 +176,8 @@ body {
   font-weight: 500;
   padding: 0.75rem 1.5rem;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.1);
+  background: rgba(var(--surface-tint-rgb), 0.03);
   color: var(--text-primary);
   cursor: pointer;
   display: inline-flex;
@@ -121,8 +187,8 @@ body {
 }
 
 .btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(var(--surface-tint-rgb), 0.08);
+  border-color: rgba(var(--surface-tint-rgb), 0.2);
 }
 
 .btn:active {
@@ -130,28 +196,69 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, #00b0ff 100%);
-  color: #030406;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-end) 100%);
+  color: var(--text-on-primary);
   font-weight: 600;
   border: none;
   box-shadow: 0 4px 15px var(--primary-glow);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #33f3ff 0%, #33c0ff 100%);
-  box-shadow: 0 6px 20px rgba(0, 240, 255, 0.4);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 80%, white) 0%, color-mix(in srgb, var(--primary-end) 80%, white) 100%);
+  box-shadow: 0 6px 20px var(--primary-glow);
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, var(--secondary) 0%, #6d28d9 100%);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-end) 100%);
+  color: #ffffff;
   border: none;
   box-shadow: 0 4px 15px var(--secondary-glow);
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--secondary) 80%, white) 0%, color-mix(in srgb, var(--secondary-end) 80%, white) 100%);
+  box-shadow: 0 6px 20px var(--secondary-glow);
+}
+
+/* Shared form chrome — <select>/<input> fields across the labs, themed as a
+   single surface rather than each file hardcoding its own dark colors */
+.input-field {
+  font-family: inherit;
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.14);
+  border-radius: 6px;
+  outline: none;
+}
+
+.input-field:focus {
+  border-color: var(--primary);
+}
+
+/* Sidebar theme toggle */
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: rgba(var(--surface-tint-rgb), 0.03);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.theme-toggle:hover {
+  background: rgba(var(--surface-tint-rgb), 0.08);
+  border-color: var(--panel-border-hover);
+  color: var(--text-primary);
+}
+
+.theme-toggle:active {
+  transform: scale(0.93);
 }
 
 /* App Shell Layout */
@@ -494,10 +601,19 @@ body {
   margin-bottom: 2rem;
 }
 
+/* Lab overview cards on the Dashboard — each sets --card-accent inline to
+   its own icon color; the hover border reacts via plain CSS instead of a
+   mouseenter/mouseleave handler mutating style.borderColor directly, so it
+   stays declarative and doesn't need to know the current theme's default
+   border color to restore on mouse-leave. */
+.path-card:hover {
+  border-color: var(--card-accent, var(--panel-border-hover));
+}
+
 .lab-title {
   font-size: 2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #ffffff 0%, var(--text-secondary) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 0.5rem;
@@ -551,8 +667,8 @@ body {
   transform: translateX(-50%) translateY(4px);
   width: 250px;
   max-width: 70vw;
-  background: #10131c;
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  background: var(--tooltip-bg);
+  border: 1px solid var(--tooltip-border);
   border-radius: 10px;
   padding: 0.65rem 0.8rem;
   font-size: 0.78rem;

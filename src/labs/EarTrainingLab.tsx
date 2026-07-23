@@ -291,7 +291,7 @@ export const EarTrainingLab: React.FC = () => {
         
         {/* Settings Panel */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>Quiz Settings</h3>
+          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>Quiz Settings</h3>
 
           <div>
             <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Question Source</span>
@@ -327,7 +327,8 @@ export const EarTrainingLab: React.FC = () => {
                     const entry = tabSource.libraryEntries.find(t => t.id === e.target.value);
                     if (entry) tabSource.selectTab(entry);
                   }}
-                  style={{ width: '100%', background: '#0b0c10', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 0.6rem', borderRadius: '6px', color: '#fff', outline: 'none', fontSize: '0.85rem' }}
+                  className="input-field"
+                  style={{ width: '100%', padding: '0.5rem 0.6rem', fontSize: '0.85rem' }}
                 >
                   <option value="" disabled>Choose a piece…</option>
                   {tabSource.libraryEntries.map(entry => (
@@ -410,7 +411,7 @@ export const EarTrainingLab: React.FC = () => {
           )}
 
           {hasStarted && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: 'auto', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: 'auto', background: 'rgba(var(--surface-tint-rgb),0.02)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Accuracy:</span>
                 <span style={{ fontWeight: 'bold' }}>
@@ -452,7 +453,7 @@ export const EarTrainingLab: React.FC = () => {
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               
               {/* Audio Playback controls */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.06)', paddingBottom: '0.75rem' }}>
                 <h3 style={{ fontSize: '1.1rem' }}>Listen & Identify</h3>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button onClick={playSound} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
@@ -503,11 +504,11 @@ export const EarTrainingLab: React.FC = () => {
                     if (isCorrectOpt) {
                       cardStyle.borderColor = 'var(--success)';
                       cardStyle.background = 'rgba(16, 185, 129, 0.08)';
-                      cardStyle.color = '#fff';
+                      cardStyle.color = 'var(--text-primary)';
                     } else if (isUserAnswer) {
                       cardStyle.borderColor = 'var(--danger)';
                       cardStyle.background = 'rgba(239, 68, 68, 0.08)';
-                      cardStyle.color = '#fff';
+                      cardStyle.color = 'var(--text-primary)';
                     } else {
                       cardStyle.opacity = 0.55;
                     }
@@ -546,8 +547,8 @@ export const EarTrainingLab: React.FC = () => {
                   className="glass-panel" 
                   style={{ 
                     padding: '1rem', 
-                    background: 'rgba(255,255,255,0.01)', 
-                    border: '1px solid rgba(255,255,255,0.06)',
+                    background: 'rgba(var(--surface-tint-rgb),0.01)', 
+                    border: '1px solid rgba(var(--surface-tint-rgb),0.06)',
                     borderRadius: '10px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -556,7 +557,7 @@ export const EarTrainingLab: React.FC = () => {
                     overflowY: 'auto'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.06)', paddingBottom: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                     <span>Melody Clue Reference</span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>Click <IconSpeaker size={12} /> to hear reference</span>
                   </div>
@@ -590,7 +591,7 @@ export const EarTrainingLab: React.FC = () => {
 
               {/* Status Message */}
               {isAnswered && (
-                <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.01)', border: '1px dashed rgba(255,255,255,0.06)', padding: '0.75rem', borderRadius: '8px' }}>
+                <div style={{ textAlign: 'center', background: 'rgba(var(--surface-tint-rgb),0.01)', border: '1px dashed rgba(var(--surface-tint-rgb),0.06)', padding: '0.75rem', borderRadius: '8px' }}>
                   {(() => {
                     const rootNote = midiToNoteName(currentRoot);
                     if (quizMode === 'intervals' && correctInterval) {
@@ -636,7 +637,7 @@ export const EarTrainingLab: React.FC = () => {
       {hasStarted && (
         <>
           <section className="glass-panel" style={{ padding: '1.5rem', opacity: isAnswered ? 1.0 : 0.45, transition: 'opacity 0.3s ease' }}>
-            <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
               Piano Notation Assistant
             </h3>
             <Keyboard 
@@ -647,7 +648,7 @@ export const EarTrainingLab: React.FC = () => {
           </section>
 
           <section className="glass-panel" style={{ padding: '1.5rem', opacity: isAnswered ? 1.0 : 0.45, transition: 'opacity 0.3s ease' }}>
-            <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
               Guitar Fretboard Helper (Standard Tuning)
             </h3>
             <Fretboard 
