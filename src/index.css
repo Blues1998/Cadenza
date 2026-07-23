@@ -255,11 +255,14 @@ body {
 
 /* Guitar Fretboard Styles */
 .fretboard-container {
-  background: #181412;
-  border-radius: 12px;
-  border: 4px solid #2d1a10;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-  padding: 1rem 0;
+  background: #0d0906;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow:
+    0 20px 45px rgba(0,0,0,0.65),
+    inset 0 0 0 3px #050302,
+    inset 0 0 0 4px rgba(230,210,170,0.14);
+  padding: 1.1rem 0.75rem;
   position: relative;
   overflow-x: auto;
   user-select: none;
@@ -269,29 +272,38 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  min-width: 900px;
+  min-width: 760px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+  /* Rosewood: a soft top-light gradient (suggests the neck's curvature) over a
+     procedural wood-grain texture over a base rosewood color gradient. */
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 16%, rgba(0,0,0,0) 66%, rgba(0,0,0,0.3) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.009 0.09' numOctaves='4' seed='11'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.15 0 0 0 0 0.09 0 0 0 0 0.05 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+    linear-gradient(160deg, #3c2617 0%, #2a1810 50%, #1b0f09 100%);
+  background-repeat: no-repeat, repeat, no-repeat;
 }
 
-.fret-marker-row {
-  display: flex;
-  height: 20px;
-  border-bottom: 2px solid transparent;
+/* Inlay position markers — sit on the wood between strings 3 & 4 (or
+   straddling it for the fret-12 octave marker), behind the strings/notes */
+.inlay-layer {
+  position: absolute;
+  left: 60px;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.fret-marker-cell {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.fret-dot {
-  width: 8px;
-  height: 8px;
-  background: #e2e8f0;
+.inlay-dot {
+  position: absolute;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  opacity: 0.6;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 32% 28%, #ffffff 0%, #e8e2d0 25%, #cbbfa0 55%, #9c8f6d 100%);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.6), inset 0 0 2px rgba(255,255,255,0.6);
 }
 
 .guitar-string-row {
@@ -303,10 +315,9 @@ body {
 
 /* Fretboard Frets */
 .fret-cell {
-  flex: 1;
+  flex: none; /* width supplied inline, tapered to real fret spacing */
   height: 100%;
   position: relative;
-  border-right: 2px solid #b45309; /* fret wire */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -314,27 +325,61 @@ body {
 }
 
 .fret-cell:hover {
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.03);
 }
 
-.fret-cell:first-child {
-  flex: 0 0 60px; /* Open string */
-  border-right: 4px solid #f59e0b; /* Nut */
-  background: rgba(255,255,255,0.01);
+/* Metal fret wire, standing in front of the wood at the right edge of each cell */
+.fret-cell:not(.nut-cell)::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  right: 0;
+  width: 3px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.85), #cfcfd2 25%, #7c7c82 55%, #3d3d42 80%, rgba(255,255,255,0.3));
+  box-shadow: 1px 0 3px rgba(0,0,0,0.6);
 }
 
-/* Fretboard String Line overlay */
+.fret-area {
+  flex: 1;
+  display: flex;
+  height: 100%;
+  position: relative;
+}
+
+.nut-cell {
+  flex: 0 0 60px;
+  width: 60px;
+  background: rgba(255,255,255,0.015);
+}
+
+/* Bone/ivory nut, wider and brighter than the fret wire it sits beside */
+.nut-cell::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  right: -3px;
+  width: 7px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #fbf6e8 0%, #e9dfc0 35%, #cbbf9c 60%, #a8987a 100%);
+  box-shadow: 2px 0 6px rgba(0,0,0,0.55), inset -1px 0 1px rgba(255,255,255,0.5);
+  z-index: 5;
+}
+
+/* Fretboard String Line overlay — brushed-steel gradient instead of flat gray */
 .guitar-string-line {
   position: absolute;
   left: 0;
   right: 0;
-  height: 1px;
-  background: #94a3b8;
+  border-radius: 2px;
+  background-image: linear-gradient(180deg, #f4f6f8 0%, #cfd6dd 30%, #7d868f 55%, #cfd6dd 75%, #f4f6f8 100%);
   pointer-events: none;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.75);
 }
 
-/* Make lower strings thicker */
+/* Make lower (thicker-gauge) strings render thicker */
 .string-thickness-6 { height: 3.5px; }
 .string-thickness-5 { height: 2.8px; }
 .string-thickness-4 { height: 2.2px; }
@@ -342,13 +387,14 @@ body {
 .string-thickness-2 { height: 1.2px; }
 .string-thickness-1 { height: 0.8px; }
 
-/* Guitar Note Marker */
+/* Guitar Note Marker — beveled jewel/pearl finish instead of a flat fill */
 .guitar-note-marker {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.1);
-  border: 2px solid var(--text-secondary);
+  position: relative;
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.35), rgba(255,255,255,0.05) 45%, rgba(0,0,0,0.25) 100%), rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -356,36 +402,35 @@ body {
   font-weight: 600;
   z-index: 10;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.55);
 }
 
 .fret-cell:hover .guitar-note-marker {
   transform: scale(1.15);
-  background: rgba(255,255,255,0.25);
-  border-color: var(--text-primary);
+  border-color: rgba(255,255,255,0.5);
 }
 
 .guitar-note-marker.active {
-  background: var(--primary);
-  border-color: var(--text-primary);
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), var(--primary) 55%, #00b8c4 100%);
+  border-color: rgba(255,255,255,0.6);
   color: #030406;
-  box-shadow: 0 0 10px var(--primary-glow);
+  box-shadow: 0 0 14px var(--primary-glow), 0 2px 6px rgba(0,0,0,0.5);
   transform: scale(1.1);
 }
 
 .guitar-note-marker.highlight-correct {
-  background: var(--success);
-  border-color: var(--text-primary);
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.5), var(--success) 55%, #0a7d5c 100%);
+  border-color: rgba(255,255,255,0.6);
   color: #030406;
-  box-shadow: 0 0 10px var(--success-glow);
+  box-shadow: 0 0 14px var(--success-glow), 0 2px 6px rgba(0,0,0,0.5);
   transform: scale(1.1);
 }
 
 .guitar-note-marker.highlight-root {
-  background: var(--warning);
-  border-color: var(--text-primary);
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), var(--warning) 55%, #b9740a 100%);
+  border-color: rgba(255,255,255,0.6);
   color: #030406;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35), 0 2px 6px rgba(0,0,0,0.5);
   transform: scale(1.15);
 }
 
