@@ -165,20 +165,23 @@ export const TheoryLab: React.FC = () => {
     }, 400);
   };
 
-  // Click on a key segment in the Circle of Fifths
-  const handleCircleKeyClick = (keyInfo: CircleKeyInfo) => {
+  // Click on a key segment in the Circle of Fifths. `isMinorClick`
+  // distinguishes the inner (relative minor) ring from the outer (major)
+  // ring — they represent different home notes over the same note set.
+  const handleCircleKeyClick = (keyInfo: CircleKeyInfo, isMinorClick: boolean = false) => {
     reportProgress('theory-circle-key-clicked');
     setSelectedCircleKey(keyInfo);
-    setSelectedRoot(normalizeNoteName(keyInfo.name.replace('m', '')));
-    setSelectedOctave(3);
     setSelectedChordQuality(-1); // Switch to scale mode for key
-    
+
+    const rootName = isMinorClick ? keyInfo.relativeMinor.replace(/m$/, '') : keyInfo.name;
+    setSelectedRoot(normalizeNoteName(rootName));
+    setSelectedOctave(3);
+
     // Play root tonic chord of this key
-    const isMinor = keyInfo.name.endsWith('m');
-    const rootMidi = noteNameToMidi(keyInfo.name.replace('m', ''), 3);
-    const chordIntervals = isMinor ? [0, 3, 7] : [0, 4, 7]; // minor or major triad
+    const rootMidi = noteNameToMidi(rootName, 3);
+    const chordIntervals = isMinorClick ? [0, 3, 7] : [0, 4, 7]; // minor or major triad
     const chordMidis = chordIntervals.map(i => rootMidi + i);
-    
+
     audio.playChord(chordMidis, 2.0);
     setActiveMidis(chordMidis);
     setTimeout(() => setActiveMidis([]), 300);
@@ -252,17 +255,31 @@ export const TheoryLab: React.FC = () => {
       // Center of sector for labels
       const labelAngle = (index * 30 - 90) * Math.PI / 180;
       const labelX_maj = cx + (outerR + midR) / 2 * Math.cos(labelAngle);
-      const labelY_maj = cx + (outerR + midR) / 2 * Math.sin(labelAngle) + 5;
-      
+      const labelY_maj = cy + (outerR + midR) / 2 * Math.sin(labelAngle) + 5;
+
       const labelX_min = cx + (midR + innerR) / 2 * Math.cos(labelAngle);
-      const labelY_min = cx + (midR + innerR) / 2 * Math.sin(labelAngle) + 5;
+      const labelY_min = cy + (midR + innerR) / 2 * Math.sin(labelAngle) + 5;
 
       const isSelected = selectedCircleKey.name === keyInfo.name;
 
+      // Major and minor sectors are independently clickable — they
+      // represent different home notes (relative major/minor) over the
+      // same note set, so each needs its own handler rather than both
+      // falling back to a single click on their shared <g>.
+      const handleMajorClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        handleCircleKeyClick(keyInfo, false);
+      };
+      const handleMinorClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        handleCircleKeyClick(keyInfo, true);
+      };
+
       return (
-        <g key={keyInfo.name} style={{ cursor: 'pointer' }} onClick={() => handleCircleKeyClick(keyInfo)}>
+        <g key={keyInfo.name} style={{ cursor: 'pointer' }}>
           {/* Major Key Sector */}
           <path
+            onClick={handleMajorClick}
             d={`M ${x1_mid} ${y1_mid} L ${x1_out} ${y1_out} A ${outerR} ${outerR} 0 0 1 ${x2_out} ${y2_out} L ${x2_mid} ${y2_mid} A ${midR} ${midR} 0 0 0 ${x1_mid} ${y1_mid}`}
             fill={isSelected ? 'rgba(0, 240, 255, 0.2)' : 'rgba(255, 255, 255, 0.02)'}
             stroke={isSelected ? 'var(--primary)' : 'rgba(255, 255, 255, 0.08)'}
@@ -271,6 +288,7 @@ export const TheoryLab: React.FC = () => {
           />
           {/* Minor Key Sector */}
           <path
+            onClick={handleMinorClick}
             d={`M ${x1_in} ${y1_in} L ${x1_mid} ${y1_mid} A ${midR} ${midR} 0 0 1 ${x2_mid} ${y2_mid} L ${x2_in} ${y2_in} A ${innerR} ${innerR} 0 0 0 ${x1_in} ${y1_in}`}
             fill={isSelected ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255, 255, 255, 0.01)'}
             stroke={isSelected ? 'var(--secondary)' : 'rgba(255, 255, 255, 0.05)'}
@@ -278,10 +296,10 @@ export const TheoryLab: React.FC = () => {
           />
 
           {/* Text Labels */}
-          <text x={labelX_maj} y={labelY_maj} fill={isSelected ? 'var(--primary)' : '#fff'} fontSize="13.5" fontWeight={isSelected ? 'bold' : 'normal'} textAnchor="middle">
+          <text onClick={handleMajorClick} x={labelX_maj} y={labelY_maj} fill={isSelected ? 'var(--primary)' : '#fff'} fontSize="13.5" fontWeight={isSelected ? 'bold' : 'normal'} textAnchor="middle">
             {keyInfo.name}
           </text>
-          <text x={labelX_min} y={labelY_min} fill={isSelected ? 'var(--secondary)' : 'var(--text-secondary)'} fontSize="10.5" textAnchor="middle">
+          <text onClick={handleMinorClick} x={labelX_min} y={labelY_min} fill={isSelected ? 'var(--secondary)' : 'var(--text-secondary)'} fontSize="10.5" textAnchor="middle">
             {keyInfo.relativeMinor}
           </text>
         </g>

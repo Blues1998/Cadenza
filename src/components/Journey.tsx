@@ -101,6 +101,15 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
                     {/* Header row — always clickable to expand/collapse */}
                     <div
                       onClick={() => setExpandedId(isExpanded ? '' : level.id)}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isExpanded}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setExpandedId(isExpanded ? '' : level.id);
+                        }
+                      }}
                       style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', userSelect: 'none' }}
                     >
                       <span style={{ width: '20px', textAlign: 'center', flexShrink: 0 }}>
