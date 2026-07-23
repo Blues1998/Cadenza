@@ -169,6 +169,13 @@ export const TabPlayerLab: React.FC = () => {
   const userBrowsingRef = useRef(false);
   const browsingTimeoutRef = useRef<number | null>(null);
   const isAutoScrollingRef = useRef(false);
+  // alphaTab only fully resets its audio render buffer on a seek that happens
+  // *while already playing* — seeking to a restored position before the very
+  // first Play (see the playerReady handler below) updates the cursor/tick
+  // position correctly but leaves stale synth state, so that first playback
+  // comes out silent. This flags "re-apply the position once playback
+  // actually starts" to force the same seek through the working code path.
+  const needsAudioResyncRef = useRef(false);
 
   const [scoreTitle, setScoreTitle] = useState<string>('');
   const [scoreArtist, setScoreArtist] = useState<string>('');
@@ -671,6 +678,10 @@ export const TabPlayerLab: React.FC = () => {
       // fresh scoreboard — stats from a previous piece shouldn't bleed in.
       pendingTargetRef.current = null;
       pendingResolvedRef.current = false;
+      // Likewise, a pending resync from whatever was loaded before shouldn't
+      // carry over onto this score (playerReady below will set it fresh if
+      // this load turns out to be a restore).
+      needsAudioResyncRef.current = false;
       setCurrentTargetLabel(null);
       hideGradeHighlight();
       setGradeStats({ hits: 0, misses: 0 });
@@ -717,6 +728,11 @@ export const TabPlayerLab: React.FC = () => {
       // Reorient immediately when playback (re)starts, in case the user
       // browsed away while paused.
       if (playing && !userBrowsingRef.current) api.scrollToCursor();
+      if (playing && needsAudioResyncRef.current) {
+        needsAudioResyncRef.current = false;
+        const currentPosition = api.timePosition;
+        api.timePosition = currentPosition;
+      }
       if (!playing) {
         persistCurrentTab();
         // Every opened grading window must resolve exactly once — pausing
@@ -738,6 +754,7 @@ export const TabPlayerLab: React.FC = () => {
       if (restore && restore.lastPositionMs > 0) {
         api.timePosition = restore.lastPositionMs;
         api.scrollToCursor();
+        needsAudioResyncRef.current = true;
       }
     });
     api.playerPositionChanged.on((args) => {
