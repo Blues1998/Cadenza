@@ -15,6 +15,7 @@ import type {
 import { useTabIntervalSource } from '../hooks/useTabIntervalSource';
 import type { TabIntervalCandidate } from '../utils/tabIntervalSource';
 import { CHORD_FEELINGS } from '../utils/glossary';
+import { IconSpeaker } from '../components/Icons';
 
 // Two of the longer 7th-chord names get an abbreviated parenthetical
 // (everything else is short enough to show in full) — the feeling word
@@ -557,7 +558,7 @@ export const EarTrainingLab: React.FC = () => {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                     <span>Melody Clue Reference</span>
-                    <span>Click 🔊 to hear reference</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>Click <IconSpeaker size={12} /> to hear reference</span>
                   </div>
                   {getPossibleIntervals().map((interval) => (
                     <div 
@@ -580,7 +581,7 @@ export const EarTrainingLab: React.FC = () => {
                         style={{ padding: '2px 6px', fontSize: '0.7rem' }}
                         title="Hear reference interval"
                       >
-                        🔊
+                        <IconSpeaker />
                       </button>
                     </div>
                   ))}

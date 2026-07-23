@@ -10,6 +10,7 @@ import {
 } from '../utils/musicTheory';
 import { SCALE_FEELINGS, CHORD_FEELINGS } from '../utils/glossary';
 import { reportProgress } from '../utils/progress';
+import { IconCheck } from '../components/Icons';
 
 // ---- Challenge tuning constants ----
 const CONFIRM_MS = 350;  // how long the correct note must be held to count
@@ -434,10 +435,11 @@ export const PlayLab: React.FC = () => {
                           fontWeight: current ? 700 : 500,
                           border: `1px solid ${done ? 'var(--success)' : current ? 'var(--warning)' : 'rgba(255,255,255,0.1)'}`,
                           background: done ? 'rgba(16,185,129,0.12)' : current ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.02)',
-                          color: done ? 'var(--success)' : current ? 'var(--warning)' : 'var(--text-muted)'
+                          color: done ? 'var(--success)' : current ? 'var(--warning)' : 'var(--text-muted)',
+                          display: 'inline-flex', alignItems: 'center', gap: '0.3rem'
                         }}
                       >
-                        {done ? '✓ ' : ''}{targetsHidden && !done ? '?' : label}
+                        {done && <IconCheck size={11} />}{targetsHidden && !done ? '?' : label}
                       </span>
                     );
                   })}

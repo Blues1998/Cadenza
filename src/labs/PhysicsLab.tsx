@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { audio } from '../utils/audio';
 import { NOTE_NAMES } from '../utils/musicTheory';
 import { reportProgress } from '../utils/progress';
+import { IconPlay, IconStop } from '../components/Icons';
 
 // ---- Shared drawing helpers ----
 const COLORS = {
@@ -168,8 +169,8 @@ const HarmonicExplorer: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <button onClick={play} className="btn btn-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}>
-          ▶ Hear this exact waveform
+        <button onClick={play} className="btn btn-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+          <IconPlay /> Hear this exact waveform
         </button>
         {HARMONIC_PRESETS.map(p => (
           <button key={p.name} onClick={() => setAmps(p.amps)} className="btn" style={{ padding: '0.4rem 0.7rem', fontSize: '0.75rem' }}>
@@ -335,8 +336,8 @@ const RatioExplorer: React.FC = () => {
       </p>
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <button onClick={sounding ? stopDuo : startDuo} className={`btn ${sounding ? 'btn-secondary' : 'btn-primary'}`} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}>
-          {sounding ? '■ Stop Sound' : '▶ Sound On (two sine tones)'}
+        <button onClick={sounding ? stopDuo : startDuo} className={`btn ${sounding ? 'btn-secondary' : 'btn-primary'}`} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+          {sounding ? <><IconStop /> Stop Sound</> : <><IconPlay /> Sound On (two sine tones)</>}
         </button>
         <span style={{ fontSize: '0.85rem', fontFamily: 'monospace', color: locked ? 'var(--success)' : 'var(--text-secondary)' }}>
           {BASE_HZ} Hz + {f2.toFixed(1)} Hz · ratio {ratio.toFixed(3)} ·

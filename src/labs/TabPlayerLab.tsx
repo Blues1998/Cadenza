@@ -15,6 +15,7 @@ import type { TabLibraryEntry } from '../utils/tabLibrary';
 import { GUITAR_SOUNDFONT_URL, GUITAR_TONES, DEFAULT_GUITAR_TONE, toneKey, setScoreInstrument } from '../utils/guitarTones';
 import { useMicPitch } from '../hooks/useMicPitch';
 import { NOTE_NAMES } from '../utils/musicTheory';
+import { IconCheck, IconX } from '../components/Icons';
 
 const ACCEPTED_EXTENSIONS = '.gp,.gp3,.gp4,.gp5,.gpx,.musicxml,.xml';
 
@@ -1126,10 +1127,11 @@ export const TabPlayerLab: React.FC = () => {
                           padding: '0.25rem 0.5rem', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 600,
                           border: `1px solid ${r.hit ? 'var(--success)' : 'var(--danger)'}`,
                           background: r.hit ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                          color: r.hit ? 'var(--success)' : 'var(--danger)'
+                          color: r.hit ? 'var(--success)' : 'var(--danger)',
+                          display: 'inline-flex', alignItems: 'center', gap: '0.3rem'
                         }}
                       >
-                        {r.hit ? '✓' : '✕'} {r.label}
+                        {r.hit ? <IconCheck size={11} /> : <IconX size={11} />} {r.label}
                       </span>
                     ))}
                   </div>

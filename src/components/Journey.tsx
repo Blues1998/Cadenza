@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { ActiveTab } from './Sidebar';
 import { JOURNEY, ALL_LEVELS, XP_PER_LEVEL, isLevelComplete, getCurrentLevelIndex, levelProgress } from '../utils/journey';
 import { subscribeProgress } from '../utils/progress';
+import { IconCheckCircle, IconCircle } from './Icons';
 
 interface JourneyProps {
   setActiveTab: (tab: ActiveTab) => void;
@@ -112,8 +113,8 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
                       }}
                       style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', userSelect: 'none' }}
                     >
-                      <span style={{ width: '20px', textAlign: 'center', flexShrink: 0 }}>
-                        {done ? '✅' : '○'}
+                      <span style={{ width: '20px', display: 'flex', justifyContent: 'center', flexShrink: 0, color: done ? 'var(--success)' : 'var(--text-muted)' }}>
+                        {done ? <IconCheckCircle /> : <IconCircle />}
                       </span>
                       {isSuggested && !done && (
                         <span style={{ fontSize: '0.65rem', background: 'var(--primary)', color: '#030406', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', flexShrink: 0 }}>

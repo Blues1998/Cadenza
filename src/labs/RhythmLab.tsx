@@ -137,7 +137,15 @@ const TimingGraph: React.FC<{
       g.textAlign = 'left';
       g.fillText(`output latency: ${Math.round(audio.getOutputLatency() * 1000)}ms`, 6, h - 4);
       g.textAlign = 'right';
-      g.fillText('now ▶', w - 4, 12);
+      g.fillText('now', w - 12, 12);
+      // Small drawn triangle marking the "now" line — sharper at any zoom
+      // level than relying on the ▶ glyph in a 9px monospace font.
+      g.beginPath();
+      g.moveTo(w - 8, 8);
+      g.lineTo(w - 8, 16);
+      g.lineTo(w - 2, 12);
+      g.closePath();
+      g.fill();
 
       rafId = requestAnimationFrame(draw);
     };
