@@ -481,7 +481,7 @@ export const TheoryLab: React.FC = () => {
             <svg width="320" height="320" viewBox="0 0 320 320" style={{ transform: 'rotate(0deg)' }}>
               {renderCircleSectors()}
               {/* Inner core empty space */}
-              <circle cx="160" cy="160" r="55" fill="#080a0f" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="0.5" />
+              <circle cx="160" cy="160" r="55" fill="var(--input-bg)" stroke="rgba(var(--surface-tint-rgb), 0.08)" strokeWidth="0.5" />
               {/* Core Label */}
               <text x="160" y="155" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">SELECTED KEY</text>
               <text x="160" y="177" fill="var(--primary)" fontSize="18" fontWeight="bold" textAnchor="middle">{selectedCircleKey.name} Maj</text>
