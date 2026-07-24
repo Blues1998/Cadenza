@@ -90,7 +90,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
                   className="fret-cell nut-cell"
                   onClick={() => handleCellClick(str.midi, 0)}
                 >
-                  <span style={{ cursor: 'pointer', zIndex: 11, color: 'var(--primary)', fontWeight: 'bold' }}>
+                  <span style={{ cursor: 'pointer', zIndex: 11, color: '#00f0ff', fontWeight: 'bold' }}>
                     {str.note}
                     <span style={{ fontSize: '0.65rem', verticalAlign: 'sub' }}>{str.octave}</span>
                   </span>
@@ -141,6 +141,19 @@ export const Fretboard: React.FC<FretboardProps> = ({
               </div>
             );
           })}
+
+          {/* Fret-number ruler, aligned to the same tapered cell widths as
+              the strings above so each number sits under its real fret */}
+          <div className="fret-ruler-row">
+            <div className="fret-ruler-nut">0</div>
+            <div className="fret-ruler-area">
+              {FRET_WIDTH_PCT.map((pct, i) => (
+                <div key={i} className="fret-ruler-cell" style={{ width: `${pct}%` }}>
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

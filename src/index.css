@@ -95,7 +95,7 @@
   --shadow-panel: 0 8px 28px 0 rgba(80, 62, 30, 0.12);
   --input-bg: #fffdf8;
   --input-text: var(--text-primary);
-  --tooltip-bg: #1c2129;
+  --tooltip-bg: #fffdf8;
   --tooltip-border: rgba(14, 122, 134, 0.35);
   --scrollbar-track: rgba(23, 18, 8, 0.05);
   --scrollbar-thumb: rgba(23, 18, 8, 0.14);
@@ -313,14 +313,14 @@ body {
 }
 
 .piano-key.white.active {
-  background: linear-gradient(to bottom, #a5f3fc 0%, var(--primary) 100%);
-  box-shadow: 0 5px 15px var(--primary-glow);
+  background: linear-gradient(to bottom, #a5f3fc 0%, #00f0ff 100%);
+  box-shadow: 0 5px 15px rgba(0, 240, 255, 0.25);
   z-index: 2;
 }
 
 .piano-key.white.highlight-correct {
-  background: linear-gradient(to bottom, #a7f3d0 0%, var(--success) 100%);
-  box-shadow: 0 5px 15px var(--success-glow);
+  background: linear-gradient(to bottom, #a7f3d0 0%, #10b981 100%);
+  box-shadow: 0 5px 15px rgba(16, 185, 129, 0.25);
   z-index: 2;
 }
 
@@ -341,16 +341,16 @@ body {
 
 .piano-key.black.active {
   background: linear-gradient(to bottom, #8b5cf6 0%, #6d28d9 100%);
-  box-shadow: 0 3px 10px var(--secondary-glow);
+  box-shadow: 0 3px 10px rgba(139, 92, 246, 0.25);
 }
 
 .piano-key.black.highlight-correct {
   background: linear-gradient(to bottom, #10b981 0%, #047857 100%);
-  box-shadow: 0 3px 10px var(--success-glow);
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
 }
 
 .piano-key.white.highlight-root {
-  background: linear-gradient(to bottom, #fde68a 0%, var(--warning) 100%);
+  background: linear-gradient(to bottom, #fde68a 0%, #f59e0b 100%);
   box-shadow: 0 5px 15px rgba(245, 158, 11, 0.35);
   z-index: 2;
 }
@@ -517,28 +517,64 @@ body {
   border-color: rgba(255,255,255,0.5);
 }
 
+/* Fixed (not themed) colors below — the fretboard is an always-dark
+   instrument surface, and these markers sit directly on its wood/fret
+   texture, so they need the same fixed brightness in both themes rather
+   than the page's --primary/--success/--warning, which go darker and
+   lower-contrast in light mode to stay legible as page text/buttons. */
 .guitar-note-marker.active {
-  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), var(--primary) 55%, #00b8c4 100%);
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), #00f0ff 55%, #00b8c4 100%);
   border-color: rgba(255,255,255,0.6);
   color: #030406;
-  box-shadow: 0 0 14px var(--primary-glow), 0 2px 6px rgba(0,0,0,0.5);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.25), 0 2px 6px rgba(0,0,0,0.5);
   transform: scale(1.1);
 }
 
 .guitar-note-marker.highlight-correct {
-  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.5), var(--success) 55%, #0a7d5c 100%);
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.5), #10b981 55%, #0a7d5c 100%);
   border-color: rgba(255,255,255,0.6);
   color: #030406;
-  box-shadow: 0 0 14px var(--success-glow), 0 2px 6px rgba(0,0,0,0.5);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.25), 0 2px 6px rgba(0,0,0,0.5);
   transform: scale(1.1);
 }
 
 .guitar-note-marker.highlight-root {
-  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), var(--warning) 55%, #b9740a 100%);
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), #f59e0b 55%, #b9740a 100%);
   border-color: rgba(255,255,255,0.6);
   color: #030406;
   box-shadow: 0 0 14px rgba(245, 158, 11, 0.35), 0 2px 6px rgba(0,0,0,0.5);
   transform: scale(1.15);
+}
+
+/* Fret-number ruler along the bottom of the neck — fixed light-on-dark
+   colors like the rest of the fretboard, not page text, since it sits on
+   the wood in both themes */
+.fret-ruler-row {
+  display: flex;
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.fret-ruler-nut {
+  flex: 0 0 60px;
+  width: 60px;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+}
+
+.fret-ruler-area {
+  flex: 1;
+  display: flex;
+}
+
+.fret-ruler-cell {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
 }
 
 /* Mobile fretboard: compressed cell sizes so more of the neck fits per
@@ -583,6 +619,16 @@ body {
   .inlay-dot {
     width: 9px;
     height: 9px;
+  }
+
+  .fret-ruler-nut {
+    flex-basis: 44px;
+    width: 44px;
+  }
+
+  .fret-ruler-cell,
+  .fret-ruler-nut {
+    font-size: 0.6rem;
   }
 
   /* Snap to the fret positions players actually think in (open, 3rd, 5th,
@@ -664,9 +710,12 @@ body {
   position: absolute;
   bottom: calc(100% + 10px);
   left: 50%;
-  transform: translateX(-50%) translateY(4px);
+  /* --tip-shift is measured in JS on hover/focus and nudges the tooltip
+     back on-screen when centering it over the trigger would push it past
+     the viewport edge (narrow columns, terms near the left/right edge) */
+  transform: translateX(calc(-50% + var(--tip-shift, 0px))) translateY(4px);
   width: 250px;
-  max-width: 70vw;
+  max-width: min(70vw, 250px);
   background: var(--tooltip-bg);
   border: 1px solid var(--tooltip-border);
   border-radius: 10px;
@@ -686,11 +735,19 @@ body {
   z-index: 100;
 }
 
+/* Flipped when there's no room above the trigger (e.g. a term near the
+   top of the viewport) — same idea as --tip-shift, but for the vertical axis */
+.term-tip.term-tip--below {
+  bottom: auto;
+  top: calc(100% + 10px);
+  transform: translateX(calc(-50% + var(--tip-shift, 0px))) translateY(-4px);
+}
+
 .term:hover .term-tip,
 .term:focus .term-tip {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(calc(-50% + var(--tip-shift, 0px))) translateY(0);
 }
 
 .term-tip strong {
