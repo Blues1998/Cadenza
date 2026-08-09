@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { Theme } from '../hooks/useTheme';
 import { IconSun, IconMoon } from './Icons';
 
-export type ActiveTab = 'dashboard' | 'ear-training' | 'theory' | 'play' | 'physics' | 'rhythm' | 'tuner' | 'tabs';
+export type ActiveTab = 'dashboard' | 'ear-training' | 'theory' | 'play' | 'physics' | 'rhythm' | 'tuner' | 'tabs' | 'songs';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -114,6 +114,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
           <path d="M9 18V5l12-2v13" />
           <circle cx="6" cy="18" r="3" />
           <circle cx="18" cy="16" r="3" />
+        </svg>
+      )
+    },
+    {
+      id: 'songs' as ActiveTab,
+      label: 'Song Hero',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 15 9 22 9.5 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.5 9 9 12 2" />
         </svg>
       )
     }

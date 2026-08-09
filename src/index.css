@@ -235,6 +235,24 @@ body {
   border-color: var(--primary);
 }
 
+/* Keycap badge for on-screen keyboard-shortcut hints */
+.key-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.3em;
+  padding: 1px 6px;
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.14);
+  border-radius: 4px;
+  font-family: inherit;
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
 /* Sidebar theme toggle */
 .theme-toggle {
   width: 36px;

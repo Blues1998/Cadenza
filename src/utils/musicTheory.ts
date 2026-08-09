@@ -115,6 +115,37 @@ export const GUITAR_STRINGS = [
   { note: 'E', octave: 2, midi: 40 }  // String 6 (lowest pitch)
 ];
 
+// Standard open-position chord shapes ("campfire chords"), for keyboard-driven
+// guitar playing. `frets` has one entry per GUITAR_STRINGS index (0 = high E
+// ... 5 = low E): a fret number (0 = open) or null for a muted/unplayed string.
+export interface GuitarChordShape {
+  id: string;
+  label: string;
+  root: string; // pitch class, matches an entry in NOTE_NAMES
+  frets: (number | null)[];
+}
+
+export const GUITAR_CHORD_SHAPES: GuitarChordShape[] = [
+  { id: 'C',  label: 'C major', root: 'C', frets: [0, 1, 0, 2, 3, null] },
+  { id: 'G',  label: 'G major', root: 'G', frets: [3, 0, 0, 0, 2, 3] },
+  { id: 'D',  label: 'D major', root: 'D', frets: [2, 3, 2, 0, null, null] },
+  { id: 'A',  label: 'A major', root: 'A', frets: [0, 2, 2, 2, 0, null] },
+  { id: 'E',  label: 'E major', root: 'E', frets: [0, 0, 1, 2, 2, 0] },
+  { id: 'Am', label: 'A minor', root: 'A', frets: [0, 1, 2, 2, 0, null] },
+  { id: 'Em', label: 'E minor', root: 'E', frets: [0, 0, 0, 2, 2, 0] },
+  { id: 'Dm', label: 'D minor', root: 'D', frets: [1, 3, 2, 0, null, null] },
+];
+
+// MIDI notes sounded by a chord shape (skipping muted strings) — shared by
+// useGuitarChordKeyboard (live play) and useSongChart (Listen-mode playback).
+export function chordShapeMidis(chordId: string): number[] {
+  const shape = GUITAR_CHORD_SHAPES.find(s => s.id === chordId);
+  if (!shape) return [];
+  return shape.frets
+    .map((fret, i) => (fret === null ? null : GUITAR_STRINGS[i].midi + fret))
+    .filter((m): m is number => m !== null);
+}
+
 // Keyboard configuration
 export const PIANO_START_MIDI = 48; // C3
 export const PIANO_END_MIDI = 84;   // C6 (3 Octaves + 1 note)

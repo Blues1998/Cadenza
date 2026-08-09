@@ -19,6 +19,13 @@ public/soundfont
 # Guitar soundfont (~37MB, too big to commit) — run `npm run setup:soundfont`
 public/instruments
 
+# Reference Guitar Pro tab files used while hand-authoring Song Hero's chart
+# data (src/data/songCharts.ts). Several are commercial/copyrighted songs,
+# never commit these to a repo that gets deployed publicly.
+*.gp3
+*.gp4
+*.gp5
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

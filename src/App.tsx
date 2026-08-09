@@ -10,6 +10,7 @@ import { PhysicsLab } from './labs/PhysicsLab';
 import { RhythmLab } from './labs/RhythmLab';
 import { TunerLab } from './labs/TunerLab';
 import { TabPlayerLab } from './labs/TabPlayerLab';
+import { SongHeroLab } from './labs/SongHeroLab';
 
 function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
@@ -33,6 +34,8 @@ function App() {
         return <TunerLab />;
       case 'tabs':
         return <TabPlayerLab />;
+      case 'songs':
+        return <SongHeroLab />;
       default:
         return <DashboardLanding setActiveTab={setActiveTab} />;
     }

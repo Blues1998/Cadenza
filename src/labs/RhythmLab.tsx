@@ -585,7 +585,7 @@ export const RhythmLab: React.FC = () => {
           {!isGameMode ? (
             <div style={{ margin: 'auto 0', textAlign: 'center', color: 'var(--text-secondary)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <p>Practice timing independently with the metronome ticks.</p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Tip: Press <kbd style={{ padding: '2px 6px', background: '#2d3748', borderRadius: '4px', fontStyle: 'normal' }}>Spacebar</kbd> to toggle the metronome on/off.</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Tip: Press <kbd className="key-hint">Spacebar</kbd> to toggle the metronome on/off.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: 1, gap: '1rem' }}>

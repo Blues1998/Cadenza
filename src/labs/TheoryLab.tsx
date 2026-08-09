@@ -8,6 +8,7 @@ import {
   CIRCLE_OF_FIFTHS,
   CHORD_QUALITIES,
   SCALE_FORMULAS,
+  GUITAR_CHORD_SHAPES,
   noteNameToMidi,
   normalizeNoteName
 } from '../utils/musicTheory';
@@ -17,6 +18,8 @@ import type {
 } from '../utils/musicTheory';
 import { SCALE_FEELINGS, CHORD_FEELINGS } from '../utils/glossary';
 import { reportProgress } from '../utils/progress';
+import { useComputerKeyboardInstrument } from '../hooks/useComputerKeyboardInstrument';
+import { useGuitarChordKeyboard } from '../hooks/useGuitarChordKeyboard';
 
 const INTRO_DISMISSED_KEY = 'theory-intro-dismissed';
 
@@ -114,11 +117,22 @@ export const TheoryLab: React.FC = () => {
 
   const handlePlayNote = (midi: number) => {
     audio.playMidi(midi, 1.5);
-    setActiveMidis([midi]);
+    // Add rather than replace, so a fast strum across several strings (each
+    // its own handlePlayNote call) shows every struck note flashing at
+    // once instead of each new note cutting the previous one's flash short.
+    setActiveMidis((prev) => (prev.includes(midi) ? prev : [...prev, midi]));
     setTimeout(() => {
       setActiveMidis((prev) => prev.filter((m) => m !== midi));
     }, 150);
   };
+
+  const [guitarMode, setGuitarMode] = useState(false);
+
+  // Two mutually-exclusive keyboard input modes, both driving the same
+  // handlePlayNote a mouse click already uses: melodic single-note typing
+  // (piano-style), or Guitar Mode's chord-shape + per-string pick keys.
+  const { octave: keyboardOctave } = useComputerKeyboardInstrument(handlePlayNote, !guitarMode);
+  const { heldShape, heldShapeMidis, heldShapeRootMidis } = useGuitarChordKeyboard(handlePlayNote, guitarMode);
 
   // Play the entire scale in an ascending sweep sequence
   const playScaleSweep = () => {
@@ -533,12 +547,47 @@ export const TheoryLab: React.FC = () => {
 
       </div>
 
+      {/* Shared instrument picker — your keyboard always controls whichever
+          one is selected here; the highlighted panel below shows which */}
+      <div className="glass-panel" style={{ padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <strong style={{ fontSize: '0.85rem' }}>Play with your keyboard:</strong>
+        <button onClick={() => setGuitarMode(false)} className={`btn ${!guitarMode ? 'btn-primary' : ''}`} style={{ padding: '0.4rem 1.1rem', fontSize: '0.85rem' }}>
+          🎹 Piano
+        </button>
+        <button onClick={() => setGuitarMode(true)} className={`btn ${guitarMode ? 'btn-primary' : ''}`} style={{ padding: '0.4rem 1.1rem', fontSize: '0.85rem' }}>
+          🎸 Guitar
+        </button>
+        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          the panel outlined below is the one listening for key presses
+        </span>
+      </div>
+
       {/* Piano View */}
-      <section className="glass-panel" style={{ padding: '1.5rem' }}>
+      <section
+        className="glass-panel"
+        style={{
+          padding: '1.5rem',
+          border: !guitarMode ? '1px solid var(--primary)' : undefined,
+          boxShadow: !guitarMode ? '0 0 0 1px var(--primary), 0 0 24px var(--primary-glow)' : undefined
+        }}
+      >
         <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
           3-Octave Piano Keyboard
+          {!guitarMode && (
+            <span style={{ display: 'inline-block', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-on-primary)', background: 'var(--primary)', padding: '2px 8px', borderRadius: '10px', marginLeft: '0.6rem', verticalAlign: 'middle' }}>
+              ⌨ Listening
+            </span>
+          )}
           <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '0.25rem' }}>
             Click any key to hear it — colored keys belong to your selection above.
+          </span>
+          <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+            Or play it with your keyboard: <kbd className="key-hint">A</kbd><kbd className="key-hint">S</kbd><kbd className="key-hint">D</kbd><kbd className="key-hint">F</kbd><kbd className="key-hint">G</kbd><kbd className="key-hint">H</kbd><kbd className="key-hint">J</kbd><kbd className="key-hint">K</kbd>
+            <span>+</span>
+            <kbd className="key-hint">W</kbd><kbd className="key-hint">E</kbd><kbd className="key-hint">T</kbd><kbd className="key-hint">Y</kbd><kbd className="key-hint">U</kbd>
+            <span>for sharps ·</span>
+            <kbd className="key-hint">Z</kbd><span>/</span><kbd className="key-hint">X</kbd>
+            <span>to change octave · currently <strong style={{ color: 'var(--primary)' }}>octave {keyboardOctave}</strong></span>
           </span>
         </h3>
         <HighlightLegend mode={selectedChordQuality !== -1 ? 'chord' : 'scale'} />
@@ -551,12 +600,26 @@ export const TheoryLab: React.FC = () => {
       </section>
 
       {/* Fretboard View */}
-      <section className="glass-panel" style={{ padding: '1.5rem' }}>
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-          <span>Guitar Fretboard (Standard Tuning EADGBE)</span>
-          <button 
-            onClick={() => handlePlayNote(noteNameToMidi('E', 2))} 
-            className="btn" 
+      <section
+        className="glass-panel"
+        style={{
+          padding: '1.5rem',
+          border: guitarMode ? '1px solid var(--primary)' : undefined,
+          boxShadow: guitarMode ? '0 0 0 1px var(--primary), 0 0 24px var(--primary-glow)' : undefined
+        }}
+      >
+        <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center' }}>
+            Guitar Fretboard (Standard Tuning EADGBE)
+            {guitarMode && (
+              <span style={{ display: 'inline-block', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-on-primary)', background: 'var(--primary)', padding: '2px 8px', borderRadius: '10px', marginLeft: '0.6rem' }}>
+                ⌨ Listening
+              </span>
+            )}
+          </span>
+          <button
+            onClick={() => handlePlayNote(noteNameToMidi('E', 2))}
+            className="btn"
             style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}
           >
             Strum Guitar
@@ -565,11 +628,38 @@ export const TheoryLab: React.FC = () => {
         <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '-0.75rem', marginBottom: '0.75rem' }}>
           The exact same notes as the piano above, mapped onto the guitar neck — one note can live in several places on a guitar.
         </p>
+
+        {guitarMode ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
+              Hold a chord shape:
+              {GUITAR_CHORD_SHAPES.map((shape, i) => (
+                <span key={shape.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                  <kbd className="key-hint">{i + 1}</kbd>
+                  <span>{shape.id}</span>
+                </span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
+              Pick a string (low → high):
+              <kbd className="key-hint">Z</kbd><kbd className="key-hint">X</kbd><kbd className="key-hint">C</kbd><kbd className="key-hint">V</kbd><kbd className="key-hint">B</kbd><kbd className="key-hint">N</kbd>
+              <span>— no shape held = strings ring open</span>
+            </div>
+            <div>
+              Holding: <strong style={{ color: heldShape ? 'var(--primary)' : 'var(--text-muted)' }}>{heldShape ? heldShape.label : 'nothing (open strings)'}</strong>
+            </div>
+          </div>
+        ) : (
+          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+            Select 🎸 Guitar above to play chords and fingerstyle patterns with your keyboard.
+          </p>
+        )}
+
         <HighlightLegend mode={selectedChordQuality !== -1 ? 'chord' : 'scale'} />
         <Fretboard
           activeMidis={activeMidis}
-          highlightCorrectMidis={highlightedMidis}
-          rootMidis={rootMidis}
+          highlightCorrectMidis={guitarMode && heldShape ? heldShapeMidis : highlightedMidis}
+          rootMidis={guitarMode && heldShape ? heldShapeRootMidis : rootMidis}
           onPlayNote={handlePlayNote}
           showAllNoteNames={true}
         />
