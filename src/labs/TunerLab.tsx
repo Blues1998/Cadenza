@@ -177,7 +177,7 @@ export const TunerLab: React.FC = () => {
               {/* Slider Scale Meter */}
               <div style={{ width: '100%', maxWidth: '360px', position: 'relative', marginTop: '1rem' }}>
                 {/* Horizontal scale */}
-                <div style={{ height: '4px', background: 'rgba(var(--surface-tint-rgb),0.08)', borderRadius: '2px', width: '100%' }}></div>
+                <div style={{ height: '4px', background: 'var(--surface-3)', borderRadius: '2px', width: '100%' }}></div>
                 
                 {/* Center / In-Tune tick */}
                 <div style={{ position: 'absolute', left: '50%', top: '-8px', width: '2px', height: '20px', background: 'var(--success)', transform: 'translateX(-50%)' }} />
@@ -228,7 +228,7 @@ export const TunerLab: React.FC = () => {
 
         {/* Intonation Game Console */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', minHeight: '340px' }}>
-          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
+          <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
             <span>Pitch Matching Game</span>
             <Segmented
               value={gameMode}
@@ -265,9 +265,8 @@ export const TunerLab: React.FC = () => {
                     <div
                       key={note}
                       style={{
-                        background: 'rgba(var(--surface-tint-rgb),0.03)',
-                        border: '1px solid rgba(var(--surface-tint-rgb),0.06)',
-                        borderRadius: '10px',
+                        background: 'var(--surface-2)',
+                        borderRadius: '8px',
                         padding: '0.5rem 0.4rem',
                         textAlign: 'center'
                       }}
@@ -280,7 +279,7 @@ export const TunerLab: React.FC = () => {
                 </div>
               </div>
 
-              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingTop: '0.75rem' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', paddingTop: '0.75rem' }}>
                 Singing instead? Switch to <strong style={{ color: 'var(--text-secondary)' }}>Practice Game</strong> and the lab
                 gives you a note to hold until you land it.
               </p>
@@ -289,7 +288,7 @@ export const TunerLab: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '1rem', justifyContent: 'center' }}>
               
               {/* Target Note Display Box */}
-              <div style={{ textAlign: 'center', padding: '1.25rem', background: 'rgba(var(--surface-tint-rgb),0.01)', border: '1px solid rgba(var(--surface-tint-rgb),0.05)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ textAlign: 'center', padding: '1.25rem', background: 'var(--surface-2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TARGET NOTE</span>
                 <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--secondary)' }}>{targetNote}</span>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
@@ -309,7 +308,7 @@ export const TunerLab: React.FC = () => {
                   <span>Pitch Intonation Accuracy:</span>
                   <span style={{ fontWeight: 'bold' }}>{holdProgress}%</span>
                 </div>
-                <div style={{ height: '10px', background: 'rgba(var(--surface-tint-rgb),0.08)', borderRadius: '5px', overflow: 'hidden' }}>
+                <div style={{ height: '10px', background: 'var(--surface-3)', borderRadius: '5px', overflow: 'hidden' }}>
                   <div 
                     style={{ 
                       width: `${holdProgress}%`, 
@@ -326,7 +325,7 @@ export const TunerLab: React.FC = () => {
               </div>
 
               {/* Accuracy Stats */}
-              <div style={{ display: 'flex', justifyItems: 'space-between', gap: '1rem', borderTop: '1px solid rgba(var(--surface-tint-rgb),0.06)', paddingTop: '0.75rem', fontSize: '0.85rem', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', justifyItems: 'space-between', gap: '1rem', paddingTop: '0.75rem', fontSize: '0.85rem', justifyContent: 'space-between' }}>
                 <span>Matched Notes: <strong style={{ color: 'var(--primary)' }}>{matchScore}</strong></span>
                 <span style={{ color: 'var(--warning)' }}>Streak: <strong>🔥 {matchStreak}</strong></span>
               </div>

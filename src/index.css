@@ -49,44 +49,47 @@ h1, h2, h3, h4, .lab-title {
   color: #F1F0EC;
   background-color: #111214;
 
-  /* Near-neutral ground with the faintest warm lift toward the centre, so
-     the shell reads as a matte panel rather than a flat fill. */
-  --bg-gradient: radial-gradient(circle at 50% 0%, #17181B 0%, #111214 55%, #0C0D0F 100%);
-  --panel-bg: rgba(25, 27, 30, 0.72);
-  --panel-border: #303338;
-  --panel-border-hover: #43474D;
-  --surface-2: #222529;
+  /* Flat. A gradient ground is the tell of a dashboard template; an
+     instrument panel is one matte colour and lets the content sit on it. */
+  --bg-gradient: none;
+  --panel-bg: #17191C;
+  --panel-border: #292C30;
+  --panel-border-hover: #383C42;
+  /* Tonal steps, not outlines. Depth comes from these three values rather
+     than from drawing a line around everything. */
+  --surface-1: #17191C;
+  --surface-2: #1D2024;
+  --surface-3: #24272C;
 
-  /* One accent, used hard. Everything else in the interface is neutral, so
-     orange always means "this is the live thing". */
+  /* Orange is rationed. It marks the live thing and the one action a screen
+     wants from you — a sounding note, the root of a scale, the primary
+     button, the lab you are in. Selection states are tonal, which is what
+     keeps the accent meaning anything at all. */
   --primary: #FF6A2A;
-  --primary-glow: rgba(255, 106, 42, 0.28);
-  --primary-end: #FF8A4C;
-  --secondary: #FFB08A;
-  --secondary-glow: rgba(255, 176, 138, 0.22);
-  --secondary-end: #FFC9B0;
+  --primary-glow: rgba(255, 106, 42, 0.22);
+  --primary-end: #FF6A2A;
+  --secondary: #C8CCD2;
+  --secondary-glow: rgba(200, 204, 210, 0.14);
+  --secondary-end: #C8CCD2;
 
-  /* Feedback colours, kept clear of the accent: the green and the red must
-     never be mistaken for "selected", and the caution yellow is pushed well
-     off orange so a warning does not read as an accent. */
-  --success: #46C08A;
-  --success-glow: rgba(70, 192, 138, 0.25);
-  --warning: #E5C463;
-  --warning-glow: rgba(229, 196, 99, 0.3);
-  --danger: #FF4D5E;
-  --danger-glow: rgba(255, 77, 94, 0.25);
+  --success: #7DB89A;
+  --success-glow: rgba(125, 184, 154, 0.22);
+  --warning: #D9B26A;
+  --warning-glow: rgba(217, 178, 106, 0.24);
+  --danger: #E06A6A;
+  --danger-glow: rgba(224, 106, 106, 0.22);
 
   /* Notes on an instrument, as a heat ramp: a scale tone is a faint ember,
      the root burns, and whatever is sounding right now flashes white-hot.
-     Separate from the feedback colours above so a quiz's "correct" green can
-     never collide with a fretboard's "in this scale". */
-  --note-scale: #FFB08A;
-  --note-scale-deep: #C97748;
+     This is where the colour budget goes — the instruments carry the richness
+     so the chrome does not have to. */
+  --note-scale: #C08560;
+  --note-scale-deep: #8E5A38;
   /* A major scale colours seven of twelve piano keys, so the full ember is
      too much across that much surface — the large key faces get a wash and
      the small fretboard dots keep the saturated version. */
-  --note-scale-wash: #F0CDB8;
-  --note-scale-wash-deep: #C99B7E;
+  --note-scale-wash: #D8BCA8;
+  --note-scale-wash-deep: #A9846A;
   --note-root: #FF6A2A;
   --note-root-deep: #C24312;
   --note-active: #F1F0EC;
@@ -94,17 +97,17 @@ h1, h2, h3, h4, .lab-title {
   --text-primary: #F1F0EC;
   --text-secondary: #A9ADB3;
   --text-muted: #85898F;
-  --text-on-primary: #14100E;
-  --text-on-secondary: #14100E;
+  --text-on-primary: #111214;
+  --text-on-secondary: #111214;
 
   --surface-tint-rgb: 255, 255, 255;
-  --shadow-panel: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
-  --toolbar-bg: rgba(17, 18, 20, 0.92);
-  --input-bg: #0E0F11;
+  --shadow-panel: none;
+  --toolbar-bg: rgba(17, 18, 20, 0.94);
+  --input-bg: #111214;
   --input-text: #F1F0EC;
-  --tooltip-bg: #191B1E;
-  --tooltip-border: rgba(255, 106, 42, 0.35);
-  --scrollbar-track: rgba(0, 0, 0, 0.25);
+  --tooltip-bg: #1D2024;
+  --tooltip-border: #292C30;
+  --scrollbar-track: transparent;
   --scrollbar-thumb: rgba(241, 240, 236, 0.1);
   --scrollbar-thumb-hover: rgba(241, 240, 236, 0.18);
 }
@@ -112,35 +115,37 @@ h1, h2, h3, h4, .lab-title {
 :root[data-theme='light'] {
   color-scheme: light;
   color: #17181A;
-  background-color: #FAF9F7;
+  background-color: #FAFAF8;
 
-  --bg-gradient: radial-gradient(circle at 50% 0%, #FFFFFF 0%, #F6F4F1 55%, #EFECE7 100%);
-  --panel-bg: rgba(255, 255, 255, 0.82);
-  --panel-border: rgba(17, 18, 20, 0.1);
-  --panel-border-hover: rgba(17, 18, 20, 0.2);
-  --surface-2: #F1EFEB;
+  --bg-gradient: none;
+  --panel-bg: #FFFFFF;
+  --panel-border: #E6E4E0;
+  --panel-border-hover: #D2CFC9;
+  --surface-1: #FFFFFF;
+  --surface-2: #F4F3F0;
+  --surface-3: #E9E7E3;
 
   /* The accent darkens on paper. #FF6A2A over white is a 2.5:1 contrast —
      fine as a fill, unreadable as text — so the light theme uses a deeper
      burn that still reads as the same orange. */
   --primary: #D9480F;
-  --primary-glow: rgba(217, 72, 15, 0.18);
-  --primary-end: #B8380A;
-  --secondary: #B25A32;
-  --secondary-glow: rgba(178, 90, 50, 0.16);
-  --secondary-end: #8F4423;
+  --primary-glow: rgba(217, 72, 15, 0.14);
+  --primary-end: #D9480F;
+  --secondary: #4A4E55;
+  --secondary-glow: rgba(74, 78, 85, 0.12);
+  --secondary-end: #4A4E55;
 
-  --success: #12805B;
-  --success-glow: rgba(18, 128, 91, 0.16);
-  --warning: #96700F;
-  --warning-glow: rgba(150, 112, 15, 0.2);
-  --danger: #C92A3B;
-  --danger-glow: rgba(201, 42, 59, 0.18);
+  --success: #4A8467;
+  --success-glow: rgba(74, 132, 103, 0.16);
+  --warning: #8A6A1E;
+  --warning-glow: rgba(138, 106, 30, 0.18);
+  --danger: #B3453F;
+  --danger-glow: rgba(179, 69, 63, 0.16);
 
-  --note-scale: #E08A57;
-  --note-scale-deep: #B4622F;
-  --note-scale-wash: #F2C6A8;
-  --note-scale-wash-deep: #D29770;
+  --note-scale: #C07A4C;
+  --note-scale-deep: #97562C;
+  --note-scale-wash: #F0D3BE;
+  --note-scale-wash-deep: #CFA484;
   --note-root: #E0500F;
   --note-root-deep: #A83808;
   --note-active: #17181A;
@@ -152,13 +157,13 @@ h1, h2, h3, h4, .lab-title {
   --text-on-secondary: #FFFFFF;
 
   --surface-tint-rgb: 17, 18, 20;
-  --shadow-panel: 0 8px 28px 0 rgba(17, 18, 20, 0.08);
-  --toolbar-bg: rgba(250, 249, 247, 0.93);
+  --shadow-panel: none;
+  --toolbar-bg: rgba(250, 250, 248, 0.94);
   --input-bg: #FFFFFF;
   --input-text: var(--text-primary);
   --tooltip-bg: #FFFFFF;
-  --tooltip-border: rgba(217, 72, 15, 0.35);
-  --scrollbar-track: rgba(17, 18, 20, 0.05);
+  --tooltip-border: #E6E4E0;
+  --scrollbar-track: transparent;
   --scrollbar-thumb: rgba(17, 18, 20, 0.16);
   --scrollbar-thumb-hover: rgba(17, 18, 20, 0.26);
 }
@@ -195,90 +200,89 @@ body {
 }
 
 /* Glassmorphism Styles */
+/* No glass. A blurred translucent panel is the signature of a dashboard
+   template; an instrument panel is one matte colour, and depth comes from the
+   tonal step between --surface-1/2/3 rather than from a line round
+   everything. */
 .glass-panel {
   background: var(--panel-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-panel);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 12px;
+  transition: border-color 0.18s ease;
 }
 
-.glass-panel:hover {
-  border-color: var(--panel-border-hover);
-}
+/* Panels are not interactive, so they no longer light up when the pointer
+   crosses them. */
 
 .glass-card {
-  background: rgba(var(--surface-tint-rgb), 0.02);
-  border: 1px solid rgba(var(--surface-tint-rgb), 0.04);
-  border-radius: 12px;
+  background: var(--surface-2);
+  border: none;
+  border-radius: 8px;
   padding: 1.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.15s ease;
   cursor: pointer;
 }
 
 .glass-card:hover {
-  background: rgba(var(--surface-tint-rgb), 0.05);
-  border-color: rgba(var(--surface-tint-rgb), 0.1);
-  transform: translateY(-2px);
+  background: var(--surface-3);
 }
 
 .glass-card.active {
-  background: var(--primary-glow);
-  border-color: var(--primary);
-  box-shadow: 0 0 15px var(--primary-glow);
+  background: var(--surface-3);
+  box-shadow: inset 2px 0 0 var(--primary);
 }
 
 /* Interactive Elements */
+/* The default button is tonal. Only .btn-primary is orange, and a screen
+   should want at most one thing badly enough to spend it. */
 .btn {
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  padding: 0.75rem 1.5rem;
-  border-radius: 10px;
-  border: 1px solid rgba(var(--surface-tint-rgb), 0.1);
-  background: rgba(var(--surface-tint-rgb), 0.03);
-  color: var(--text-primary);
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  color: var(--text-secondary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .btn:hover {
-  background: rgba(var(--surface-tint-rgb), 0.08);
-  border-color: rgba(var(--surface-tint-rgb), 0.2);
+  background: var(--surface-3);
+  color: var(--text-primary);
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-end) 100%);
+  background: var(--primary);
   color: var(--text-on-primary);
   font-weight: 600;
-  border: none;
-  box-shadow: 0 4px 15px var(--primary-glow);
+  border-color: transparent;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 80%, white) 0%, color-mix(in srgb, var(--primary-end) 80%, white) 100%);
-  box-shadow: 0 6px 20px var(--primary-glow);
+  background: color-mix(in srgb, var(--primary) 88%, white);
+  color: var(--text-on-primary);
 }
 
+/* Not a second accent — a firmer neutral than .btn, still no colour. */
 .btn-secondary {
-  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-end) 100%);
-  color: #ffffff;
-  border: none;
-  box-shadow: 0 4px 15px var(--secondary-glow);
+  background: var(--surface-3);
+  color: var(--text-primary);
+  border-color: var(--panel-border);
+  font-weight: 600;
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--secondary) 80%, white) 0%, color-mix(in srgb, var(--secondary-end) 80%, white) 100%);
-  box-shadow: 0 6px 20px var(--secondary-glow);
+  background: var(--surface-3);
+  border-color: var(--panel-border-hover);
 }
 
 /* Shared form chrome — <select>/<input> fields across the labs, themed as a
@@ -292,9 +296,9 @@ body {
   justify-content: center;
   min-width: 1.3em;
   padding: 1px 6px;
-  background: var(--input-bg);
-  color: var(--input-text);
-  border: 1px solid rgba(var(--surface-tint-rgb), 0.14);
+  background: var(--surface-3);
+  color: var(--text-secondary);
+  border: none;
   border-radius: 4px;
   font-family: var(--font-mono);
   font-style: normal;
@@ -420,7 +424,7 @@ html {
   top: 0;
   left: 0;
   border-right: 1px solid var(--panel-border);
-  border-radius: 0 16px 16px 0;
+  border-radius: 0;
   overflow: hidden;
   transition: width 0.2s ease, padding 0.2s ease;
 }
@@ -740,7 +744,7 @@ html {
 /* Guitar Fretboard Styles */
 .fretboard-container {
   background: #0B0C0D;
-  border-radius: 14px;
+  border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.06);
   box-shadow:
     0 20px 45px rgba(0,0,0,0.65),
@@ -1037,17 +1041,17 @@ html {
 }
 
 .lab-title {
-  font-size: 2rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 0.5rem;
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
 }
 
 .lab-description {
-  color: var(--text-secondary);
-  font-size: 1rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  max-width: 78ch;
 }
 
 /* Animations */
@@ -1077,8 +1081,7 @@ html {
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid var(--panel-border);
   border-top: none;
-  border-radius: 0 0 16px 16px;
-  box-shadow: var(--shadow-panel);
+  border-radius: 0 0 12px 12px;
 }
 
 .toolbar-row {
@@ -1104,34 +1107,39 @@ html {
   gap: 3px;
 }
 
+/* The key strip is musical data, so it is set in the mono face. The selected
+   key is one of the few places in the chrome worth the accent: it names what
+   every panel below is showing. */
 .note-key {
-  font-family: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 500;
   min-width: 30px;
   padding: 0.35rem 0.2rem;
-  border-radius: 7px;
-  border: 1px solid rgba(var(--surface-tint-rgb), 0.12);
-  background: rgba(var(--surface-tint-rgb), 0.04);
-  color: var(--text-secondary);
+  border-radius: 6px;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
+/* Accidentals sit back the way black keys do on a keyboard */
 .note-key.is-accidental {
-  background: rgba(var(--surface-tint-rgb), 0.11);
-  color: var(--text-muted);
+  background: transparent;
+  color: #5F6369;
 }
 
 .note-key:hover {
-  border-color: var(--primary);
-  color: var(--text-primary);
+  background: var(--surface-3);
+  color: var(--text-secondary);
 }
 
-.note-key.is-selected {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-end) 100%);
-  border-color: var(--primary);
+.note-key.is-selected,
+.note-key.is-selected.is-accidental {
+  background: var(--primary);
   color: var(--text-on-primary);
+  font-weight: 600;
 }
 
 /* Segmented control for small, mutually exclusive choices */
@@ -1139,9 +1147,9 @@ html {
   display: inline-flex;
   padding: 2px;
   gap: 2px;
-  border-radius: 9px;
-  border: 1px solid rgba(var(--surface-tint-rgb), 0.12);
-  background: rgba(var(--surface-tint-rgb), 0.04);
+  border-radius: 8px;
+  border: none;
+  background: var(--surface-2);
 }
 
 .segmented button {
@@ -1150,9 +1158,9 @@ html {
   font-weight: 600;
   padding: 0.3rem 0.7rem;
   border: none;
-  border-radius: 7px;
+  border-radius: 6px;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
@@ -1182,14 +1190,17 @@ html {
   cursor: not-allowed;
 }
 
+/* Selection is a tonal lift and a brighter label, not a colour. A raised
+   segment with full-strength text is unmistakable without spending the accent
+   on something as routine as which tab is open. */
 .segmented button[aria-pressed='true'] {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-end) 100%);
-  color: var(--text-on-primary);
+  background: var(--surface-3);
+  color: var(--text-primary);
 }
 
 .segmented.is-secondary button[aria-pressed='true'] {
-  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-end) 100%);
-  color: var(--text-on-secondary);
+  background: var(--surface-3);
+  color: var(--text-primary);
 }
 
 /* Range sliders, checkboxes and radios were drawing in the browser's own
@@ -1224,9 +1235,9 @@ input[type='range'] {
   font-size: 0.85rem;
   width: 100%;
   padding: 0.45rem 2rem 0.45rem 0.7rem;
-  border-radius: 9px;
-  border: 1px solid rgba(var(--surface-tint-rgb), 0.14);
-  background-color: var(--input-bg);
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background-color: var(--surface-2);
   color: var(--input-text);
   cursor: pointer;
   /* Chevron drawn inline so it inherits the theme and needs no asset */
@@ -1239,7 +1250,7 @@ input[type='range'] {
 }
 
 .select-field:hover {
-  border-color: rgba(var(--surface-tint-rgb), 0.28);
+  border-color: var(--panel-border-hover);
 }
 
 .select-field:focus {
@@ -1261,29 +1272,29 @@ input[type='range'] {
   font-size: 0.76rem;
   font-weight: 500;
   padding: 0.32rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(var(--surface-tint-rgb), 0.12);
-  background: rgba(var(--surface-tint-rgb), 0.03);
-  color: var(--text-secondary);
+  border-radius: 8px;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .pill:hover {
-  border-color: var(--primary);
-  color: var(--text-primary);
+  background: var(--surface-3);
+  color: var(--text-secondary);
 }
 
 .pill.is-selected {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-end) 100%);
-  border-color: transparent;
-  color: var(--text-on-primary);
+  background: var(--surface-3);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--panel-border-hover);
 }
 
 .pill.is-selected.is-secondary {
-  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-end) 100%);
-  color: var(--text-on-secondary);
+  background: var(--surface-3);
+  color: var(--text-primary);
 }
 
 @media (max-width: 640px) {
@@ -1482,7 +1493,7 @@ input[type='range'] {
   max-width: min(70vw, 250px);
   background: var(--tooltip-bg);
   border: 1px solid var(--tooltip-border);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 0.65rem 0.8rem;
   font-size: 0.78rem;
   font-weight: 400;

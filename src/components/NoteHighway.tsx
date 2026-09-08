@@ -144,7 +144,7 @@ export const NoteHighway: React.FC<NoteHighwayProps> = ({ events, minMidi, maxMi
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: '100%', height: '160px', display: 'block', borderRadius: '10px' }}
+      style={{ width: '100%', height: '160px', display: 'block', borderRadius: '8px' }}
     />
   );
 };

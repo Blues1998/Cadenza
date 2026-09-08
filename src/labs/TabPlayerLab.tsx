@@ -904,8 +904,8 @@ export const TabPlayerLab: React.FC = () => {
                 onClick={() => loadFromLibrary(entry)}
                 style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem',
-                  padding: '0.65rem 0.9rem', borderRadius: '10px', cursor: 'pointer',
-                  background: 'rgba(var(--surface-tint-rgb),0.02)', border: '1px solid rgba(var(--surface-tint-rgb),0.06)'
+                  padding: '0.65rem 0.9rem', borderRadius: '8px', cursor: 'pointer',
+                  background: 'var(--surface-2)', border: '1px solid rgba(var(--surface-tint-rgb),0.06)'
                 }}
               >
                 <div style={{ minWidth: 0 }}>
@@ -939,7 +939,7 @@ export const TabPlayerLab: React.FC = () => {
         onDrop={handleDrop}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
-          padding: '1.25rem', borderRadius: '12px', cursor: 'pointer',
+          padding: '1.25rem', borderRadius: '8px', cursor: 'pointer',
           border: `2px dashed ${isDragging ? 'var(--primary)' : 'rgba(var(--surface-tint-rgb),0.12)'}`,
           background: isDragging ? 'rgba(255, 106, 42, 0.05)' : 'rgba(var(--surface-tint-rgb),0.015)',
           transition: 'border-color 0.15s ease, background 0.15s ease'
@@ -957,13 +957,13 @@ export const TabPlayerLab: React.FC = () => {
       </label>
 
       {error && (
-        <div style={{ padding: '0.85rem 1rem', borderRadius: '10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', fontSize: '0.85rem' }}>
+        <div style={{ padding: '0.85rem 1rem', borderRadius: '8px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', fontSize: '0.85rem' }}>
           {error}
         </div>
       )}
 
       {guitarSoundfontMissing && (
-        <div style={{ padding: '0.85rem 1rem', borderRadius: '10px', background: 'rgba(255, 106, 42, 0.08)', border: '1px solid rgba(255, 106, 42, 0.3)', color: 'var(--warning)', fontSize: '0.85rem' }}>
+        <div style={{ padding: '0.85rem 1rem', borderRadius: '8px', background: 'rgba(255, 106, 42, 0.08)', border: '1px solid rgba(255, 106, 42, 0.3)', color: 'var(--warning)', fontSize: '0.85rem' }}>
           The high-quality guitar samples didn't load, so playback will fall back to a generic synth sound.
           Run <code>npm run setup:soundfont</code> in the project to fetch them.
         </div>
@@ -1092,8 +1092,8 @@ export const TabPlayerLab: React.FC = () => {
             <div
               style={{
                 display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1.5rem',
-                padding: '0.85rem 1rem', borderRadius: '10px',
-                background: 'rgba(var(--surface-tint-rgb),0.015)', border: '1px solid rgba(var(--surface-tint-rgb),0.06)',
+                padding: '0.85rem 1rem', borderRadius: '8px',
+                background: 'rgba(var(--surface-tint-rgb),0.015)',
                 fontSize: '0.82rem', color: 'var(--text-secondary)'
               }}
             >
@@ -1111,7 +1111,7 @@ export const TabPlayerLab: React.FC = () => {
           {/* Mic-verified play-along: grades single-note melodic beats in
               real time against the mic as the cursor advances, using the
               exact same pitch-detection pipeline as Play Challenges. */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem 1.25rem', borderRadius: '10px', background: 'rgba(var(--surface-tint-rgb),0.015)', border: '1px solid rgba(var(--surface-tint-rgb),0.06)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem 1.25rem', borderRadius: '8px', background: 'rgba(var(--surface-tint-rgb),0.015)', border: '1px solid rgba(var(--surface-tint-rgb),0.06)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Mic Play-Along</div>
@@ -1200,8 +1200,7 @@ export const TabPlayerLab: React.FC = () => {
           maxHeight: hasScore ? '65vh' : undefined,
           overflow: 'auto',
           background: hasScore ? '#ffffff' : '#0E0F11',
-          borderRadius: '12px',
-          border: '1px solid rgba(var(--surface-tint-rgb),0.06)',
+          borderRadius: '8px',
           padding: hasScore ? '1rem' : 0
         }}
       />
@@ -1226,7 +1225,7 @@ export const TabPlayerLab: React.FC = () => {
             overflowY: 'auto',
             background: 'var(--tooltip-bg)',
             border: '1px solid var(--tooltip-border)',
-            borderRadius: '10px',
+            borderRadius: '8px',
             padding: '0.7rem 0.85rem',
             fontSize: '0.78rem',
             lineHeight: 1.5,

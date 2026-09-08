@@ -434,7 +434,7 @@ export const PlayLab: React.FC = () => {
                           fontSize: '0.78rem',
                           fontWeight: current ? 700 : 500,
                           border: `1px solid ${done ? 'var(--success)' : current ? 'var(--warning)' : 'rgba(var(--surface-tint-rgb),0.1)'}`,
-                          background: done ? 'rgba(70, 192, 138, 0.12)' : current ? 'rgba(255, 106, 42, 0.12)' : 'rgba(var(--surface-tint-rgb),0.02)',
+                          background: done ? 'rgba(70, 192, 138, 0.12)' : current ? 'rgba(255, 106, 42, 0.12)' : 'var(--surface-2)',
                           color: done ? 'var(--success)' : current ? 'var(--warning)' : 'var(--text-muted)',
                           display: 'inline-flex', alignItems: 'center', gap: '0.3rem'
                         }}
@@ -462,7 +462,7 @@ export const PlayLab: React.FC = () => {
               </div>
 
               {/* Mode-specific settings */}
-              <div style={{ borderTop: '1px solid rgba(var(--surface-tint-rgb),0.06)', paddingTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              <div style={{ paddingTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                 {mode === 'scale' && (
                   <>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -525,7 +525,7 @@ export const PlayLab: React.FC = () => {
                   <span>Hold to confirm</span>
                   <span>{holdPct}%</span>
                 </div>
-                <div style={{ height: '8px', background: 'rgba(var(--surface-tint-rgb),0.08)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ height: '8px', background: 'var(--surface-3)', borderRadius: '4px', overflow: 'hidden' }}>
                   <div style={{ width: `${holdPct}%`, height: '100%', background: 'var(--success)', boxShadow: '0 0 10px var(--success-glow)', transition: 'width 0.08s linear' }} />
                 </div>
               </div>
@@ -538,7 +538,7 @@ export const PlayLab: React.FC = () => {
 
           {/* Fretboard */}
           <section className="glass-panel" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.15rem', marginBottom: '0.75rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.15rem', marginBottom: '0.75rem', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <span>Guitar Fretboard Guide</span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-secondary)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={showTargets} onChange={e => setShowTargets(e.target.checked)} />

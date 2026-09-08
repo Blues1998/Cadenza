@@ -136,7 +136,7 @@ export const SongHeroLab: React.FC = () => {
         )}
 
         {summary && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem', borderRadius: '10px', background: 'rgba(var(--surface-tint-rgb),0.04)', border: '1px solid rgba(var(--surface-tint-rgb),0.08)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem', borderRadius: '8px', background: 'rgba(var(--surface-tint-rgb),0.04)', border: '1px solid rgba(var(--surface-tint-rgb),0.08)' }}>
             <strong style={{ fontSize: '1.1rem' }}>Score: {summary.accuracyPct}%</strong>
             <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               <span>Perfect: <strong style={{ color: 'var(--success)' }}>{summary.perfect}</strong></span>

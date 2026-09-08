@@ -33,7 +33,7 @@ const TierBadge: React.FC<{ tier: DifficultyTier }> = ({ tier }) => (
       letterSpacing: '0.04em',
       color: TIER_COLOR[tier],
       border: `1px solid ${TIER_COLOR[tier]}`,
-      borderRadius: '10px',
+      borderRadius: '8px',
       padding: '1px 7px',
       whiteSpace: 'nowrap'
     }}
@@ -58,10 +58,9 @@ const VoicingCard: React.FC<{
       alignItems: 'center',
       gap: '0.3rem',
       padding: compact ? '0.4rem 0.25rem 0.5rem' : '0.5rem 0.4rem 0.6rem',
-      borderRadius: '10px',
+      borderRadius: '8px',
       cursor: 'pointer',
-      background: 'rgba(var(--surface-tint-rgb), 0.03)',
-      border: '1px solid rgba(var(--surface-tint-rgb), 0.06)',
+      background: 'var(--surface-2)',
       flex: compact ? '1 1 92px' : '0 0 auto',
       minWidth: compact ? '92px' : '116px',
       maxWidth: compact ? '124px' : undefined
@@ -125,7 +124,6 @@ const ChordCard: React.FC<{ chord: ScaleChord; onStrum: (m: number[]) => void }>
             flexWrap: 'wrap',
             gap: '0.4rem',
             justifyContent: 'center',
-            borderTop: '1px solid rgba(var(--surface-tint-rgb), 0.08)',
             paddingTop: '0.6rem'
           }}
         >
@@ -164,14 +162,14 @@ export const ScaleChords: React.FC<ScaleChordsProps> = ({ rootName, scale, onStr
         <div style={{ display: 'flex', gap: '0.4rem' }}>
           <button
             onClick={() => setSevenths(false)}
-            className={`btn ${!sevenths ? 'btn-primary' : ''}`}
+            className={`btn ${!sevenths ? 'btn-secondary' : ''}`}
             style={{ padding: '0.35rem 0.9rem', fontSize: '0.8rem' }}
           >
             Triads
           </button>
           <button
             onClick={() => setSevenths(true)}
-            className={`btn ${sevenths ? 'btn-primary' : ''}`}
+            className={`btn ${sevenths ? 'btn-secondary' : ''}`}
             style={{ padding: '0.35rem 0.9rem', fontSize: '0.8rem' }}
           >
             <Term k="seventhChord">7th chords</Term>
@@ -184,8 +182,7 @@ export const ScaleChords: React.FC<ScaleChordsProps> = ({ rootName, scale, onStr
           style={{
             fontSize: '0.76rem',
             color: 'var(--text-secondary)',
-            background: 'rgba(var(--surface-tint-rgb), 0.03)',
-            border: '1px solid rgba(var(--surface-tint-rgb), 0.07)',
+            background: 'var(--surface-2)',
             borderRadius: '8px',
             padding: '0.6rem 0.8rem',
             lineHeight: 1.5,

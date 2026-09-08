@@ -168,7 +168,7 @@ const TimingGraph: React.FC<{
           display: 'block',
           background: '#0E0F11',
           border: '1px solid rgba(255,255,255,0.05)',
-          borderRadius: '10px'
+          borderRadius: '8px'
         }}
       />
       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.65rem', color: 'var(--text-muted)', justifyContent: 'center' }}>
@@ -450,7 +450,7 @@ export const RhythmLab: React.FC = () => {
         
         {/* Metronome Console */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+          <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
             <span>Metronome Console</span>
             <span className="readout" style={{ color: 'var(--primary)', fontWeight: 600 }}>{bpm} BPM</span>
           </h3>
@@ -527,7 +527,7 @@ export const RhythmLab: React.FC = () => {
                     borderRadius: '50%',
                     background: isActive 
                       ? (isFirstBeat ? 'var(--success)' : 'var(--primary)') 
-                      : 'rgba(var(--surface-tint-rgb), 0.05)',
+                      : 'var(--surface-3)',
                     border: '1px solid',
                     borderColor: isActive
                       ? (isFirstBeat ? 'var(--success)' : 'var(--primary)')
@@ -571,7 +571,7 @@ export const RhythmLab: React.FC = () => {
 
         {/* Tapping Game Console */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', minHeight: '340px' }}>
-          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
             {isGameMode ? 'Tapping Accuracy Game' : 'Metronome Guide'}
           </h3>
 
@@ -596,7 +596,7 @@ export const RhythmLab: React.FC = () => {
                 </div>
               ))}
 
-              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingTop: '0.75rem' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', paddingTop: '0.75rem' }}>
                 Press <kbd className="key-hint">Spacebar</kbd> to start and stop without reaching for the mouse.
                 Switch to <strong style={{ color: 'var(--text-secondary)' }}>Game</strong> to have your taps measured against the click.
               </p>
@@ -605,7 +605,7 @@ export const RhythmLab: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: 1, gap: '1rem' }}>
               
               {/* Score / Accuracy Banner */}
-              <div style={{ display: 'flex', justifyItems: 'space-between', alignItems: 'center', background: 'rgba(var(--surface-tint-rgb),0.02)', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', justifyItems: 'space-between', alignItems: 'center', background: 'var(--surface-2)', padding: '0.75rem 1rem', borderRadius: '8px', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Session Accuracy:</span>
                 <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: overallAccuracy > 80 ? 'var(--success)' : 'var(--primary)' }}>
                   {overallAccuracy}%
@@ -613,7 +613,7 @@ export const RhythmLab: React.FC = () => {
               </div>
 
               {/* Interactive Game Pace Control Row */}
-              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(var(--surface-tint-rgb),0.02)', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-2)', padding: '0.75rem 1rem', borderRadius: '8px', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Game Pace:</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <button 
@@ -643,9 +643,9 @@ export const RhythmLab: React.FC = () => {
                 onPointerDown={handleTap}
                 style={{
                   height: '100px',
-                  background: 'rgba(var(--surface-tint-rgb),0.01)',
+                  background: 'var(--surface-2)',
                   border: '2px dashed rgba(var(--surface-tint-rgb),0.1)',
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
@@ -699,7 +699,7 @@ export const RhythmLab: React.FC = () => {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            background: 'rgba(var(--surface-tint-rgb),0.02)',
+                            background: 'var(--surface-2)',
                             padding: '0.4rem 0.6rem',
                             borderRadius: '6px',
                             fontSize: '0.8rem',

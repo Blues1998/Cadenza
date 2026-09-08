@@ -377,8 +377,8 @@ export const TheoryLab: React.FC = () => {
           <path
             onClick={handleMajorClick}
             d={`M ${x1_mid} ${y1_mid} L ${x1_out} ${y1_out} A ${outerR} ${outerR} 0 0 1 ${x2_out} ${y2_out} L ${x2_mid} ${y2_mid} A ${midR} ${midR} 0 0 0 ${x1_mid} ${y1_mid}`}
-            fill={isSelected ? 'rgba(255, 106, 42, 0.2)' : 'rgba(var(--surface-tint-rgb), 0.02)'}
-            stroke={isSelected ? 'var(--primary)' : 'rgba(var(--surface-tint-rgb), 0.08)'}
+            fill={isSelected ? 'rgba(255, 106, 42, 0.2)' : 'var(--surface-2)'}
+            stroke={isSelected ? 'var(--primary)' : 'var(--surface-3)'}
             strokeWidth={isSelected ? '2' : '1'}
             className="sector-path"
           />
@@ -386,8 +386,8 @@ export const TheoryLab: React.FC = () => {
           <path
             onClick={handleMinorClick}
             d={`M ${x1_in} ${y1_in} L ${x1_mid} ${y1_mid} A ${midR} ${midR} 0 0 1 ${x2_mid} ${y2_mid} L ${x2_in} ${y2_in} A ${innerR} ${innerR} 0 0 0 ${x1_in} ${y1_in}`}
-            fill={isSelected ? 'rgba(255, 176, 138, 0.15)' : 'rgba(var(--surface-tint-rgb), 0.01)'}
-            stroke={isSelected ? 'var(--secondary)' : 'rgba(var(--surface-tint-rgb), 0.05)'}
+            fill={isSelected ? 'rgba(255, 176, 138, 0.15)' : 'var(--surface-2)'}
+            stroke={isSelected ? 'var(--secondary)' : 'var(--surface-3)'}
             strokeWidth={isSelected ? '1.5' : '0.5'}
           />
 
@@ -419,16 +419,16 @@ export const TheoryLab: React.FC = () => {
 
       {/* Dismissible "Start here" guide for first-time visitors */}
       {showIntro && (
-        <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', borderColor: 'rgba(255, 106, 42, 0.25)' }}>
+        <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', borderColor: 'var(--panel-border-hover)' }}>
           <div style={{ flex: '1 1 380px', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <h3 style={{ fontSize: '1rem', color: 'var(--primary)' }}>New here? Try this first</h3>
+            <h3 style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>New here? Try this first</h3>
             {[
               ['1', 'Pick a feeling below — start with "Happy & Bright" (that’s the Major scale).'],
               ['2', 'Press Play and just listen. Does it match the feeling on the label?'],
               ['3', 'Watch the same notes light up on the piano and guitar — the orange note is "home".']
             ].map(([num, text]) => (
               <div key={num} style={{ display: 'flex', gap: '0.6rem', alignItems: 'baseline', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                <span style={{ flexShrink: 0, width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(255, 106, 42, 0.15)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, alignSelf: 'center' }}>{num}</span>
+                <span style={{ flexShrink: 0, width: '20px', height: '20px', borderRadius: '50%', background: 'var(--surface-3)', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, alignSelf: 'center' }}>{num}</span>
                 <span>{text}</span>
               </div>
             ))}
@@ -453,8 +453,8 @@ export const TheoryLab: React.FC = () => {
       />
 
       {/* Plain-English read-out of whatever the toolbar currently has selected */}
-      <div style={{ background: 'rgba(255, 106, 42, 0.04)', border: '1px solid rgba(255, 106, 42, 0.15)', borderRadius: '12px', padding: '0.85rem 1.1rem', fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
-        <span style={{ display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--primary)', marginBottom: '0.3rem' }}>
+      <div style={{ background: 'var(--surface-2)', borderRadius: '10px', padding: '0.85rem 1.1rem', fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
+        <span style={{ display: 'block', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
           What you're seeing & hearing
         </span>
       {selectedChordQuality !== -1 ? (
@@ -525,8 +525,8 @@ export const TheoryLab: React.FC = () => {
 
           {/* Key signature info */}
           <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ background: 'rgba(var(--surface-tint-rgb),0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
-              <h4 style={{ color: 'var(--primary)', marginBottom: '0.4rem' }}>About this Key</h4>
+            <div style={{ background: 'var(--surface-2)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
+              <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.4rem' }}>About this Key</h4>
               <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 <div><Term k="relativeMinor">Relative Minor</Term>: <span style={{ color: 'var(--secondary)' }}>{activeCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
                 <div><Term k="accidentals">Accidentals</Term>: <span>
@@ -549,7 +549,7 @@ export const TheoryLab: React.FC = () => {
                       key={chordName}
                       onClick={() => playDiatonicChord(chordName, i)}
                       className="btn"
-                      style={{ padding: '0.4rem', fontSize: '0.75rem', flexDirection: 'column', gap: '2px', background: 'rgba(var(--surface-tint-rgb),0.02)' }}
+                      style={{ padding: '0.4rem', fontSize: '0.75rem', flexDirection: 'column', gap: '2px', background: 'var(--surface-2)' }}
                     >
                       <span style={{ fontWeight: 'bold' }}>{chordName}</span>
                       <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{degrees[i]}</span>
@@ -572,7 +572,7 @@ export const TheoryLab: React.FC = () => {
           separate "which one listens to the keyboard" bar was over a screen
           and a half of chrome for what is really a single choice. */}
       <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', justifyContent: 'space-between', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.85rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', justifyContent: 'space-between', paddingBottom: '0.85rem' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
             <div className="segmented" role="group" aria-label="Instrument">
               <button type="button" onClick={() => chooseInstrument('piano')} aria-pressed={instrument === 'piano'}>🎹 Piano</button>
@@ -580,8 +580,8 @@ export const TheoryLab: React.FC = () => {
               <button type="button" onClick={() => chooseInstrument('both')} aria-pressed={instrument === 'both'}>Both</button>
             </div>
             <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-              your keyboard plays the <strong style={{ color: 'var(--primary)' }}>{guitarMode ? 'guitar' : 'piano'}</strong>
-              {!guitarMode && <> · octave <strong style={{ color: 'var(--primary)' }}>{keyboardOctave}</strong></>}
+              your keyboard plays the <strong style={{ color: 'var(--text-secondary)' }}>{guitarMode ? 'guitar' : 'piano'}</strong>
+              {!guitarMode && <> · octave <strong className="readout" style={{ color: 'var(--text-secondary)' }}>{keyboardOctave}</strong></>}
             </span>
           </div>
 
@@ -607,7 +607,7 @@ export const TheoryLab: React.FC = () => {
         </div>
 
         {showKeyMap && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.78rem', color: 'var(--text-muted)', background: 'rgba(var(--surface-tint-rgb), 0.03)', borderRadius: '10px', padding: '0.75rem 0.9rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.78rem', color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
             {guitarMode ? (
               <>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>

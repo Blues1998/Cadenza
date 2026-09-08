@@ -142,7 +142,7 @@ const HarmonicExplorer: React.FC = () => {
 
   return (
     <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem' }}>
         1 · Why instruments sound different: the harmonic series
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
@@ -152,7 +152,7 @@ const HarmonicExplorer: React.FC = () => {
         we call timbre. Mix your own below (faint lines = individual harmonics, bright line = their sum).
       </p>
 
-      <canvas ref={canvasRef} style={{ width: '100%', height: '130px', background: '#0E0F11', borderRadius: '10px' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: '130px', background: '#0E0F11', borderRadius: '8px' }} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.75rem' }}>
         {amps.map((a, n) => (
@@ -326,7 +326,7 @@ const RatioExplorer: React.FC = () => {
 
   return (
     <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem' }}>
         2 · Why some notes sound good together: simple ratios & beating
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
@@ -360,11 +360,11 @@ const RatioExplorer: React.FC = () => {
 
       <div>
         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Combined wave, zoomed to 35 ms — simple ratios repeat neatly:</span>
-        <canvas ref={waveCanvasRef} style={{ width: '100%', height: '80px', background: '#0E0F11', borderRadius: '10px', marginTop: '0.25rem' }} />
+        <canvas ref={waveCanvasRef} style={{ width: '100%', height: '80px', background: '#0E0F11', borderRadius: '8px', marginTop: '0.25rem' }} />
       </div>
       <div>
         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Same signal over 1 full second — beating shows up as slow loudness waves:</span>
-        <canvas ref={envCanvasRef} style={{ width: '100%', height: '80px', background: '#0E0F11', borderRadius: '10px', marginTop: '0.25rem' }} />
+        <canvas ref={envCanvasRef} style={{ width: '100%', height: '80px', background: '#0E0F11', borderRadius: '8px', marginTop: '0.25rem' }} />
       </div>
       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
         The tritone sits at √2 ≈ 1.414 — a famously irrational spot with no tidy pattern, which is
@@ -389,7 +389,7 @@ const TEMPER_ROWS: { name: string; semis: number; p: number; q: number }[] = [
 
 const TemperamentTable: React.FC = () => (
   <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-    <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
+    <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem' }}>
       3 · Why 12 notes? Equal temperament is a floating-point hack
     </h3>
     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
@@ -406,7 +406,7 @@ const TemperamentTable: React.FC = () => (
         <thead>
           <tr style={{ color: 'var(--text-muted)', textAlign: 'left' }}>
             {['Interval', 'Pure ratio', 'Pure (¢)', '12-TET (¢)', 'Error', 'Hear the difference'].map(hd => (
-              <th key={hd} style={{ padding: '0.4rem 0.6rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', fontWeight: 600 }}>{hd}</th>
+              <th key={hd} style={{ padding: '0.4rem 0.6rem', fontWeight: 600 }}>{hd}</th>
             ))}
           </tr>
         </thead>
@@ -502,7 +502,7 @@ const ModularCircle: React.FC = () => {
 
   return (
     <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
+      <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem' }}>
         4 · The circle of fifths is just (n + 7) mod 12
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
@@ -534,7 +534,7 @@ const ModularCircle: React.FC = () => {
               <g key={name}>
                 <circle
                   cx={p.x} cy={p.y} r={isCurrent ? 17 : 14}
-                  fill={isCurrent ? 'rgba(255, 106, 42, 0.25)' : isVisited ? 'rgba(255, 106, 42, 0.12)' : 'rgba(var(--surface-tint-rgb),0.03)'}
+                  fill={isCurrent ? 'rgba(255, 106, 42, 0.25)' : isVisited ? 'rgba(255, 106, 42, 0.12)' : 'var(--surface-2)'}
                   stroke={isCurrent ? COLORS.warning : isVisited ? COLORS.primary : 'rgba(var(--surface-tint-rgb),0.12)'}
                   strokeWidth={isCurrent ? 2 : 1}
                 />

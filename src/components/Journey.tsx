@@ -35,7 +35,7 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
         <div>
           <h3 style={{ fontSize: '1.35rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
             <span>Your Guided Journey</span>
-            <span style={{ fontSize: '0.8rem', background: 'rgba(255, 106, 42, 0.08)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(255, 106, 42, 0.2)' }}>
+            <span style={{ fontSize: '0.8rem', background: 'rgba(255, 106, 42, 0.08)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '8px', border: '1px solid rgba(255, 106, 42, 0.2)' }}>
               {xp} XP
             </span>
           </h3>
@@ -50,14 +50,14 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
             <span>{completedCount} of {totalLevels} levels</span>
             <strong>{pct}%</strong>
           </div>
-          <div style={{ height: '6px', background: 'rgba(var(--surface-tint-rgb),0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{ height: '6px', background: 'var(--surface-3)', borderRadius: '3px', overflow: 'hidden' }}>
             <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--secondary))', transition: 'width 0.3s ease' }} />
           </div>
         </div>
       </div>
 
       {finished && (
-        <div style={{ padding: '1rem', borderRadius: '10px', background: 'rgba(70, 192, 138, 0.08)', border: '1px solid rgba(70, 192, 138, 0.3)', color: 'var(--success)', fontSize: '0.9rem' }}>
+        <div style={{ padding: '1rem', borderRadius: '8px', background: 'rgba(70, 192, 138, 0.08)', border: '1px solid rgba(70, 192, 138, 0.3)', color: 'var(--success)', fontSize: '0.9rem' }}>
           🎉 Journey complete! You've covered notes, scales, intervals, chords, keys, and rhythm — by playing all of it.
           Keep building streaks in Play Challenges and Ear Training to sharpen everything.
         </div>
@@ -93,8 +93,8 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
                       display: 'flex', flexDirection: 'column', gap: isExpanded ? '0.6rem' : 0,
                       padding: isExpanded ? '1rem 1.25rem' : '0.4rem 0.75rem',
                       borderRadius: isExpanded ? '12px' : '8px',
-                      background: isExpanded ? 'rgba(255, 106, 42, 0.04)' : done ? 'rgba(70, 192, 138, 0.04)' : 'rgba(var(--surface-tint-rgb),0.01)',
-                      border: '1px solid ' + (isExpanded ? 'rgba(255, 106, 42, 0.25)' : done ? 'rgba(70, 192, 138, 0.15)' : 'rgba(var(--surface-tint-rgb),0.05)'),
+                      background: isExpanded ? 'rgba(255, 106, 42, 0.04)' : done ? 'rgba(70, 192, 138, 0.04)' : 'var(--surface-2)',
+                      border: '1px solid ' + (isExpanded ? 'rgba(255, 106, 42, 0.25)' : done ? 'rgba(70, 192, 138, 0.15)' : 'var(--surface-3)'),
                       boxShadow: isExpanded ? '0 0 20px rgba(255, 106, 42, 0.05)' : 'none',
                       transition: 'background 0.15s ease, border-color 0.15s ease'
                     }}
@@ -117,7 +117,7 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
                         {done ? <IconCheckCircle /> : <IconCircle />}
                       </span>
                       {isSuggested && !done && (
-                        <span style={{ fontSize: '0.65rem', background: 'var(--primary)', color: 'var(--text-on-primary)', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', flexShrink: 0 }}>
+                        <span style={{ fontSize: '0.65rem', background: 'var(--primary)', color: 'var(--text-on-primary)', fontWeight: 700, padding: '2px 8px', borderRadius: '8px', flexShrink: 0 }}>
                           UP NEXT
                         </span>
                       )}
