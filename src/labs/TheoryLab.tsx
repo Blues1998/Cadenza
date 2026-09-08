@@ -3,6 +3,7 @@ import { Keyboard } from '../components/Keyboard';
 import { Fretboard } from '../components/Fretboard';
 import { Term } from '../components/Term';
 import { ScaleChords } from '../components/ScaleChords';
+import { ScaleControlBar } from '../components/ScaleControlBar';
 import { audio } from '../utils/audio';
 import {
   NOTE_NAMES,
@@ -194,6 +195,12 @@ export const TheoryLab: React.FC = () => {
     }, 400);
   };
 
+  // The toolbar's single Play button — whichever mode is active
+  const playSelection = () => {
+    if (selectedChordQuality !== -1) playCurrentChord();
+    else playScaleSweep();
+  };
+
   // Click on a key segment in the Circle of Fifths. `isMinorClick`
   // distinguishes the inner (relative minor) ring from the outer (major)
   // ring — they represent different home notes over the same note set.
@@ -372,195 +379,107 @@ export const TheoryLab: React.FC = () => {
         </section>
       )}
 
-      <div className="grid-2">
-        
-        {/* Scale/Chord Config Panel */}
-        <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-            <span>Explorer Settings</span>
-            <span style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>
-              Mode: {selectedChordQuality !== -1 ? 'Chord' : 'Scale'}
-            </span>
-          </h3>
+      {/* Pinned controls — the whole page below reacts to these */}
+      <ScaleControlBar
+        root={selectedRoot}
+        onRootChange={setSelectedRoot}
+        octave={selectedOctave}
+        onOctaveChange={setSelectedOctave}
+        scale={selectedScale}
+        onScaleChange={(sc) => { setSelectedScale(sc); setSelectedChordQuality(-1); }}
+        chordQuality={selectedChordQuality}
+        onChordQualityChange={setSelectedChordQuality}
+        onPlay={playSelection}
+      />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                <Term k="rootNote">Root Note</Term> <span style={{ color: 'var(--text-muted)' }}>— the home note</span>
-              </label>
-              <select 
-                value={selectedRoot} 
-                onChange={(e) => setSelectedRoot(e.target.value)}
-                className="input-field"
-                style={{ width: '100%', padding: '0.5rem' }}
-              >
-                {NOTE_NAMES.map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                <Term k="octave">Octave</Term> <span style={{ color: 'var(--text-muted)' }}>— how high or low</span>
-              </label>
-              <select 
-                value={selectedOctave} 
-                onChange={(e) => setSelectedOctave(Number(e.target.value))}
-                className="input-field"
-                style={{ width: '100%', padding: '0.5rem' }}
-              >
-                <option value={2}>Low (2)</option>
-                <option value={3}>Mid (3)</option>
-                <option value={4}>High (4)</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              Pick a <Term k="scale">scale</Term> by its feeling
-            </span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {SCALE_FORMULAS.map((scale) => (
-                <button
-                  key={scale.name}
-                  onClick={() => {
-                    setSelectedScale(scale);
-                    setSelectedChordQuality(-1);
-                  }}
-                  className={`btn ${selectedScale.name === scale.name && selectedChordQuality === -1 ? 'btn-primary' : ''}`}
-                  style={{ padding: '0.45rem 0.8rem', fontSize: '0.8rem', flexDirection: 'column', gap: '1px', alignItems: 'flex-start' }}
-                >
-                  <span style={{ fontWeight: 600 }}>{SCALE_FEELINGS[scale.name]?.feeling ?? scale.name}</span>
-                  <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{scale.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              …or pick a <Term k="chordQuality">chord</Term> by its feeling
-            </span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {CHORD_QUALITIES.map((chord, idx) => (
-                <button
-                  key={chord.name}
-                  onClick={() => setSelectedChordQuality(idx)}
-                  className={`btn ${selectedChordQuality === idx ? 'btn-secondary' : ''}`}
-                  style={{ padding: '0.45rem 0.8rem', fontSize: '0.8rem', flexDirection: 'column', gap: '1px', alignItems: 'flex-start' }}
-                >
-                  <span style={{ fontWeight: 600 }}>{CHORD_FEELINGS[chord.name] ?? chord.name}</span>
-                  <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{chord.name} ({chord.symbols[0]})</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Dynamic plain-English caption for the current selection */}
-          <div style={{ background: 'rgba(0, 240, 255, 0.04)', border: '1px solid rgba(0, 240, 255, 0.15)', borderRadius: '10px', padding: '0.85rem 1rem', fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
-            <span style={{ display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--primary)', marginBottom: '0.3rem' }}>
-              What you're seeing & hearing
-            </span>
-            {selectedChordQuality !== -1 ? (
-              <>
-                <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</strong>
-                {' '}sounds <strong style={{ color: 'var(--secondary)' }}>{(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}</strong>.
-                {' '}It's the notes <strong style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong> played
-                at the same time, built up from the home note {selectedRoot}. Press play and listen for that feeling.
-              </>
-            ) : (
-              <>
-                <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {selectedScale.name}</strong> — start
-                at the home note <strong style={{ color: 'var(--warning)' }}>{selectedRoot}</strong> and
-                climb: <strong style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>.
-                {' '}Listen for {SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}
-              </>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: '1rem', marginTop: 'auto', paddingTop: '1rem' }}>
-            {selectedChordQuality !== -1 ? (
-              <button onClick={playCurrentChord} className="btn btn-secondary" style={{ flex: 1, justifySelf: 'center' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Arpeggiate/Play Chord
-              </button>
-            ) : (
-              <button onClick={playScaleSweep} className="btn btn-primary" style={{ flex: 1 }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Play Scale (Sweep)
-              </button>
-            )}
-          </div>
-        </section>
-
-        {/* Interactive Circle of Fifths */}
-        <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          <div style={{ width: '100%', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
-            <h3 style={{ fontSize: '1.15rem' }}>
-              <Term k="circleOfFifths">Circle of Fifths</Term>
-            </h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
-              A map of all 12 musical <Term k="musicalKey">keys</Term>. Neighboring slices share almost
-              all their notes, so they blend well together — click any slice to hear its home chord.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-            {/* SVG Circle */}
-            <svg width="320" height="320" viewBox="0 0 320 320" style={{ transform: 'rotate(0deg)' }}>
-              {renderCircleSectors()}
-              {/* Inner core empty space */}
-              <circle cx="160" cy="160" r="55" fill="var(--input-bg)" stroke="rgba(var(--surface-tint-rgb), 0.08)" strokeWidth="0.5" />
-              {/* Core Label */}
-              <text x="160" y="155" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">SELECTED KEY</text>
-              <text x="160" y="177" fill="var(--primary)" fontSize="18" fontWeight="bold" textAnchor="middle">{selectedCircleKey.name} Maj</text>
-            </svg>
-
-            {/* Key signature info */}
-            <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ background: 'rgba(var(--surface-tint-rgb),0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
-                <h4 style={{ color: 'var(--primary)', marginBottom: '0.4rem' }}>About this Key</h4>
-                <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  <div><Term k="relativeMinor">Relative Minor</Term>: <span style={{ color: 'var(--secondary)' }}>{selectedCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
-                  <div><Term k="accidentals">Accidentals</Term>: <span>
-                    {selectedCircleKey.sharps > 0 ? `${selectedCircleKey.sharps} ♯ (Sharps)` :
-                     selectedCircleKey.sharps < 0 ? `${Math.abs(selectedCircleKey.sharps)} ♭ (Flats)` :
-                     'None (Natural Key)'}
-                  </span></div>
-                </div>
-              </div>
-
-              <div>
-                <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                  <Term k="diatonicChords">Chords that belong</Term> in the Key of {selectedCircleKey.name}
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
-                  {selectedCircleKey.chords.map((chordName, i) => {
-                    const degrees = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
-                    return (
-                      <button
-                        key={chordName}
-                        onClick={() => playDiatonicChord(chordName, i)}
-                        className="btn"
-                        style={{ padding: '0.4rem', fontSize: '0.75rem', flexDirection: 'column', gap: '2px', background: 'rgba(var(--surface-tint-rgb),0.02)' }}
-                      >
-                        <span style={{ fontWeight: 'bold' }}>{chordName}</span>
-                        <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{degrees[i]}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem', lineHeight: 1.5 }}>
-                  The <Term k="romanNumerals">Roman numerals</Term> tell you each chord's role:
-                  UPPERCASE = happy major, lowercase = sad minor, ° = tense. Click a few in a
-                  row — congratulations, you're writing a chord progression.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
+      {/* Plain-English read-out of whatever the toolbar currently has selected */}
+      <div style={{ background: 'rgba(0, 240, 255, 0.04)', border: '1px solid rgba(0, 240, 255, 0.15)', borderRadius: '12px', padding: '0.85rem 1.1rem', fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
+        <span style={{ display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--primary)', marginBottom: '0.3rem' }}>
+          What you're seeing & hearing
+        </span>
+      {selectedChordQuality !== -1 ? (
+        <>
+          <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</strong>
+          {' '}sounds <strong style={{ color: 'var(--secondary)' }}>{(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}</strong>.
+          {' '}It's the notes <strong style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong> played
+          at the same time, built up from the home note {selectedRoot}. Press play and listen for that feeling.
+        </>
+      ) : (
+        <>
+          <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {selectedScale.name}</strong> — start
+          at the home note <strong style={{ color: 'var(--warning)' }}>{selectedRoot}</strong> and
+          climb: <strong style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>.
+          {' '}Listen for {SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}
+        </>
+      )}
       </div>
+
+      {/* Interactive Circle of Fifths */}
+      <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ width: '100%', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
+          <h3 style={{ fontSize: '1.15rem' }}>
+            <Term k="circleOfFifths">Circle of Fifths</Term>
+          </h3>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
+            A map of all 12 musical <Term k="musicalKey">keys</Term>. Neighboring slices share almost
+            all their notes, so they blend well together — click any slice to hear its home chord.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+          {/* SVG Circle */}
+          <svg width="320" height="320" viewBox="0 0 320 320" style={{ transform: 'rotate(0deg)' }}>
+            {renderCircleSectors()}
+            {/* Inner core empty space */}
+            <circle cx="160" cy="160" r="55" fill="var(--input-bg)" stroke="rgba(var(--surface-tint-rgb), 0.08)" strokeWidth="0.5" />
+            {/* Core Label */}
+            <text x="160" y="155" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">SELECTED KEY</text>
+            <text x="160" y="177" fill="var(--primary)" fontSize="18" fontWeight="bold" textAnchor="middle">{selectedCircleKey.name} Maj</text>
+          </svg>
+
+          {/* Key signature info */}
+          <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ background: 'rgba(var(--surface-tint-rgb),0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
+              <h4 style={{ color: 'var(--primary)', marginBottom: '0.4rem' }}>About this Key</h4>
+              <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <div><Term k="relativeMinor">Relative Minor</Term>: <span style={{ color: 'var(--secondary)' }}>{selectedCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
+                <div><Term k="accidentals">Accidentals</Term>: <span>
+                  {selectedCircleKey.sharps > 0 ? `${selectedCircleKey.sharps} ♯ (Sharps)` :
+                   selectedCircleKey.sharps < 0 ? `${Math.abs(selectedCircleKey.sharps)} ♭ (Flats)` :
+                   'None (Natural Key)'}
+                </span></div>
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                <Term k="diatonicChords">Chords that belong</Term> in the Key of {selectedCircleKey.name}
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
+                {selectedCircleKey.chords.map((chordName, i) => {
+                  const degrees = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
+                  return (
+                    <button
+                      key={chordName}
+                      onClick={() => playDiatonicChord(chordName, i)}
+                      className="btn"
+                      style={{ padding: '0.4rem', fontSize: '0.75rem', flexDirection: 'column', gap: '2px', background: 'rgba(var(--surface-tint-rgb),0.02)' }}
+                    >
+                      <span style={{ fontWeight: 'bold' }}>{chordName}</span>
+                      <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{degrees[i]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem', lineHeight: 1.5 }}>
+                The <Term k="romanNumerals">Roman numerals</Term> tell you each chord's role:
+                UPPERCASE = happy major, lowercase = sad minor, ° = tense. Click a few in a
+                row — congratulations, you're writing a chord progression.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Every chord this scale contains, with playable fingerings */}
       <ScaleChords

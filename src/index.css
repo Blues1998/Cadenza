@@ -50,8 +50,12 @@
   --text-secondary: #9ca3af;
   --text-muted: #6b7280;
   --text-on-primary: #030406;
+  --text-on-secondary: #ffffff;
 
   --surface-tint-rgb: 255, 255, 255;
+  /* Denser than --panel-bg: the sticky toolbar sits over scrolling content
+     and has to stay readable with it moving underneath. */
+  --toolbar-bg: rgba(10, 13, 20, 0.88);
   --shadow-panel: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
   --input-bg: #0b0c10;
   --input-text: #ffffff;
@@ -90,8 +94,10 @@
   --text-secondary: #565c6b;
   --text-muted: #7c8294;
   --text-on-primary: #ffffff;
+  --text-on-secondary: #ffffff;
 
   --surface-tint-rgb: 23, 18, 8;
+  --toolbar-bg: rgba(253, 250, 243, 0.92);
   --shadow-panel: 0 8px 28px 0 rgba(80, 62, 30, 0.12);
   --input-bg: #fffdf8;
   --input-text: var(--text-primary);
@@ -288,9 +294,13 @@ body {
 .main-content {
   flex: 1;
   padding: 2rem;
-  overflow-y: auto;
   max-width: 1400px;
   margin: 0 auto;
+  /* Deliberately no overflow-y: the window is the scroll container, which is
+     what the sticky sidebar and the labs' sticky toolbars both position
+     against. An overflow value here would make this a scrollport that never
+     actually scrolls, and everything sticky inside it would scroll away. */
+  min-width: 0;
 }
 
 /* Piano Keyboard styles */
@@ -697,6 +707,159 @@ body {
 
 .pulse-primary {
   animation: pulseGlow 2s infinite;
+}
+
+/* ===== Sticky lab toolbar =====
+   Controls that the rest of a long page reacts to. Pinned to the top of the
+   viewport so changing the key or the scale never costs a scroll back up. */
+.lab-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  background: var(--toolbar-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--panel-border);
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  box-shadow: var(--shadow-panel);
+}
+
+.toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.toolbar-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Chromatic key strip — the twelve notes laid out like a keyboard so the
+   black notes read as black notes, instead of hidden in a dropdown. */
+.note-strip {
+  display: flex;
+  gap: 3px;
+}
+
+.note-key {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  min-width: 30px;
+  padding: 0.35rem 0.2rem;
+  border-radius: 7px;
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.12);
+  background: rgba(var(--surface-tint-rgb), 0.04);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.note-key.is-accidental {
+  background: rgba(var(--surface-tint-rgb), 0.11);
+  color: var(--text-muted);
+}
+
+.note-key:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.note-key.is-selected {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-end) 100%);
+  border-color: var(--primary);
+  color: var(--text-on-primary);
+}
+
+/* Segmented control for small, mutually exclusive choices */
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  border-radius: 9px;
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.12);
+  background: rgba(var(--surface-tint-rgb), 0.04);
+}
+
+.segmented button {
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.segmented button:hover {
+  color: var(--text-primary);
+}
+
+.segmented button[aria-pressed='true'] {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-end) 100%);
+  color: var(--text-on-primary);
+}
+
+.segmented.is-secondary button[aria-pressed='true'] {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-end) 100%);
+  color: var(--text-on-secondary);
+}
+
+/* Compact choice pills — the feeling-named scales and chords */
+.pill {
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 500;
+  padding: 0.32rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.12);
+  background: rgba(var(--surface-tint-rgb), 0.03);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.pill:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.pill.is-selected {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-end) 100%);
+  border-color: transparent;
+  color: var(--text-on-primary);
+}
+
+.pill.is-selected.is-secondary {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-end) 100%);
+  color: var(--text-on-secondary);
+}
+
+@media (max-width: 640px) {
+  .lab-toolbar {
+    padding: 0.6rem 0.7rem;
+  }
+
+  .note-key {
+    min-width: 26px;
+    font-size: 0.72rem;
+  }
 }
 
 /* Custom Grid layouts */
