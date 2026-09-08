@@ -86,7 +86,7 @@ export const SongHeroLab: React.FC = () => {
             <h4 style={{ marginBottom: '0.25rem' }}>{s.title}</h4>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{s.subtitle}</p>
             <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-              {s.instrument === 'piano' ? '🎹 Piano' : '🎸 Guitar'} · {s.bpm} BPM
+              {s.instrument === 'piano' ? 'Piano' : 'Guitar'} · {s.bpm} BPM
             </p>
           </div>
         ))}

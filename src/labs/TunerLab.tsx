@@ -142,10 +142,9 @@ export const TunerLab: React.FC = () => {
               <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255, 176, 138, 0.05)', border: '1px solid var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
               </div>
-              <h3 style={{ fontSize: '1.25rem' }}>Microphone Access Required</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '300px' }}>The tuner listens through your microphone.</p>
               <button onClick={initMicrophone} className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
-                Allow Microphone Access
+                Allow microphone
               </button>
               {micError && (
                 <p style={{ color: 'var(--danger)', fontSize: '0.8rem', maxWidth: '300px' }}>{micError}</p>
@@ -229,7 +228,7 @@ export const TunerLab: React.FC = () => {
         {/* Intonation Game Console */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', minHeight: '340px' }}>
           <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-            <span>Pitch Matching Game</span>
+            <span>{gameMode ? 'Pitch Matching' : 'Tuning'}</span>
             <Segmented
               value={gameMode}
               onChange={setGameMode}
@@ -323,7 +322,7 @@ export const TunerLab: React.FC = () => {
               {/* Accuracy Stats */}
               <div style={{ display: 'flex', justifyItems: 'space-between', gap: '1rem', paddingTop: '0.75rem', fontSize: '0.85rem', justifyContent: 'space-between' }}>
                 <span>Matched Notes: <strong style={{ color: 'var(--primary)' }}>{matchScore}</strong></span>
-                <span style={{ color: 'var(--warning)' }}>Streak: <strong>🔥 {matchStreak}</strong></span>
+                <span style={{ color: 'var(--warning)' }}>Streak <strong>{matchStreak}</strong></span>
               </div>
 
             </div>

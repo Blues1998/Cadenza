@@ -398,7 +398,7 @@ export const PlayLab: React.FC = () => {
             </div>
             <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', fontSize: '0.9rem' }}>
               <span>Score: <strong style={{ color: 'var(--primary)' }}>{score}</strong></span>
-              <span style={{ color: 'var(--warning)' }}>Streak: <strong>🔥 {streak}</strong></span>
+              <span style={{ color: 'var(--warning)' }}>Streak <strong>{streak}</strong></span>
               <span style={{ color: 'var(--text-secondary)' }}>Best: <strong>{best[mode]}</strong></span>
               <button onClick={stop} className="btn" style={{ padding: '0.35rem 0.8rem', fontSize: '0.75rem' }}>
                 <span style={{ width: '8px', height: '8px', background: 'var(--danger)', borderRadius: '50%' }}></span>

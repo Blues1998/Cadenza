@@ -951,7 +951,7 @@ export const TabPlayerLab: React.FC = () => {
           <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
         <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-          Drop a tab file here, or click to browse ({ACCEPTED_EXTENSIONS})
+          Drop a file, or click to browse
         </span>
       </label>
 

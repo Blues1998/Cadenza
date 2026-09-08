@@ -172,7 +172,7 @@ const HarmonicExplorer: React.FC = () => {
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={play} className="btn btn-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-          <IconPlay /> Hear this exact waveform
+          <IconPlay /> Hear it
         </button>
         {HARMONIC_PRESETS.map(p => (
           <button key={p.name} onClick={() => setAmps(p.amps)} className="btn" style={{ padding: '0.4rem 0.7rem', fontSize: '0.75rem' }}>
@@ -334,7 +334,7 @@ const RatioExplorer: React.FC = () => {
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={sounding ? stopDuo : startDuo} className={`btn ${sounding ? 'btn-secondary' : 'btn-primary'}`} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-          {sounding ? <><IconStop /> Stop Sound</> : <><IconPlay /> Sound On (two sine tones)</>}
+          {sounding ? <><IconStop /> Stop Sound</> : <><IconPlay /> Sound on</>}
         </button>
         <span style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)', color: locked ? 'var(--success)' : 'var(--text-secondary)' }}>
           {BASE_HZ} Hz + {f2.toFixed(1)} Hz · ratio {ratio.toFixed(3)} ·

@@ -565,8 +565,8 @@ export const TheoryLab: React.FC = () => {
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', justifyContent: 'space-between', paddingBottom: '0.85rem' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
             <div className="segmented" role="group" aria-label="Instrument">
-              <button type="button" onClick={() => chooseInstrument('piano')} aria-pressed={instrument === 'piano'}>🎹 Piano</button>
-              <button type="button" onClick={() => chooseInstrument('guitar')} aria-pressed={instrument === 'guitar'}>🎸 Guitar</button>
+              <button type="button" onClick={() => chooseInstrument('piano')} aria-pressed={instrument === 'piano'}>Piano</button>
+              <button type="button" onClick={() => chooseInstrument('guitar')} aria-pressed={instrument === 'guitar'}>Guitar</button>
               <button type="button" onClick={() => chooseInstrument('both')} aria-pressed={instrument === 'both'}>Both</button>
             </div>
             <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>

@@ -291,10 +291,10 @@ export const EarTrainingLab: React.FC = () => {
         
         {/* Settings Panel */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem' }}>Quiz Settings</h3>
+          <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem' }}>Settings</h3>
 
           <Segmented
-            label="Question Source"
+            label="Source"
             value={sourceMode}
             onChange={(v) => { setSourceMode(v); if (v === 'tab') setQuizMode('intervals'); }}
             options={[
@@ -342,7 +342,7 @@ export const EarTrainingLab: React.FC = () => {
 
           {sourceMode === 'random' && (
             <Segmented
-              label="Quiz Type"
+              label="Type"
               value={quizMode}
               onChange={setQuizMode}
               options={[
@@ -354,7 +354,7 @@ export const EarTrainingLab: React.FC = () => {
           )}
 
           <Segmented
-            label="Difficulty Level"
+            label="Difficulty"
             value={difficulty}
             onChange={setDifficulty}
             tone="secondary"
@@ -370,7 +370,7 @@ export const EarTrainingLab: React.FC = () => {
 
           {sourceMode === 'random' && (
             <Segmented
-              label="Playback Style"
+              label="Playback"
               value={playbackStyle}
               onChange={setPlaybackStyle}
               size="sm"
@@ -437,7 +437,7 @@ export const EarTrainingLab: React.FC = () => {
                       className={`btn ${showCheatSheet ? 'active' : ''}`}
                       style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
                     >
-                      🎵 Songs Reference
+                      Song clues
                     </button>
                   )}
                   {isAnswered && (
