@@ -1192,6 +1192,21 @@ html {
   color: var(--text-on-secondary);
 }
 
+/* Range sliders, checkboxes and radios were drawing in the browser's own
+   accent — the OS blue, which was merely bland against the old palette and
+   fights the orange outright. accent-color re-tints the native widget without
+   giving up its keyboard and touch behaviour. */
+input[type='range'],
+input[type='checkbox'],
+input[type='radio'],
+progress {
+  accent-color: var(--primary);
+}
+
+input[type='range'] {
+  cursor: pointer;
+}
+
 /* Caption above a control group */
 .field-label {
   display: block;
