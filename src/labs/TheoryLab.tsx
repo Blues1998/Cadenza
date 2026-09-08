@@ -4,6 +4,7 @@ import { Fretboard } from '../components/Fretboard';
 import { Term } from '../components/Term';
 import { ScaleChords } from '../components/ScaleChords';
 import { ScaleControlBar } from '../components/ScaleControlBar';
+import { Segmented } from '../components/Segmented';
 import { audio } from '../utils/audio';
 import {
   NOTE_NAMES,
@@ -564,11 +565,19 @@ export const TheoryLab: React.FC = () => {
       <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', justifyContent: 'space-between', paddingBottom: '0.85rem' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
-            <div className="segmented" role="group" aria-label="Instrument">
-              <button type="button" onClick={() => chooseInstrument('piano')} aria-pressed={instrument === 'piano'}>Piano</button>
-              <button type="button" onClick={() => chooseInstrument('guitar')} aria-pressed={instrument === 'guitar'}>Guitar</button>
-              <button type="button" onClick={() => chooseInstrument('both')} aria-pressed={instrument === 'both'}>Both</button>
-            </div>
+            {/* The one control that was still hand-rolled markup wearing the
+                segmented class. It looked right but could not slide, which was
+                conspicuous on the page's most prominent choice. */}
+            <Segmented
+              value={instrument}
+              onChange={chooseInstrument}
+              ariaLabel="Instrument"
+              options={[
+                { value: 'piano', label: 'Piano' },
+                { value: 'guitar', label: 'Guitar' },
+                { value: 'both', label: 'Both' }
+              ]}
+            />
             <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
               your keyboard plays the <strong style={{ color: 'var(--text-secondary)' }}>{guitarMode ? 'guitar' : 'piano'}</strong>
               {!guitarMode && <> · octave <strong className="readout" style={{ color: 'var(--text-secondary)' }}>{keyboardOctave}</strong></>}

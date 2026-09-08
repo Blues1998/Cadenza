@@ -1253,6 +1253,7 @@ html {
 
 /* Segmented control for small, mutually exclusive choices */
 .segmented {
+  position: relative;
   display: inline-flex;
   padding: 2px;
   gap: 2px;
@@ -1261,7 +1262,32 @@ html {
   background: var(--surface-2);
 }
 
+/* The selection is one element that travels, not a background switching off
+   in one segment and on in another. It is the most-pressed control in the
+   app, and the travel is what says these are two states of one setting. */
+.segmented-thumb {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 6px;
+  background: var(--surface-3);
+  box-shadow: var(--elevation-low);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Only after the thumb has been placed once, so it does not fly in from the
+   left edge each time a lab mounts. */
+.segmented-thumb.is-placed {
+  transition:
+    transform 190ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 190ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .segmented button {
+  position: relative;
+  z-index: 1;
   font-family: inherit;
   font-size: 0.76rem;
   font-weight: 600;
@@ -1301,15 +1327,17 @@ html {
 
 /* Selection is a tonal lift and a brighter label, not a colour. A raised
    segment with full-strength text is unmistakable without spending the accent
-   on something as routine as which tab is open. */
+   on something as routine as which tab is open. The lift itself is drawn by
+   the sliding thumb behind the row, so the button only takes the label. */
 .segmented button[aria-pressed='true'] {
-  background: var(--surface-3);
+  background: transparent;
   color: var(--text-primary);
 }
 
-.segmented.is-secondary button[aria-pressed='true'] {
+/* If the thumb has not been measured yet — the group is display:none, say —
+   the pressed segment still has to look pressed. */
+.segmented:not(:has(.segmented-thumb)) button[aria-pressed='true'] {
   background: var(--surface-3);
-  color: var(--text-primary);
 }
 
 /* Range sliders, checkboxes and radios were drawing in the browser's own

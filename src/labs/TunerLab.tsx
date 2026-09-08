@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Segmented } from '../components/Segmented';
 import { useMicPitch } from '../hooks/useMicPitch';
+import { useSpringValue } from '../hooks/useSpringValue';
 import { audio } from '../utils/audio';
 import { noteNameToMidi } from '../utils/musicTheory';
 import { reportProgress } from '../utils/progress';
@@ -14,6 +15,21 @@ export const TunerLab: React.FC = () => {
     start: initMicrophone,
     stop: stopMicrophone
   } = useMicPitch();
+
+  // The gauge runs on a sprung value rather than the raw estimate. Pitch
+  // detection re-reads every audio frame and its output jitters by a few cents
+  // even on a perfectly steady note, so the needle used to teleport and read as
+  // noise. The spring low-passes that away and settles like a real meter.
+  //
+  // Only the gauge is smoothed. The matching game below still judges the raw
+  // estimate, so what it accepts is not softened by a display decision.
+  const lastCentsRef = useRef<number>(0);
+  if (pitchData) lastCentsRef.current = pitchData.cents;
+  // Held rather than recentred through a silent frame, so a gap in detection
+  // does not swing the needle to "in tune" and back.
+  const springedCents = useSpringValue(pitchData ? pitchData.cents : lastCentsRef.current);
+  const gaugeCents = Math.max(-50, Math.min(50, springedCents));
+  const gaugeInTune = Math.abs(gaugeCents) <= 5;
 
   // Pitch matching game states
   const [gameMode, setGameMode] = useState<boolean>(false);
@@ -160,8 +176,8 @@ export const TunerLab: React.FC = () => {
                   style={{
                     fontSize: '4.2rem',
                     fontWeight: 500,
-                    color: pitchData ? (Math.abs(pitchData.cents) <= 5 ? 'var(--success)' : 'var(--primary)') : 'var(--text-muted)',
-                    textShadow: pitchData && Math.abs(pitchData.cents) <= 5 ? '0 0 30px var(--success-glow)' : 'none',
+                    color: pitchData ? (gaugeInTune ? 'var(--success)' : 'var(--primary)') : 'var(--text-muted)',
+                    textShadow: pitchData && gaugeInTune ? '0 0 30px var(--success-glow)' : 'none',
                     lineHeight: 1.1,
                     transition: 'color 0.15s ease'
                   }}
@@ -191,15 +207,17 @@ export const TunerLab: React.FC = () => {
                     style={{
                       position: 'absolute',
                       // map cents (-50 to +50) to percentage (0% to 100%)
-                      left: `${((pitchData.cents + 50) / 100) * 100}%`,
+                      left: `${((gaugeCents + 50) / 100) * 100}%`,
                       top: '-14px',
                       width: '4px',
                       height: '32px',
-                      background: Math.abs(pitchData.cents) <= 5 ? 'var(--success)' : 'var(--primary)',
-                      boxShadow: Math.abs(pitchData.cents) <= 5 ? '0 0 10px var(--success-glow)' : '0 0 8px var(--primary-glow)',
+                      background: gaugeInTune ? 'var(--success)' : 'var(--primary)',
+                      boxShadow: gaugeInTune ? '0 0 10px var(--success-glow)' : '0 0 8px var(--primary-glow)',
                       borderRadius: '2px',
                       transform: 'translateX(-50%)',
-                      transition: 'left 0.08s linear, background-color 0.1s ease'
+                      // No transition on `left`: the spring already owns the
+                      // motion, and a transition on top of it would only add lag.
+                      transition: 'background-color 0.1s ease, box-shadow 0.1s ease'
                     }}
                   />
                 )}
@@ -207,8 +225,10 @@ export const TunerLab: React.FC = () => {
                 {/* Left/Right flat/sharp Labels */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '1.25rem' }}>
                   <span>FLAT (-50c)</span>
-                  <span style={{ color: pitchData && Math.abs(pitchData.cents) <= 5 ? 'var(--success)' : 'var(--text-muted)', fontWeight: pitchData && Math.abs(pitchData.cents) <= 5 ? 'bold' : 'normal' }}>
-                    {pitchData ? (pitchData.cents === 0 ? 'IN TUNE' : `${pitchData.cents > 0 ? '+' : ''}${pitchData.cents} cents`) : '0.0 cents'}
+                  <span style={{ color: pitchData && gaugeInTune ? 'var(--success)' : 'var(--text-muted)', fontWeight: pitchData && gaugeInTune ? 'bold' : 'normal' }}>
+                    {pitchData
+                      ? (gaugeInTune ? 'IN TUNE' : `${gaugeCents > 0 ? '+' : ''}${Math.round(gaugeCents)} cents`)
+                      : '0.0 cents'}
                   </span>
                   <span>SHARP (+50c)</span>
                 </div>
