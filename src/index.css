@@ -114,6 +114,13 @@ h1, h2, h3, h4, .lab-title {
   --text-secondary: #A9ADB3;
   --text-muted: #85898F;
   --text-on-primary: #111214;
+
+  /* Hero. The photograph is a dark image, so in this theme it sits on its own
+     near-black ground unfiltered. See --hero-photo-filter in the light theme. */
+  --hero-ground-rgb: 16, 17, 20;
+  --hero-photo-filter: none;
+  --hero-ink: #F1F0EC;
+  --hero-accent: #FF6A2A;
   --text-on-secondary: #111214;
 
   --surface-tint-rgb: 255, 255, 255;
@@ -184,6 +191,16 @@ h1, h2, h3, h4, .lab-title {
   --text-secondary: #55585E;
   --text-muted: #85898F;
   --text-on-primary: #FFFFFF;
+
+  /* The same photograph, lifted into this theme's key rather than punching a
+     black hole in a paper-white page. Inverting the luminance turns the dark
+     body pale and the pale strings dark; the hue rotation puts back the warmth
+     the inversion would otherwise flip to blue. The ground is the exact inverse
+     of the colour the image was flattened onto, so the two meet seamlessly. */
+  --hero-ground-rgb: 239, 238, 235;
+  --hero-photo-filter: invert(1) hue-rotate(180deg);
+  --hero-ink: #141414;
+  --hero-accent: #D9480F;
   --text-on-secondary: #FFFFFF;
 
   --surface-tint-rgb: 17, 18, 20;
@@ -1579,11 +1596,23 @@ input[type='range'] {
   padding: 0 3rem;
   border-radius: 14px;
   overflow: hidden;
-  background-color: #101114;
+  background-color: rgb(var(--hero-ground-rgb));
+  box-shadow: var(--elevation);
+}
+
+/* The photograph sits on its own layer so the light theme can invert it
+   without inverting the name laid over it. */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--hero-image);
   background-repeat: no-repeat;
   background-size: cover;
   background-position: right center;
-  box-shadow: var(--elevation);
+  filter: var(--hero-photo-filter);
+  pointer-events: none;
 }
 
 /* The scrim never reaches transparent. Left of the name it is solid, so the
@@ -1594,25 +1623,30 @@ input[type='range'] {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #101114 0%, rgba(16, 17, 20, 0.94) 28%, rgba(16, 17, 20, 0.5) 100%);
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    rgb(var(--hero-ground-rgb)) 0%,
+    rgba(var(--hero-ground-rgb), 0.94) 28%,
+    rgba(var(--hero-ground-rgb), 0.5) 100%
+  );
   pointer-events: none;
 }
 
 .hero-title {
   position: relative;
+  z-index: 2;
   font-size: 3.1rem;
   font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1.02;
   margin: 0;
-  color: #F1F0EC;
+  color: var(--hero-ink);
 }
 
-/* One word carries the accent, not the whole name. Literal rather than
-   --primary: the light theme darkens that token to #D9480F so it reads on
-   white, and this word is always on black. */
+/* One word carries the accent, not the whole name */
 .hero-title span {
-  color: #FF6A2A;
+  color: var(--hero-accent);
 }
 
 /* The curriculum, said in a bar and two numbers. The levels are a click away
@@ -1718,11 +1752,20 @@ input[type='range'] {
     min-height: 210px;
     align-items: flex-end;
     padding: 0 1.4rem 1.3rem;
+  }
+
+  .hero::after {
     background-position: 62% top;
   }
 
   .hero::before {
-    background: linear-gradient(180deg, rgba(16, 17, 20, 0.5) 0%, rgba(16, 17, 20, 0.55) 30%, rgba(16, 17, 20, 0.9) 70%, #101114 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(var(--hero-ground-rgb), 0.5) 0%,
+      rgba(var(--hero-ground-rgb), 0.55) 30%,
+      rgba(var(--hero-ground-rgb), 0.9) 70%,
+      rgb(var(--hero-ground-rgb)) 100%
+    );
   }
 
   .hero-title {

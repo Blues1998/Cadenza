@@ -49,7 +49,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
           picture has no visible edge on its left. */}
       <header
         className="hero"
-        style={{ backgroundImage: `url(${assetUrl('hero-guitar.webp')})` }}
+        style={{ ['--hero-image' as string]: `url(${assetUrl('hero-guitar.webp')})` } as React.CSSProperties}
       >
         <h2 className="hero-title">
           Cadenza <span>Lab</span>
