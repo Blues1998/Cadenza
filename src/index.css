@@ -675,6 +675,15 @@ html {
 }
 
 /* Piano Keyboard styles */
+/* Dragging across an instrument must not drag-select the note labels printed
+   on it, and a long press has to sustain rather than raise the touch callout. */
+.fretboard-container,
+.keyboard-container {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .keyboard-container {
   display: flex;
   position: relative;

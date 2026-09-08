@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { GUITAR_STRINGS, midiToNoteName } from '../utils/musicTheory';
+import { useNotePress } from '../hooks/useNotePress';
 
 interface FretboardProps {
   activeMidis?: number[];
@@ -62,10 +63,48 @@ export const Fretboard: React.FC<FretboardProps> = ({
   onPlayNote,
   showAllNoteNames = false
 }) => {
-  const handleCellClick = (stringStartMidi: number, fret: number) => {
-    if (interactive && onPlayNote) {
-      onPlayNote(stringStartMidi + fret);
+  const playCell = useCallback((midi: number) => {
+    if (interactive && onPlayNote) onPlayNote(midi);
+  }, [interactive, onPlayNote]);
+
+  const press = useNotePress(playCell);
+
+  // Which note is under a point on screen. Cells carry their own MIDI number so
+  // a drag can ask the document what it is over, rather than the fretboard
+  // having to work it out from coordinates and fret spacing.
+  const midiAt = (x: number, y: number): number | null => {
+    const el = document.elementFromPoint(x, y);
+    const cell = el?.closest<HTMLElement>('[data-midi]');
+    if (!cell || !cell.closest('.fretboard-strings-container')) return null;
+    const midi = Number(cell.dataset.midi);
+    return Number.isFinite(midi) ? midi : null;
+  };
+
+  // Dragging across the strings strums them. Mouse and pen only: on a touch
+  // screen the neck is wider than the display and a horizontal drag has to
+  // stay available for scrolling it, which is worth more than the gesture.
+  const dragging = useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!interactive) return;
+    const midi = midiAt(e.clientX, e.clientY);
+    if (midi === null) return;
+    press.begin(midi);
+    if (e.pointerType !== 'touch') {
+      dragging.current = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
     }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    const midi = midiAt(e.clientX, e.clientY);
+    if (midi !== null) press.moveTo(midi);
+  };
+
+  const handlePointerUp = () => {
+    dragging.current = false;
+    press.end();
   };
 
   // A pluck is an event, not a state: the string keeps ringing on screen for
@@ -120,7 +159,13 @@ export const Fretboard: React.FC<FretboardProps> = ({
         <span>12th Fret (Octave)</span>
       </div>
 
-      <div className="fretboard-container">
+      <div
+        className="fretboard-container"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
         <div className="fretboard-strings-container">
 
           {/* Inlay position markers, sitting on the wood between strings 3 & 4 */}
@@ -153,10 +198,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
                 <div className={`guitar-string-line string-thickness-${stringNum}`} />
 
                 {/* Open String Note Label on Headstock */}
-                <div
-                  className="fret-cell nut-cell"
-                  onClick={() => handleCellClick(str.midi, 0)}
-                >
+                <div className="fret-cell nut-cell" data-midi={str.midi}>
                   <span style={{ cursor: 'pointer', zIndex: 11, color: 'var(--primary)', fontWeight: 'bold' }}>
                     {str.note}
                     <span style={{ fontSize: '0.65rem', verticalAlign: 'sub' }}>{str.octave}</span>
@@ -207,7 +249,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
                         key={fret}
                         className="fret-cell"
                         style={{ width: `${FRET_WIDTH_PCT[fIdx]}%` }}
-                        onClick={() => handleCellClick(str.midi, fret)}
+                        data-midi={midiNote}
                       >
                         {showNote && (
                           <div className={`guitar-note-marker ${isActive ? 'active' : isRoot ? 'highlight-root' : isCorrect ? 'highlight-correct' : ''}`}>

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 import { NOTE_NAMES, PIANO_START_MIDI, PIANO_END_MIDI } from '../utils/musicTheory';
+import { useNotePress } from '../hooks/useNotePress';
 
 interface KeyboardProps {
   activeMidis?: number[];
@@ -24,10 +25,46 @@ export const Keyboard: React.FC<KeyboardProps> = ({
     keys.push({ midi, isBlack, name: noteName });
   }
 
-  const handleKeyClick = (midi: number) => {
-    if (interactive && onPlayNote) {
-      onPlayNote(midi);
+  const playKey = useCallback((midi: number) => {
+    if (interactive && onPlayNote) onPlayNote(midi);
+  }, [interactive, onPlayNote]);
+
+  const press = useNotePress(playKey);
+
+  // Black keys overlap the whites, so asking the document what is under the
+  // point gets the hit-testing right for free rather than reimplementing it.
+  const midiAt = (x: number, y: number): number | null => {
+    const el = document.elementFromPoint(x, y);
+    const key = el?.closest<HTMLElement>('[data-midi]');
+    if (!key || !key.closest('.keyboard-container')) return null;
+    const midi = Number(key.dataset.midi);
+    return Number.isFinite(midi) ? midi : null;
+  };
+
+  // Dragging along the keys is a glissando. Mouse and pen only: the keyboard
+  // is wider than a phone screen and has to stay draggable to scroll.
+  const dragging = useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!interactive) return;
+    const midi = midiAt(e.clientX, e.clientY);
+    if (midi === null) return;
+    press.begin(midi);
+    if (e.pointerType !== 'touch') {
+      dragging.current = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
     }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    const midi = midiAt(e.clientX, e.clientY);
+    if (midi !== null) press.moveTo(midi);
+  };
+
+  const handlePointerUp = () => {
+    dragging.current = false;
+    press.end();
   };
 
   return (
@@ -38,7 +75,13 @@ export const Keyboard: React.FC<KeyboardProps> = ({
         <span className="readout" style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>C6 (High)</span>
       </div>
 
-      <div className="keyboard-container">
+      <div
+        className="keyboard-container"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
         {keys.map(({ midi, isBlack, name }) => {
           const isActive = activeMidis.includes(midi);
           const isCorrect = highlightCorrectMidis.includes(midi);
@@ -58,7 +101,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
             <div
               key={midi}
               className={className}
-              onClick={() => handleKeyClick(midi)}
+              data-midi={midi}
               title={`${name}${Math.floor(midi / 12) - 1}`}
             />
           );

@@ -1,9 +1,33 @@
 // Low-latency Audio Synthesis Engine using the native Web Audio API
 import { midiToFreq } from './musicTheory';
 
+// A note that is still ringing and can still be changed. Held so a press can
+// flatten a pluck's decay into a sustain and let go of it later.
+interface Voice {
+  midi: number;
+  parts: { osc: OscillatorNode; gain: GainNode; peak: number }[];
+  sustained: boolean;
+}
+
+// A plucked string cannot really be sustained — it decays, that is what a
+// pluck is. Holding a note therefore does not extend the pluck so much as
+// bow it: the envelope stops falling and settles at a fraction of its peak,
+// weighted so the fundamental survives and the bright upper partials do not.
+// That is what a held string sounds like as it rings out.
+const SUSTAIN_LEVEL = [0.62, 0.3, 0.14, 0.06, 0.03, 0.015];
+const RELEASE_S = 0.42;
+// Nothing should ring forever if a pointerup is somehow missed.
+const MAX_SUSTAIN_S = 30;
+
 class AudioEngine {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
+  private voices = new Map<number, Voice>();
+  private nextVoiceId = 1;
+  // Most recent voice per MIDI note, so an instrument surface can hold the
+  // note it just asked a lab to play without the id being threaded back
+  // through the lab's own callback.
+  private latestByMidi = new Map<number, number>();
 
   constructor() {
     // Context is initialized on first user interaction to comply with browser autoplay policies
@@ -53,7 +77,49 @@ class AudioEngine {
   // Play a single note using standard MIDI index number
   public playMidi(midi: number, duration: number = 2.0, time?: number) {
     const freq = midiToFreq(midi);
-    this.playNote(freq, duration, time);
+    this.playNote(freq, duration, time, midi);
+  }
+
+  // Stop a plucked note decaying and hold it, for as long as a key or fret is
+  // held down. No-op if that note is not currently ringing.
+  public sustainMidi(midi: number) {
+    const id = this.latestByMidi.get(midi);
+    if (id === undefined) return;
+    const voice = this.voices.get(id);
+    if (!voice || voice.sustained || !this.ctx) return;
+    voice.sustained = true;
+    const now = this.ctx.currentTime;
+
+    voice.parts.forEach(({ osc, gain, peak }, i) => {
+      const level = peak * (SUSTAIN_LEVEL[i] ?? 0.02);
+      gain.gain.cancelScheduledValues(now);
+      // From wherever the decay had got to, so the handover is inaudible
+      gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), now);
+      gain.gain.linearRampToValueAtTime(level, now + 0.09);
+      // Rescheduling stop() on a still-running oscillator moves its end
+      osc.stop(now + MAX_SUSTAIN_S + RELEASE_S);
+    });
+
+    window.setTimeout(() => this.releaseMidi(midi), MAX_SUSTAIN_S * 1000);
+  }
+
+  // Let a held note go. It decays rather than cutting off.
+  public releaseMidi(midi: number) {
+    const id = this.latestByMidi.get(midi);
+    if (id === undefined) return;
+    const voice = this.voices.get(id);
+    if (!voice || !voice.sustained || !this.ctx) return;
+    const now = this.ctx.currentTime;
+
+    voice.parts.forEach(({ osc, gain }) => {
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + RELEASE_S);
+      osc.stop(now + RELEASE_S + 0.05);
+    });
+
+    this.voices.delete(id);
+    if (this.latestByMidi.get(midi) === id) this.latestByMidi.delete(midi);
   }
 
   // Play a chords of MIDI numbers
@@ -65,7 +131,7 @@ class AudioEngine {
   }
 
   // Core sound synthesis: Acoustic Guitar physical modeling (Additive Overtones + Wood Pluck Noise)
-  public playNote(frequency: number, duration: number = 2.0, time?: number) {
+  public playNote(frequency: number, duration: number = 2.0, time?: number, midi?: number) {
     this.init();
     if (!this.ctx || !this.masterGain) return;
 
@@ -77,6 +143,11 @@ class AudioEngine {
 
     const pluckGain = this.ctx.createGain();
     pluckGain.connect(this.masterGain);
+
+    // Only notes addressed by MIDI can be held later, which is every note an
+    // instrument surface plays. Scheduled-in-advance notes are left alone.
+    const voice: Voice | null =
+      midi !== undefined ? { midi, parts: [], sustained: false } : null;
 
     // Harmonics layout: mimicking acoustic guitar string energy transfer
     // We add sine and triangle waves at integer overtones (fundamental, 2nd, 3rd, etc.)
@@ -109,7 +180,21 @@ class AudioEngine {
 
       osc.start(now);
       osc.stop(now + attackTime + decayTime + 0.1);
+      voice?.parts.push({ osc, gain: oscGain, peak: gainRatio });
     });
+
+    if (voice && midi !== undefined) {
+      const id = this.nextVoiceId++;
+      this.voices.set(id, voice);
+      this.latestByMidi.set(midi, id);
+      // A note nobody held is forgotten once it has finished decaying
+      window.setTimeout(() => {
+        if (!this.voices.get(id)?.sustained) {
+          this.voices.delete(id);
+          if (this.latestByMidi.get(midi) === id) this.latestByMidi.delete(midi);
+        }
+      }, (finalDuration + 0.5) * 1000);
+    }
 
     // Pick attack simulation: brief wooden tap/pick noise using high-pass filtered white noise
     try {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import type { ActiveTab } from './components/Sidebar';
 import { useTheme } from './hooks/useTheme';
+import { useLabSwipe } from './hooks/useLabSwipe';
 import { DashboardLanding } from './labs/DashboardLanding';
 import { JourneyLab } from './labs/JourneyLab';
 import { EarTrainingLab } from './labs/EarTrainingLab';
@@ -16,6 +17,9 @@ import { SongHeroLab } from './labs/SongHeroLab';
 function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const { theme, toggleTheme } = useTheme();
+
+  // On a phone, a horizontal swipe steps through the current sidebar group
+  useLabSwipe(activeTab, setActiveTab);
 
   // Labs are several screens tall and the window keeps its scroll offset when
   // the content under it is swapped, so switching from a scrolled lab used to
