@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { GUITAR_STRINGS, midiToNoteName } from '../utils/musicTheory';
 
 interface FretboardProps {
@@ -28,12 +28,31 @@ const FRET_WIDTH_PCT = Array.from({ length: FRETS_COUNT }, (_, i) => {
 const fretCenterPct = (fret: number): number =>
   (((fretPosition(fret - 1) + fretPosition(fret)) / 2) / NECK_SPAN) * 100;
 
+// Left edge of the vibrating length, as a % of the fretted area: fretting at
+// fret n stops the string against that fret's wire, so everything to the right
+// of it rings and everything to the left is dead. Fret 0 is the open string,
+// stopped by the nut, which is the left edge of the area.
+const fretEdgePct = (fret: number): number => (fretPosition(fret) / NECK_SPAN) * 100;
+
 // Fret marker configuration: which frets have inlay dots
 const getFretDots = (fret: number): 'single' | 'double' | null => {
   if (fret === 12) return 'double';
   if ([3, 5, 7, 9].includes(fret)) return 'single';
   return null;
 };
+
+// How long each string's ring-out is drawn for, indexed like GUITAR_STRINGS:
+// high E first, down to low E. Heavier strings ring longer, which is also what
+// the audio engine does — it stretches a note's decay for lower pitches. These
+// have to stay in step with the --ring-dur values on .ring-1 … .ring-6, or the
+// element is unmounted part-way through its own animation.
+const RING_MS = [850, 950, 1050, 1200, 1350, 1500];
+
+interface Strike {
+  id: number;
+  stringIdx: number;
+  fret: number;
+}
 
 export const Fretboard: React.FC<FretboardProps> = ({
   activeMidis = [],
@@ -48,6 +67,51 @@ export const Fretboard: React.FC<FretboardProps> = ({
       onPlayNote(stringStartMidi + fret);
     }
   };
+
+  // A pluck is an event, not a state: the string keeps ringing on screen for
+  // its own decay even after the lab has cleared the note from activeMidis
+  // (a strummed chord clears after 350ms but sounds for seconds). So strikes
+  // are tracked separately and expire on their own timers.
+  const [strikes, setStrikes] = useState<Strike[]>([]);
+  const soundingRef = useRef<Set<number>>(new Set());
+  const nextStrikeId = useRef(0);
+  const timers = useRef<number[]>([]);
+
+  const activeKey = activeMidis.join(',');
+  useEffect(() => {
+    const sounding = new Set(activeMidis);
+    const fresh: Strike[] = [];
+
+    GUITAR_STRINGS.forEach((str, stringIdx) => {
+      // Only notes that just started count as a pluck. The lowest fret wins:
+      // one finger stops the string at one place, and the lowest stopped fret
+      // leaves the longest length ringing.
+      for (let fret = 0; fret <= FRETS_COUNT; fret++) {
+        const midi = str.midi + fret;
+        if (sounding.has(midi) && !soundingRef.current.has(midi)) {
+          fresh.push({ id: nextStrikeId.current++, stringIdx, fret });
+          break;
+        }
+      }
+    });
+
+    soundingRef.current = sounding;
+    if (fresh.length === 0) return;
+
+    setStrikes(prev => [...prev, ...fresh]);
+    const expiring = new Set(fresh.map(s => s.id));
+    const longest = Math.max(...fresh.map(s => RING_MS[s.stringIdx]));
+    const timer = window.setTimeout(() => {
+      setStrikes(prev => prev.filter(s => !expiring.has(s.id)));
+      timers.current = timers.current.filter(t => t !== timer);
+    }, longest);
+    timers.current.push(timer);
+    // activeMidis is a fresh array on every render, so the joined key is what
+    // actually tells us the sounding notes changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeKey]);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
@@ -79,10 +143,13 @@ export const Fretboard: React.FC<FretboardProps> = ({
           {/* Render Guitar Strings */}
           {GUITAR_STRINGS.map((str, strIdx) => {
             const stringNum = strIdx + 1; // 1 = high E (thinnest) ... 6 = low E (thickest)
+            const ringing = strikes.filter(s => s.stringIdx === strIdx);
             return (
-              <div key={strIdx} className="guitar-string-row">
+              <div key={strIdx} className={`guitar-string-row${ringing.length > 0 ? ' is-ringing' : ''}`}>
 
-                {/* Visual String line running behind note markers */}
+                {/* Visual String line running behind note markers. It fades
+                    while the string rings, the way a real one loses its hard
+                    edge into the blur of its own movement. */}
                 <div className={`guitar-string-line string-thickness-${stringNum}`} />
 
                 {/* Open String Note Label on Headstock */}
@@ -111,6 +178,19 @@ export const Fretboard: React.FC<FretboardProps> = ({
 
                 {/* Render Fret Cells for this String, tapered to real fret spacing */}
                 <div className="fret-area">
+
+                  {/* The ring-out. One element per pluck, spanning from the
+                      fret that stops the string to the bridge off the right
+                      edge, keyed so a repeated strike restarts the decay. */}
+                  {ringing.map(strike => (
+                    <span
+                      key={strike.id}
+                      className={`string-ring ring-${stringNum}`}
+                      style={{ left: `${fretEdgePct(strike.fret)}%` }}
+                      aria-hidden="true"
+                    />
+                  ))}
+
                   {Array.from({ length: FRETS_COUNT }).map((_, fIdx) => {
                     const fret = fIdx + 1;
                     const midiNote = str.midi + fret;
