@@ -1497,13 +1497,15 @@ input[type='range'] {
   box-shadow: var(--elevation);
 }
 
-/* Scrim across the left third. The picture is already near-black there, so
-   this only guarantees the name holds its contrast at every width. */
+/* The scrim never reaches transparent. Left of the name it is solid, so the
+   title always holds; across the instrument it stays a veil, so the guitar
+   reads as something the panel is lit by rather than a photograph pasted
+   into it. */
 .hero::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #101114 0%, rgba(16, 17, 20, 0.82) 26%, rgba(16, 17, 20, 0) 62%);
+  background: linear-gradient(90deg, #101114 0%, rgba(16, 17, 20, 0.94) 28%, rgba(16, 17, 20, 0.5) 100%);
   pointer-events: none;
 }
 
@@ -1631,7 +1633,7 @@ input[type='range'] {
   }
 
   .hero::before {
-    background: linear-gradient(180deg, rgba(16, 17, 20, 0) 24%, rgba(16, 17, 20, 0.86) 66%, #101114 100%);
+    background: linear-gradient(180deg, rgba(16, 17, 20, 0.5) 0%, rgba(16, 17, 20, 0.55) 30%, rgba(16, 17, 20, 0.9) 70%, #101114 100%);
   }
 
   .hero-title {
