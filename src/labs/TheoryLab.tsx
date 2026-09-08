@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Keyboard } from '../components/Keyboard';
 import { Fretboard } from '../components/Fretboard';
 import { Term } from '../components/Term';
+import { ScaleChords } from '../components/ScaleChords';
 import { audio } from '../utils/audio';
 import {
   NOTE_NAMES,
@@ -124,6 +125,20 @@ export const TheoryLab: React.FC = () => {
     setTimeout(() => {
       setActiveMidis((prev) => prev.filter((m) => m !== midi));
     }, 150);
+  };
+
+  // Strum a whole chord shape: roll through its notes low string to high, the
+  // way a downstroke actually sounds, and light them up on the neck below.
+  const handleStrumVoicing = (midis: number[]) => {
+    audio.init();
+    reportProgress('theory-diatonic-played');
+    reportProgress('theory-chord-shape-played');
+    const now = audio.getCurrentTime();
+    [...midis].sort((a, b) => a - b).forEach((midi, i) => {
+      audio.playMidi(midi, 2.2, now + i * 0.045);
+    });
+    setActiveMidis(midis);
+    setTimeout(() => setActiveMidis([]), 1100);
   };
 
   const [guitarMode, setGuitarMode] = useState(false);
@@ -546,6 +561,13 @@ export const TheoryLab: React.FC = () => {
         </section>
 
       </div>
+
+      {/* Every chord this scale contains, with playable fingerings */}
+      <ScaleChords
+        rootName={selectedRoot}
+        scale={selectedScale}
+        onStrum={handleStrumVoicing}
+      />
 
       {/* Shared instrument picker — your keyboard always controls whichever
           one is selected here; the highlighted panel below shows which */}

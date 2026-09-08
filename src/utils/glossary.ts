@@ -57,6 +57,21 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     definition:
       "The seven chords built using only this key's notes. Most songs use just these — that is why they sound like they belong together. Try clicking a few in a row!"
   },
+  seventhChord: {
+    title: '7th Chord',
+    definition:
+      'A normal three-note chord with one extra note stacked on top. It adds colour — jazzier, dreamier, or more restless — without changing which chord it is.'
+  },
+  chordVoicing: {
+    title: 'Voicing',
+    definition:
+      'One particular way of fingering a chord on the neck. The same chord can be played in several places, with different strings and a different feel, and they are all correct.'
+  },
+  barreChord: {
+    title: 'Barre Chord',
+    definition:
+      'A chord where one finger presses several strings flat across a fret, acting as a movable nut. Hard at first, but it lets one shape slide up the neck to give you every key.'
+  },
   romanNumerals: {
     title: 'Roman Numerals (I, ii, V…)',
     definition:
