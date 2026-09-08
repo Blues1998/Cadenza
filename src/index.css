@@ -1426,6 +1426,274 @@ input[type='range'] {
   }
 }
 
+/* ===== Guided Journey =====
+   One continuous line rather than a stack of cards. The line is the progress
+   bar: the segment beside a finished level is lit and the rest is not, so the
+   shape of the run says where you are the way a score shows how much of the
+   piece is left. */
+.journey {
+  padding: 1.75rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.journey-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.journey-head h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.journey-head p {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  margin-top: 0.35rem;
+  max-width: 62ch;
+}
+
+/* Counts as instrument data, not a second progress bar */
+.journey-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.journey-count-figure {
+  font-size: 1.9rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.journey-count-total {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.journey-count-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+}
+
+.journey-done {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--success);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Every row carries the same 1px rule on its left edge, so the segments join
+   into one unbroken line down the panel. */
+.timeline-mark,
+.timeline-step {
+  position: relative;
+  padding-left: 1.6rem;
+  border-left: 1px solid var(--panel-border);
+}
+
+.timeline-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 1.5rem;
+  padding-bottom: 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+
+.timeline-mark:first-child {
+  padding-top: 0;
+}
+
+/* A rehearsal mark: a short tick across the line where a movement begins */
+.timeline-mark::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  width: 0.9rem;
+  height: 1px;
+  background: var(--panel-border-hover);
+}
+
+.timeline-mark.is-done {
+  border-left-color: var(--success);
+}
+
+.timeline-mark-count {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  letter-spacing: 0;
+}
+
+/* A finished level lights its own segment of the line */
+.timeline-step.is-done {
+  border-left-color: var(--success);
+}
+
+.step-node {
+  position: absolute;
+  left: -4px;
+  top: 0.85rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--panel-bg);
+  box-shadow: 0 0 0 1px var(--panel-border-hover);
+}
+
+.timeline-step.is-done .step-node {
+  background: var(--success);
+  box-shadow: none;
+}
+
+.timeline-step.is-next .step-node {
+  background: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.step-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem 0.5rem 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.15s ease;
+}
+
+.step-head:hover {
+  color: var(--text-primary);
+}
+
+/* Bar numbers */
+.step-index {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 0.88rem;
+}
+
+/* Pushes anything after the tag to the right, so the tag stays beside the
+   title it belongs to instead of drifting to the far edge. */
+.step-head::after {
+  content: '';
+  flex: 1;
+  order: 9;
+}
+
+.timeline-step.is-open .step-title {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.timeline-step.is-done .step-index,
+.timeline-step.is-done .step-title {
+  color: var(--text-muted);
+}
+
+.step-tag {
+  flex-shrink: 0;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+}
+
+.step-tag.is-done {
+  color: var(--success);
+}
+
+.step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.1rem 0 1.1rem;
+  max-width: 66ch;
+}
+
+.step-idea {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.step-task {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.step-task-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.step-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.1rem;
+}
+
+.step-progress,
+.step-xp {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .journey {
+    padding: 1.25rem 1rem 1.5rem;
+  }
+
+  .timeline-mark,
+  .timeline-step {
+    padding-left: 1.1rem;
+  }
+}
+
 /* ===== Beginner glossary tooltips (<Term> component) ===== */
 .term {
   position: relative;

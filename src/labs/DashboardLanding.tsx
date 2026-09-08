@@ -95,12 +95,8 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       {/* Welcome Banner */}
       <div 
         className="glass-panel" 
-        style={{ 
-          padding: '2.5rem', 
-          // Tinted through the elevation token so the wash inverts with the
-          // theme; it was a literal dark blue-grey, which greyed out the hero
-          // on the light theme.
-          background: 'linear-gradient(135deg, rgba(var(--surface-tint-rgb), 0.05) 0%, var(--primary-glow) 100%)',
+        style={{
+          padding: '2.5rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -109,17 +105,17 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: '600px' }}>
-          <h2 style={{ fontSize: '2.2rem', fontWeight: 700, lineHeight: 1.2 }}>
-            Welcome to your <span style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Cadenza Lab</span>
+          <h2 style={{ fontSize: '2.1rem', fontWeight: 600, lineHeight: 1.15, letterSpacing: '-0.03em' }}>
+            Welcome to your <span style={{ color: 'var(--primary)' }}>Cadenza Lab</span>
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.98rem', lineHeight: 1.6 }}>
             No music experience required. Follow the guided journey below — each level is one idea
             learned by playing, and completes automatically the moment you do it.
           </p>
         </div>
-        <div style={{ padding: '1rem 1.5rem', background: 'var(--surface-2)', borderRadius: '8px', textAlign: 'center' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Focus Instrument</span>
-          <h3 style={{ color: 'var(--primary)', marginTop: '0.2rem', fontSize: '1.25rem' }}>Acoustic Guitar 🎸</h3>
+        <div style={{ padding: '0.9rem 1.4rem', background: 'var(--surface-2)', borderRadius: '8px' }}>
+          <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.14em' }}>Focus instrument</span>
+          <h3 style={{ color: 'var(--text-primary)', marginTop: '0.25rem', fontSize: '1.1rem', fontWeight: 600 }}>Acoustic Guitar</h3>
         </div>
       </div>
 
