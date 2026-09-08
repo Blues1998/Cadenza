@@ -148,7 +148,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
           onClick={toggleCollapsed}
           role="button"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          style={{ width: '36px', height: '36px', flexShrink: 0, borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0, 240, 255, 0.3)', cursor: 'pointer' }}
+          style={{ width: '36px', height: '36px', flexShrink: 0, borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(255, 106, 42, 0.3)', cursor: 'pointer' }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-on-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 18V5l12-2v13" />
@@ -178,10 +178,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
                 justifyContent: collapsed ? 'center' : 'flex-start',
                 width: '100%',
                 padding: collapsed ? '0.6rem 0' : undefined,
-                background: isActive ? 'rgba(0, 240, 255, 0.06)' : 'transparent',
+                background: isActive ? 'rgba(255, 106, 42, 0.06)' : 'transparent',
                 borderColor: isActive ? 'var(--primary)' : 'transparent',
                 color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                boxShadow: isActive ? '0 0 12px rgba(0, 240, 255, 0.1)' : 'none',
+                boxShadow: isActive ? '0 0 12px rgba(255, 106, 42, 0.1)' : 'none',
               }}
             >
               <span style={{ color: isActive ? 'var(--primary)' : 'inherit', display: 'flex', alignItems: 'center' }}>

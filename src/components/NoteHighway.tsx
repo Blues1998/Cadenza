@@ -6,16 +6,16 @@ import type { JudgedEvent } from '../hooks/useSongChart';
 // surface (same rule as Sound Physics' waveforms and Rhythm Lab's timing
 // graph) that stays dark regardless of light/dark mode.
 const COLORS = {
-  bg: '#0f1219',
+  bg: '#0E0F11',
   grid: 'rgba(255,255,255,0.06)',
   hitLine: 'rgba(255,255,255,0.35)',
   upcoming: '#8b93a7',
   upcomingFill: 'rgba(139,147,167,0.15)',
-  perfect: '#10b981',
-  good: '#00f0ff',
-  imprecise: '#f59e0b',
-  miss: '#ef4444',
-  text: '#0b0c10',
+  perfect: '#46C08A',
+  good: '#FF6A2A',
+  imprecise: '#E5C463',
+  miss: '#FF4D5E',
+  text: '#111214',
 };
 
 const WINDOW_AHEAD_S = 2.5; // seconds of upcoming notes visible

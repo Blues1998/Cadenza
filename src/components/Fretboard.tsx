@@ -90,7 +90,7 @@ export const Fretboard: React.FC<FretboardProps> = ({
                   className="fret-cell nut-cell"
                   onClick={() => handleCellClick(str.midi, 0)}
                 >
-                  <span style={{ cursor: 'pointer', zIndex: 11, color: '#00f0ff', fontWeight: 'bold' }}>
+                  <span style={{ cursor: 'pointer', zIndex: 11, color: 'var(--primary)', fontWeight: 'bold' }}>
                     {str.note}
                     <span style={{ fontSize: '0.65rem', verticalAlign: 'sub' }}>{str.octave}</span>
                   </span>

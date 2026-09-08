@@ -368,7 +368,7 @@ export const PlayLab: React.FC = () => {
 
       {!isActive ? (
         <section className="glass-panel" style={{ padding: '2.5rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(0, 240, 255, 0.05)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255, 106, 42, 0.05)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
           </div>
           <h3 style={{ fontSize: '1.25rem' }}>Grab your instrument</h3>
@@ -434,7 +434,7 @@ export const PlayLab: React.FC = () => {
                           fontSize: '0.78rem',
                           fontWeight: current ? 700 : 500,
                           border: `1px solid ${done ? 'var(--success)' : current ? 'var(--warning)' : 'rgba(var(--surface-tint-rgb),0.1)'}`,
-                          background: done ? 'rgba(16,185,129,0.12)' : current ? 'rgba(245,158,11,0.12)' : 'rgba(var(--surface-tint-rgb),0.02)',
+                          background: done ? 'rgba(70, 192, 138, 0.12)' : current ? 'rgba(255, 106, 42, 0.12)' : 'rgba(var(--surface-tint-rgb),0.02)',
                           color: done ? 'var(--success)' : current ? 'var(--warning)' : 'var(--text-muted)',
                           display: 'inline-flex', alignItems: 'center', gap: '0.3rem'
                         }}

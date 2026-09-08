@@ -42,9 +42,9 @@ const HighlightLegend: React.FC<{ mode: 'scale' | 'chord' }> = ({ mode }) => {
   });
   return (
     <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-      <span><span style={dot('var(--warning)')} />Root — the home note</span>
-      <span><span style={dot('var(--success)')} />Notes in this {mode}</span>
-      <span><span style={dot('var(--primary)')} />Playing right now</span>
+      <span><span style={dot('var(--note-root)')} />Root — the home note</span>
+      <span><span style={dot('var(--note-scale)')} />Notes in this {mode}</span>
+      <span><span style={dot('var(--note-active)')} />Playing right now</span>
     </div>
   );
 };
@@ -377,7 +377,7 @@ export const TheoryLab: React.FC = () => {
           <path
             onClick={handleMajorClick}
             d={`M ${x1_mid} ${y1_mid} L ${x1_out} ${y1_out} A ${outerR} ${outerR} 0 0 1 ${x2_out} ${y2_out} L ${x2_mid} ${y2_mid} A ${midR} ${midR} 0 0 0 ${x1_mid} ${y1_mid}`}
-            fill={isSelected ? 'rgba(0, 240, 255, 0.2)' : 'rgba(var(--surface-tint-rgb), 0.02)'}
+            fill={isSelected ? 'rgba(255, 106, 42, 0.2)' : 'rgba(var(--surface-tint-rgb), 0.02)'}
             stroke={isSelected ? 'var(--primary)' : 'rgba(var(--surface-tint-rgb), 0.08)'}
             strokeWidth={isSelected ? '2' : '1'}
             className="sector-path"
@@ -386,7 +386,7 @@ export const TheoryLab: React.FC = () => {
           <path
             onClick={handleMinorClick}
             d={`M ${x1_in} ${y1_in} L ${x1_mid} ${y1_mid} A ${midR} ${midR} 0 0 1 ${x2_mid} ${y2_mid} L ${x2_in} ${y2_in} A ${innerR} ${innerR} 0 0 0 ${x1_in} ${y1_in}`}
-            fill={isSelected ? 'rgba(139, 92, 246, 0.15)' : 'rgba(var(--surface-tint-rgb), 0.01)'}
+            fill={isSelected ? 'rgba(255, 176, 138, 0.15)' : 'rgba(var(--surface-tint-rgb), 0.01)'}
             stroke={isSelected ? 'var(--secondary)' : 'rgba(var(--surface-tint-rgb), 0.05)'}
             strokeWidth={isSelected ? '1.5' : '0.5'}
           />
@@ -419,16 +419,16 @@ export const TheoryLab: React.FC = () => {
 
       {/* Dismissible "Start here" guide for first-time visitors */}
       {showIntro && (
-        <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', borderColor: 'rgba(0, 240, 255, 0.25)' }}>
+        <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', borderColor: 'rgba(255, 106, 42, 0.25)' }}>
           <div style={{ flex: '1 1 380px', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             <h3 style={{ fontSize: '1rem', color: 'var(--primary)' }}>New here? Try this first</h3>
             {[
               ['1', 'Pick a feeling below — start with "Happy & Bright" (that’s the Major scale).'],
               ['2', 'Press Play and just listen. Does it match the feeling on the label?'],
-              ['3', 'Watch the same notes light up on the piano and guitar — the amber note is "home".']
+              ['3', 'Watch the same notes light up on the piano and guitar — the orange note is "home".']
             ].map(([num, text]) => (
               <div key={num} style={{ display: 'flex', gap: '0.6rem', alignItems: 'baseline', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                <span style={{ flexShrink: 0, width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(0,240,255,0.15)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, alignSelf: 'center' }}>{num}</span>
+                <span style={{ flexShrink: 0, width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(255, 106, 42, 0.15)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, alignSelf: 'center' }}>{num}</span>
                 <span>{text}</span>
               </div>
             ))}
@@ -453,7 +453,7 @@ export const TheoryLab: React.FC = () => {
       />
 
       {/* Plain-English read-out of whatever the toolbar currently has selected */}
-      <div style={{ background: 'rgba(0, 240, 255, 0.04)', border: '1px solid rgba(0, 240, 255, 0.15)', borderRadius: '12px', padding: '0.85rem 1.1rem', fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
+      <div style={{ background: 'rgba(255, 106, 42, 0.04)', border: '1px solid rgba(255, 106, 42, 0.15)', borderRadius: '12px', padding: '0.85rem 1.1rem', fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
         <span style={{ display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--primary)', marginBottom: '0.3rem' }}>
           What you're seeing & hearing
         </span>

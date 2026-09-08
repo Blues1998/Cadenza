@@ -5,11 +5,13 @@ import { reportProgress } from '../utils/progress';
 import { IconPlay, IconStop } from '../components/Icons';
 
 // ---- Shared drawing helpers ----
+// Literal rather than var(--…): these are fed to canvas fillStyle/strokeStyle,
+// which cannot resolve CSS custom properties. Keep in step with the tokens.
 const COLORS = {
-  primary: '#00f0ff',
-  secondary: '#8b5cf6',
-  success: '#10b981',
-  warning: '#f59e0b',
+  primary: '#FF6A2A',
+  secondary: '#FFB08A',
+  success: '#46C08A',
+  warning: '#E5C463',
   grid: 'rgba(255,255,255,0.07)',
   faint: 'rgba(255,255,255,0.18)'
 };
@@ -104,7 +106,7 @@ const HarmonicExplorer: React.FC = () => {
     // The summed wave — what you actually hear
     ctx.strokeStyle = COLORS.primary;
     ctx.lineWidth = 2.5;
-    ctx.shadowColor = 'rgba(0,240,255,0.4)';
+    ctx.shadowColor = 'rgba(255, 106, 42, 0.4)';
     ctx.shadowBlur = 6;
     ctx.beginPath();
     for (let px = 0; px <= w; px++) {
@@ -150,7 +152,7 @@ const HarmonicExplorer: React.FC = () => {
         we call timbre. Mix your own below (faint lines = individual harmonics, bright line = their sum).
       </p>
 
-      <canvas ref={canvasRef} style={{ width: '100%', height: '130px', background: '#0f1219', borderRadius: '10px' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: '130px', background: '#0E0F11', borderRadius: '10px' }} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.75rem' }}>
         {amps.map((a, n) => (
@@ -247,7 +249,7 @@ const RatioExplorer: React.FC = () => {
       drawMidline(ctx, w, h);
       const T = 1.0;
       const SUB = 48; // samples per pixel column
-      ctx.fillStyle = locked ? 'rgba(16,185,129,0.55)' : 'rgba(0,240,255,0.55)';
+      ctx.fillStyle = locked ? 'rgba(70, 192, 138, 0.55)' : 'rgba(255, 106, 42, 0.55)';
       for (let px = 0; px < w; px++) {
         let min = 2, max = -2;
         for (let s = 0; s < SUB; s++) {
@@ -358,11 +360,11 @@ const RatioExplorer: React.FC = () => {
 
       <div>
         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Combined wave, zoomed to 35 ms — simple ratios repeat neatly:</span>
-        <canvas ref={waveCanvasRef} style={{ width: '100%', height: '80px', background: '#0f1219', borderRadius: '10px', marginTop: '0.25rem' }} />
+        <canvas ref={waveCanvasRef} style={{ width: '100%', height: '80px', background: '#0E0F11', borderRadius: '10px', marginTop: '0.25rem' }} />
       </div>
       <div>
         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Same signal over 1 full second — beating shows up as slow loudness waves:</span>
-        <canvas ref={envCanvasRef} style={{ width: '100%', height: '80px', background: '#0f1219', borderRadius: '10px', marginTop: '0.25rem' }} />
+        <canvas ref={envCanvasRef} style={{ width: '100%', height: '80px', background: '#0E0F11', borderRadius: '10px', marginTop: '0.25rem' }} />
       </div>
       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
         The tritone sits at √2 ≈ 1.414 — a famously irrational spot with no tidy pattern, which is
@@ -532,7 +534,7 @@ const ModularCircle: React.FC = () => {
               <g key={name}>
                 <circle
                   cx={p.x} cy={p.y} r={isCurrent ? 17 : 14}
-                  fill={isCurrent ? 'rgba(245,158,11,0.25)' : isVisited ? 'rgba(0,240,255,0.12)' : 'rgba(var(--surface-tint-rgb),0.03)'}
+                  fill={isCurrent ? 'rgba(255, 106, 42, 0.25)' : isVisited ? 'rgba(255, 106, 42, 0.12)' : 'rgba(var(--surface-tint-rgb),0.03)'}
                   stroke={isCurrent ? COLORS.warning : isVisited ? COLORS.primary : 'rgba(var(--surface-tint-rgb),0.12)'}
                   strokeWidth={isCurrent ? 2 : 1}
                 />

@@ -45,12 +45,12 @@ const TimingGraph: React.FC<{
     // low-contrast values in light mode, which would read fine as page text
     // but muddy against this canvas's own always-dark background).
     const colors = {
-      beat: '#00f0ff',
-      tap: '#f59e0b',
-      perfect: '#10b981',
-      good: '#00f0ff',
-      imprecise: '#f59e0b',
-      miss: '#ef4444',
+      beat: 'var(--primary)',
+      tap: '#FF6A2A',
+      perfect: '#46C08A',
+      good: 'var(--primary)',
+      imprecise: '#E5C463',
+      miss: '#FF4D5E',
       grid: 'rgba(255,255,255,0.07)',
       text: '#8b93a7'
     };
@@ -166,7 +166,7 @@ const TimingGraph: React.FC<{
           width: '100%',
           height: '110px',
           display: 'block',
-          background: '#0f1219',
+          background: '#0E0F11',
           border: '1px solid rgba(255,255,255,0.05)',
           borderRadius: '10px'
         }}

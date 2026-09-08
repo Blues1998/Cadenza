@@ -81,7 +81,7 @@ export const JOURNEY: JourneyChapter[] = [
       {
         id: 'first-climb',
         title: 'Climb a scale on your instrument',
-        idea: 'Theory sticks when your hands do it. The amber marker shows the note to play; the app confirms each one by ear.',
+        idea: 'Theory sticks when your hands do it. The orange marker shows the note to play; the app confirms each one by ear.',
         task: 'In Play Challenges, complete one full Scale Climb round (any scale, any root).',
         tab: 'play',
         buttonText: 'Start Scale Climb',

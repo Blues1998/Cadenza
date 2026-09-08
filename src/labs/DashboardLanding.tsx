@@ -97,7 +97,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         className="glass-panel" 
         style={{ 
           padding: '2.5rem', 
-          background: 'linear-gradient(135deg, rgba(18, 22, 33, 0.6) 0%, rgba(139, 92, 246, 0.08) 100%)',
+          background: 'linear-gradient(135deg, rgba(18, 22, 33, 0.6) 0%, rgba(255, 176, 138, 0.08) 100%)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',

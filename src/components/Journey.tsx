@@ -35,7 +35,7 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
         <div>
           <h3 style={{ fontSize: '1.35rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
             <span>Your Guided Journey</span>
-            <span style={{ fontSize: '0.8rem', background: 'rgba(0, 240, 255, 0.08)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(0, 240, 255, 0.2)' }}>
+            <span style={{ fontSize: '0.8rem', background: 'rgba(255, 106, 42, 0.08)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(255, 106, 42, 0.2)' }}>
               {xp} XP
             </span>
           </h3>
@@ -57,7 +57,7 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
       </div>
 
       {finished && (
-        <div style={{ padding: '1rem', borderRadius: '10px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)', color: 'var(--success)', fontSize: '0.9rem' }}>
+        <div style={{ padding: '1rem', borderRadius: '10px', background: 'rgba(70, 192, 138, 0.08)', border: '1px solid rgba(70, 192, 138, 0.3)', color: 'var(--success)', fontSize: '0.9rem' }}>
           🎉 Journey complete! You've covered notes, scales, intervals, chords, keys, and rhythm — by playing all of it.
           Keep building streaks in Play Challenges and Ear Training to sharpen everything.
         </div>
@@ -93,9 +93,9 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
                       display: 'flex', flexDirection: 'column', gap: isExpanded ? '0.6rem' : 0,
                       padding: isExpanded ? '1rem 1.25rem' : '0.4rem 0.75rem',
                       borderRadius: isExpanded ? '12px' : '8px',
-                      background: isExpanded ? 'rgba(0, 240, 255, 0.04)' : done ? 'rgba(16,185,129,0.04)' : 'rgba(var(--surface-tint-rgb),0.01)',
-                      border: '1px solid ' + (isExpanded ? 'rgba(0, 240, 255, 0.25)' : done ? 'rgba(16,185,129,0.15)' : 'rgba(var(--surface-tint-rgb),0.05)'),
-                      boxShadow: isExpanded ? '0 0 20px rgba(0, 240, 255, 0.05)' : 'none',
+                      background: isExpanded ? 'rgba(255, 106, 42, 0.04)' : done ? 'rgba(70, 192, 138, 0.04)' : 'rgba(var(--surface-tint-rgb),0.01)',
+                      border: '1px solid ' + (isExpanded ? 'rgba(255, 106, 42, 0.25)' : done ? 'rgba(70, 192, 138, 0.15)' : 'rgba(var(--surface-tint-rgb),0.05)'),
+                      boxShadow: isExpanded ? '0 0 20px rgba(255, 106, 42, 0.05)' : 'none',
                       transition: 'background 0.15s ease, border-color 0.15s ease'
                     }}
                   >

@@ -255,9 +255,9 @@ export const TabPlayerLab: React.FC = () => {
     }
     const el = gradeHighlightElRef.current;
     if (!el || !positionGradeBox(beat)) return;
-    el.style.borderColor = 'rgba(245, 158, 11, 0.9)';
-    el.style.background = 'rgba(245, 158, 11, 0.12)';
-    el.style.boxShadow = '0 0 12px rgba(245, 158, 11, 0.4)';
+    el.style.borderColor = 'rgba(255, 106, 42, 0.9)';
+    el.style.background = 'rgba(255, 106, 42, 0.12)';
+    el.style.boxShadow = '0 0 12px rgba(255, 106, 42, 0.4)';
     el.style.opacity = '1';
   }, [positionGradeBox]);
 
@@ -267,9 +267,9 @@ export const TabPlayerLab: React.FC = () => {
   const flashResultBox = useCallback((hit: boolean) => {
     const el = gradeHighlightElRef.current;
     if (!el) return;
-    el.style.borderColor = hit ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)';
-    el.style.background = hit ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)';
-    el.style.boxShadow = hit ? '0 0 14px rgba(16, 185, 129, 0.5)' : '0 0 14px rgba(239, 68, 68, 0.5)';
+    el.style.borderColor = hit ? 'rgba(70, 192, 138, 0.95)' : 'rgba(239, 68, 68, 0.95)';
+    el.style.background = hit ? 'rgba(70, 192, 138, 0.18)' : 'rgba(239, 68, 68, 0.18)';
+    el.style.boxShadow = hit ? '0 0 14px rgba(70, 192, 138, 0.5)' : '0 0 14px rgba(239, 68, 68, 0.5)';
     el.style.opacity = '1';
     if (gradeFadeTimeoutRef.current !== null) window.clearTimeout(gradeFadeTimeoutRef.current);
     gradeFadeTimeoutRef.current = window.setTimeout(() => {
@@ -489,10 +489,10 @@ export const TabPlayerLab: React.FC = () => {
     const highlightEl = document.createElement('div');
     highlightEl.style.position = 'absolute';
     highlightEl.style.pointerEvents = 'none';
-    highlightEl.style.border = '2px solid rgba(0, 240, 255, 0.9)';
+    highlightEl.style.border = '2px solid rgba(255, 106, 42, 0.9)';
     highlightEl.style.borderRadius = '6px';
-    highlightEl.style.background = 'rgba(0, 240, 255, 0.1)';
-    highlightEl.style.boxShadow = '0 0 12px rgba(0, 240, 255, 0.45)';
+    highlightEl.style.background = 'rgba(255, 106, 42, 0.1)';
+    highlightEl.style.boxShadow = '0 0 12px rgba(255, 106, 42, 0.45)';
     highlightEl.style.opacity = '0';
     highlightEl.style.transition = 'opacity 0.12s ease';
     // alphaTab's own cursor overlay wrapper (.at-cursors) is explicitly
@@ -941,7 +941,7 @@ export const TabPlayerLab: React.FC = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
           padding: '1.25rem', borderRadius: '12px', cursor: 'pointer',
           border: `2px dashed ${isDragging ? 'var(--primary)' : 'rgba(var(--surface-tint-rgb),0.12)'}`,
-          background: isDragging ? 'rgba(0, 240, 255, 0.05)' : 'rgba(var(--surface-tint-rgb),0.015)',
+          background: isDragging ? 'rgba(255, 106, 42, 0.05)' : 'rgba(var(--surface-tint-rgb),0.015)',
           transition: 'border-color 0.15s ease, background 0.15s ease'
         }}
       >
@@ -963,7 +963,7 @@ export const TabPlayerLab: React.FC = () => {
       )}
 
       {guitarSoundfontMissing && (
-        <div style={{ padding: '0.85rem 1rem', borderRadius: '10px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', color: 'var(--warning)', fontSize: '0.85rem' }}>
+        <div style={{ padding: '0.85rem 1rem', borderRadius: '10px', background: 'rgba(255, 106, 42, 0.08)', border: '1px solid rgba(255, 106, 42, 0.3)', color: 'var(--warning)', fontSize: '0.85rem' }}>
           The high-quality guitar samples didn't load, so playback will fall back to a generic synth sound.
           Run <code>npm run setup:soundfont</code> in the project to fetch them.
         </div>
@@ -1165,7 +1165,7 @@ export const TabPlayerLab: React.FC = () => {
                         style={{
                           padding: '0.25rem 0.5rem', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 600,
                           border: `1px solid ${r.hit ? 'var(--success)' : 'var(--danger)'}`,
-                          background: r.hit ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                          background: r.hit ? 'rgba(70, 192, 138, 0.12)' : 'rgba(239,68,68,0.12)',
                           color: r.hit ? 'var(--success)' : 'var(--danger)',
                           display: 'inline-flex', alignItems: 'center', gap: '0.3rem'
                         }}
@@ -1185,10 +1185,10 @@ export const TabPlayerLab: React.FC = () => {
           injected into the DOM with no default styling at all — invisible
           until given a color, same story as the notation background. */}
       <style>{`
-        .at-cursor-bar { background: rgba(0, 240, 255, 0.12); }
-        .at-cursor-beat { background: #0090a8; width: 3px; }
-        .at-highlight * { fill: #0090a8; stroke: #0090a8; }
-        .at-selection div { background: rgba(0, 240, 255, 0.1); }
+        .at-cursor-bar { background: rgba(255, 106, 42, 0.12); }
+        .at-cursor-beat { background: #FF6A2A; width: 3px; }
+        .at-highlight * { fill: #D9480F; stroke: #D9480F; }
+        .at-selection div { background: rgba(255, 106, 42, 0.1); }
       `}</style>
 
       {/* alphaTab draws notation in dark ink meant for a page, so this stays
@@ -1199,7 +1199,7 @@ export const TabPlayerLab: React.FC = () => {
           minHeight: hasScore ? '400px' : '120px',
           maxHeight: hasScore ? '65vh' : undefined,
           overflow: 'auto',
-          background: hasScore ? '#ffffff' : '#0b0c10',
+          background: hasScore ? '#ffffff' : '#0E0F11',
           borderRadius: '12px',
           border: '1px solid rgba(var(--surface-tint-rgb),0.06)',
           padding: hasScore ? '1rem' : 0
@@ -1248,7 +1248,7 @@ export const TabPlayerLab: React.FC = () => {
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     minWidth: '1.6rem', padding: '0.1rem 0.35rem',
-                    background: 'rgba(0,240,255,0.12)', borderRadius: '4px',
+                    background: 'rgba(255, 106, 42, 0.12)', borderRadius: '4px',
                     fontFamily: 'var(--font-mono)', fontSize: '0.72rem'
                   }}>
                     {entry.symbol}

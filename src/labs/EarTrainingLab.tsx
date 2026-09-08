@@ -404,7 +404,7 @@ export const EarTrainingLab: React.FC = () => {
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', minHeight: '320px', justifyContent: 'center', alignItems: 'center', gap: '1.5rem' }}>
           {!hasStarted ? (
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(0, 240, 255, 0.05)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255, 106, 42, 0.05)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 600 }}>Ready to train your ears?</h3>
@@ -476,7 +476,7 @@ export const EarTrainingLab: React.FC = () => {
                   if (isAnswered) {
                     if (isCorrectOpt) {
                       cardStyle.borderColor = 'var(--success)';
-                      cardStyle.background = 'rgba(16, 185, 129, 0.08)';
+                      cardStyle.background = 'rgba(70, 192, 138, 0.08)';
                       cardStyle.color = 'var(--text-primary)';
                     } else if (isUserAnswer) {
                       cardStyle.borderColor = 'var(--danger)';
