@@ -1,5 +1,6 @@
 import React from 'react';
 import { Term } from './Term';
+import { Segmented } from './Segmented';
 import { NOTE_NAMES, CHORD_QUALITIES, SCALE_FORMULAS } from '../utils/musicTheory';
 import type { ScaleFormula } from '../utils/musicTheory';
 import { SCALE_FEELINGS, CHORD_FEELINGS } from '../utils/glossary';
@@ -73,18 +74,7 @@ export const ScaleControlBar: React.FC<ScaleControlBarProps> = ({
         <span className="toolbar-label" style={{ marginLeft: 'auto' }}>
           <Term k="octave">Octave</Term>
         </span>
-        <div className="segmented" role="group" aria-label="Octave">
-          {OCTAVES.map(o => (
-            <button
-              key={o.value}
-              type="button"
-              onClick={() => onOctaveChange(o.value)}
-              aria-pressed={octave === o.value}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
+        <Segmented value={octave} onChange={onOctaveChange} options={OCTAVES} ariaLabel="Octave" />
 
         <button
           type="button"
@@ -99,18 +89,16 @@ export const ScaleControlBar: React.FC<ScaleControlBarProps> = ({
 
       {/* Scale or chord — one list at a time, so the mode is never ambiguous */}
       <div className="toolbar-row">
-        <div className={`segmented${chordMode ? ' is-secondary' : ''}`} role="group" aria-label="What to explore">
-          <button type="button" onClick={() => onChordQualityChange(-1)} aria-pressed={!chordMode}>
-            <Term k="scale">Scale</Term>
-          </button>
-          <button
-            type="button"
-            onClick={() => onChordQualityChange(chordQuality === -1 ? 0 : chordQuality)}
-            aria-pressed={chordMode}
-          >
-            <Term k="chordQuality">Chord</Term>
-          </button>
-        </div>
+        <Segmented
+          value={chordMode}
+          onChange={(wantChords) => onChordQualityChange(wantChords ? Math.max(0, chordQuality) : -1)}
+          tone={chordMode ? 'secondary' : 'primary'}
+          options={[
+            { value: false, label: <Term k="scale">Scale</Term> },
+            { value: true, label: <Term k="chordQuality">Chord</Term> }
+          ]}
+          ariaLabel="What to explore"
+        />
 
         <div className="pill-row">
           {chordMode

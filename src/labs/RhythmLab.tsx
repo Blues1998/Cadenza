@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Segmented } from '../components/Segmented';
 import { audio } from '../utils/audio';
 import { reportProgress } from '../utils/progress';
 
@@ -484,12 +485,12 @@ export const RhythmLab: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>Time Signature</label>
+              <label className="field-label" htmlFor="time-signature">Time Signature</label>
               <select
+                id="time-signature"
                 value={timeSignature}
                 onChange={(e) => setTimeSignature(Number(e.target.value))}
-                className="input-field"
-                style={{ width: '100%', padding: '0.5rem' }}
+                className="select-field"
               >
                 <option value={2}>2/4 (Duple)</option>
                 <option value={3}>3/4 (Triple / Waltz)</option>
@@ -497,26 +498,18 @@ export const RhythmLab: React.FC = () => {
                 <option value={6}>6/8 (Compound)</option>
               </select>
             </div>
-            
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>Mode</label>
-              <div style={{ display: 'flex', gap: '0.25rem' }}>
-                <button
-                  onClick={() => { setIsGameMode(false); stopMetronome(); }}
-                  className={`btn ${!isGameMode ? 'btn-primary' : ''}`}
-                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem' }}
-                >
-                  Solo
-                </button>
-                <button
-                  onClick={() => { setIsGameMode(true); stopMetronome(); }}
-                  className={`btn ${isGameMode ? 'btn-secondary' : ''}`}
-                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem' }}
-                >
-                  Game
-                </button>
-              </div>
-            </div>
+
+            <Segmented
+              label="Mode"
+              value={isGameMode}
+              onChange={(v) => { setIsGameMode(v); stopMetronome(); }}
+              tone={isGameMode ? 'secondary' : 'primary'}
+              options={[
+                { value: false, label: 'Solo' },
+                { value: true, label: 'Game' }
+              ]}
+              full
+            />
           </div>
 
           {/* Visual Beat Indicator Dots */}

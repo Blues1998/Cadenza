@@ -1044,8 +1044,8 @@ export const TabPlayerLab: React.FC = () => {
                   const [bank, program] = e.target.value.split(':').map(Number);
                   applyGuitarTone(bank, program);
                 }}
-                className="input-field"
-                style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                className="select-field"
+                style={{ width: 'auto', padding: '0.35rem 1.8rem 0.35rem 0.6rem', fontSize: '0.8rem' }}
               >
                 {GUITAR_TONES.map(t => <option key={toneKey(t.bank, t.program)} value={toneKey(t.bank, t.program)}>{t.label}</option>)}
               </select>

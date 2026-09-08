@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Keyboard } from '../components/Keyboard';
 import { Fretboard } from '../components/Fretboard';
+import { Segmented } from '../components/Segmented';
 import { audio } from '../utils/audio';
 import { reportProgress } from '../utils/progress';
 import {
@@ -293,29 +294,20 @@ export const EarTrainingLab: React.FC = () => {
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>Quiz Settings</h3>
 
-          <div>
-            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Question Source</span>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={() => setSourceMode('random')}
-                className={`btn ${sourceMode === 'random' ? 'btn-primary' : ''}`}
-                style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }}
-              >
-                Random Tones
-              </button>
-              <button
-                onClick={() => { setSourceMode('tab'); setQuizMode('intervals'); }}
-                className={`btn ${sourceMode === 'tab' ? 'btn-primary' : ''}`}
-                style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }}
-              >
-                From My Tabs
-              </button>
-            </div>
-          </div>
+          <Segmented
+            label="Question Source"
+            value={sourceMode}
+            onChange={(v) => { setSourceMode(v); if (v === 'tab') setQuizMode('intervals'); }}
+            options={[
+              { value: 'random', label: 'Random Tones' },
+              { value: 'tab', label: 'From My Tabs' }
+            ]}
+            full
+          />
 
           {sourceMode === 'tab' && (
             <div>
-              <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Practice From</span>
+              <span className="field-label">Practice From</span>
               {tabSource.libraryEntries.length === 0 ? (
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
                   No tabs saved yet. Import one in the Tab Player lab, then come back here to practice with it.
@@ -327,8 +319,7 @@ export const EarTrainingLab: React.FC = () => {
                     const entry = tabSource.libraryEntries.find(t => t.id === e.target.value);
                     if (entry) tabSource.selectTab(entry);
                   }}
-                  className="input-field"
-                  style={{ width: '100%', padding: '0.5rem 0.6rem', fontSize: '0.85rem' }}
+                  className="select-field"
                 >
                   <option value="" disabled>Choose a piece…</option>
                   {tabSource.libraryEntries.map(entry => (
@@ -351,63 +342,45 @@ export const EarTrainingLab: React.FC = () => {
           )}
 
           {sourceMode === 'random' && (
-            <div>
-              <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Quiz Type</span>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  onClick={() => setQuizMode('intervals')}
-                  className={`btn ${quizMode === 'intervals' ? 'btn-primary' : ''}`}
-                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }}
-                >
-                  Intervals
-                </button>
-                <button
-                  onClick={() => setQuizMode('chords')}
-                  className={`btn ${quizMode === 'chords' ? 'btn-primary' : ''}`}
-                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }}
-                >
-                  Chord Qualities
-                </button>
-              </div>
-            </div>
+            <Segmented
+              label="Quiz Type"
+              value={quizMode}
+              onChange={setQuizMode}
+              options={[
+                { value: 'intervals', label: 'Intervals' },
+                { value: 'chords', label: 'Chord Qualities' }
+              ]}
+              full
+            />
           )}
 
-          <div>
-            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Difficulty Level</span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {(['super-beginner', 'easy', 'medium', 'hard'] as Difficulty[]).map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setDifficulty(level)}
-                  className={`btn ${difficulty === level ? 'btn-secondary' : ''}`}
-                  style={{ flex: '1 1 45%', padding: '0.4rem', fontSize: '0.8rem', textTransform: 'none' }}
-                >
-                  {level === 'super-beginner' ? 'Super Beginner' : level.charAt(0).toUpperCase() + level.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
+          <Segmented
+            label="Difficulty Level"
+            value={difficulty}
+            onChange={setDifficulty}
+            tone="secondary"
+            size="sm"
+            options={[
+              { value: 'super-beginner' as Difficulty, label: 'Super Beginner' },
+              { value: 'easy' as Difficulty, label: 'Easy' },
+              { value: 'medium' as Difficulty, label: 'Medium' },
+              { value: 'hard' as Difficulty, label: 'Hard' }
+            ]}
+            full
+          />
 
           {sourceMode === 'random' && (
-            <div>
-              <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Playback Style</span>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  onClick={() => setPlaybackStyle('melodic')}
-                  className={`btn ${playbackStyle === 'melodic' ? 'btn-primary' : ''}`}
-                  style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}
-                >
-                  Melodic (Stepwise)
-                </button>
-                <button
-                  onClick={() => setPlaybackStyle('harmonic')}
-                  className={`btn ${playbackStyle === 'harmonic' ? 'btn-primary' : ''}`}
-                  style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}
-                >
-                  Harmonic (Together)
-                </button>
-              </div>
-            </div>
+            <Segmented
+              label="Playback Style"
+              value={playbackStyle}
+              onChange={setPlaybackStyle}
+              size="sm"
+              options={[
+                { value: 'melodic', label: 'Melodic (Stepwise)' },
+                { value: 'harmonic', label: 'Harmonic (Together)' }
+              ]}
+              full
+            />
           )}
 
           {hasStarted && (

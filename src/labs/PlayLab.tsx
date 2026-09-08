@@ -470,8 +470,8 @@ export const PlayLab: React.FC = () => {
                       <select
                         value={String(scaleRootPc)}
                         onChange={e => setScaleRootPc(e.target.value === 'random' ? 'random' : Number(e.target.value))}
-                        className="input-field"
-                        style={{ padding: '0.3rem' }}
+                        className="select-field"
+                        style={{ width: 'auto', padding: '0.3rem 1.7rem 0.3rem 0.5rem', fontSize: '0.78rem' }}
                       >
                         {NOTE_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}
                         <option value="random">Surprise me</option>
@@ -482,8 +482,8 @@ export const PlayLab: React.FC = () => {
                       <select
                         value={scaleIdx}
                         onChange={e => setScaleIdx(Number(e.target.value))}
-                        className="input-field"
-                        style={{ padding: '0.3rem' }}
+                        className="select-field"
+                        style={{ width: 'auto', padding: '0.3rem 1.7rem 0.3rem 0.5rem', fontSize: '0.78rem' }}
                       >
                         {SCALE_FORMULAS.map((s, i) => (
                           <option key={s.name} value={i}>{SCALE_FEELINGS[s.name]?.feeling ?? s.name} — {s.name}</option>

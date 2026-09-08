@@ -835,8 +835,28 @@ body {
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.segmented button:hover {
+.segmented.is-sm button {
+  font-size: 0.72rem;
+  padding: 0.25rem 0.55rem;
+}
+
+/* Stretch to fill the row, for a setting that owns its own line */
+.segmented.is-full {
+  display: flex;
+  width: 100%;
+}
+
+.segmented.is-full button {
+  flex: 1;
+}
+
+.segmented button:hover:not(:disabled) {
   color: var(--text-primary);
+}
+
+.segmented button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .segmented button[aria-pressed='true'] {
@@ -847,6 +867,47 @@ body {
 .segmented.is-secondary button[aria-pressed='true'] {
   background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-end) 100%);
   color: var(--text-on-secondary);
+}
+
+/* Caption above a control group */
+.field-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+
+/* Native select, restyled. Kept native so it keeps the platform's keyboard
+   handling and mobile picker; only the shell and the chevron are ours. */
+.select-field {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  width: 100%;
+  padding: 0.45rem 2rem 0.45rem 0.7rem;
+  border-radius: 9px;
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.14);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  cursor: pointer;
+  /* Chevron drawn inline so it inherits the theme and needs no asset */
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 17px) 52%, calc(100% - 12px) 52%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.select-field:hover {
+  border-color: rgba(var(--surface-tint-rgb), 0.28);
+}
+
+.select-field:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 /* Compact choice pills — the feeling-named scales and chords */

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Segmented } from '../components/Segmented';
 import { useMicPitch } from '../hooks/useMicPitch';
 import { audio } from '../utils/audio';
 import { noteNameToMidi } from '../utils/musicTheory';
@@ -229,22 +230,16 @@ export const TunerLab: React.FC = () => {
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', minHeight: '340px' }}>
           <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
             <span>Pitch Matching Game</span>
-            <div style={{ display: 'flex', gap: '0.25rem' }}>
-              <button
-                onClick={() => setGameMode(false)}
-                className={`btn ${!gameMode ? 'btn-primary' : ''}`}
-                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
-              >
-                Tuner
-              </button>
-              <button
-                onClick={() => setGameMode(true)}
-                className={`btn ${gameMode ? 'btn-secondary' : ''}`}
-                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
-              >
-                Practice Game
-              </button>
-            </div>
+            <Segmented
+              value={gameMode}
+              onChange={setGameMode}
+              tone={gameMode ? 'secondary' : 'primary'}
+              size="sm"
+              options={[
+                { value: false, label: 'Tuner' },
+                { value: true, label: 'Practice Game' }
+              ]}
+            />
           </h3>
 
           {!gameMode ? (
