@@ -168,8 +168,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
         )}
       </div>
 
-      {/* Channels. Each lab is a strip on the desk: a level meter that lights
-          when the channel is live, then the icon, then a silk-screened label. */}
+      {/* Channels. A meter beside every row meant nine accent lines competing
+          for the one thing they were supposed to signal, so only the live
+          channel is marked now — a single orange bar down its left edge. */}
       <nav className="sidebar-nav" ref={navRef}>
         {menuItems.map((item) => {
           const isActive = activeTab === item.id;
@@ -182,7 +183,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
               data-active={isActive}
               aria-current={isActive ? 'page' : undefined}
             >
-              <span className="channel-meter" aria-hidden="true" />
               <span className="channel-icon">{item.icon}</span>
               {!collapsed && <span className="channel-label">{item.label}</span>}
             </button>

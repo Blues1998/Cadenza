@@ -508,8 +508,8 @@ html {
 
 .console-subtitle {
   display: block;
-  font-size: 0.6rem;
-  color: var(--primary);
+  font-size: 0.58rem;
+  color: var(--text-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.18em;
@@ -520,17 +520,17 @@ html {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.65rem;
   width: 100%;
-  padding: 0.5rem 0.6rem;
+  padding: 0.48rem 0.7rem;
   border: none;
   border-radius: 6px;
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-ui);
   font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   text-align: left;
   cursor: pointer;
@@ -542,65 +542,40 @@ html {
   color: var(--text-secondary);
 }
 
-/* The level meter. Unlit it is a dim rail; on hover it half-fills; when the
-   channel is live it runs full and glows, so the active lab is legible from
-   the meter alone when the rail is collapsed to icons. */
-.channel-meter {
-  flex-shrink: 0;
-  width: 3px;
-  height: 22px;
-  border-radius: 2px;
-  /* Tint rather than --surface-2: the light theme's surface is barely
-     distinguishable from the rail, and an unlit meter still has to read as a
-     meter. */
-  background: rgba(var(--surface-tint-rgb), 0.14);
-  overflow: hidden;
-  position: relative;
-}
-
-.channel-meter::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 0;
-  border-radius: 2px;
-  background: linear-gradient(to top, var(--primary-end), var(--primary));
-  transition: height 0.18s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.channel:hover .channel-meter::after {
-  height: 40%;
-}
-
-.channel.is-live .channel-meter::after {
-  height: 100%;
-  box-shadow: 0 0 8px var(--primary-glow);
-}
-
+/* Icons sit back at 16px and inherit the row's colour, so nine of them read
+   as a texture beside the labels rather than nine competing marks. */
 .channel-icon {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  color: currentColor;
+  opacity: 0.75;
+}
+
+.channel-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .channel-label {
   white-space: nowrap;
 }
 
+/* The one accent line in the rail */
 .channel.is-live {
-  background: rgba(var(--surface-tint-rgb), 0.05);
+  background: var(--surface-2);
   color: var(--text-primary);
+  box-shadow: inset 2px 0 0 var(--primary);
 }
 
 .channel.is-live .channel-icon {
-  color: var(--primary);
+  opacity: 1;
 }
 
+
+
 .sidebar.is-collapsed .channel {
-  gap: 0.55rem;
-  padding: 0.5rem 0.35rem;
-  justify-content: flex-start;
+  justify-content: center;
+  padding: 0.5rem 0;
 }
 
 /* Meter bridge at the foot of the bank */
@@ -1387,28 +1362,10 @@ input[type='range'] {
     padding: 0.4rem 0.7rem 0.35rem;
   }
 
-  .channel-meter {
-    order: 3;
-    width: 100%;
-    min-width: 26px;
-    height: 3px;
-  }
-
-  .channel-meter::after {
-    inset: 0 auto 0 0;
-    height: 100%;
-    width: 0;
-    transition: width 0.18s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .channel:hover .channel-meter::after {
-    height: 100%;
-    width: 40%;
-  }
-
-  .channel.is-live .channel-meter::after {
-    height: 100%;
-    width: 100%;
+  /* Laid on its side the live channel's marker becomes an underline, since a
+     left-edge bar reads as nothing in a horizontal bar. */
+  .channel.is-live {
+    box-shadow: inset 0 -2px 0 var(--primary);
   }
 
   .channel-label {
