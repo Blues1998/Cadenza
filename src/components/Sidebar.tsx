@@ -143,27 +143,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
 
   return (
     <aside className={`sidebar glass-panel${collapsed ? ' is-collapsed' : ''}`}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: collapsed ? 0 : '0.75rem', justifyContent: collapsed ? 'center' : 'flex-start' }}>
-        <div
+      {/* Logo plate — a square silk-screened badge, the way a desk carries the
+          manufacturer's mark above the channels. Doubles as the collapse
+          control, as it always has. */}
+      <div className="console-brand">
+        <button
+          type="button"
           onClick={toggleCollapsed}
-          role="button"
+          className="console-plate"
+          aria-expanded={!collapsed}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          style={{ width: '36px', height: '36px', flexShrink: 0, borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(255, 106, 42, 0.3)', cursor: 'pointer' }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-on-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 18V5l12-2v13" />
             <circle cx="6" cy="18" r="3" />
             <circle cx="18" cy="16" r="3" />
           </svg>
-        </div>
+        </button>
         {!collapsed && (
-          <div className="sidebar-brand-text" style={{ whiteSpace: 'nowrap' }}>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '0.5px' }}>CADENZA</h1>
-            <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Music Lab</span>
+          <div className="sidebar-brand-text">
+            <h1 className="console-wordmark">CADENZA</h1>
+            <span className="console-subtitle">Music Lab</span>
           </div>
         )}
       </div>
 
+      {/* Channels. Each lab is a strip on the desk: a level meter that lights
+          when the channel is live, then the icon, then a silk-screened label. */}
       <nav className="sidebar-nav" ref={navRef}>
         {menuItems.map((item) => {
           const isActive = activeTab === item.id;
@@ -171,34 +177,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className="btn"
+              className={`channel${isActive ? ' is-live' : ''}`}
               title={item.label}
               data-active={isActive}
-              style={{
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                width: '100%',
-                padding: collapsed ? '0.6rem 0' : undefined,
-                background: isActive ? 'rgba(255, 106, 42, 0.06)' : 'transparent',
-                borderColor: isActive ? 'var(--primary)' : 'transparent',
-                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                boxShadow: isActive ? '0 0 12px rgba(255, 106, 42, 0.1)' : 'none',
-              }}
+              aria-current={isActive ? 'page' : undefined}
             >
-              <span style={{ color: isActive ? 'var(--primary)' : 'inherit', display: 'flex', alignItems: 'center' }}>
-                {item.icon}
-              </span>
-              {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
+              <span className="channel-meter" aria-hidden="true" />
+              <span className="channel-icon">{item.icon}</span>
+              {!collapsed && <span className="channel-label">{item.label}</span>}
             </button>
           );
         })}
       </nav>
 
-      <div className="sidebar-status" title="Audio Engine Ready" style={{ padding: collapsed ? '0.6rem 0' : '0.75rem', borderRadius: '12px', background: 'rgba(var(--surface-tint-rgb),0.02)', border: '1px solid rgba(var(--surface-tint-rgb),0.04)', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: collapsed ? 'center' : 'stretch' }}>
-        {!collapsed && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Status:</div>}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', justifyContent: collapsed ? 'center' : 'flex-start' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success-glow)', flexShrink: 0 }}></span>
-          {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>Audio Engine Ready</span>}
-        </div>
+      {/* Meter bridge: the one place a status LED belongs */}
+      <div className="console-status" title="Audio engine ready">
+        <span className="console-led" aria-hidden="true" />
+        {!collapsed && (
+          <>
+            <span className="console-status-name">ENGINE</span>
+            <span className="console-status-value readout">READY</span>
+          </>
+        )}
       </div>
 
       <button

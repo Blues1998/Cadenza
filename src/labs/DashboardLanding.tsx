@@ -97,7 +97,10 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         className="glass-panel" 
         style={{ 
           padding: '2.5rem', 
-          background: 'linear-gradient(135deg, rgba(18, 22, 33, 0.6) 0%, rgba(255, 176, 138, 0.08) 100%)',
+          // Tinted through the elevation token so the wash inverts with the
+          // theme; it was a literal dark blue-grey, which greyed out the hero
+          // on the light theme.
+          background: 'linear-gradient(135deg, rgba(var(--surface-tint-rgb), 0.05) 0%, var(--primary-glow) 100%)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',

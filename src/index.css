@@ -425,6 +425,26 @@ html {
   transition: width 0.2s ease, padding 0.2s ease;
 }
 
+/* Brushed edge down the right-hand side, the way a rack unit meets its
+   neighbour. Subtle enough to read as material rather than decoration. */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(var(--surface-tint-rgb), 0.16) 12%,
+    rgba(var(--surface-tint-rgb), 0.05) 50%,
+    rgba(var(--surface-tint-rgb), 0.16) 88%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
 .sidebar.is-collapsed {
   width: 76px;
   padding: 2rem 0.6rem;
@@ -433,8 +453,191 @@ html {
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 2px;
   flex: 1;
+}
+
+/* ===== Console strip =====
+   The rail is a channel bank. Every lab is a strip: a level meter that lights
+   when the channel is live, the icon, and a silk-screened label. Uppercase and
+   letterspaced because that is how a desk labels its channels — and because at
+   this size it stops nine navigation items from reading as nine sentences. */
+.console-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.sidebar.is-collapsed .console-brand {
+  justify-content: center;
+}
+
+.console-plate {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--text-on-primary);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.console-plate:hover {
+  background: transparent;
+  color: var(--primary);
+}
+
+.console-wordmark {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.console-subtitle {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+}
+
+.channel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.channel:hover {
+  background: rgba(var(--surface-tint-rgb), 0.04);
+  color: var(--text-secondary);
+}
+
+/* The level meter. Unlit it is a dim rail; on hover it half-fills; when the
+   channel is live it runs full and glows, so the active lab is legible from
+   the meter alone when the rail is collapsed to icons. */
+.channel-meter {
+  flex-shrink: 0;
+  width: 3px;
+  height: 22px;
+  border-radius: 2px;
+  /* Tint rather than --surface-2: the light theme's surface is barely
+     distinguishable from the rail, and an unlit meter still has to read as a
+     meter. */
+  background: rgba(var(--surface-tint-rgb), 0.14);
+  overflow: hidden;
+  position: relative;
+}
+
+.channel-meter::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 0;
+  border-radius: 2px;
+  background: linear-gradient(to top, var(--primary-end), var(--primary));
+  transition: height 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.channel:hover .channel-meter::after {
+  height: 40%;
+}
+
+.channel.is-live .channel-meter::after {
+  height: 100%;
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+
+.channel-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.channel-label {
+  white-space: nowrap;
+}
+
+.channel.is-live {
+  background: rgba(var(--surface-tint-rgb), 0.05);
+  color: var(--text-primary);
+}
+
+.channel.is-live .channel-icon {
+  color: var(--primary);
+}
+
+.sidebar.is-collapsed .channel {
+  gap: 0.55rem;
+  padding: 0.5rem 0.35rem;
+  justify-content: flex-start;
+}
+
+/* Meter bridge at the foot of the bank */
+.console-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--panel-border);
+  background: rgba(var(--surface-tint-rgb), 0.02);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sidebar.is-collapsed .console-status {
+  justify-content: center;
+  padding: 0.55rem 0;
+}
+
+.console-led {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 8px var(--success-glow);
+}
+
+.console-status-name {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.console-status-value {
+  margin-left: auto;
+  color: var(--success);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
 }
 
 .main-content {
@@ -1130,15 +1333,65 @@ html {
     display: none;
   }
 
-  .sidebar-nav .btn {
+  /* Laid on its side, a channel's meter becomes an underline — the same
+     signal, in the orientation the bar actually runs. */
+  .sidebar::after {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(var(--surface-tint-rgb), 0.16) 12%,
+      rgba(var(--surface-tint-rgb), 0.05) 50%,
+      rgba(var(--surface-tint-rgb), 0.16) 88%,
+      transparent 100%
+    );
+  }
+
+  .channel {
     width: auto;
     flex-shrink: 0;
-    padding: 0.5rem 0.8rem;
-    font-size: 0.85rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.7rem 0.35rem;
+  }
+
+  .channel-meter {
+    order: 3;
+    width: 100%;
+    min-width: 26px;
+    height: 3px;
+  }
+
+  .channel-meter::after {
+    inset: 0 auto 0 0;
+    height: 100%;
+    width: 0;
+    transition: width 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .channel:hover .channel-meter::after {
+    height: 100%;
+    width: 40%;
+  }
+
+  .channel.is-live .channel-meter::after {
+    height: 100%;
+    width: 100%;
+  }
+
+  .channel-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
   }
 
   /* Decoration, and the first thing to go when space is this tight */
-  .sidebar-status {
+  .console-status {
     display: none !important;
   }
 
