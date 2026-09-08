@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Keyboard } from '../components/Keyboard';
 import { Fretboard } from '../components/Fretboard';
 import { Term } from '../components/Term';
@@ -25,6 +25,7 @@ import { useGuitarChordKeyboard } from '../hooks/useGuitarChordKeyboard';
 
 const INTRO_DISMISSED_KEY = 'theory-intro-dismissed';
 const INSTRUMENT_KEY = 'theory-instrument-view';
+const CIRCLE_OPEN_KEY = 'theory-circle-open';
 
 type InstrumentView = 'piano' | 'guitar' | 'both';
 
@@ -73,8 +74,36 @@ export const TheoryLab: React.FC = () => {
     } catch { /* private browsing — just hide for this session */ }
   };
 
-  // Circle of Fifths State
-  const [selectedCircleKey, setSelectedCircleKey] = useState<CircleKeyInfo>(CIRCLE_OF_FIFTHS[0]);
+  // Circle of Fifths — reference material folded away by default on a page
+  // this tall, but the preference sticks once you open it.
+  const [showCircle, setShowCircle] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(CIRCLE_OPEN_KEY) !== '0';
+    } catch {
+      return true;
+    }
+  });
+  const toggleCircle = () => {
+    setShowCircle(prev => {
+      try {
+        localStorage.setItem(CIRCLE_OPEN_KEY, prev ? '0' : '1');
+      } catch { /* private browsing — this session only */ }
+      return !prev;
+    });
+  };
+
+  // The circle reflects the toolbar rather than remembering its own key.
+  // It used to hold separate state, so picking F# Natural Minor up top left
+  // the circle still highlighting C major and listing C major's chords —
+  // two answers on screen to the question "what key am I in?".
+  const inMinorKey = /Minor|Blues/.test(selectedScale.name);
+  const activeCircleKey = useMemo(() => {
+    const asMinor = CIRCLE_OF_FIFTHS.find(
+      k => normalizeNoteName(k.relativeMinor.replace(/m$/, '')) === selectedRoot
+    );
+    const asMajor = CIRCLE_OF_FIFTHS.find(k => normalizeNoteName(k.name) === selectedRoot);
+    return (inMinorKey ? asMinor : asMajor) ?? asMajor ?? asMinor ?? CIRCLE_OF_FIFTHS[0];
+  }, [selectedRoot, inMinorKey]);
 
   // Compute notes to highlight based on scale or chord selections
   useEffect(() => {
@@ -231,12 +260,18 @@ export const TheoryLab: React.FC = () => {
   // ring — they represent different home notes over the same note set.
   const handleCircleKeyClick = (keyInfo: CircleKeyInfo, isMinorClick: boolean = false) => {
     reportProgress('theory-circle-key-clicked');
-    setSelectedCircleKey(keyInfo);
     setSelectedChordQuality(-1); // Switch to scale mode for key
 
     const rootName = isMinorClick ? keyInfo.relativeMinor.replace(/m$/, '') : keyInfo.name;
     setSelectedRoot(normalizeNoteName(rootName));
     setSelectedOctave(3);
+
+    // Clicking the inner ring means "the minor key", so the scale follows the
+    // ring. An already-minor choice is left alone — someone exploring
+    // harmonic minor shouldn't be dropped back to natural minor for clicking
+    // a different key.
+    if (isMinorClick && !inMinorKey) setSelectedScale(SCALE_FORMULAS[1]);
+    if (!isMinorClick && inMinorKey) setSelectedScale(SCALE_FORMULAS[0]);
 
     // Play root tonic chord of this key
     const rootMidi = noteNameToMidi(rootName, 3);
@@ -321,7 +356,7 @@ export const TheoryLab: React.FC = () => {
       const labelX_min = cx + (midR + innerR) / 2 * Math.cos(labelAngle);
       const labelY_min = cy + (midR + innerR) / 2 * Math.sin(labelAngle) + 5;
 
-      const isSelected = selectedCircleKey.name === keyInfo.name;
+      const isSelected = activeCircleKey.name === keyInfo.name;
 
       // Major and minor sectors are independently clickable — they
       // represent different home notes (relative major/minor) over the
@@ -439,18 +474,42 @@ export const TheoryLab: React.FC = () => {
       )}
       </div>
 
-      {/* Interactive Circle of Fifths */}
+      {/* Every chord this scale contains, with playable fingerings */}
+      <ScaleChords
+        rootName={selectedRoot}
+        scale={selectedScale}
+        onStrum={handleStrumVoicing}
+      />
+
+      {/* Circle of Fifths — background reference, so it sits after the things
+          the toolbar actually drives rather than between them */}
       <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-        <div style={{ width: '100%', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
-          <h3 style={{ fontSize: '1.15rem' }}>
-            <Term k="circleOfFifths">Circle of Fifths</Term>
-          </h3>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
-            A map of all 12 musical <Term k="musicalKey">keys</Term>. Neighboring slices share almost
-            all their notes, so they blend well together — click any slice to hear its home chord.
-          </p>
+        <div style={{ width: '100%', borderBottom: showCircle ? '1px solid rgba(var(--surface-tint-rgb),0.08)' : 'none', paddingBottom: showCircle ? '0.5rem' : 0, display: 'flex', gap: '1rem', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          <div>
+            <h3 style={{ fontSize: '1.15rem' }}>
+              <Term k="circleOfFifths">Circle of Fifths</Term>
+              <span style={{ fontWeight: 400, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                {' '}— currently <strong style={{ color: inMinorKey ? 'var(--secondary)' : 'var(--primary)' }}>
+                  {inMinorKey ? activeCircleKey.relativeMinor : `${activeCircleKey.name} major`}
+                </strong>
+              </span>
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
+              A map of all 12 musical <Term k="musicalKey">keys</Term>. Neighboring slices share almost
+              all their notes, so they blend well together — click any slice to hear its home chord.
+            </p>
+          </div>
+          <button
+            onClick={toggleCircle}
+            className="btn"
+            aria-expanded={showCircle}
+            style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', flexShrink: 0 }}
+          >
+            {showCircle ? 'Hide map ▴' : 'Show map ▾'}
+          </button>
         </div>
 
+        {showCircle && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
           {/* SVG Circle */}
           <svg width="320" height="320" viewBox="0 0 320 320" style={{ transform: 'rotate(0deg)' }}>
@@ -459,7 +518,9 @@ export const TheoryLab: React.FC = () => {
             <circle cx="160" cy="160" r="55" fill="var(--input-bg)" stroke="rgba(var(--surface-tint-rgb), 0.08)" strokeWidth="0.5" />
             {/* Core Label */}
             <text x="160" y="155" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">SELECTED KEY</text>
-            <text x="160" y="177" fill="var(--primary)" fontSize="18" fontWeight="bold" textAnchor="middle">{selectedCircleKey.name} Maj</text>
+            <text x="160" y="177" fill={inMinorKey ? 'var(--secondary)' : 'var(--primary)'} fontSize="18" fontWeight="bold" textAnchor="middle">
+              {inMinorKey ? activeCircleKey.relativeMinor : `${activeCircleKey.name} Maj`}
+            </text>
           </svg>
 
           {/* Key signature info */}
@@ -467,10 +528,10 @@ export const TheoryLab: React.FC = () => {
             <div style={{ background: 'rgba(var(--surface-tint-rgb),0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
               <h4 style={{ color: 'var(--primary)', marginBottom: '0.4rem' }}>About this Key</h4>
               <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <div><Term k="relativeMinor">Relative Minor</Term>: <span style={{ color: 'var(--secondary)' }}>{selectedCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
+                <div><Term k="relativeMinor">Relative Minor</Term>: <span style={{ color: 'var(--secondary)' }}>{activeCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
                 <div><Term k="accidentals">Accidentals</Term>: <span>
-                  {selectedCircleKey.sharps > 0 ? `${selectedCircleKey.sharps} ♯ (Sharps)` :
-                   selectedCircleKey.sharps < 0 ? `${Math.abs(selectedCircleKey.sharps)} ♭ (Flats)` :
+                  {activeCircleKey.sharps > 0 ? `${activeCircleKey.sharps} ♯ (Sharps)` :
+                   activeCircleKey.sharps < 0 ? `${Math.abs(activeCircleKey.sharps)} ♭ (Flats)` :
                    'None (Natural Key)'}
                 </span></div>
               </div>
@@ -478,10 +539,10 @@ export const TheoryLab: React.FC = () => {
 
             <div>
               <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                <Term k="diatonicChords">Chords that belong</Term> in the Key of {selectedCircleKey.name}
+                <Term k="diatonicChords">Chords that belong</Term> in the Key of {activeCircleKey.name}
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
-                {selectedCircleKey.chords.map((chordName, i) => {
+                {activeCircleKey.chords.map((chordName, i) => {
                   const degrees = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
                   return (
                     <button
@@ -504,14 +565,8 @@ export const TheoryLab: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
       </section>
-
-      {/* Every chord this scale contains, with playable fingerings */}
-      <ScaleChords
-        rootName={selectedRoot}
-        scale={selectedScale}
-        onStrum={handleStrumVoicing}
-      />
 
       {/* Instruments — one panel with tabs. Two full-height panels plus a
           separate "which one listens to the keyboard" bar was over a screen
