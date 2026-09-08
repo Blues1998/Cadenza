@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import type { ActiveTab } from './components/Sidebar';
 import { useTheme } from './hooks/useTheme';
@@ -15,6 +15,14 @@ import { SongHeroLab } from './labs/SongHeroLab';
 function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const { theme, toggleTheme } = useTheme();
+
+  // Labs are several screens tall and the window keeps its scroll offset when
+  // the content under it is swapped, so switching from a scrolled lab used to
+  // drop you into the middle of the next one with its header off-screen.
+  // Instant rather than smooth: this is a page change, not a jump within one.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTab]);
 
   const renderActiveContent = () => {
     switch (activeTab) {
@@ -47,8 +55,12 @@ function App() {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} toggleTheme={toggleTheme} />
 
       {/* Main Panel Content Area */}
+      {/* key on the tab so each lab mounts fresh and plays the entrance
+          transition, instead of the new content appearing mid-swap */}
       <main className="main-content">
-        {renderActiveContent()}
+        <div key={activeTab} className="lab-enter">
+          {renderActiveContent()}
+        </div>
       </main>
     </div>
   );

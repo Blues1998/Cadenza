@@ -285,6 +285,79 @@ body {
   transform: scale(0.93);
 }
 
+/* ===== Keyboard focus =====
+   Nothing in the app drew a focus ring: .btn and friends set their own
+   backgrounds and borders, which suppressed the UA default, so tabbing
+   through a lab moved an invisible cursor. :focus-visible keeps this off the
+   mouse path — a clicked button does not sprout a ring. */
+:where(a, button, select, input, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Controls that already own a rounded shell keep their own radius */
+.note-key:focus-visible,
+.pill:focus-visible {
+  outline-offset: 3px;
+}
+
+.segmented button:focus-visible {
+  outline-offset: -2px;
+}
+
+/* A lab settles in rather than snapping into place. Short and subtle: this
+   runs on every tab change, so anything longer would read as latency. */
+@keyframes labEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.lab-enter {
+  animation: labEnter 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ===== Motion =====
+   Anchored scrolling glides rather than jumping, and everything that moves
+   stops moving for anyone who has asked their system for less of it. The
+   animations are decorative — a pulsing glow, hover lifts, panel fades — so
+   they are removed outright rather than merely shortened. */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Hover lifts and press scales are movement too */
+  .glass-card:hover,
+  .btn:active,
+  .dashboard-card:hover {
+    transform: none !important;
+  }
+
+  .lab-enter {
+    animation: none;
+  }
+}
+
 /* App Shell Layout */
 .app-container {
   display: flex;
