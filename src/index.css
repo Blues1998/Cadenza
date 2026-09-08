@@ -291,6 +291,35 @@ body {
   min-height: 100vh;
 }
 
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex-shrink: 0;
+  width: 260px;
+  padding: 2rem 1rem;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  left: 0;
+  border-right: 1px solid var(--panel-border);
+  border-radius: 0 16px 16px 0;
+  overflow: hidden;
+  transition: width 0.2s ease, padding 0.2s ease;
+}
+
+.sidebar.is-collapsed {
+  width: 76px;
+  padding: 2rem 0.6rem;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
 .main-content {
   flex: 1;
   padding: 2rem;
@@ -821,6 +850,13 @@ body {
 }
 
 /* Compact choice pills — the feeling-named scales and chords */
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
 .pill {
   font-family: inherit;
   font-size: 0.76rem;
@@ -873,6 +909,104 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
+}
+
+/* ===== Narrow screens: the shell stops being a side-by-side layout =====
+   A 260px sidebar next to 2rem of padding leaves about 66px of content on a
+   390px phone, which wrapped body text to one word per line. Below 900px the
+   nav becomes a scrollable bar across the top and the content gets the whole
+   width. */
+@media (max-width: 900px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .sidebar,
+  .sidebar.is-collapsed {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    width: auto;
+    height: auto;
+    padding: 0.6rem 0.8rem;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--panel-border);
+    border-radius: 0 0 16px 16px;
+    overflow: visible;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .sidebar-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sidebar-nav .btn {
+    width: auto;
+    flex-shrink: 0;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  /* Decoration, and the first thing to go when space is this tight */
+  .sidebar-status {
+    display: none !important;
+  }
+
+  /* The wordmark costs more than half the bar on a phone; the logo carries
+     the brand and the nav gets the room. */
+  .sidebar-brand-text {
+    display: none;
+  }
+
+  .main-content {
+    padding: 1rem;
+    /* The centring margin is a main-axis margin while the shell is a row, but
+       becomes a cross-axis auto margin once it stacks — and an auto margin on
+       the cross axis cancels stretch, leaving the box sized by its widest
+       content instead of by the screen. */
+    margin-inline: 0;
+    width: 100%;
+  }
+}
+
+/* Phone-width toolbar: the note strip and the feeling pills scroll sideways
+   rather than wrapping into a bar that eats a third of the screen. */
+@media (max-width: 640px) {
+  .toolbar-label,
+  .hide-sm {
+    display: none;
+  }
+
+  .note-strip,
+  .pill-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    /* Scrolling chips need to reach the panel edge to look scrollable */
+    margin-inline: -0.2rem;
+    padding-inline: 0.2rem;
+  }
+
+  .note-strip::-webkit-scrollbar,
+  .pill-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .note-key,
+  .pill,
+  .segmented {
+    flex-shrink: 0;
+  }
 }
 
 /* ===== Beginner glossary tooltips (<Term> component) ===== */

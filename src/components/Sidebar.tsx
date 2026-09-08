@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Theme } from '../hooks/useTheme';
 import { IconSun, IconMoon } from './Icons';
 
@@ -31,6 +31,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
       return !prev;
     });
   };
+
+  // When the nav is the horizontal bar used on narrow screens it can scroll
+  // past the active item, leaving no on-screen sign of which lab you are in.
+  // Only nudge it when it actually scrolls, so the vertical desktop rail is
+  // left alone.
+  const navRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav || nav.scrollWidth <= nav.clientWidth) return;
+    const active = nav.querySelector<HTMLElement>('[data-active="true"]');
+    if (!active) return;
+    active.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  }, [activeTab]);
 
   const menuItems = [
     {
@@ -129,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
   ];
 
   return (
-    <aside className="glass-panel" style={{ width: collapsed ? '76px' : '260px', padding: collapsed ? '2rem 0.6rem' : '2rem 1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', borderRight: '1px solid var(--panel-border)', borderRadius: '0 16px 16px 0', height: '100vh', position: 'sticky', top: 0, left: 0, transition: 'width 0.2s ease, padding 0.2s ease', overflow: 'hidden' }}>
+    <aside className={`sidebar glass-panel${collapsed ? ' is-collapsed' : ''}`}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: collapsed ? 0 : '0.75rem', justifyContent: collapsed ? 'center' : 'flex-start' }}>
         <div
           onClick={toggleCollapsed}
@@ -144,14 +157,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
           </svg>
         </div>
         {!collapsed && (
-          <div style={{ whiteSpace: 'nowrap' }}>
+          <div className="sidebar-brand-text" style={{ whiteSpace: 'nowrap' }}>
             <h1 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '0.5px' }}>CADENZA</h1>
             <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Music Lab</span>
           </div>
         )}
       </div>
 
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+      <nav className="sidebar-nav" ref={navRef}>
         {menuItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
@@ -160,6 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
               onClick={() => setActiveTab(item.id)}
               className="btn"
               title={item.label}
+              data-active={isActive}
               style={{
                 justifyContent: collapsed ? 'center' : 'flex-start',
                 width: '100%',
@@ -179,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
         })}
       </nav>
 
-      <div title="Audio Engine Ready" style={{ padding: collapsed ? '0.6rem 0' : '0.75rem', borderRadius: '12px', background: 'rgba(var(--surface-tint-rgb),0.02)', border: '1px solid rgba(var(--surface-tint-rgb),0.04)', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: collapsed ? 'center' : 'stretch' }}>
+      <div className="sidebar-status" title="Audio Engine Ready" style={{ padding: collapsed ? '0.6rem 0' : '0.75rem', borderRadius: '12px', background: 'rgba(var(--surface-tint-rgb),0.02)', border: '1px solid rgba(var(--surface-tint-rgb),0.04)', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: collapsed ? 'center' : 'stretch' }}>
         {!collapsed && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Status:</div>}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', justifyContent: collapsed ? 'center' : 'flex-start' }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success-glow)', flexShrink: 0 }}></span>

@@ -93,7 +93,7 @@ export const ScaleControlBar: React.FC<ScaleControlBarProps> = ({
           style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem' }}
         >
           <PlayIcon />
-          Play {selectionName}
+          Play <span className="hide-sm">{selectionName}</span>
         </button>
       </div>
 
@@ -112,7 +112,7 @@ export const ScaleControlBar: React.FC<ScaleControlBarProps> = ({
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+        <div className="pill-row">
           {chordMode
             ? CHORD_QUALITIES.map((chord, idx) => (
                 <button
