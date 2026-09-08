@@ -520,6 +520,7 @@ html {
 }
 
 .sidebar-nav {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -603,6 +604,11 @@ html {
   align-items: center;
   flex-shrink: 0;
   opacity: 0.75;
+  /* Matches the row's own colour transition, so the icon and its label change
+     together when a row is hovered or goes live. (It does not soften the flash
+     below — a cancelled animation gives a transition nothing to start from.
+     That is why the flash is not hung off :hover at all.) */
+  transition: color 180ms ease-out, opacity 180ms ease-out;
 }
 
 .channel-icon svg {
@@ -614,18 +620,121 @@ html {
   white-space: nowrap;
 }
 
-/* The one accent line in the rail */
+/* The live channel keeps only its ink. Everything that used to draw the plate
+   — the surface, the lift, the orange bar — is one element that slides between
+   rows, so moving between labs reads as the same marker travelling rather than
+   as one row going dark and another lighting up. */
 .channel.is-live {
-  background: var(--surface-2);
   color: var(--text-primary);
-  border-radius: 8px;
-  box-shadow: inset 3px 0 0 var(--primary), var(--elevation-low);
 }
 
 .channel.is-live .channel-icon {
   opacity: 1;
 }
 
+.channel-plate {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 8px;
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--primary), var(--elevation-low);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Only once it has been placed, so it does not fly in from the corner of the
+   rail on load. The travel is longer than the segmented control's — top of the
+   rail to the bottom is most of the screen — so it gets a little more time;
+   the same easing, which leaves fast and arrives soft. */
+.channel-plate.is-placed {
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The rows sit over the plate, which is the surface they appear to sit on.
+   Raised on the rows themselves, which are already positioned — positioning
+   the groups instead would make each group the offset parent its rows are
+   measured against, and the plate would be placed relative to the wrong box. */
+.channel {
+  z-index: 1;
+}
+
+/* ===== The rail's icons =====
+   Entering a channel flashes its icon to the accent and lets it fall back. It
+   is the one place in the app where the accent appears without meaning "this
+   is live" — affordable precisely because it is gone again before it can be
+   read as a state.
+
+   The trigger is .is-flashing, put on by the component and taken off when the
+   animation says it has finished; see the comment on startFlash. On :hover
+   these are cancelled the moment the pointer moves on, and an icon caught at
+   full orange snaps back to grey.
+   
+   One duration for all four. The colour and the movement are one gesture, and
+   they have to end together — the row's class is cleared by whichever ends
+   first, so a longer animation would simply be cut off. */
+.channel {
+  --channel-flash: 520ms;
+}
+
+@keyframes channelIconFlash {
+  30%, 52% {
+    color: var(--primary);
+    opacity: 1;
+  }
+}
+
+.channel.is-flashing .channel-icon {
+  animation: channelIconFlash var(--channel-flash) ease-out;
+}
+
+/* Three of them do a little more, and they are the three whose icon is a
+   picture of a thing that moves. The rest just flash: an animation on every
+   row would be a rail that fidgets. */
+
+/* The mic goes live. Scaled from the capsule's own centre, not the icon's, so
+   it swells in place instead of drifting up the stand. */
+@keyframes channelMicPulse {
+  45% {
+    transform: scale(1.16);
+  }
+}
+
+.channel.is-flashing[data-nav='tuner'] .channel-icon svg > path:first-of-type {
+  transform-box: view-box;
+  transform-origin: 12px 8.5px;
+  animation: channelMicPulse var(--channel-flash) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The clock ticks. Both hands are one polyline, so rotating it about the
+   dial's centre moves the pair together the way a real face does. It sweeps
+   and returns rather than advancing, since there is no state to advance to. */
+@keyframes channelClockTick {
+  55% {
+    transform: rotate(42deg);
+  }
+}
+
+.channel.is-flashing[data-nav='rhythm'] .channel-icon svg > polyline {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+  animation: channelClockTick var(--channel-flash) cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+/* The note rises. The whole glyph, because a beamed note that left its heads
+   behind would come apart. */
+@keyframes channelNoteRise {
+  45% {
+    transform: translateY(-3px);
+  }
+}
+
+.channel.is-flashing[data-nav='tabs'] .channel-icon svg {
+  animation: channelNoteRise var(--channel-flash) cubic-bezier(0.22, 1, 0.36, 1);
+}
 
 
 .sidebar.is-collapsed .channel {
@@ -1658,9 +1767,10 @@ input[type='range'] {
     padding: 0.4rem 0.7rem 0.35rem;
   }
 
-  /* Laid on its side the live channel's marker becomes an underline, since a
-     left-edge bar reads as nothing in a horizontal bar. */
-  .channel.is-live {
+  /* Laid on its side the marker becomes an underline, since a left-edge bar
+     reads as nothing in a horizontal bar. The plate travels sideways here for
+     the same reason it travels down the rail on a desktop. */
+  .channel-plate {
     box-shadow: inset 0 -2px 0 var(--primary);
   }
 

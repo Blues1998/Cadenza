@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Theme } from '../hooks/useTheme';
 import type { ActiveTab } from './navGroups';
 import { IconSun, IconMoon } from './Icons';
@@ -15,6 +15,12 @@ interface SidebarProps {
 }
 
 const COLLAPSED_KEY = 'sidebar-collapsed';
+
+// Names of the rail's hover animations, so an animationend from anything else
+// cannot clear the flash early.
+const FLASH_ANIMATIONS = new Set([
+  'channelIconFlash', 'channelMicPulse', 'channelClockTick', 'channelNoteRise'
+]);
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme, toggleTheme }) => {
   // Collapsed = icon-only rail; the preference persists across sessions
@@ -48,6 +54,72 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
     active.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
   }, [activeTab]);
 
+  // The live channel's plate is one element that travels, rather than a
+  // background and an orange bar switching off in one row and on in another.
+  // Measured off the button itself so the same code serves the vertical rail
+  // and the horizontal bar a phone gets — there the plate slides sideways.
+  const [plate, setPlate] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  // The first placement is a jump. Without this the plate would fly in from
+  // the corner of the rail every time the app loads.
+  const placed = useRef(false);
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const measure = () => {
+      const active = nav.querySelector<HTMLElement>('[data-active="true"]');
+      if (!active) {
+        setPlate(null);
+        return;
+      }
+      setPlate({ x: active.offsetLeft, y: active.offsetTop, w: active.offsetWidth, h: active.offsetHeight });
+    };
+
+    measure();
+    // The rail changes width when it collapses, the labels reflow when a web
+    // font lands, and the bar rewraps when a phone is turned. A plate measured
+    // against the old geometry would sit off its row.
+    const observer = new ResizeObserver(measure);
+    observer.observe(nav);
+    // The groups and the rows, by selector rather than by walking children —
+    // the plate is a child of the nav too, and observing the thing this
+    // measurement moves would have it chasing itself.
+    for (const el of nav.querySelectorAll('.channel-group, .channel')) observer.observe(el);
+    return () => observer.disconnect();
+  }, [activeTab, collapsed]);
+
+  useLayoutEffect(() => {
+    if (plate) placed.current = true;
+  }, [plate]);
+
+  // Entering a row flashes its icon. Driven by a class the row keeps until the
+  // animation reports itself finished, rather than by :hover — hung off :hover
+  // it is cancelled the instant the pointer leaves, and sweeping down the rail
+  // cuts every icon from full orange back to grey mid-flash. A flash is
+  // something that happened, not a state the pointer is holding open, so it
+  // gets to finish. Several can be running at once, which is what a sweep
+  // should look like.
+  const [flashing, setFlashing] = useState<ReadonlySet<ActiveTab>>(new Set());
+
+  const startFlash = (id: ActiveTab) => {
+    setFlashing(prev => {
+      if (prev.has(id)) return prev;   // already running; do not stack
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
+
+  const endFlash = (id: ActiveTab) => {
+    setFlashing(prev => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
   return (
     <aside className={`sidebar${collapsed ? ' is-collapsed' : ''}`}>
       {/* Logo plate — a square silk-screened badge, the way a desk carries the
@@ -74,6 +146,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
           left edge. Collapsed, the group headings become hairlines: the
           grouping survives, the words do not. */}
       <nav className="sidebar-nav" ref={navRef}>
+        {plate && (
+          <span
+            className={`channel-plate${placed.current ? ' is-placed' : ''}`}
+            style={{ transform: `translate(${plate.x}px, ${plate.y}px)`, width: `${plate.w}px`, height: `${plate.h}px` }}
+            aria-hidden="true"
+          />
+        )}
         {GROUPS.map((group, i) => (
           <div className="channel-group" key={group.name ?? i}>
             {group.name && <span className="channel-group-label">{group.name}</span>}
@@ -83,8 +162,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`channel${isActive ? ' is-live' : ''}`}
+                  className={`channel${isActive ? ' is-live' : ''}${flashing.has(item.id) ? ' is-flashing' : ''}`}
+                  onMouseEnter={() => startFlash(item.id)}
+                  onAnimationEnd={e => {
+                    if (FLASH_ANIMATIONS.has(e.animationName)) endFlash(item.id);
+                  }}
                   title={item.label}
+                  data-nav={item.id}
                   data-active={isActive}
                   aria-current={isActive ? 'page' : undefined}
                 >
