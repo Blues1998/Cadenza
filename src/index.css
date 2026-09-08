@@ -1467,6 +1467,131 @@ input[type='range'] {
   gap: 1.5rem;
 }
 
+/* ===== Mastery strip =====
+   A row of bars, one per item in a drill, showing what is actually known.
+   The value is drawn twice — the bar grows and its colour warms — because
+   the reading that matters is the profile of the whole row, the dips more
+   than the numbers. */
+.mastery {
+  display: flex;
+  flex-direction: column;
+}
+
+.mastery-head {
+  margin-bottom: 0.5rem;
+}
+
+/* The reset sits at the far end of the caption rather than beside the label,
+   so it reads as a control on the panel and not as part of the reading. */
+.mastery-reset {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 140ms ease, color 140ms ease;
+}
+
+/* Destructive and rarely wanted: it appears when you are already looking at
+   the strip, and stays available to the keyboard the whole time. */
+.mastery:hover .mastery-reset,
+.mastery-reset:focus-visible {
+  opacity: 1;
+}
+
+.mastery-reset:hover {
+  color: var(--text-primary);
+}
+
+.mastery-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.mastery-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.3rem;
+}
+
+.mastery-bar {
+  position: relative;
+  display: block;
+  height: 34px;
+  border-radius: 3px;
+  /* A visible floor. The bar has to read as "this far up out of full", which
+     needs the empty part to be there rather than merely absent. */
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.mastery-bar-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--m, 0) * 100%);
+  border-radius: 2px;
+  background: var(--text-muted);
+  transition: height 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The accent laid over the grey, faded in across the stretch of the scale that
+   matters rather than across the whole of it — see WARM_FLOOR in the component.
+   Two layers rather than a colour interpolation: the grey has to be a real
+   floor, or an item you have just started is indistinguishable from a dim
+   orange one. */
+.mastery-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--primary);
+  opacity: var(--warm, 0);
+  transition: opacity 340ms ease;
+}
+
+.mastery-tick {
+  font-size: 0.55rem;
+  line-height: 1;
+  text-align: center;
+  color: var(--text-muted);
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 140ms ease, opacity 140ms ease;
+}
+
+/* Not yet unlocked: an outline, so the road ahead is legible as shape without
+   competing with the part of the row that carries information. */
+.mastery-cell.is-locked .mastery-bar {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--panel-border);
+}
+
+.mastery-cell.is-locked .mastery-tick {
+  opacity: 0.3;
+}
+
+/* The item just answered. No animation — the bar underneath has already moved,
+   and this only has to say which one moved. */
+.mastery-cell.is-latest .mastery-tick {
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+.mastery-cell.is-latest .mastery-bar {
+  box-shadow: inset 0 0 0 1px var(--primary-glow);
+}
+
 /* ===== Narrow screens: the shell stops being a side-by-side layout =====
    A 260px sidebar next to 2rem of padding leaves about 66px of content on a
    390px phone, which wrapped body text to one word per line. Below 900px the
