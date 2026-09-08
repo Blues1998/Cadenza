@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import type { ActiveTab } from './components/Sidebar';
 import { useTheme } from './hooks/useTheme';
 import { DashboardLanding } from './labs/DashboardLanding';
+import { JourneyLab } from './labs/JourneyLab';
 import { EarTrainingLab } from './labs/EarTrainingLab';
 import { TheoryLab } from './labs/TheoryLab';
 import { PlayLab } from './labs/PlayLab';
@@ -28,6 +29,8 @@ function App() {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardLanding setActiveTab={setActiveTab} />;
+      case 'journey':
+        return <JourneyLab setActiveTab={setActiveTab} />;
       case 'ear-training':
         return <EarTrainingLab />;
       case 'theory':
