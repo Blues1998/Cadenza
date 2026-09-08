@@ -145,7 +145,7 @@ export const TunerLab: React.FC = () => {
               </div>
               <h3 style={{ fontSize: '1.25rem' }}>Microphone Access Required</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '300px' }}>To use the real-time tuner and singing matching game, please activate your microphone input.</p>
-              <button onClick={initMicrophone} className="btn btn-secondary" style={{ marginTop: '0.5rem' }}>
+              <button onClick={initMicrophone} className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
                 Allow Microphone Access
               </button>
               {micError && (
@@ -243,9 +243,47 @@ export const TunerLab: React.FC = () => {
           </h3>
 
           {!gameMode ? (
-            <div style={{ margin: 'auto 0', textAlign: 'center', color: 'var(--text-secondary)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <p>Practice tuning your guitar strings or singing clean scales.</p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Guitar strings: E2 (82.4 Hz), A2 (110.0 Hz), D3 (146.8 Hz), G3 (196.0 Hz), B3 (246.9 Hz), E4 (329.6 Hz).</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.55 }}>
+              <p style={{ margin: 0 }}>
+                Play one string at a time and watch the gauge. Tune <em>up</em> to the note rather than
+                down onto it — a string arriving from below holds its pitch better than one left slack.
+              </p>
+
+              {/* Standard tuning, low to high. A reference you read while
+                  turning a peg, so it is a table and not a sentence. */}
+              <div>
+                <span className="field-label">Standard tuning (low → high)</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(72px, 1fr))', gap: '0.4rem' }}>
+                  {[
+                    ['6th', 'E2', '82.4'],
+                    ['5th', 'A2', '110.0'],
+                    ['4th', 'D3', '146.8'],
+                    ['3rd', 'G3', '196.0'],
+                    ['2nd', 'B3', '246.9'],
+                    ['1st', 'E4', '329.6']
+                  ].map(([string, note, hz]) => (
+                    <div
+                      key={note}
+                      style={{
+                        background: 'rgba(var(--surface-tint-rgb),0.03)',
+                        border: '1px solid rgba(var(--surface-tint-rgb),0.06)',
+                        borderRadius: '10px',
+                        padding: '0.5rem 0.4rem',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{string}</div>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>{note}</div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{hz} Hz</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingTop: '0.75rem' }}>
+                Singing instead? Switch to <strong style={{ color: 'var(--text-secondary)' }}>Practice Game</strong> and the lab
+                gives you a note to hold until you land it.
+              </p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '1rem', justifyContent: 'center' }}>

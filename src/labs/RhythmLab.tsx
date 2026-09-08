@@ -576,9 +576,30 @@ export const RhythmLab: React.FC = () => {
           </h3>
 
           {!isGameMode ? (
-            <div style={{ margin: 'auto 0', textAlign: 'center', color: 'var(--text-secondary)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <p>Practice timing independently with the metronome ticks.</p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Tip: Press <kbd className="key-hint">Spacebar</kbd> to toggle the metronome on/off.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.55 }}>
+              <p style={{ margin: 0 }}>
+                The click is a reference, not a race. Play along with it and listen for the moment
+                your note and the tick stop being two sounds and become one.
+              </p>
+
+              {[
+                ['Start slower than feels necessary', 'Play the part at a tempo where you never rush. Speed added to a shaky part just makes it shaky faster.'],
+                ['Move up in small steps', 'When a pass is clean twice in a row, add 5 BPM. That is what the −5 / +5 buttons are sized for.'],
+                ['Listen to the downbeat', 'Beat 1 is pitched higher than the rest. If it lands somewhere unexpected, you have drifted — stop and restart rather than catching up.'],
+                ['Try dropping the click', 'Once a tempo is comfortable, count two bars with the metronome and two without. Holding steady through the silence is the actual skill.']
+              ].map(([title, body]) => (
+                <div key={title} style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
+                  <span aria-hidden="true" style={{ flexShrink: 0, width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', marginTop: '0.5rem' }} />
+                  <span>
+                    <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{title}.</strong> {body}
+                  </span>
+                </div>
+              ))}
+
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingTop: '0.75rem' }}>
+                Press <kbd className="key-hint">Spacebar</kbd> to start and stop without reaching for the mouse.
+                Switch to <strong style={{ color: 'var(--text-secondary)' }}>Game</strong> to have your taps measured against the click.
+              </p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: 1, gap: '1rem' }}>
