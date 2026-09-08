@@ -2,6 +2,7 @@
 // anything else that needs alphaTab to play back real guitar sound (e.g.
 // the Ear Training lab's "practice from my tabs" mode).
 import { model } from '@coderline/alphatab';
+import { assetUrl } from './assetUrl';
 
 // Real recorded classical/steel guitar samples (4 velocity layers + fret
 // noise) from the "Nylon and Steel Guitars-4U" soundfont (soundfonts4u,
@@ -9,7 +10,7 @@ import { model } from '@coderline/alphatab';
 // Its presets were rebanked from 0 to 1 (see scripts/fetch-guitar-soundfont.mjs)
 // purely to avoid colliding with the base soundfont's bank-0 GM programs
 // 0-6 (pianos) when both are loaded together.
-export const GUITAR_SOUNDFONT_URL = '/instruments/soundfonts4u-nylon-steel-guitars-bank1.sf2';
+export const GUITAR_SOUNDFONT_URL = assetUrl('instruments/soundfonts4u-nylon-steel-guitars-bank1.sf2');
 
 export interface GuitarTone {
   bank: number;

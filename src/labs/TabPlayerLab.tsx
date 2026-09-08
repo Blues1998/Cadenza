@@ -13,6 +13,7 @@ import {
 } from '../utils/tabLibrary';
 import type { TabLibraryEntry } from '../utils/tabLibrary';
 import { GUITAR_SOUNDFONT_URL, GUITAR_TONES, DEFAULT_GUITAR_TONE, toneKey, setScoreInstrument } from '../utils/guitarTones';
+import { assetUrl } from '../utils/assetUrl';
 import { useMicPitch } from '../hooks/useMicPitch';
 import { NOTE_NAMES } from '../utils/musicTheory';
 import { IconCheck, IconX } from '../components/Icons';
@@ -387,12 +388,12 @@ export const TabPlayerLab: React.FC = () => {
 
     const api = new AlphaTabApi(viewport, {
       core: {
-        fontDirectory: '/font/'
+        fontDirectory: assetUrl('font/')
       },
       player: {
         enablePlayer: true,
         playerMode: 'EnabledAutomatic',
-        soundFont: '/soundfont/sonivox.sf2',
+        soundFont: assetUrl('soundfont/sonivox.sf2'),
         enableCursor: true,
         // A non-Off mode is required for alphaTab to dispatch scroll updates
         // at all, but the actual behavior comes entirely from

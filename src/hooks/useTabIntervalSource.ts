@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { AlphaTabApi } from '@coderline/alphatab';
 import { GUITAR_SOUNDFONT_URL, DEFAULT_GUITAR_TONE, setScoreInstrument } from '../utils/guitarTones';
+import { assetUrl } from '../utils/assetUrl';
 import { extractIntervalCandidates } from '../utils/tabIntervalSource';
 import type { TabIntervalCandidate } from '../utils/tabIntervalSource';
 import { listLibraryTabs, loadTabBlob } from '../utils/tabLibrary';
@@ -72,11 +73,11 @@ export function useTabIntervalSource(): TabIntervalSource {
     containerRef.current = container;
 
     const api = new AlphaTabApi(container, {
-      core: { fontDirectory: '/font/' },
+      core: { fontDirectory: assetUrl('font/') },
       player: {
         enablePlayer: true,
         playerMode: 'EnabledAutomatic',
-        soundFont: '/soundfont/sonivox.sf2',
+        soundFont: assetUrl('soundfont/sonivox.sf2'),
         enableCursor: false
       }
     });
