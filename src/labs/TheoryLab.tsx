@@ -461,14 +461,14 @@ export const TheoryLab: React.FC = () => {
         <>
           <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</strong>
           {' '}sounds <strong style={{ color: 'var(--secondary)' }}>{(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}</strong>.
-          {' '}It's the notes <strong style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong> played
+          {' '}It's the notes <strong className="readout" style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong> played
           at the same time, built up from the home note {selectedRoot}. Press play and listen for that feeling.
         </>
       ) : (
         <>
           <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {selectedScale.name}</strong> — start
           at the home note <strong style={{ color: 'var(--warning)' }}>{selectedRoot}</strong> and
-          climb: <strong style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>.
+          climb: <strong className="readout" style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>.
           {' '}Listen for {SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}
         </>
       )}

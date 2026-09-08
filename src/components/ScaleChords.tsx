@@ -100,7 +100,7 @@ const ChordCard: React.FC<{ chord: ScaleChord; onStrum: (m: number[]) => void }>
         <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--secondary)' }}>{chord.numeral}</span>
       </div>
 
-      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+      <span className="readout" style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
         {chord.noteNames.map(prettyNote).join(' · ')}
       </span>
 

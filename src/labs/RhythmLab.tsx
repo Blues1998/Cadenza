@@ -129,7 +129,7 @@ const TimingGraph: React.FC<{
         g.setLineDash([]);
 
         g.fillStyle = colors[t.rating];
-        g.font = '10px monospace';
+        g.font = "10px 'JetBrains Mono', monospace";
         g.textAlign = 'center';
         const label = `${t.differenceMs > 0 ? '+' : ''}${t.differenceMs}ms`;
         g.fillText(label, (x + mx) / 2, 34);
@@ -137,7 +137,7 @@ const TimingGraph: React.FC<{
 
       // Live latency readout (what the grader is compensating for)
       g.fillStyle = colors.text;
-      g.font = '9px monospace';
+      g.font = "9px 'JetBrains Mono', monospace";
       g.textAlign = 'left';
       g.fillText(`output latency: ${Math.round(audio.getOutputLatency() * 1000)}ms`, 6, h - 4);
       g.textAlign = 'right';
@@ -452,7 +452,7 @@ export const RhythmLab: React.FC = () => {
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <h3 style={{ fontSize: '1.15rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
             <span>Metronome Console</span>
-            <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{bpm} BPM</span>
+            <span className="readout" style={{ color: 'var(--primary)', fontWeight: 600 }}>{bpm} BPM</span>
           </h3>
 
           {/* Tempo Controls */}
@@ -624,7 +624,7 @@ export const RhythmLab: React.FC = () => {
                   >
                     Slower
                   </button>
-                  <strong style={{ color: 'var(--primary)', fontSize: '0.9rem', fontFamily: 'monospace' }}>
+                  <strong style={{ color: 'var(--primary)', fontSize: '0.9rem', fontFamily: 'var(--font-mono)' }}>
                     {bpm} BPM ({getTempoLabel(bpm)})
                   </strong>
                   <button 
@@ -707,7 +707,7 @@ export const RhythmLab: React.FC = () => {
                           }}
                         >
                           <span style={{ textTransform: 'uppercase', fontWeight: 600, fontSize: '0.75rem', color }}>{hit.rating}</span>
-                          <span style={{ fontFamily: 'monospace' }}>
+                          <span style={{ fontFamily: 'var(--font-mono)' }}>
                             {hit.differenceMs > 0 ? `+${hit.differenceMs}` : hit.differenceMs}ms
                           </span>
                         </div>

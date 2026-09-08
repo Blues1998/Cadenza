@@ -104,7 +104,7 @@ export const NoteHighway: React.FC<NoteHighwayProps> = ({ events, minMidi, maxMi
           ctx.lineWidth = 2;
           ctx.stroke();
           ctx.fillStyle = e.rating ? COLORS.text : color;
-          ctx.font = 'bold 11px monospace';
+          ctx.font = "bold 11px 'JetBrains Mono', monospace";
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(label, x, y + 1);
@@ -127,7 +127,7 @@ export const NoteHighway: React.FC<NoteHighwayProps> = ({ events, minMidi, maxMi
           ctx.lineWidth = 2;
           ctx.stroke();
           ctx.fillStyle = e.rating ? COLORS.text : color;
-          ctx.font = 'bold 13px monospace';
+          ctx.font = "bold 13px 'JetBrains Mono', monospace";
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(`${label} ${e.direction === 'down' ? '↓' : '↑'}`, x, y + badgeH / 2 + 1);

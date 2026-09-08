@@ -1,7 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  /* Three faces, three jobs. Space Grotesk has enough character to carry a
+     title and too much to read a paragraph in; Geist is the neutral that
+     everything else is set in; JetBrains Mono is reserved for musical
+     readouts — "A minor · 7th fret · 92 BPM" — where the figures should line
+     up and read as instrument data rather than prose. */
+  --font-display: 'Space Grotesk', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-ui: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  font-family: var(--font-ui);
   line-height: 1.5;
   font-weight: 400;
 
@@ -9,6 +18,19 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings carry the display face; body copy never does. */
+h1, h2, h3, h4, .lab-title {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+/* Musical readouts: note names, frets, tempo, frequencies, cents. */
+.readout {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 /* ===== Theme tokens =====
@@ -241,9 +263,9 @@ body {
   color: var(--input-text);
   border: 1px solid rgba(var(--surface-tint-rgb), 0.14);
   border-radius: 4px;
-  font-family: inherit;
+  font-family: var(--font-mono);
   font-style: normal;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   line-height: 1.6;
 }

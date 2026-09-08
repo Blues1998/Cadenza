@@ -339,7 +339,7 @@ const RatioExplorer: React.FC = () => {
         <button onClick={sounding ? stopDuo : startDuo} className={`btn ${sounding ? 'btn-secondary' : 'btn-primary'}`} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
           {sounding ? <><IconStop /> Stop Sound</> : <><IconPlay /> Sound On (two sine tones)</>}
         </button>
-        <span style={{ fontSize: '0.85rem', fontFamily: 'monospace', color: locked ? 'var(--success)' : 'var(--text-secondary)' }}>
+        <span style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)', color: locked ? 'var(--success)' : 'var(--text-secondary)' }}>
           {BASE_HZ} Hz + {f2.toFixed(1)} Hz · ratio {ratio.toFixed(3)} ·
           {' '}nearest {closest[0]}:{closest[1]} ({closest[2]}) {closestCents >= 0 ? '+' : ''}{closestCents.toFixed(0)}¢
           {locked ? ' — locked in!' : ''}
@@ -395,7 +395,7 @@ const TemperamentTable: React.FC = () => (
       in C sounds sour in E. The fix (≈1600s): split the octave into 12 <em>equal</em> steps of
       2<sup>1/12</sup> ≈ 1.0595 each. Then every interval is slightly wrong in <em>every</em> key by the
       same tiny amount — a lossy compression scheme trading perfection for universality. It works because of a
-      numerical coincidence: <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>2^(7/12) = 1.4983 ≈ 3/2</span>.
+      numerical coincidence: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>2^(7/12) = 1.4983 ≈ 3/2</span>.
       The error, measured in cents (1 semitone = 100¢):
     </p>
 
@@ -416,10 +416,10 @@ const TemperamentTable: React.FC = () => (
             return (
               <tr key={row.name} style={{ borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
                 <td style={{ padding: '0.4rem 0.6rem', fontWeight: 600 }}>{row.name}</td>
-                <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'monospace' }}>{row.p}:{row.q}</td>
-                <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'monospace' }}>{justCents.toFixed(1)}</td>
-                <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'monospace' }}>{row.semis * 100}</td>
-                <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'monospace', color: bad ? 'var(--warning)' : 'var(--success)' }}>
+                <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'var(--font-mono)' }}>{row.p}:{row.q}</td>
+                <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'var(--font-mono)' }}>{justCents.toFixed(1)}</td>
+                <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'var(--font-mono)' }}>{row.semis * 100}</td>
+                <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'var(--font-mono)', color: bad ? 'var(--warning)' : 'var(--success)' }}>
                   {error >= 0 ? '+' : ''}{error.toFixed(1)}¢
                 </td>
                 <td style={{ padding: '0.4rem 0.6rem', display: 'flex', gap: '0.35rem' }}>
@@ -505,7 +505,7 @@ const ModularCircle: React.FC = () => {
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
         Arrange the 12 notes in a circle (chromatic order) and repeatedly jump up a perfect fifth —
-        7 semitones. Because <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>gcd(7, 12) = 1</span>,
+        7 semitones. Because <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>gcd(7, 12) = 1</span>,
         the walk visits <em>every</em> note exactly once before returning home: that's the entire reason the
         circle of fifths exists. Try other step sizes and watch composite steps get stuck in small subgroups.
       </p>

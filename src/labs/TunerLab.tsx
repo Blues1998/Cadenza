@@ -169,7 +169,7 @@ export const TunerLab: React.FC = () => {
                 >
                   {pitchData ? pitchData.note : '--'}
                 </div>
-                <div style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginTop: '0.5rem', fontFamily: 'monospace' }}>
+                <div style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginTop: '0.5rem', fontFamily: 'var(--font-mono)' }}>
                   {pitchData ? `${pitchData.frequency.toFixed(1)} Hz` : 'Silent'}
                 </div>
               </div>
@@ -274,7 +274,7 @@ export const TunerLab: React.FC = () => {
                     >
                       <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{string}</div>
                       <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>{note}</div>
-                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{hz} Hz</div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{hz} Hz</div>
                     </div>
                   ))}
                 </div>

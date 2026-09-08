@@ -514,7 +514,7 @@ export const PlayLab: React.FC = () => {
                 <div style={{ fontSize: '3.2rem', fontWeight: 700, lineHeight: 1.1, color: pitch ? (currentTargetPc !== null && ((pitch.midi % 12) + 12) % 12 === currentTargetPc ? 'var(--success)' : 'var(--primary)') : 'var(--text-muted)' }}>
                   {pitch ? pitch.note : '--'}
                 </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
                   {pitch ? `${pitch.frequency.toFixed(1)} Hz · ${pitch.cents > 0 ? '+' : ''}${pitch.cents}c` : 'silent'}
                 </div>
               </div>

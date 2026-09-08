@@ -1032,7 +1032,7 @@ export const TabPlayerLab: React.FC = () => {
                 style={{ flex: 1 }}
               />
               <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, width: '3.2rem', textAlign: 'right' }}>
-                {tempoPct}%
+                <span className="readout">{tempoPct}%</span>
               </span>
             </div>
 
@@ -1099,7 +1099,7 @@ export const TabPlayerLab: React.FC = () => {
             >
               {LEGEND_KEYS.map(key => (
                 <Term key={key} k={key} source={TAB_TECHNIQUES}>
-                  <span style={{ fontFamily: 'monospace', color: 'var(--primary)', fontWeight: 700, marginRight: '0.35rem' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--primary)', fontWeight: 700, marginRight: '0.35rem' }}>
                     {TAB_TECHNIQUES[key].symbol}
                   </span>
                   {TAB_TECHNIQUES[key].title}
@@ -1249,7 +1249,7 @@ export const TabPlayerLab: React.FC = () => {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     minWidth: '1.6rem', padding: '0.1rem 0.35rem',
                     background: 'rgba(0,240,255,0.12)', borderRadius: '4px',
-                    fontFamily: 'monospace', fontSize: '0.72rem'
+                    fontFamily: 'var(--font-mono)', fontSize: '0.72rem'
                   }}>
                     {entry.symbol}
                   </span>
