@@ -872,52 +872,78 @@ html {
   box-shadow: 0 1px 3px rgba(0,0,0,0.75);
 }
 
-/* A plucked string does not show you its cycles — at 80-330 Hz they are far
-   past what a screen can draw, and far past what an eye resolves. What you
-   actually see is a blurred band that snaps open on the attack and shrinks
-   as the note dies. So this animates the envelope, not the wave.
+/* A plucked string does not show you its cycles — 80-330 Hz is far past what
+   a screen draws or an eye resolves. What you see is the envelope: the string
+   smeared between the two extremes of its swing.
 
-   Three things are true to the instrument and worth keeping: the band starts
-   at the fret stopping the string and runs off toward the bridge, never to
-   its left; heavier strings swing wider and ring longer; and the blur scales
-   with the amplitude, because the transform applies after the filter. */
+   The important detail is that the smear is not uniform. A string is slowest
+   at the turning points and fastest crossing the middle, so it dwells at the
+   edges and blurs through the centre — which is why this draws two bright
+   rails with a dim gap between them, not a fat bright line. That reads as
+   movement at a glance; an earlier version put the brightness in the middle
+   and merely looked like a thicker string, which on an already-pale steel
+   string against dark wood was close to invisible.
+
+   Two things stay true to the instrument: the swing starts at the fret
+   stopping the string and runs off toward the bridge, never to its left; and
+   heavier strings swing wider and ring longer. */
 .string-ring {
   position: absolute;
   right: 0;
   top: 50%;
-  border-radius: 2px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(207, 214, 221, 0.6) 50%, rgba(255, 255, 255, 0.85));
-  filter: blur(1.3px);
-  opacity: 0;
+  height: var(--ring-span);
   pointer-events: none;
   z-index: 9;
+  opacity: 0;
   transform: translateY(-50%);
+  transform-origin: center;
+  background:
+    /* the two turning points, where the string dwells */
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 246, 236, 1) 12%,
+      rgba(255, 231, 206, 0.42) 29%,
+      rgba(255, 178, 116, 0.2) 50%,
+      rgba(255, 231, 206, 0.42) 71%,
+      rgba(255, 246, 236, 1) 88%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+    /* warm bloom around the whole swing, so it separates from the steel */
+    linear-gradient(
+      180deg,
+      rgba(255, 150, 70, 0) 0%,
+      rgba(255, 150, 70, 0.3) 50%,
+      rgba(255, 150, 70, 0) 100%
+    );
+  filter: blur(1.1px);
   /* Tapered to nothing at the stopped end, where the string cannot move */
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 32%, #000 100%);
-  mask-image: linear-gradient(90deg, transparent 0%, #000 32%, #000 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 26%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 26%, #000 100%);
   animation: stringRing var(--ring-dur) cubic-bezier(0.16, 0.7, 0.4, 1) forwards;
 }
 
+/* The rails fly apart on the attack and fall back together as it dies */
 @keyframes stringRing {
-  0%   { opacity: 0;    transform: translateY(-50%) scaleY(0.5); }
-  5%   { opacity: 0.95; transform: translateY(-50%) scaleY(var(--ring-amp)); }
-  24%  { opacity: 0.72; transform: translateY(-50%) scaleY(calc(var(--ring-amp) * 0.52)); }
-  40%  { opacity: 0.62; transform: translateY(-50%) scaleY(calc(var(--ring-amp) * 0.74)); }
-  60%  { opacity: 0.4;  transform: translateY(-50%) scaleY(calc(var(--ring-amp) * 0.38)); }
-  80%  { opacity: 0.2;  transform: translateY(-50%) scaleY(calc(var(--ring-amp) * 0.22)); }
-  100% { opacity: 0;    transform: translateY(-50%) scaleY(1); }
+  0%   { opacity: 0;    transform: translateY(-50%) scaleY(0.12); }
+  4%   { opacity: 1;    transform: translateY(-50%) scaleY(1); }
+  22%  { opacity: 0.9;  transform: translateY(-50%) scaleY(0.44); }
+  38%  { opacity: 0.82; transform: translateY(-50%) scaleY(0.74); }
+  58%  { opacity: 0.6;  transform: translateY(-50%) scaleY(0.3); }
+  78%  { opacity: 0.34; transform: translateY(-50%) scaleY(0.16); }
+  100% { opacity: 0;    transform: translateY(-50%) scaleY(0.06); }
 }
 
-.ring-1 { height: 0.8px; --ring-amp: 5.6; --ring-dur: 850ms; }
-.ring-2 { height: 1.2px; --ring-amp: 5;   --ring-dur: 950ms; }
-.ring-3 { height: 1.8px; --ring-amp: 4.2; --ring-dur: 1050ms; }
-.ring-4 { height: 2.2px; --ring-amp: 4.2; --ring-dur: 1200ms; }
-.ring-5 { height: 2.8px; --ring-amp: 3.9; --ring-dur: 1350ms; }
-.ring-6 { height: 3.5px; --ring-amp: 3.6; --ring-dur: 1500ms; }
+.ring-1 { --ring-span: 11px; --ring-dur: 850ms; }
+.ring-2 { --ring-span: 13px; --ring-dur: 950ms; }
+.ring-3 { --ring-span: 15px; --ring-dur: 1050ms; }
+.ring-4 { --ring-span: 17px; --ring-dur: 1200ms; }
+.ring-5 { --ring-span: 19px; --ring-dur: 1350ms; }
+.ring-6 { --ring-span: 21px; --ring-dur: 1500ms; }
 
 /* The crisp line loses its edge into the blur of its own movement */
 .guitar-string-row.is-ringing .guitar-string-line {
-  opacity: 0.5;
+  opacity: 0.28;
   transition: opacity 90ms ease-out;
 }
 
