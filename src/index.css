@@ -1479,36 +1479,49 @@ input[type='range'] {
 
 /* Flat, and flush with the grid below it — the hero is a masthead, not a
    slab. Anything boxed here would be a card, which is the thing we removed. */
+/* The one photograph in the app. It is a stage surface like the waveform
+   canvases: it stays dark in the light theme rather than being washed out,
+   which is why the title colours here are literals and not theme tokens. */
 .hero {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 0.75rem 0 1.75rem;
+  min-height: 260px;
+  padding: 0 3rem;
+  border-radius: 14px;
+  overflow: hidden;
+  background-color: #101114;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: right center;
+  box-shadow: var(--elevation);
+}
+
+/* Scrim across the left third. The picture is already near-black there, so
+   this only guarantees the name holds its contrast at every width. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #101114 0%, rgba(16, 17, 20, 0.82) 26%, rgba(16, 17, 20, 0) 62%);
+  pointer-events: none;
 }
 
 .hero-title {
+  position: relative;
   font-size: 3.1rem;
   font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1.02;
   margin: 0;
-  color: var(--text-primary);
+  color: #F1F0EC;
 }
 
-/* One word carries the accent, not the whole name */
+/* One word carries the accent, not the whole name. Literal rather than
+   --primary: the light theme darkens that token to #D9480F so it reads on
+   white, and this word is always on black. */
 .hero-title span {
-  color: var(--primary);
-}
-
-.hero-guitar {
-  width: 62px;
-  height: 142px;
-  flex-shrink: 0;
-  margin-right: 1rem;
-  color: var(--text-primary);
-  opacity: 0.16;
+  color: #FF6A2A;
 }
 
 /* The curriculum, said in a bar and two numbers. The levels are a click away
@@ -1607,17 +1620,22 @@ input[type='range'] {
 }
 
 @media (max-width: 900px) {
+  /* Side by side there is no room left of the guitar, so the composition
+     turns: the instrument takes the top of the frame and the name sits under
+     it, with the scrim running down instead of across. */
   .hero {
-    padding: 1.75rem 1.4rem;
+    min-height: 210px;
+    align-items: flex-end;
+    padding: 0 1.4rem 1.3rem;
+    background-position: 62% top;
+  }
+
+  .hero::before {
+    background: linear-gradient(180deg, rgba(16, 17, 20, 0) 24%, rgba(16, 17, 20, 0.86) 66%, #101114 100%);
   }
 
   .hero-title {
     font-size: 2.3rem;
-  }
-
-  /* The drawing is the first thing to go when the hero has to stack */
-  .hero-guitar {
-    display: none;
   }
 
   .dash-grid {

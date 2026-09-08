@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { ActiveTab } from '../components/Sidebar';
-import { GuitarLineArt } from '../components/GuitarLineArt';
+import { assetUrl } from '../utils/assetUrl';
 import { ALL_LEVELS, isLevelComplete } from '../utils/journey';
 import { subscribeProgress } from '../utils/progress';
 
@@ -43,11 +43,17 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
 
   return (
     <div className="dash">
-      <header className="hero">
+      {/* The guitar is the page's one photograph, so it runs the full width of
+          the column and the name sits in the dark half of the frame. The
+          backdrop colour is the one the image was flattened onto, so the
+          picture has no visible edge on its left. */}
+      <header
+        className="hero"
+        style={{ backgroundImage: `url(${assetUrl('hero-guitar.webp')})` }}
+      >
         <h2 className="hero-title">
           Cadenza <span>Lab</span>
         </h2>
-        <GuitarLineArt className="hero-guitar" />
       </header>
 
       {/* One line for the curriculum: where you are, as a bar and a count.
