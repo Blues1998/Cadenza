@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ActiveTab } from '../components/Sidebar';
 import { Journey } from '../components/Journey';
+import { GuitarLineArt } from '../components/GuitarLineArt';
 
 interface DashboardLandingProps {
   setActiveTab: (tab: ActiveTab) => void;
@@ -13,9 +14,8 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       title: 'Visual Theory & Scales',
       description: 'Explore scale layouts and chords on the guitar fretboard and piano. Interactive Circle of Fifths diagrams included.',
       buttonText: 'Open Theory Lab',
-      color: 'var(--primary)',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
           <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
         </svg>
@@ -26,9 +26,8 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       title: 'Ear Training (Chords & Intervals)',
       description: 'Train your ears to recognize musical relationships. Quizzes adapt dynamically across multiple difficulty ranges.',
       buttonText: 'Start Training',
-      color: 'var(--secondary)',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" strokeWidth="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
           <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
         </svg>
@@ -39,9 +38,8 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       title: 'Play Challenges (Mic-Verified)',
       description: 'Play scales, intervals, and chords on your real instrument — the app hears every note and confirms it live. Theory you play, not memorize.',
       buttonText: 'Start Playing',
-      color: '#f472b6',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f472b6" strokeWidth="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10" />
           <circle cx="12" cy="12" r="6" />
           <circle cx="12" cy="12" r="2" />
@@ -53,9 +51,8 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       title: 'Sound Physics',
       description: 'Why chords work, why 12 notes, why the circle of fifths exists — interactive waveforms, beating tones, and modular arithmetic instead of memorization.',
       buttonText: 'See the Physics',
-      color: '#38bdf8',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="2 12 5 12 8 4 12 20 15 9 17 12 22 12" />
         </svg>
       )
@@ -65,9 +62,8 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       title: 'Rhythm Metronome & Game',
       description: 'Test your timing precision against a rock-solid, low-latency audio metronome. Get millisecond-accuracy feedback.',
       buttonText: 'Open Rhythm Lab',
-      color: 'var(--success)',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10" />
           <polyline points="12 6 12 12 16 14" />
         </svg>
@@ -78,9 +74,8 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       title: 'Vocal Tuner & Matcher',
       description: 'Interactive singing exercises using autocorrelation real-time pitch detection. Great for guitar tuning too.',
       buttonText: 'Launch Tuner',
-      color: 'var(--warning)',
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
           <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
           <line x1="12" y1="19" x2="12" y2="22" />
@@ -92,30 +87,33 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       
-      {/* Welcome Banner */}
-      <div 
-        className="glass-panel" 
-        style={{
-          padding: '2.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1.5rem'
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: '600px' }}>
-          <h2 style={{ fontSize: '2.1rem', fontWeight: 600, lineHeight: 1.15, letterSpacing: '-0.03em' }}>
-            Welcome to your <span style={{ color: 'var(--primary)' }}>Cadenza Lab</span>
+      {/* Hero. Eyebrow, name, one sentence — then the instrument the whole app
+          is pointed at, with a line drawing behind it doing the decorating so
+          the chrome does not have to. */}
+      <div className="glass-panel hero">
+        <div className="hero-copy">
+          <span className="hero-eyebrow readout">Welcome to your</span>
+          <h2 className="hero-title">
+            Cadenza <span>Lab</span>
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.98rem', lineHeight: 1.6 }}>
+          <p className="hero-lede">
             No music experience required. Follow the guided journey below — each level is one idea
             learned by playing, and completes automatically the moment you do it.
           </p>
         </div>
-        <div style={{ padding: '0.9rem 1.4rem', background: 'var(--surface-2)', borderRadius: '8px' }}>
-          <span style={{ display: 'block', fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.14em' }}>Focus instrument</span>
-          <h3 style={{ color: 'var(--text-primary)', marginTop: '0.25rem', fontSize: '1.1rem', fontWeight: 600 }}>Acoustic Guitar</h3>
+
+        <div className="hero-aside">
+          <GuitarLineArt className="hero-guitar" />
+          <div className="hero-focus">
+            <span className="hero-eyebrow readout">Focus instrument</span>
+            <button type="button" className="hero-focus-link" onClick={() => setActiveTab('theory')}>
+              Acoustic Guitar
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+            <span className="hero-focus-verbs readout">Strum · Learn · Play</span>
+          </div>
         </div>
       </div>
 
@@ -136,12 +134,11 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1rem',
-                transition: 'transform 0.2s ease, border-color 0.2s ease',
-                ['--card-accent' as string]: path.color
+                transition: 'background 0.15s ease'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--surface-2)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {path.icon}
                 </div>
                 <h4 style={{ fontSize: '1.1rem', fontWeight: 600 }}>{path.title}</h4>

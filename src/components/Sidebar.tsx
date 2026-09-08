@@ -142,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
   ];
 
   return (
-    <aside className={`sidebar glass-panel${collapsed ? ' is-collapsed' : ''}`}>
+    <aside className={`sidebar${collapsed ? ' is-collapsed' : ''}`}>
       {/* Logo plate — a square silk-screened badge, the way a desk carries the
           manufacturer's mark above the channels. Doubles as the collapse
           control, as it always has. */}

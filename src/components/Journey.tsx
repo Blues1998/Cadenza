@@ -34,31 +34,22 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
 
   return (
     <section className="glass-panel journey">
-      <header className="journey-head">
-        <div>
-          <h3>Your Guided Journey</h3>
-          <p>
-            One idea at a time, learned by doing. Levels complete <em>automatically</em> when you do
-            the task in the lab — no checkboxes. The order is a suggestion: open any level to jump
-            in, or redo one you've finished.
-          </p>
-        </div>
-        {/* Counts, not a progress bar — the line below already is one */}
-        <div className="journey-count readout">
-          <span className="journey-count-figure">{String(completedCount).padStart(2, '0')}</span>
-          <span className="journey-count-total">/ {totalLevels}</span>
-          <span className="journey-count-meta">{pct}% · {xp} XP</span>
-        </div>
-      </header>
-
-      {finished && (
-        <p className="journey-done">
-          Journey complete — notes, scales, intervals, chords, keys and rhythm, all of it played
-          rather than read. Keep building streaks in Play Challenges and Ear Training.
+      <div className="journey-main">
+        <h3 className="journey-title">Your Guided Journey</h3>
+        <p className="journey-lede">
+          One idea at a time, learned by doing. Levels complete <em>automatically</em> when you do
+          the task in the lab — no checkboxes. The order is a suggestion: open any level to jump in,
+          or redo one you've finished.
         </p>
-      )}
 
-      <ol className="timeline">
+        {finished && (
+          <p className="journey-done">
+            Journey complete — notes, scales, intervals, chords, keys and rhythm, all of it played
+            rather than read. Keep building streaks in Play Challenges and Ear Training.
+          </p>
+        )}
+
+        <ol className="timeline">
         {JOURNEY.map(chapter => {
           const chapterDone = chapter.levels.filter(isLevelComplete).length;
           const chapterComplete = chapterDone === chapter.levels.length;
@@ -85,7 +76,13 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
                     key={level.id}
                     className={`timeline-step${done ? ' is-done' : ''}${isSuggested && !done ? ' is-next' : ''}${isOpen ? ' is-open' : ''}`}
                   >
-                    <span className="step-node" aria-hidden="true" />
+                    <span className="step-node" aria-hidden="true">
+                      {done && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </span>
                     <button
                       type="button"
                       className="step-head"
@@ -127,7 +124,34 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
             </React.Fragment>
           );
         })}
-      </ol>
+        </ol>
+      </div>
+
+      {/* The run of levels says where you are step by step; this says it as a
+          number. Separated by a rule rather than boxed, so it reads as one
+          panel with two columns and not as a card inside a card. */}
+      <aside className="journey-side">
+        <div className="journey-stat readout">
+          <span className="journey-stat-figure">{String(completedCount).padStart(2, '0')}</span>
+          <span className="journey-stat-total">/ {totalLevels}</span>
+        </div>
+        <span className="journey-stat-label readout">
+          {pct}% complete{xp > 0 && ` · ${xp} XP`}
+        </span>
+        <div className="journey-bar" role="presentation">
+          <span style={{ width: `${pct}%` }} />
+        </div>
+
+        <blockquote className="journey-quote">
+          Small steps make great musicians.
+        </blockquote>
+
+        <ul className="journey-verbs readout">
+          <li>Practice</li>
+          <li>Explore</li>
+          <li>Improve</li>
+        </ul>
+      </aside>
     </section>
   );
 };
