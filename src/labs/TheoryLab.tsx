@@ -24,6 +24,9 @@ import { useComputerKeyboardInstrument } from '../hooks/useComputerKeyboardInstr
 import { useGuitarChordKeyboard } from '../hooks/useGuitarChordKeyboard';
 
 const INTRO_DISMISSED_KEY = 'theory-intro-dismissed';
+const INSTRUMENT_KEY = 'theory-instrument-view';
+
+type InstrumentView = 'piano' | 'guitar' | 'both';
 
 // Color legend explaining the keyboard/fretboard highlights
 const HighlightLegend: React.FC<{ mode: 'scale' | 'chord' }> = ({ mode }) => {
@@ -142,7 +145,29 @@ export const TheoryLab: React.FC = () => {
     setTimeout(() => setActiveMidis([]), 1100);
   };
 
-  const [guitarMode, setGuitarMode] = useState(false);
+  // Which instrument the section at the bottom shows. The chosen tab is also
+  // the one your computer keyboard plays, so "which panel is listening" is no
+  // longer a second control you have to keep in sync in your head.
+  const [instrument, setInstrument] = useState<InstrumentView>(() => {
+    try {
+      const saved = localStorage.getItem(INSTRUMENT_KEY);
+      if (saved === 'piano' || saved === 'guitar' || saved === 'both') return saved;
+    } catch { /* private browsing — fall through to the default */ }
+    return 'both';
+  });
+  const chooseInstrument = (view: InstrumentView) => {
+    setInstrument(view);
+    try {
+      localStorage.setItem(INSTRUMENT_KEY, view);
+    } catch { /* private browsing — this session only */ }
+  };
+  const guitarMode = instrument === 'guitar';
+  const showPiano = instrument !== 'guitar';
+  const showGuitar = instrument !== 'piano';
+
+  // The full key maps are reference material, not something you re-read every
+  // visit, so they stay one click away instead of costing a screen of height.
+  const [showKeyMap, setShowKeyMap] = useState(false);
 
   // Two mutually-exclusive keyboard input modes, both driving the same
   // handlePlayNote a mouse click already uses: melodic single-note typing
@@ -488,122 +513,124 @@ export const TheoryLab: React.FC = () => {
         onStrum={handleStrumVoicing}
       />
 
-      {/* Shared instrument picker — your keyboard always controls whichever
-          one is selected here; the highlighted panel below shows which */}
-      <div className="glass-panel" style={{ padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-        <strong style={{ fontSize: '0.85rem' }}>Play with your keyboard:</strong>
-        <button onClick={() => setGuitarMode(false)} className={`btn ${!guitarMode ? 'btn-primary' : ''}`} style={{ padding: '0.4rem 1.1rem', fontSize: '0.85rem' }}>
-          🎹 Piano
-        </button>
-        <button onClick={() => setGuitarMode(true)} className={`btn ${guitarMode ? 'btn-primary' : ''}`} style={{ padding: '0.4rem 1.1rem', fontSize: '0.85rem' }}>
-          🎸 Guitar
-        </button>
-        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-          the panel outlined below is the one listening for key presses
-        </span>
-      </div>
-
-      {/* Piano View */}
-      <section
-        className="glass-panel"
-        style={{
-          padding: '1.5rem',
-          border: !guitarMode ? '1px solid var(--primary)' : undefined,
-          boxShadow: !guitarMode ? '0 0 0 1px var(--primary), 0 0 24px var(--primary-glow)' : undefined
-        }}
-      >
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem' }}>
-          3-Octave Piano Keyboard
-          {!guitarMode && (
-            <span style={{ display: 'inline-block', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-on-primary)', background: 'var(--primary)', padding: '2px 8px', borderRadius: '10px', marginLeft: '0.6rem', verticalAlign: 'middle' }}>
-              ⌨ Listening
+      {/* Instruments — one panel with tabs. Two full-height panels plus a
+          separate "which one listens to the keyboard" bar was over a screen
+          and a half of chrome for what is really a single choice. */}
+      <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', justifyContent: 'space-between', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.85rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="segmented" role="group" aria-label="Instrument">
+              <button type="button" onClick={() => chooseInstrument('piano')} aria-pressed={instrument === 'piano'}>🎹 Piano</button>
+              <button type="button" onClick={() => chooseInstrument('guitar')} aria-pressed={instrument === 'guitar'}>🎸 Guitar</button>
+              <button type="button" onClick={() => chooseInstrument('both')} aria-pressed={instrument === 'both'}>Both</button>
+            </div>
+            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+              your keyboard plays the <strong style={{ color: 'var(--primary)' }}>{guitarMode ? 'guitar' : 'piano'}</strong>
+              {!guitarMode && <> · octave <strong style={{ color: 'var(--primary)' }}>{keyboardOctave}</strong></>}
             </span>
-          )}
-          <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Click any key to hear it — colored keys belong to your selection above.
-          </span>
-          <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-            Or play it with your keyboard: <kbd className="key-hint">A</kbd><kbd className="key-hint">S</kbd><kbd className="key-hint">D</kbd><kbd className="key-hint">F</kbd><kbd className="key-hint">G</kbd><kbd className="key-hint">H</kbd><kbd className="key-hint">J</kbd><kbd className="key-hint">K</kbd>
-            <span>+</span>
-            <kbd className="key-hint">W</kbd><kbd className="key-hint">E</kbd><kbd className="key-hint">T</kbd><kbd className="key-hint">Y</kbd><kbd className="key-hint">U</kbd>
-            <span>for sharps ·</span>
-            <kbd className="key-hint">Z</kbd><span>/</span><kbd className="key-hint">X</kbd>
-            <span>to change octave · currently <strong style={{ color: 'var(--primary)' }}>octave {keyboardOctave}</strong></span>
-          </span>
-        </h3>
-        <HighlightLegend mode={selectedChordQuality !== -1 ? 'chord' : 'scale'} />
-        <Keyboard
-          activeMidis={activeMidis}
-          highlightCorrectMidis={highlightedMidis}
-          rootMidis={rootMidis}
-          onPlayNote={handlePlayNote}
-        />
-      </section>
-
-      {/* Fretboard View */}
-      <section
-        className="glass-panel"
-        style={{
-          padding: '1.5rem',
-          border: guitarMode ? '1px solid var(--primary)' : undefined,
-          boxShadow: guitarMode ? '0 0 0 1px var(--primary), 0 0 24px var(--primary-glow)' : undefined
-        }}
-      >
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.08)', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            Guitar Fretboard (Standard Tuning EADGBE)
-            {guitarMode && (
-              <span style={{ display: 'inline-block', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-on-primary)', background: 'var(--primary)', padding: '2px 8px', borderRadius: '10px', marginLeft: '0.6rem' }}>
-                ⌨ Listening
-              </span>
-            )}
-          </span>
-          <button
-            onClick={() => handlePlayNote(noteNameToMidi('E', 2))}
-            className="btn"
-            style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}
-          >
-            Strum Guitar
-          </button>
-        </h3>
-        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '-0.75rem', marginBottom: '0.75rem' }}>
-          The exact same notes as the piano above, mapped onto the guitar neck — one note can live in several places on a guitar.
-        </p>
-
-        {guitarMode ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
-              Hold a chord shape:
-              {GUITAR_CHORD_SHAPES.map((shape, i) => (
-                <span key={shape.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
-                  <kbd className="key-hint">{i + 1}</kbd>
-                  <span>{shape.id}</span>
-                </span>
-              ))}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
-              Pick a string (low → high):
-              <kbd className="key-hint">Z</kbd><kbd className="key-hint">X</kbd><kbd className="key-hint">C</kbd><kbd className="key-hint">V</kbd><kbd className="key-hint">B</kbd><kbd className="key-hint">N</kbd>
-              <span>— no shape held = strings ring open</span>
-            </div>
-            <div>
-              Holding: <strong style={{ color: heldShape ? 'var(--primary)' : 'var(--text-muted)' }}>{heldShape ? heldShape.label : 'nothing (open strings)'}</strong>
-            </div>
           </div>
-        ) : (
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '-0.5rem', marginBottom: '1rem' }}>
-            Select 🎸 Guitar above to play chords and fingerstyle patterns with your keyboard.
-          </p>
+
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setShowKeyMap(v => !v)}
+              className="btn"
+              aria-expanded={showKeyMap}
+              style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem' }}
+            >
+              Which keys? {showKeyMap ? '▴' : '▾'}
+            </button>
+            {showGuitar && (
+              <button
+                onClick={() => handlePlayNote(noteNameToMidi('E', 2))}
+                className="btn"
+                style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem' }}
+              >
+                Strum Guitar
+              </button>
+            )}
+          </div>
+        </div>
+
+        {showKeyMap && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.78rem', color: 'var(--text-muted)', background: 'rgba(var(--surface-tint-rgb), 0.03)', borderRadius: '10px', padding: '0.75rem 0.9rem' }}>
+            {guitarMode ? (
+              <>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
+                  Hold a chord shape:
+                  {GUITAR_CHORD_SHAPES.map((shape, i) => (
+                    <span key={shape.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                      <kbd className="key-hint">{i + 1}</kbd>
+                      <span>{shape.id}</span>
+                    </span>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
+                  Pick a string (low → high):
+                  <kbd className="key-hint">Z</kbd><kbd className="key-hint">X</kbd><kbd className="key-hint">C</kbd><kbd className="key-hint">V</kbd><kbd className="key-hint">B</kbd><kbd className="key-hint">N</kbd>
+                  <span>— no shape held = strings ring open</span>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
+                Play the piano with:
+                <kbd className="key-hint">A</kbd><kbd className="key-hint">S</kbd><kbd className="key-hint">D</kbd><kbd className="key-hint">F</kbd><kbd className="key-hint">G</kbd><kbd className="key-hint">H</kbd><kbd className="key-hint">J</kbd><kbd className="key-hint">K</kbd>
+                <span>+</span>
+                <kbd className="key-hint">W</kbd><kbd className="key-hint">E</kbd><kbd className="key-hint">T</kbd><kbd className="key-hint">Y</kbd><kbd className="key-hint">U</kbd>
+                <span>for sharps ·</span>
+                <kbd className="key-hint">Z</kbd><span>/</span><kbd className="key-hint">X</kbd>
+                <span>to change octave</span>
+              </div>
+            )}
+            {instrument === 'both' && (
+              <span>Switch to the 🎸 Guitar tab to play chord shapes and pick individual strings with your keyboard.</span>
+            )}
+          </div>
         )}
 
+        {/* One legend for the whole section — it was identical in both panels */}
         <HighlightLegend mode={selectedChordQuality !== -1 ? 'chord' : 'scale'} />
-        <Fretboard
-          activeMidis={activeMidis}
-          highlightCorrectMidis={guitarMode && heldShape ? heldShapeMidis : highlightedMidis}
-          rootMidis={guitarMode && heldShape ? heldShapeRootMidis : rootMidis}
-          onPlayNote={handlePlayNote}
-          showAllNoteNames={true}
-        />
+
+        {showPiano && (
+          <div>
+            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
+              3-Octave Piano Keyboard
+              <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                Click any key to hear it — colored keys belong to your selection above.
+              </span>
+            </h3>
+            <Keyboard
+              activeMidis={activeMidis}
+              highlightCorrectMidis={highlightedMidis}
+              rootMidis={rootMidis}
+              onPlayNote={handlePlayNote}
+            />
+          </div>
+        )}
+
+        {showGuitar && (
+          <div>
+            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
+              Guitar Fretboard (Standard Tuning EADGBE)
+              <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                {instrument === 'both'
+                  ? 'The exact same notes as the piano above, mapped onto the neck — one note can live in several places on a guitar.'
+                  : 'One note can live in several places on a guitar — every spot it lives is lit up here.'}
+              </span>
+            </h3>
+            {guitarMode && (
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 0.6rem' }}>
+                Holding: <strong style={{ color: heldShape ? 'var(--primary)' : 'var(--text-muted)' }}>{heldShape ? heldShape.label : 'nothing (open strings)'}</strong>
+              </p>
+            )}
+            <Fretboard
+              activeMidis={activeMidis}
+              highlightCorrectMidis={guitarMode && heldShape ? heldShapeMidis : highlightedMidis}
+              rootMidis={guitarMode && heldShape ? heldShapeRootMidis : rootMidis}
+              onPlayNote={handlePlayNote}
+              showAllNoteNames={true}
+            />
+          </div>
+        )}
       </section>
 
     </div>
