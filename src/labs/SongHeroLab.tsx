@@ -74,9 +74,6 @@ export const SongHeroLab: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div className="lab-header">
         <h2 className="lab-title">Song Hero</h2>
-        <p className="lab-description">
-          Play real songs on your keyboard — watch the highway scroll toward the line, hit the right key at the right time.
-        </p>
       </div>
 
       <div className="grid-2">

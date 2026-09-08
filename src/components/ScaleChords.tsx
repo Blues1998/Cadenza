@@ -153,9 +153,8 @@ export const ScaleChords: React.FC<ScaleChordsProps> = ({ rootName, scale, onStr
             Chords in {prettyNote(scaleNotes[0] ?? rootName)} {scale.name}
           </h3>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5, maxWidth: '52ch' }}>
-            Every chord built from this scale's own notes, with a fingering you can play.
-            Click any box to hear it strummed — the numbers are which finger goes where
-            (1 = index, 4 = pinky), <strong>×</strong> means don't play that string.
+            Click one to hear it. Numbers are fingers (1 = index, 4 = pinky);
+            <strong> ×</strong> means skip that string.
           </p>
         </div>
 
@@ -189,9 +188,9 @@ export const ScaleChords: React.FC<ScaleChordsProps> = ({ rootName, scale, onStr
             margin: 0
           }}
         >
-          {scale.name} has too few notes to build chords from on its own — these come from
-          its parent <strong style={{ color: 'var(--text-primary)' }}>{borrowedFrom}</strong>, which is what
-          players actually solo over with it.
+          Too few notes to build chords from. These come from its parent
+          <strong style={{ color: 'var(--text-primary)' }}> {borrowedFrom}</strong>, which is what
+          players solo over with it.
         </p>
       )}
 
@@ -201,11 +200,6 @@ export const ScaleChords: React.FC<ScaleChordsProps> = ({ rootName, scale, onStr
         ))}
       </div>
 
-      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
-        Stuck on a shape? Open “other ways to play it” — the list runs easiest first, and
-        seventh chords also offer the plain triad underneath, which is what most players
-        substitute when the full shape is out of reach.
-      </p>
     </section>
   );
 };

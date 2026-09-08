@@ -284,8 +284,7 @@ export const EarTrainingLab: React.FC = () => {
       
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title">Ear Training Lab</h2>
-        <p className="lab-description">Improve your relative pitch and chord recognition skills. Practice identifying intervals and chord qualities by ear.</p>
+        <h2 className="lab-title">Ear Training</h2>
       </div>
 
       <div className="grid-2">
@@ -310,7 +309,7 @@ export const EarTrainingLab: React.FC = () => {
               <span className="field-label">Practice From</span>
               {tabSource.libraryEntries.length === 0 ? (
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                  No tabs saved yet. Import one in the Tab Player lab, then come back here to practice with it.
+                  Nothing saved yet — import a piece in Tab Player first.
                 </p>
               ) : (
                 <select
@@ -335,7 +334,7 @@ export const EarTrainingLab: React.FC = () => {
               )}
               {tabSource.selectedTab && !tabSource.isLoading && !tabSource.error && tabSource.candidates.length === 0 && (
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                  This piece doesn't have clear single-note melodic jumps to quiz on — try a different piece.
+                  No clear single-note jumps in this piece.
                 </p>
               )}
             </div>
@@ -407,11 +406,10 @@ export const EarTrainingLab: React.FC = () => {
               <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255, 106, 42, 0.05)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </div>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: 600 }}>Ready to train your ears?</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '300px' }}>
                 {sourceMode === 'tab'
-                  ? 'Listen to a real jump pulled straight from the piece you picked, then name the interval.'
-                  : <>Listen to interval gaps or chord qualities, then make your selection. Defaulting to <strong>Super Beginner</strong> mode for basic song association practice!</>}
+                  ? 'Hear a jump from the piece you picked, then name it.'
+                  : 'Hear it, then name it.'}
               </p>
               <button
                 onClick={handleStartQuiz}
@@ -419,7 +417,7 @@ export const EarTrainingLab: React.FC = () => {
                 disabled={sourceMode === 'tab' && tabSource.candidates.length === 0}
                 style={{ marginTop: '0.5rem' }}
               >
-                Start Training Session
+                Start
               </button>
             </div>
           ) : (

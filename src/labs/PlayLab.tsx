@@ -360,10 +360,6 @@ export const PlayLab: React.FC = () => {
       {/* Header */}
       <div className="lab-header">
         <h2 className="lab-title">Play Challenges</h2>
-        <p className="lab-description">
-          Theory you play, not memorize. The app listens through your microphone and verifies
-          every note on your real instrument — guitar, piano, or your voice.
-        </p>
       </div>
 
       {!isActive ? (
@@ -373,12 +369,10 @@ export const PlayLab: React.FC = () => {
           </div>
           <h3 style={{ fontSize: '1.25rem' }}>Grab your instrument</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '420px' }}>
-            These challenges are answered by <em>playing notes</em>, not clicking buttons.
-            Allow microphone access, then play scales, intervals, and chords on whatever you have —
-            the app confirms each note in real time.
+            You answer these by playing, not clicking.
           </p>
           <button onClick={start} className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
-            Allow Microphone & Start
+            Allow microphone
           </button>
           {micError && <p style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>{micError}</p>}
         </section>

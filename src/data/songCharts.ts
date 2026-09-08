@@ -65,7 +65,7 @@ const HEDWIG: PianoChart = {
   timeSignature: 3,
   countInBars: 2,
   homeOctave: 4,
-  sourceNote: 'Simplified, best-effort arrangement of the opening phrase, transposed to fit one playable octave — not a verified transcription.',
+  sourceNote: 'Simplified opening phrase, squeezed into one octave — not a verified transcription.',
   instrument: 'piano',
   notes: [
     { beat: 0,  noteName: 'Eb', octave: 4, durationBeats: 1 },
@@ -117,7 +117,7 @@ const GAME_OF_THRONES: PianoChart = {
   timeSignature: 4,
   countInBars: 2,
   homeOctave: 4,
-  sourceNote: 'Simplified ostinato capturing the driving repeated-note rhythm over the theme\'s rising chord sequence — not a full multi-part transcription.',
+  sourceNote: 'Simplified ostinato — not a full transcription.',
   instrument: 'piano',
   notes: (() => {
     // Repeating cell: root-root-fifth (eighth, eighth, quarter) played
@@ -162,7 +162,7 @@ const SENYA: PianoChart = {
   timeSignature: 4,
   countInBars: 1,
   homeOctave: 4,
-  sourceNote: 'Placeholder arrangement — a generic slow, plaintive minor-key phrase in the mood of this piece. Lower confidence than the other songs here; most in need of correction against a real recording.',
+  sourceNote: 'Placeholder — a slow minor phrase in the mood of the piece. The least accurate chart here.',
   instrument: 'piano',
   notes: [
     { beat: 0,  noteName: 'C',  octave: 5, durationBeats: 2 },
@@ -205,7 +205,7 @@ const TUYO: GuitarChart = {
   bpm: 100,
   timeSignature: 3,
   countInBars: 2,
-  sourceNote: 'Chord progression adapted to fit this app\'s 8 open-chord shapes (Dm-C-Am-Em stands in for the real changes), with a simple generic strum pattern rather than the record\'s actual fingerpicking — not a verified transcription.',
+  sourceNote: 'Chords bent to fit the app\'s 8 open shapes, with a generic strum — not a verified transcription.',
   instrument: 'guitar',
   strums: (() => {
     const progression = ['Dm', 'C', 'Am', 'Em'];

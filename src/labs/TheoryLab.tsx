@@ -408,24 +408,18 @@ export const TheoryLab: React.FC = () => {
       
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title">Visual Theory & Scale Explorer</h2>
-        <p className="lab-description">
-          See and hear how music works — no theory knowledge needed.
-          Pick a <Term k="scale">scale</Term> or <Term k="chordQuality">chord</Term> below
-          and the same notes light up on the piano and guitar at once.
-          Anything with a dotted underline can be hovered or tapped for a plain-English explanation.
-        </p>
+        <h2 className="lab-title">Theory &amp; Scales</h2>
       </div>
 
       {/* Dismissible "Start here" guide for first-time visitors */}
       {showIntro && (
         <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', borderColor: 'var(--panel-border-hover)' }}>
           <div style={{ flex: '1 1 380px', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <h3 style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>New here? Try this first</h3>
+            <h3 style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>New here?</h3>
             {[
-              ['1', 'Pick a feeling below — start with "Happy & Bright" (that’s the Major scale).'],
-              ['2', 'Press Play and just listen. Does it match the feeling on the label?'],
-              ['3', 'Watch the same notes light up on the piano and guitar — the orange note is "home".']
+              ['1', 'Pick a feeling. "Happy & Bright" is the major scale.'],
+              ['2', 'Press Play and listen.'],
+              ['3', 'Orange is home — the note it all settles back to.']
             ].map(([num, text]) => (
               <div key={num} style={{ display: 'flex', gap: '0.6rem', alignItems: 'baseline', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                 <span style={{ flexShrink: 0, width: '20px', height: '20px', borderRadius: '50%', background: 'var(--surface-3)', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, alignSelf: 'center' }}>{num}</span>
@@ -434,7 +428,7 @@ export const TheoryLab: React.FC = () => {
             ))}
           </div>
           <button onClick={dismissIntro} className="btn" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
-            Got it — hide this
+            Got it
           </button>
         </section>
       )}
@@ -454,22 +448,20 @@ export const TheoryLab: React.FC = () => {
 
       {/* Plain-English read-out of whatever the toolbar currently has selected */}
       <div style={{ background: 'var(--surface-2)', borderRadius: '10px', padding: '0.85rem 1.1rem', fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
-        <span style={{ display: 'block', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-          What you're seeing & hearing
-        </span>
       {selectedChordQuality !== -1 ? (
         <>
           <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</strong>
-          {' '}sounds <strong style={{ color: 'var(--secondary)' }}>{(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}</strong>.
-          {' '}It's the notes <strong className="readout" style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong> played
-          at the same time, built up from the home note {selectedRoot}. Press play and listen for that feeling.
+          {' · '}
+          <strong className="readout" style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>
+          {' — sounds '}
+          <strong style={{ color: 'var(--secondary)' }}>{(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}</strong>.
         </>
       ) : (
         <>
-          <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {selectedScale.name}</strong> — start
-          at the home note <strong style={{ color: 'var(--warning)' }}>{selectedRoot}</strong> and
-          climb: <strong className="readout" style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>.
-          {' '}Listen for {SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}
+          <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {selectedScale.name}</strong>
+          {' · '}
+          <strong className="readout" style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>
+          {' — listen for '}{SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}
         </>
       )}
       </div>
@@ -495,8 +487,7 @@ export const TheoryLab: React.FC = () => {
               </span>
             </h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
-              A map of all 12 musical <Term k="musicalKey">keys</Term>. Neighboring slices share almost
-              all their notes, so they blend well together — click any slice to hear its home chord.
+              All 12 <Term k="musicalKey">keys</Term>. Neighbours share almost every note. Click one to hear it.
             </p>
           </div>
           <button
@@ -558,9 +549,8 @@ export const TheoryLab: React.FC = () => {
                 })}
               </div>
               <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem', lineHeight: 1.5 }}>
-                The <Term k="romanNumerals">Roman numerals</Term> tell you each chord's role:
-                UPPERCASE = happy major, lowercase = sad minor, ° = tense. Click a few in a
-                row — congratulations, you're writing a chord progression.
+                <Term k="romanNumerals">Roman numerals</Term>: UPPERCASE major, lowercase minor, ° tense.
+                Play a few in a row and you have a progression.
               </p>
             </div>
           </div>
@@ -636,9 +626,6 @@ export const TheoryLab: React.FC = () => {
                 <span>to change octave</span>
               </div>
             )}
-            {instrument === 'both' && (
-              <span>Switch to the 🎸 Guitar tab to play chord shapes and pick individual strings with your keyboard.</span>
-            )}
           </div>
         )}
 
@@ -647,12 +634,7 @@ export const TheoryLab: React.FC = () => {
 
         {showPiano && (
           <div>
-            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
-              3-Octave Piano Keyboard
-              <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                Click any key to hear it — colored keys belong to your selection above.
-              </span>
-            </h3>
+            <h3 className="surface-label">Piano</h3>
             <Keyboard
               activeMidis={activeMidis}
               highlightCorrectMidis={highlightedMidis}
@@ -664,17 +646,12 @@ export const TheoryLab: React.FC = () => {
 
         {showGuitar && (
           <div>
-            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
-              Guitar Fretboard (Standard Tuning EADGBE)
-              <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                {instrument === 'both'
-                  ? 'The exact same notes as the piano above, mapped onto the neck — one note can live in several places on a guitar.'
-                  : 'One note can live in several places on a guitar — every spot it lives is lit up here.'}
-              </span>
+            <h3 className="surface-label">
+              Fretboard <span className="readout">EADGBE</span>
             </h3>
             {guitarMode && (
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 0.6rem' }}>
-                Holding: <strong style={{ color: heldShape ? 'var(--primary)' : 'var(--text-muted)' }}>{heldShape ? heldShape.label : 'nothing (open strings)'}</strong>
+                <strong style={{ color: heldShape ? 'var(--primary)' : 'var(--text-muted)' }}>{heldShape ? heldShape.label : 'Open strings'}</strong>
               </p>
             )}
             <Fretboard

@@ -888,9 +888,8 @@ export const TabPlayerLab: React.FC = () => {
     <section className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div>
         <h3 style={{ fontSize: '1.35rem', fontWeight: 700 }}>Tab Player</h3>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          Import a Guitar Pro (.gp3, .gp4, .gp5, .gpx) or MusicXML file and play it back right here —
-          slow the tempo down to isolate the hard parts, loop them, and practice along on your real instrument.
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '0.25rem', fontFamily: 'var(--font-mono)' }}>
+          .gp3 · .gp4 · .gp5 · .gpx · MusicXML
         </p>
       </div>
 
@@ -1116,8 +1115,8 @@ export const TabPlayerLab: React.FC = () => {
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Mic Play-Along</div>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem', maxWidth: '480px', lineHeight: 1.5 }}>
-                  Play along on your real guitar as the cursor moves — each single note lights up green the instant your mic hears it, or red if the cursor moves on first.
-                  Best with headphones: the mic can't otherwise tell your guitar apart from this tab's own backing track.
+                  Green when the mic hears the note, red when the cursor moves on first.
+                  Use headphones — otherwise it hears the backing track, not you.
                 </p>
               </div>
               <button

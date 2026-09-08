@@ -143,13 +143,13 @@ const HarmonicExplorer: React.FC = () => {
   return (
     <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem' }}>
-        1 · Why instruments sound different: the harmonic series
+        1 · Why instruments sound different
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-        Every musical note is not one frequency but a stack: the fundamental <em>f</em> plus overtones
-        at exactly 2f, 3f, 4f… A guitar and a flute playing the same note differ only in the
-        <strong style={{ color: 'var(--text-primary)' }}> recipe of overtone amplitudes</strong> — that recipe is what
-        we call timbre. Mix your own below (faint lines = individual harmonics, bright line = their sum).
+        A note is not one frequency but a stack: the fundamental <em>f</em> plus overtones at 2f, 3f, 4f…
+        A guitar and a flute playing the same note differ only in the
+        <strong style={{ color: 'var(--text-primary)' }}> mix of those overtones</strong>. That mix is timbre.
+        Build your own below.
       </p>
 
       <canvas ref={canvasRef} style={{ width: '100%', height: '130px', background: '#0E0F11', borderRadius: '8px' }} />
@@ -180,10 +180,6 @@ const HarmonicExplorer: React.FC = () => {
           </button>
         ))}
       </div>
-      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-        "Our Guitar Synth" is the literal recipe this app's guitar sound uses (see src/utils/audio.ts) —
-        55% fundamental, 25% second harmonic, and so on.
-      </p>
     </section>
   );
 };
@@ -327,14 +323,13 @@ const RatioExplorer: React.FC = () => {
   return (
     <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem' }}>
-        2 · Why some notes sound good together: simple ratios & beating
+        2 · Why some notes sound good together
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-        Two tones sound <strong style={{ color: 'var(--text-primary)' }}>consonant</strong> when their frequencies form a
-        simple ratio (2:1, 3:2, 5:4…): the combined wave repeats in a short, tidy pattern. In between,
-        the waves drift in and out of phase and the loudness wobbles at |f₂ − f₁| Hz — that wobble is
-        <strong style={{ color: 'var(--text-primary)' }}> beating</strong>, the physical thing you hear as "out of tune".
-        Turn the sound on and drag the slider slowly.
+        Two tones are <strong style={{ color: 'var(--text-primary)' }}>consonant</strong> when their frequencies form a
+        simple ratio — 2:1, 3:2, 5:4 — and the combined wave repeats in a tidy pattern. In between, the
+        loudness wobbles at |f₂ − f₁| Hz. That wobble is
+        <strong style={{ color: 'var(--text-primary)' }}> beating</strong>: the sound of "out of tune".
       </p>
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -359,16 +354,16 @@ const RatioExplorer: React.FC = () => {
       </div>
 
       <div>
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Combined wave, zoomed to 35 ms — simple ratios repeat neatly:</span>
+        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>35 ms — simple ratios repeat neatly</span>
         <canvas ref={waveCanvasRef} style={{ width: '100%', height: '80px', background: '#0E0F11', borderRadius: '8px', marginTop: '0.25rem' }} />
       </div>
       <div>
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Same signal over 1 full second — beating shows up as slow loudness waves:</span>
+        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>1 second — beating shows up as slow loudness waves</span>
         <canvas ref={envCanvasRef} style={{ width: '100%', height: '80px', background: '#0E0F11', borderRadius: '8px', marginTop: '0.25rem' }} />
       </div>
       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-        The tritone sits at √2 ≈ 1.414 — a famously irrational spot with no tidy pattern, which is
-        exactly why it sounds tense. This is also how you tune by ear: adjust until the beating stops.
+        The tritone sits at √2 ≈ 1.414 — no tidy pattern, which is why it sounds tense. It is also how
+        you tune by ear: adjust until the beating stops.
       </p>
     </section>
   );
@@ -390,14 +385,13 @@ const TEMPER_ROWS: { name: string; semis: number; p: number; q: number }[] = [
 const TemperamentTable: React.FC = () => (
   <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
     <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem' }}>
-      3 · Why 12 notes? Equal temperament is a floating-point hack
+      3 · Why 12 notes
     </h3>
     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-      Pure ratios are physically perfect but mutually incompatible — an instrument tuned to pure ratios
-      in C sounds sour in E. The fix (≈1600s): split the octave into 12 <em>equal</em> steps of
-      2<sup>1/12</sup> ≈ 1.0595 each. Then every interval is slightly wrong in <em>every</em> key by the
-      same tiny amount — a lossy compression scheme trading perfection for universality. It works because of a
-      numerical coincidence: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>2^(7/12) = 1.4983 ≈ 3/2</span>.
+      Pure ratios are perfect but incompatible — tune for C and E sounds sour. The fix, around 1600:
+      split the octave into 12 <em>equal</em> steps of 2<sup>1/12</sup> ≈ 1.0595. Now every interval is
+      slightly wrong in every key by the same tiny amount. It works on a coincidence:
+      <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}> 2^(7/12) = 1.4983 ≈ 3/2</span>.
       The error, measured in cents (1 semitone = 100¢):
     </p>
 
@@ -439,9 +433,8 @@ const TemperamentTable: React.FC = () => (
       </table>
     </div>
     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-      Fifths and fourths land within 2¢ — inaudible. Thirds are ~14¢ off, and you <em>can</em> hear it:
-      the tempered major third beats gently where the pure 5:4 is perfectly smooth. Every piano,
-      guitar fret, and this app all accept that error on purpose.
+      Fifths land within 2¢ — inaudible. Thirds are ~14¢ off and you <em>can</em> hear it. Every piano,
+      every fret, and this app accept that error on purpose.
     </p>
   </section>
 );
@@ -503,13 +496,13 @@ const ModularCircle: React.FC = () => {
   return (
     <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem' }}>
-        4 · The circle of fifths is just (n + 7) mod 12
+        4 · Why the circle of fifths closes
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-        Arrange the 12 notes in a circle (chromatic order) and repeatedly jump up a perfect fifth —
-        7 semitones. Because <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>gcd(7, 12) = 1</span>,
-        the walk visits <em>every</em> note exactly once before returning home: that's the entire reason the
-        circle of fifths exists. Try other step sizes and watch composite steps get stuck in small subgroups.
+        Put the 12 notes in a circle and keep jumping up a fifth — 7 semitones. Because
+        <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}> gcd(7, 12) = 1</span>,
+        the walk hits every note once before coming home. That is the whole reason the circle exists.
+        Try other step sizes.
       </p>
 
       <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
@@ -588,10 +581,6 @@ export const PhysicsLab: React.FC = () => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
     <div className="lab-header">
       <h2 className="lab-title">Sound Physics</h2>
-      <p className="lab-description">
-        Music theory isn't arbitrary — it falls out of the physics of vibrating strings and a bit of
-        modular arithmetic. Four interactive demos, from waveforms to why the circle of fifths exists.
-      </p>
     </div>
     <HarmonicExplorer />
     <RatioExplorer />

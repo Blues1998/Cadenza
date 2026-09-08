@@ -129,8 +129,7 @@ export const TunerLab: React.FC = () => {
       
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title">Singing & Pitch Trainer</h2>
-        <p className="lab-description">Test your pitch precision. Tune your instruments, practice vocal intonation, and play interactive pitch-matching games.</p>
+        <h2 className="lab-title">Pitch &amp; Tuner</h2>
       </div>
 
       <div className="grid-2">
@@ -144,7 +143,7 @@ export const TunerLab: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
               </div>
               <h3 style={{ fontSize: '1.25rem' }}>Microphone Access Required</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '300px' }}>To use the real-time tuner and singing matching game, please activate your microphone input.</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '300px' }}>The tuner listens through your microphone.</p>
               <button onClick={initMicrophone} className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
                 Allow Microphone Access
               </button>
@@ -246,14 +245,14 @@ export const TunerLab: React.FC = () => {
           {!gameMode ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.55 }}>
               <p style={{ margin: 0 }}>
-                Play one string at a time and watch the gauge. Tune <em>up</em> to the note rather than
-                down onto it — a string arriving from below holds its pitch better than one left slack.
+                One string at a time. Tune <em>up</em> to the note — a string arriving from
+                below holds better than one left slack.
               </p>
 
               {/* Standard tuning, low to high. A reference you read while
                   turning a peg, so it is a table and not a sentence. */}
               <div>
-                <span className="field-label">Standard tuning (low → high)</span>
+                <span className="field-label">Standard tuning</span>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(72px, 1fr))', gap: '0.4rem' }}>
                   {[
                     ['6th', 'E2', '82.4'],
@@ -280,10 +279,6 @@ export const TunerLab: React.FC = () => {
                 </div>
               </div>
 
-              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', paddingTop: '0.75rem' }}>
-                Singing instead? Switch to <strong style={{ color: 'var(--text-secondary)' }}>Practice Game</strong> and the lab
-                gives you a note to hold until you land it.
-              </p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '1rem', justifyContent: 'center' }}>
