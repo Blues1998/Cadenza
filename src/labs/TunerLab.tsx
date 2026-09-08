@@ -158,9 +158,10 @@ export const TunerLab: React.FC = () => {
               {/* Dynamic Note Display */}
               <div style={{ textAlign: 'center' }}>
                 <div 
+                  className="readout"
                   style={{
-                    fontSize: '4.5rem',
-                    fontWeight: 700,
+                    fontSize: '4.2rem',
+                    fontWeight: 500,
                     color: pitchData ? (Math.abs(pitchData.cents) <= 5 ? 'var(--success)' : 'var(--primary)') : 'var(--text-muted)',
                     textShadow: pitchData && Math.abs(pitchData.cents) <= 5 ? '0 0 30px var(--success-glow)' : 'none',
                     lineHeight: 1.1,

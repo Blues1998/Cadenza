@@ -95,8 +95,8 @@ const ChordCard: React.FC<{ chord: ScaleChord; onStrum: (m: number[]) => void }>
       style={{ padding: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.5rem' }}>
-        <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)' }}>{prettyNote(chord.symbol)}</strong>
-        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--secondary)' }}>{chord.numeral}</span>
+        <strong className="readout" style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>{prettyNote(chord.symbol)}</strong>
+        <span className="readout" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{chord.numeral}</span>
       </div>
 
       <span className="readout" style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>

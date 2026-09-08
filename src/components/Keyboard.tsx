@@ -33,9 +33,9 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: 'fit-content', maxWidth: '100%', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.5rem' }}>
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>C3 (Low)</span>
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>C4 (Middle C)</span>
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>C6 (High)</span>
+        <span className="readout" style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>C3 (Low)</span>
+        <span className="readout" style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>C4 (Middle C)</span>
+        <span className="readout" style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>C6 (High)</span>
       </div>
 
       <div className="keyboard-container">

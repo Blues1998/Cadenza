@@ -384,17 +384,17 @@ export const EarTrainingLab: React.FC = () => {
           )}
 
           {hasStarted && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: 'auto', background: 'var(--surface-2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Accuracy:</span>
-                <span style={{ fontWeight: 'bold' }}>
-                  {totalQuestions > 0 ? `${Math.round((score / totalQuestions) * 100)}%` : '0%'} 
-                  <span style={{ color: 'var(--text-muted)', fontWeight: 'normal', fontSize: '0.8rem' }}> ({score}/{totalQuestions})</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', marginTop: 'auto', background: 'var(--surface-2)', padding: '0.75rem 0.9rem', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '0.8rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Accuracy</span>
+                <span className="readout" style={{ color: 'var(--text-primary)' }}>
+                  {totalQuestions > 0 ? `${Math.round((score / totalQuestions) * 100)}%` : '0%'}
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}> {score}/{totalQuestions}</span>
                 </span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Streak:</span>
-                <span style={{ color: 'var(--warning)', fontWeight: 'bold' }}>🔥 {streak}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '0.8rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Streak</span>
+                <span className="readout" style={{ color: streak > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>{streak}</span>
               </div>
             </div>
           )}
