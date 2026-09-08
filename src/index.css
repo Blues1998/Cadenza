@@ -673,14 +673,29 @@ html {
    :hover these are cancelled the moment the pointer moves on, and an icon
    caught at full orange snaps back to grey.
 
-   One duration for everything, and every stagger is written into the keyframe
-   percentages rather than into animation-delay. A row can have three elements
-   moving in sequence, but they are three animations of the same length running
+   One duration per row, and every stagger is written into the keyframe
+   percentages rather than into animation-delay. A row can have four elements
+   moving in sequence, but they are four animations of the same length running
    at the same time — so the class is never pulled while one still has a tail
-   left to run. Nothing here is longer than a keystroke: the rail is passed
-   over on the way somewhere, not watched. */
+   left to run.
+
+   How long that is depends on how many beats the gesture has, because a
+   sequence has to spend time to be a sequence. One movement gets 600ms. A row
+   whose parts go in turn — the pulse crossing the headphones, the ripple
+   leaving the bullseye — needs each part to finish visibly before the next
+   starts, so it gets 760ms. The metronome counts four and gets 840ms, which is
+   210ms a beat: fast, but four things you can count rather than a flicker. */
 .channel {
-  --channel-flash: 300ms;
+  --channel-flash: 600ms;
+}
+
+.channel[data-nav='ear-training'],
+.channel[data-nav='play'] {
+  --channel-flash: 760ms;
+}
+
+.channel[data-nav='rhythm'] {
+  --channel-flash: 840ms;
 }
 
 @keyframes channelIconFlash {
