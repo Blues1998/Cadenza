@@ -663,21 +663,24 @@ html {
 }
 
 /* ===== The rail's icons =====
-   Entering a channel flashes its icon to the accent and lets it fall back. It
-   is the one place in the app where the accent appears without meaning "this
-   is live" — affordable precisely because it is gone again before it can be
-   read as a state.
+   Entering a channel flashes its icon to the accent and lets it fall back, and
+   the icon does the thing it is a picture of. It is the one place in the app
+   where the accent appears without meaning "this is live" — affordable
+   precisely because it is gone again before it can be read as a state.
 
    The trigger is .is-flashing, put on by the component and taken off when the
-   animation says it has finished; see the comment on startFlash. On :hover
-   these are cancelled the moment the pointer moves on, and an icon caught at
-   full orange snaps back to grey.
-   
-   One duration for all four. The colour and the movement are one gesture, and
-   they have to end together — the row's class is cleared by whichever ends
-   first, so a longer animation would simply be cut off. */
+   colour flash reports itself finished; see the comment on startFlash. On
+   :hover these are cancelled the moment the pointer moves on, and an icon
+   caught at full orange snaps back to grey.
+
+   One duration for everything, and every stagger is written into the keyframe
+   percentages rather than into animation-delay. A row can have three elements
+   moving in sequence, but they are three animations of the same length running
+   at the same time — so the class is never pulled while one still has a tail
+   left to run. Nothing here is longer than a keystroke: the rail is passed
+   over on the way somewhere, not watched. */
 .channel {
-  --channel-flash: 520ms;
+  --channel-flash: 300ms;
 }
 
 @keyframes channelIconFlash {
@@ -691,49 +694,222 @@ html {
   animation: channelIconFlash var(--channel-flash) ease-out;
 }
 
-/* Three of them do a little more, and they are the three whose icon is a
-   picture of a thing that moves. The rest just flash: an animation on every
-   row would be a rail that fidgets. */
-
-/* The mic goes live. Scaled from the capsule's own centre, not the icon's, so
-   it swells in place instead of drifting up the stand. */
-@keyframes channelMicPulse {
+/* The book turns a page. The right leaf sweeps down to the spine and opens
+   again; scaled rather than rotated, because a leaf standing edge-on to you is
+   exactly a leaf with no width. Its stroke thins as it goes, which is the part
+   that sells it. */
+@keyframes channelPageTurn {
   45% {
-    transform: scale(1.16);
+    transform: scaleX(0.1);
   }
 }
 
-.channel.is-flashing[data-nav='tuner'] .channel-icon svg > path:first-of-type {
+.channel.is-flashing[data-nav='theory'] .channel-icon svg > path:nth-of-type(2) {
   transform-box: view-box;
-  transform-origin: 12px 8.5px;
-  animation: channelMicPulse var(--channel-flash) cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: 12px 12px;
+  animation: channelPageTurn var(--channel-flash) cubic-bezier(0.4, 0, 0.3, 1);
 }
 
-/* The clock ticks. Both hands are one polyline, so rotating it about the
-   dial's centre moves the pair together the way a real face does. It sweeps
-   and returns rather than advancing, since there is no state to advance to. */
-@keyframes channelClockTick {
-  55% {
-    transform: rotate(42deg);
+/* The waveform is driven. Scaled about the centre line the flat ends already
+   sit on, so the signal swells and collapses around its own axis instead of
+   sliding up the box. */
+@keyframes channelWaveFlex {
+  32% {
+    transform: scaleY(0.4);
+  }
+  66% {
+    transform: scaleY(1.25);
+  }
+}
+
+.channel.is-flashing[data-nav='physics'] .channel-icon svg > polyline {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+  animation: channelWaveFlex var(--channel-flash) ease-in-out;
+}
+
+/* A pulse crosses the headphones, left cup to right. Two animations of equal
+   length whose peaks are set apart inside the timeline: the near one has
+   already settled by the time the far one lifts, which is what makes it read
+   as one thing travelling rather than two things blinking. */
+@keyframes channelPulseNear {
+  16% {
+    transform: scale(1.3);
+  }
+  44% {
+    transform: scale(1);
+  }
+}
+
+@keyframes channelPulseFar {
+  52% {
+    transform: scale(1.3);
+  }
+  80% {
+    transform: scale(1);
+  }
+}
+
+.channel.is-flashing[data-nav='ear-training'] .channel-icon svg > path:nth-of-type(2) {
+  transform-box: view-box;
+  transform-origin: 5.5px 17.5px;
+  animation: channelPulseNear var(--channel-flash) ease-out;
+}
+
+.channel.is-flashing[data-nav='ear-training'] .channel-icon svg > path:nth-of-type(3) {
+  transform-box: view-box;
+  transform-origin: 18.5px 17.5px;
+  animation: channelPulseFar var(--channel-flash) ease-out;
+}
+
+/* Four beats. The face has no lamps to light in turn, so the hand counts them
+   — stepped, not swept, because a hand that glides is a clock and a hand that
+   snaps is a metronome. The dial takes the downbeat. Four in 300ms is quicker
+   than anything you would set a metronome to; it is a bar being sounded out,
+   not a tempo to play along with. */
+@keyframes channelBeatTick {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(96deg);
   }
 }
 
 .channel.is-flashing[data-nav='rhythm'] .channel-icon svg > polyline {
   transform-box: view-box;
   transform-origin: 12px 12px;
-  animation: channelClockTick var(--channel-flash) cubic-bezier(0.34, 1.3, 0.64, 1);
+  animation: channelBeatTick var(--channel-flash) steps(4, end);
 }
 
-/* The note rises. The whole glyph, because a beamed note that left its heads
-   behind would come apart. */
-@keyframes channelNoteRise {
-  45% {
-    transform: translateY(-3px);
+@keyframes channelBeatRing {
+  18% {
+    transform: scale(1.06);
+  }
+  46% {
+    transform: scale(1);
+  }
+}
+
+.channel.is-flashing[data-nav='rhythm'] .channel-icon svg > circle {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+  animation: channelBeatRing var(--channel-flash) ease-out;
+}
+
+/* The needle finds centre. The icon is a microphone rather than a dial, so the
+   capsule is the needle: it swings off, overshoots the other way and settles,
+   pivoting at its own base inside a body that stays put. Damped, the way a
+   real one comes to rest — the overshoots get smaller each time. */
+@keyframes channelNeedleSettle {
+  24% {
+    transform: rotate(-10deg);
+  }
+  58% {
+    transform: rotate(5deg);
+  }
+  82% {
+    transform: rotate(-1.5deg);
+  }
+}
+
+.channel.is-flashing[data-nav='tuner'] .channel-icon svg > path:first-of-type {
+  transform-box: view-box;
+  transform-origin: 12px 15px;
+  animation: channelNeedleSettle var(--channel-flash) ease-out;
+}
+
+/* The target takes a hit. The rings go outward from the bullseye and each one
+   moves less than the one inside it, so the ripple loses energy on the way
+   out. The outermost is held to 1.06 — the icon is already as wide as its box,
+   and a rim that grew any further would be clipped by the viewBox. */
+@keyframes channelTargetIn {
+  22% {
+    transform: scale(1.3);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+@keyframes channelTargetMid {
+  40% {
+    transform: scale(1.16);
+  }
+  68% {
+    transform: scale(1);
+  }
+}
+
+@keyframes channelTargetOut {
+  58% {
+    transform: scale(1.06);
+  }
+  86% {
+    transform: scale(1);
+  }
+}
+
+.channel.is-flashing[data-nav='play'] .channel-icon svg > circle {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+}
+
+.channel.is-flashing[data-nav='play'] .channel-icon svg > circle:nth-of-type(3) {
+  animation: channelTargetIn var(--channel-flash) ease-out;
+}
+
+.channel.is-flashing[data-nav='play'] .channel-icon svg > circle:nth-of-type(2) {
+  animation: channelTargetMid var(--channel-flash) ease-out;
+}
+
+.channel.is-flashing[data-nav='play'] .channel-icon svg > circle:nth-of-type(1) {
+  animation: channelTargetOut var(--channel-flash) ease-out;
+}
+
+/* The notes scroll past. One glyph leaves to the left and the next arrives
+   from the right — the same element, moved across the gap while it is at zero
+   opacity, which is how a ticker is done with one of a thing. The whole svg
+   travels: a beamed pair that left its heads behind would come apart. */
+@keyframes channelNoteScroll {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  46% {
+    transform: translateX(-5px);
+    opacity: 0;
+  }
+  54% {
+    transform: translateX(5px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 
 .channel.is-flashing[data-nav='tabs'] .channel-icon svg {
-  animation: channelNoteRise var(--channel-flash) cubic-bezier(0.22, 1, 0.36, 1);
+  animation: channelNoteScroll var(--channel-flash) ease-in-out;
+}
+
+/* The star turns a few degrees and settles back — a nudge, not a spin. Five
+   points means a 72deg rotation is indistinguishable from none, so this stays
+   well under that: the eye reads it as the star having been knocked. */
+@keyframes channelStarTurn {
+  42% {
+    transform: rotate(6deg);
+  }
+  74% {
+    transform: rotate(-1.5deg);
+  }
+}
+
+.channel.is-flashing[data-nav='songs'] .channel-icon svg > polygon {
+  transform-box: view-box;
+  transform-origin: 12px 12.5px;
+  animation: channelStarTurn var(--channel-flash) cubic-bezier(0.34, 1.3, 0.64, 1);
 }
 
 

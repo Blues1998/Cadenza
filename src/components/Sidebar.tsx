@@ -16,11 +16,12 @@ interface SidebarProps {
 
 const COLLAPSED_KEY = 'sidebar-collapsed';
 
-// Names of the rail's hover animations, so an animationend from anything else
-// cannot clear the flash early.
-const FLASH_ANIMATIONS = new Set([
-  'channelIconFlash', 'channelMicPulse', 'channelClockTick', 'channelNoteRise'
-]);
+// A row can be running several animations at once — the target's three rings,
+// the pulse crossing the headphones — and animationend bubbles up from each of
+// them. Only the colour flash ends the flash: every row has one, they are all
+// cut to the same length, and taking the class off on the first one to finish
+// would dock whatever else was still moving.
+const FLASH_CLOCK = 'channelIconFlash';
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme, toggleTheme }) => {
   // Collapsed = icon-only rail; the preference persists across sessions
@@ -165,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
                   className={`channel${isActive ? ' is-live' : ''}${flashing.has(item.id) ? ' is-flashing' : ''}`}
                   onMouseEnter={() => startFlash(item.id)}
                   onAnimationEnd={e => {
-                    if (FLASH_ANIMATIONS.has(e.animationName)) endFlash(item.id);
+                    if (e.animationName === FLASH_CLOCK) endFlash(item.id);
                   }}
                   title={item.label}
                   data-nav={item.id}
