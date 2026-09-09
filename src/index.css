@@ -3495,19 +3495,266 @@ button.dash-card:hover .pickup-go svg {
   cursor: pointer;
 }
 
-/* Offered when a pasted sheet has its chords on their own line. Stated rather
-   than done silently — it rewrites what is in the box. */
-.chart-convert {
+/* The mode switch lives in the panel's own label row. */
+.chart-modes {
+  margin-left: auto;
+}
+
+/* ===== Editing the sheet =====
+   The sheet is the editing surface. Every word carries a chord slot above it:
+   filled ones show the chord, empty ones show a faint + that only appears when
+   you are near it, so a line of words does not read as a line of buttons. */
+.chart-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.chart-key-hint {
+  margin-left: auto;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.chart-lines.is-editing {
+  max-height: 30rem;
+}
+
+.ed-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 0.6rem;
+  padding: 0.2rem 0.3rem;
+  border-radius: 7px;
+  transition: background 0.15s ease;
+}
+
+.ed-row:hover {
+  background: var(--surface-2);
+}
+
+.ed-row.is-section {
+  margin-top: 0.5rem;
+}
+
+.ed-section {
+  max-width: 14rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* How many bars this line lasts — the number that decides whether the chart
+   keeps time with the song, and the one thing a pasted sheet cannot know. */
+.ed-bars {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding-top: 1.05rem;
+  color: var(--text-muted);
+}
+
+.ed-bars .readout {
+  min-width: 1.1rem;
+  text-align: center;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.ed-words {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0 0.35rem;
+  min-width: 0;
+}
+
+.ed-word {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ed-chord {
+  height: 1.15rem;
+  padding: 0 0.2rem;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--primary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+/* An empty slot is invisible until the line is under the pointer. */
+.ed-row:hover .ed-chord {
+  opacity: 0.35;
+}
+
+.ed-chord.has-chord {
+  opacity: 1;
+}
+
+.ed-chord:hover,
+.ed-chord:focus-visible {
+  opacity: 1;
+  background: var(--surface-3);
+}
+
+.ed-chord.is-open {
+  opacity: 1;
+  background: var(--primary);
+  color: var(--text-on-primary);
+}
+
+.ed-text {
+  padding: 0 0.05rem;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+  cursor: text;
+  text-align: left;
+}
+
+.ed-text:hover {
+  background: var(--surface-3);
+}
+
+.ed-lyric-input {
+  font-size: 0.95rem;
+}
+
+.ed-actions {
+  display: flex;
+  gap: 0.1rem;
+  padding-top: 0.9rem;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.ed-row:hover .ed-actions,
+.ed-actions:focus-within {
+  opacity: 1;
+}
+
+.ed-actions button {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ed-actions button:hover {
+  background: var(--surface-3);
+  color: var(--text-primary);
+}
+
+.ed-actions button:last-child:hover {
+  color: var(--danger);
+}
+
+/* Opens under the line rather than floating over it: a popover has to be
+   positioned, and a positioned thing has to be kept on screen. This cannot go
+   anywhere it should not. */
+.ed-chordbox {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.7rem;
-  padding: 0.7rem 0.85rem;
+  gap: 0.4rem 0.6rem;
+  margin: 0.35rem 0 0.2rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 8px;
+  background: var(--surface-3);
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.ed-chord-input {
+  width: 5.5rem;
+  font-size: 0.85rem;
+}
+
+.ed-apply {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.ed-beat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ed-beat .readout {
+  min-width: 2rem;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.ed-suggest {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.ed-add {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ===== Import ===== */
+.chart-import {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.import-read {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.6rem 0.8rem;
   border-radius: 9px;
   background: var(--surface-2);
-  box-shadow: inset 3px 0 0 var(--primary);
-  font-size: 0.82rem;
+  box-shadow: inset 3px 0 0 var(--success);
+  font-size: 0.8rem;
   color: var(--text-secondary);
+}
+
+.import-count {
+  color: var(--text-primary);
+}
+
+.import-format {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.import-meta {
+  margin-left: auto;
+}
+
+.import-warn {
+  color: var(--warning);
 }
 
 /* Which set of chord names is on screen: the ones on the page, or the ones

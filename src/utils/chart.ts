@@ -3,33 +3,44 @@
 //
 // The timeline is bars and beats, not seconds. There is no recording in this
 // app to sync against, and a guitarist does not think "the F arrives at 14.6
-// seconds" — they think "the F is the second bar". Bars and beats are also
-// exact, transposable, and still true when you slow the tempo down to practise,
-// which a list of timestamps is not.
+// seconds" — they think "the F is the second bar". Bars also stay true when the
+// tempo is dragged down to something playable, which a list of timestamps does
+// not, and slowing a song down is most of what practising one is.
 //
-// The chart is stored as the text that was typed and parsed on the way out, the
-// same way a song's chord line is. Nothing is lost in a round trip, editing is
-// just editing the text, and there is no second copy of the same fact to drift.
+// The chart is stored as structure, not as text: a list of lines, each a list
+// of words, each word optionally carrying the chord that starts on it. Text is
+// what comes in from a chord sheet and what goes back out — it is a format, not
+// the truth. Storing the structure is what lets a chord be changed by clicking
+// the chord, rather than by finding it in a paragraph of brackets.
 //
-// The notation is the one every chord sheet already uses: the chord in square
-// brackets, immediately before the syllable it lands on.
-//
-//   Verse:
-//   [Am]Sing a word or two [F]here
-//   [C]And the line goes [G]on
-//
-// One chord holds one bar unless the line says otherwise with bar lines:
-//
-//   [Am]words [F]more | [C]next bar
-//
-// — everything between two bar lines is one bar, and the chords inside it share
-// that bar's beats equally. A line ending in a colon with no chords in it is a
-// section heading.
+// One chord holds one bar unless the line says otherwise. A line's `bars` is
+// explicit and editable; the chords inside it are spread evenly across those
+// bars unless a chord names its own beat.
+
+export interface ChartWord {
+  text: string;
+  /** The chord that starts on this word, if any. */
+  chord?: string;
+  /** Beats from the start of the line. Absent means "share the line evenly". */
+  beat?: number;
+}
+
+export interface ChartLineRecord {
+  id: string;
+  kind: 'lyric' | 'section';
+  /** Section heading text, for kind 'section'. */
+  label?: string;
+  words?: ChartWord[];
+  bars?: number;
+}
 
 export interface ChartChord {
   symbol: string;
   /** Beats from the start of the song. */
   beat: number;
+  /** Which line and which word this came from, so the editor can find it again. */
+  lineId: string;
+  wordIndex: number;
 }
 
 /** A run of lyric text with the chord that starts it, for chord-over-word rendering. */
@@ -40,6 +51,7 @@ export interface ChartSegment {
 
 export interface ChartLine {
   index: number;
+  id: string;
   section: string;
   startBeat: number;
   beats: number;
@@ -69,126 +81,81 @@ export const DEFAULT_CHART: ChartSettings = { tempo: 80, beatsPerBar: 4, countIn
 export const TEMPO_MIN = 30;
 export const TEMPO_MAX = 220;
 
-const CHORD_TOKEN = /\[([^\]]{1,20})\]/g;
+let idSeed = 0;
+export const newLineId = (): string => `l${Date.now().toString(36)}${(idSeed++).toString(36)}`;
 
-// Defined further down with the rest of the transposing; hoisted, so parseChart
-// can use it without the file having to open on pitch arithmetic.
+// ---------------------------------------------------------------------------
+// Timing
+// ---------------------------------------------------------------------------
 
-/** The chords and text of one bar's worth of source, in the order they appear. */
-function readBar(text: string, transpose = 0): { chords: string[]; segments: ChartSegment[] } {
-  const segments: ChartSegment[] = [];
-  const chords: string[] = [];
-  let cursor = 0;
-  let pending: string | null = null;
-  CHORD_TOKEN.lastIndex = 0;
-  for (let m = CHORD_TOKEN.exec(text); m; m = CHORD_TOKEN.exec(text)) {
-    const before = text.slice(cursor, m.index);
-    if (before || pending !== null) segments.push({ chord: pending, text: before });
-    pending = transposeSymbol(m[1].trim(), transpose);
-    chords.push(pending);
-    cursor = m.index + m[0].length;
-  }
-  const tail = text.slice(cursor);
-  if (tail || pending !== null) segments.push({ chord: pending, text: tail });
-  return { chords, segments };
-}
+/** How long a line lasts, in bars, when nobody has said. */
+export const defaultBars = (words: ChartWord[]): number =>
+  Math.max(1, words.filter(w => w.chord).length);
 
 /**
- * Reads a chart's source into lines with beats on them.
+ * Lays the stored lines out on a beat grid.
  *
- * Forgiving throughout: an empty line is skipped, a line with no chords still
- * takes its bar so the words stay in time, and a bracket holding something we
- * cannot name is kept as written. Nothing here rejects input — a chart being
- * written is a chart that is half finished most of the time.
+ * Chords with no beat of their own share the line evenly, which is what a chord
+ * sheet means when it prints four chords over one line. A chord that names a
+ * beat keeps it — that is the escape hatch for the change that lands on the
+ * "and" of three.
  */
-export function parseChart(source: string, beatsPerBar = 4, transpose = 0): ParsedChart {
-  const lines: ChartLine[] = [];
+export function timeChart(lines: ChartLineRecord[], beatsPerBar = 4, transpose = 0): ParsedChart {
+  const out: ChartLine[] = [];
   const sections: string[] = [];
-  const seenChords = new Set<string>();
+  const seen = new Set<string>();
   const chords: string[] = [];
   let section = '';
   let beat = 0;
   let index = 0;
 
-  for (const raw of source.split('\n')) {
-    const text = raw.trim();
-    if (!text) continue;
-
-    // A heading: ends in a colon and has no chords of its own.
-    if (text.endsWith(':') && !text.includes('[')) {
-      section = text.slice(0, -1).trim();
+  for (const record of lines) {
+    if (record.kind === 'section') {
+      section = (record.label ?? '').trim();
       if (section && !sections.includes(section)) sections.push(section);
       continue;
     }
 
-    // A leading or trailing bar line is punctuation, not an empty bar.
-    const bars = text.includes('|')
-      ? text.split('|').map(part => part.trim()).filter(part => part !== '')
-      : [text];
+    const words = record.words ?? [];
+    const bars = Math.max(1, record.bars ?? defaultBars(words));
+    const beats = bars * beatsPerBar;
+    const withChords = words.map((w, i) => ({ w, i })).filter(({ w }) => w.chord);
 
     const lineChords: ChartChord[] = [];
-    const segments: ChartSegment[] = [];
-    let barCount = 0;
+    withChords.forEach(({ w, i }, n) => {
+      const symbol = transposeSymbol(w.chord as string, transpose);
+      const offset = w.beat ?? (n * beats) / withChords.length;
+      lineChords.push({ symbol, beat: beat + offset, lineId: record.id, wordIndex: i });
+      if (seen.has(symbol)) return;
+      seen.add(symbol);
+      chords.push(symbol);
+    });
+    lineChords.sort((a, b) => a.beat - b.beat);
 
-    if (text.includes('|')) {
-      // Explicit bars: whatever is between two bar lines is one bar, and the
-      // chords inside share that bar's beats.
-      for (const bar of bars) {
-        const read = readBar(bar, transpose);
-        // The bar line is a marker, and whatever spacing was typed around it is
-        // cosmetic — but the words either side of it are still separate words.
-        // Each bar is trimmed and the boundary gets exactly one space back,
-        // otherwise "na na | na" came out as "na nana" or "na na  na"
-        // depending on how the line happened to be spaced.
-        if (barCount > 0 && segments.length > 0) {
-          const last = segments[segments.length - 1];
-          if (!/\s$/.test(last.text)) last.text += ' ';
-        }
-        const start = beat + barCount * beatsPerBar;
-        const step = read.chords.length > 0 ? beatsPerBar / read.chords.length : 0;
-        read.chords.forEach((symbol, i) => lineChords.push({ symbol, beat: start + i * step }));
-        segments.push(...read.segments);
-        barCount += 1;
-      }
-    } else {
-      // No bar lines: one chord holds one bar, which is how a chord sheet reads
-      // when nobody has written the bars in.
-      const read = readBar(text, transpose);
-      read.chords.forEach((symbol, i) => lineChords.push({ symbol, beat: beat + i * beatsPerBar }));
-      segments.push(...read.segments);
-      barCount = Math.max(1, read.chords.length);
-    }
+    const segments: ChartSegment[] = words.map((w, i) => ({
+      chord: w.chord ? transposeSymbol(w.chord, transpose) : null,
+      text: w.text + (i < words.length - 1 && w.text !== '' ? ' ' : '')
+    }));
 
-    for (const c of lineChords) {
-      if (seenChords.has(c.symbol)) continue;
-      seenChords.add(c.symbol);
-      chords.push(c.symbol);
-    }
-
-    // A line of nothing but bar lines has no bars to give it a length. It
-    // cannot be timed and there is nothing to show, so it is not a line.
-    if (barCount === 0) continue;
-
-    const words = segments.map(s => s.text).join('').trim();
-    const beats = barCount * beatsPerBar;
-    lines.push({
+    out.push({
       index,
+      id: record.id,
       section,
       startBeat: beat,
       beats,
       chords: lineChords,
       segments,
-      instrumental: words === '' && lineChords.length > 0
+      instrumental: words.every(w => w.text.trim() === '') && lineChords.length > 0
     });
     index += 1;
     beat += beats;
   }
 
   return {
-    lines,
+    lines: out,
     sections,
     totalBeats: beat,
-    chordCount: lines.reduce((n, l) => n + l.chords.length, 0),
+    chordCount: out.reduce((n, l) => n + l.chords.length, 0),
     chords
   };
 }
@@ -230,21 +197,16 @@ export function chartDuration(totalBeats: number, tempo: number): string {
 // Chord sheets as they are found in the wild
 // ---------------------------------------------------------------------------
 
-// Nearly every chord sheet on the internet puts the chords on their own line,
-// spaced so each one sits above the syllable it lands on:
-//
-//     Dm            Bb   C
-//     Words of the song go here
-//
-// That survives being read and does not survive being reflowed — the alignment
-// is the data, and it is gone the moment the column width changes. So it is
-// converted on the way in rather than supported: the column each chord starts
-// at is looked up in the line below, and the chord is written into the words at
-// that point. After that it is an ordinary chart and nothing downstream has to
-// know where it came from.
+// Nearly every chord sheet puts the chords on their own line, spaced so each one
+// sits above the syllable it lands on. That survives being read and does not
+// survive being reflowed — the alignment is the data, and it is gone the moment
+// the column width changes. So it is converted on the way in rather than
+// supported.
 
 const CHORD_TOKEN_STRICT =
   /^[A-G][#b]?(?:maj7|maj9|maj|M7|min7|min|m7b5|m7|m9|m6|m|sus2|sus4|sus|add9|dim7|dim|aug|11|13|7|9|6|5)?(?:\/[A-G][#b]?)?$/;
+
+export const isChordSymbol = (token: string): boolean => CHORD_TOKEN_STRICT.test(token.trim());
 
 const isChordLine = (line: string): boolean => {
   const tokens = line.trim().split(/\s+/).filter(Boolean);
@@ -278,9 +240,7 @@ function chordColumns(line: string): { symbol: string; column: number }[] {
  *
  * A chord line with words under it is merged into them. A chord line with
  * nothing under it is an instrumental bar and becomes a line of bare chords.
- * Headings and blank lines pass through untouched, and anything that is not a
- * chord line is left exactly as it was — a sheet half in one format and half in
- * the other still comes out readable.
+ * Headings and blank lines pass through untouched.
  */
 export function convertAboveLine(text: string): string {
   const lines = text.replace(/\r/g, '').split('\n');
@@ -298,7 +258,6 @@ export function convertAboveLine(text: string): string {
     const hasWords = below !== undefined && below.trim() !== '' && !isChordLine(below);
 
     if (!hasWords) {
-      // An interlude: the chords are the whole line.
       out.push(chords.map(c => `[${c.symbol}]`).join(''));
       continue;
     }
@@ -324,8 +283,169 @@ export function convertAboveLine(text: string): string {
     i += 1;   // the words have been consumed
   }
 
-  // Collapse the runs of blank lines a pasted sheet is full of.
   return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// ---------------------------------------------------------------------------
+// Text in, text out
+// ---------------------------------------------------------------------------
+
+const CHORD_TOKEN = /\[([^\]]{1,24})\]/g;
+
+// Ultimate Guitar marks its sections with brackets too — [Verse 1], [Chorus] —
+// which is the same punctuation this format uses for chords. A bracket holding
+// something that is not a chord is a heading.
+const isSectionBracket = (line: string): boolean => {
+  const m = /^\[([^\]]{1,40})\]$/.exec(line.trim());
+  return m !== null && !isChordSymbol(m[1]);
+};
+
+/** One line of inline text into words, with each chord attached to the word it starts. */
+function wordsFromLine(text: string): ChartWord[] {
+  const pending: string[] = [];
+  const words: ChartWord[] = [];
+  let cursor = 0;
+
+  const pushWords = (chunk: string) => {
+    for (const piece of chunk.split(/\s+/)) {
+      if (piece === '') continue;
+      const word: ChartWord = { text: piece };
+      if (pending.length > 0) word.chord = pending.shift();
+      words.push(word);
+    }
+  };
+
+  CHORD_TOKEN.lastIndex = 0;
+  for (let m = CHORD_TOKEN.exec(text); m; m = CHORD_TOKEN.exec(text)) {
+    pushWords(text.slice(cursor, m.index));
+    pending.push(m[1].trim());
+    cursor = m.index + m[0].length;
+  }
+  pushWords(text.slice(cursor));
+
+  // Chords with no word left to sit on — a change at the end of a line. They get
+  // an empty word so they still have somewhere to live and something to click.
+  for (const chord of pending) words.push({ text: '', chord });
+  return words;
+}
+
+/**
+ * A pasted sheet into stored lines.
+ *
+ * Bar lines are read if they are there: a line written with them takes its bar
+ * count from them, and the chords inside each bar keep their share of it.
+ */
+export function linesFromText(text: string, beatsPerBar = 4): ChartLineRecord[] {
+  const out: ChartLineRecord[] = [];
+
+  for (const raw of text.replace(/\r/g, '').split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    if (isSectionBracket(line)) {
+      out.push({ id: newLineId(), kind: 'section', label: line.slice(1, -1).trim() });
+      continue;
+    }
+    if (line.endsWith(':') && !line.includes('[')) {
+      out.push({ id: newLineId(), kind: 'section', label: line.slice(0, -1).trim() });
+      continue;
+    }
+
+    if (!line.includes('|')) {
+      const words = wordsFromLine(line);
+      if (words.length === 0) continue;
+      out.push({ id: newLineId(), kind: 'lyric', words, bars: defaultBars(words) });
+      continue;
+    }
+
+    // Explicit bars. Each bar's chords share it, so their beats are written down
+    // rather than left to the even spread across the line.
+    const bars = line.split('|').map(b => b.trim()).filter(Boolean);
+    const words: ChartWord[] = [];
+    bars.forEach((bar, barIndex) => {
+      const barWords = wordsFromLine(bar);
+      const chordCount = barWords.filter(w => w.chord).length;
+      let n = 0;
+      for (const w of barWords) {
+        if (w.chord) {
+          w.beat = barIndex * beatsPerBar + (n * beatsPerBar) / Math.max(1, chordCount);
+          n += 1;
+        }
+        words.push(w);
+      }
+    });
+    if (words.length === 0) continue;
+    out.push({ id: newLineId(), kind: 'lyric', words, bars: Math.max(1, bars.length) });
+  }
+
+  return out;
+}
+
+/** Stored lines back to the inline text, for copying out or editing by hand. */
+export function linesToText(lines: ChartLineRecord[]): string {
+  return lines
+    .map(line => {
+      if (line.kind === 'section') return `${line.label ?? ''}:`;
+      return (line.words ?? [])
+        .map(w => (w.chord ? `[${w.chord}]` : '') + w.text)
+        .join(' ')
+        .replace(/\s+$/, '');
+    })
+    .join('\n');
+}
+
+/** Kept for charts stored before the structure existed. */
+export function parseChart(source: string, beatsPerBar = 4, transpose = 0): ParsedChart {
+  return timeChart(linesFromText(source, beatsPerBar), beatsPerBar, transpose);
+}
+
+// ---------------------------------------------------------------------------
+// What a sheet says about itself
+// ---------------------------------------------------------------------------
+
+export interface SheetMeta {
+  capo?: number;
+  key?: string;
+  tempo?: number;
+}
+
+/**
+ * The header lines a chord site puts above the song.
+ *
+ * Read rather than trusted: these are typed by whoever uploaded the tab, so
+ * anything found is offered for the user to accept and never applied silently.
+ */
+export function extractMeta(text: string): SheetMeta {
+  const meta: SheetMeta = {};
+  const head = text.split('\n').slice(0, 40).join('\n');
+
+  const capoNone = /capo\s*[:\-]?\s*(?:none|no capo)/i.test(head);
+  const capo = /capo\s*[:\-]?\s*(?:on\s*)?(\d{1,2})(?:\s*(?:st|nd|rd|th)?\s*fret)?/i.exec(head);
+  if (capoNone) meta.capo = 0;
+  else if (capo) meta.capo = Number(capo[1]);
+
+  const key = /\bkey\s*[:\-]\s*([A-G][#b]?\s*(?:maj(?:or)?|min(?:or)?|m)?)/i.exec(head);
+  if (key) meta.key = key[1].trim().replace(/\s+/g, ' ');
+
+  const tempo = /\b(?:tempo|bpm)\s*[:\-]?\s*(\d{2,3})\b/i.exec(head)
+    ?? /\b(\d{2,3})\s*bpm\b/i.exec(head);
+  if (tempo) {
+    const n = Number(tempo[1]);
+    if (n >= TEMPO_MIN && n <= TEMPO_MAX) meta.tempo = n;
+  }
+
+  return meta;
+}
+
+/** Header and credit lines, dropped so they do not become the first verse. */
+export function stripHeaders(text: string): string {
+  const skip = /^\s*(capo|key|tempo|bpm|tuning|artist|song|title|album|by|chords?\s+by|tabbed\s+by|difficulty|strumming(\s+pattern)?|author|version)\s*[:\-]/i;
+  return text
+    .replace(/\r/g, '')
+    .split('\n')
+    .filter(line => !skip.test(line))
+    .join('\n')
+    .trim();
 }
 
 // ---------------------------------------------------------------------------

@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
+import { Segmented } from './Segmented';
 import { getVoicings } from '../utils/chords';
 import { chordShape } from '../utils/songText';
-import { updateSong } from '../utils/library';
+import { songChords, updateSong } from '../utils/library';
 import type { Song } from '../utils/library';
 import { useChartTransport } from '../hooks/useChartTransport';
 import {
@@ -10,25 +11,25 @@ import {
   chordsAtBeat,
   convertAboveLine,
   DEFAULT_CHART,
+  defaultBars,
+  extractMeta,
   lineAtBeat,
+  linesFromText,
   looksLikeAboveLine,
-  parseChart,
+  newLineId,
+  stripHeaders,
+  timeChart,
   TEMPO_MAX,
-  TEMPO_MIN
+  TEMPO_MIN,
+  transposeSymbol
 } from '../utils/chart';
+import type { ChartLine, ChartLineRecord, ChartWord, ParsedChart } from '../utils/chart';
 
 interface SongChartPanelProps {
   song: Song;
 }
 
-// The format, said once, with nonsense words. Nothing in this app ships with
-// anybody's lyrics in it — the words are yours and they are typed here.
-const EXAMPLE = `Verse:
-[Am]La la la la [F]la la
-[C]La la la la [G]la
-
-Chorus:
-[Am]La la | [F]la [C]la | [G]la`;
+type Mode = 'play' | 'edit' | 'import';
 
 const BEATS_PER_BAR = [3, 4, 6];
 
@@ -44,10 +45,13 @@ const useVoicing = (symbol: string | null) =>
 /**
  * The words and the chord changes, in time.
  *
- * A chord list tells you what to play; it cannot tell you when to change, which
- * is the part that actually breaks a song. This runs the chart against a click
- * so the change arrives when it arrives, shows you the shape you are about to
- * need before you need it, and slows down to whatever tempo you can hold.
+ * Three things one panel has to do, so three modes rather than one crowded one:
+ * take a sheet in from wherever it was found, let every chord and every word be
+ * changed by pressing it, and play the result against a click.
+ *
+ * The editing surface is the sheet itself. An earlier version of this was a
+ * textarea of bracket notation — a fine storage format and a miserable thing to
+ * fix one chord in.
  */
 export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   const stored = song.chart;
@@ -56,22 +60,19 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     beatsPerBar: stored?.beatsPerBar ?? DEFAULT_CHART.beatsPerBar,
     countInBars: stored?.countInBars ?? DEFAULT_CHART.countInBars
   };
-  const source = stored?.source ?? '';
+  const lines = useMemo(() => stored?.lines ?? [], [stored]);
   const transpose = stored?.transpose ?? 0;
   // Minus the capo is the shift that turns a sheet written at sounding pitch
   // into the shapes the hands are making.
   const capoShift = song.capo ? -song.capo : 0;
 
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(source);
+  const [mode, setMode] = useState<Mode>(lines.length === 0 ? 'import' : 'play');
   const [playChords, setPlayChords] = useState(false);
 
   const chart = useMemo(
-    () => parseChart(source, settings.beatsPerBar, transpose),
-    [source, settings.beatsPerBar, transpose]
+    () => timeChart(lines, settings.beatsPerBar, transpose),
+    [lines, settings.beatsPerBar, transpose]
   );
-  const preview = useMemo(() => parseChart(draft, settings.beatsPerBar), [draft, settings.beatsPerBar]);
-  const draftIsAboveLine = useMemo(() => looksLikeAboveLine(draft), [draft]);
 
   const { phase, beat, start, stop, countInBeats } = useChartTransport(chart, settings, { playChords });
   const running = phase === 'countin' || phase === 'playing';
@@ -83,17 +84,22 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   const currentVoicing = useVoicing(current?.symbol ?? null);
   const nextVoicing = useVoicing(next?.symbol ?? null);
 
-  const save = (patch: Partial<{ source: string; tempo: number; beatsPerBar: number; countInBars: number; transpose: number }>) =>
-    void updateSong(song.id, { chart: { source, ...settings, transpose, ...patch } });
+  const patch = (next: Partial<NonNullable<Song['chart']>>) =>
+    void updateSong(song.id, { chart: { lines, ...settings, transpose, ...next } });
+
+  // Everything the editor shows is in the key on screen, so a chord typed while
+  // the capo lens is on is stored shifted back. Editing what you can see is the
+  // whole point of the lens; storing what was typed would silently disagree.
+  const toDisplay = (symbol: string) => transposeSymbol(symbol, transpose);
+  const toStored = (symbol: string) => transposeSymbol(symbol, -transpose);
 
   // Keep the line being sung in the middle of the panel's own scroller rather
-  // than moving the page under you — the transport and the chord you are about
-  // to need have to stay put while the words move.
+  // than moving the page under you.
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!running || !currentLine) return;
-    const el = scroller.current?.querySelector<HTMLElement>(`[data-line="${currentLine.index}"]`);
     const box = scroller.current;
+    const el = box?.querySelector<HTMLElement>(`[data-line="${currentLine.index}"]`);
     if (!el || !box) return;
     box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.offsetHeight / 2, behavior: 'smooth' });
   }, [running, currentLine]);
@@ -109,192 +115,551 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     const gaps = kept.slice(1).map((t, i) => t - kept[i]);
     const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
     const bpm = Math.round(60000 / mean);
-    if (bpm >= TEMPO_MIN && bpm <= TEMPO_MAX) save({ tempo: bpm });
+    if (bpm >= TEMPO_MIN && bpm <= TEMPO_MAX) patch({ tempo: bpm });
   };
 
-  if (editing) {
-    return (
-      <section className="song-panel chart-panel">
-        <div className="surface-label">
-          <span>Chart</span>
-          <span className="readout">{preview.lines.length} lines · {preview.chordCount} changes</span>
-        </div>
-        <p className="chart-help">
-          Put the chord in brackets right before the syllable it lands on. One chord holds one
-          bar; add <code>|</code> bar lines when a bar has more than one. A line ending in a
-          colon is a heading.
-        </p>
-        <textarea
-          className="text-field chart-source"
-          rows={12}
-          spellCheck={false}
-          placeholder={EXAMPLE}
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
-        />
-        {/* Pasted from a chord sheet: the chords are on their own line, spaced
-            over the syllable they land on. That alignment is the data and it
-            does not survive being reflowed, so it is converted rather than
-            supported. */}
-        {draftIsAboveLine && (
-          <div className="chart-convert">
-            <span>These chords sit on a line above the words.</span>
-            <button type="button" className="btn btn-secondary" onClick={() => setDraft(convertAboveLine(draft))}>
-              Write them into the words
-            </button>
-          </div>
-        )}
-        <div className="chart-edit-actions">
-          <button type="button" className="btn btn-primary" onClick={() => { save({ source: draft }); setEditing(false); }}>
-            Save chart
-          </button>
-          <button type="button" className="btn" onClick={() => { setDraft(source); setEditing(false); }}>Cancel</button>
-          {draft.trim() === '' && (
-            <button type="button" className="btn chart-example" onClick={() => setDraft(EXAMPLE)}>Paste the example</button>
-          )}
-        </div>
-      </section>
-    );
-  }
-
-  if (chart.lines.length === 0) {
-    return (
-      <section className="song-panel chart-panel">
-        <div className="surface-label"><span>Chart</span></div>
-        <p className="song-empty">
-          No chart yet. Write the words with the chord changes in them and this will play them
-          in time, at whatever tempo you can hold.
-        </p>
-        <button type="button" className="btn btn-primary chart-start" onClick={() => { setDraft(source); setEditing(true); }}>
-          Write the chart
-        </button>
-      </section>
-    );
-  }
+  const modes: { value: Mode; label: string }[] = [
+    { value: 'play', label: 'Play' },
+    { value: 'edit', label: 'Edit' },
+    { value: 'import', label: 'Import' }
+  ];
 
   return (
     <section className="song-panel chart-panel">
       <div className="surface-label">
         <span>Chart</span>
-        <span className="readout">
-          {chart.lines.length} lines · {chart.chords.length} chords · {chartDuration(chart.totalBeats, settings.tempo)}
-        </span>
-        <button type="button" className="chart-edit" onClick={() => { setDraft(source); setEditing(true); }}>Edit</button>
-      </div>
-
-      <div className="chart-transport">
-        <button type="button" className={`btn ${running ? 'btn-secondary' : 'btn-primary'}`} onClick={running ? stop : start}>
-          {running ? 'Stop' : phase === 'done' ? 'Again' : 'Play along'}
-        </button>
-
-        <label className="chart-tempo">
-          <span className="field-label">Tempo</span>
-          <input
-            type="range"
-            min={TEMPO_MIN}
-            max={TEMPO_MAX}
-            step={1}
-            value={settings.tempo}
-            disabled={running}
-            onChange={e => save({ tempo: Number(e.target.value) })}
-            aria-label="Tempo in beats per minute"
+        {lines.length > 0 && (
+          <span className="readout">
+            {chart.lines.length} lines · {chart.chords.length} chords · {chartDuration(chart.totalBeats, settings.tempo)}
+          </span>
+        )}
+        <span className="chart-modes">
+          <Segmented<Mode>
+            value={mode}
+            onChange={m => { if (running) stop(); setMode(m); }}
+            options={modes}
+            ariaLabel="Chart mode"
+            size="sm"
           />
-        </label>
-        <span className="chart-bpm readout">{settings.tempo}<span> bpm</span></span>
-        <button type="button" className="btn chart-tap" onClick={tapTempo} disabled={running}>Tap</button>
-
-        <label className="chart-signature">
-          <span className="field-label">Beats/bar</span>
-          <select
-            className="select-field"
-            value={settings.beatsPerBar}
-            disabled={running}
-            onChange={e => save({ beatsPerBar: Number(e.target.value) })}
-          >
-            {BEATS_PER_BAR.map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
-        </label>
-
-        <label className="chart-toggle">
-          <input type="checkbox" checked={playChords} onChange={e => setPlayChords(e.target.checked)} />
-          Sound the chords
-        </label>
+        </span>
       </div>
 
-      {/* A sheet copied from anywhere is written at sounding pitch. With a capo
-          on, the shapes under your fingers are a different set of names, and
-          the diagrams have to agree with your hands rather than with the page.
-          The text is never rewritten — this shifts what is shown. */}
+      {mode === 'import' && (
+        <ChartImport
+          song={song}
+          hasChart={lines.length > 0}
+          beatsPerBar={settings.beatsPerBar}
+          onApply={(next, append, meta) => {
+            const merged = append ? [...lines, ...next] : next;
+            void updateSong(song.id, {
+              chart: { lines: merged, ...settings, transpose, ...(meta.tempo ? { tempo: meta.tempo } : {}) },
+              ...(meta.capo !== undefined ? { capo: meta.capo } : {}),
+              ...(meta.key ? { key: meta.key } : {})
+            });
+            setMode('edit');
+          }}
+        />
+      )}
+
+      {mode !== 'import' && lines.length === 0 && (
+        <p className="song-empty">Nothing here yet. Import a sheet, or add lines by hand in Edit.</p>
+      )}
+
+      {mode === 'play' && lines.length > 0 && (
+        <>
+          <div className="chart-transport">
+            <button type="button" className={`btn ${running ? 'btn-secondary' : 'btn-primary'}`} onClick={running ? stop : start}>
+              {running ? 'Stop' : phase === 'done' ? 'Again' : 'Play along'}
+            </button>
+
+            <label className="chart-tempo">
+              <span className="field-label">Tempo</span>
+              <input
+                type="range"
+                min={TEMPO_MIN}
+                max={TEMPO_MAX}
+                step={1}
+                value={settings.tempo}
+                disabled={running}
+                onChange={e => patch({ tempo: Number(e.target.value) })}
+                aria-label="Tempo in beats per minute"
+              />
+            </label>
+            <span className="chart-bpm readout">{settings.tempo}<span> bpm</span></span>
+            <button type="button" className="btn chart-tap" onClick={tapTempo} disabled={running}>Tap</button>
+
+            <label className="chart-signature">
+              <span className="field-label">Beats/bar</span>
+              <select
+                className="select-field"
+                value={settings.beatsPerBar}
+                disabled={running}
+                onChange={e => patch({ beatsPerBar: Number(e.target.value) })}
+              >
+                {BEATS_PER_BAR.map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </label>
+
+            <label className="chart-toggle">
+              <input type="checkbox" checked={playChords} onChange={e => setPlayChords(e.target.checked)} />
+              Sound the chords
+            </label>
+          </div>
+
+          <div className="chart-now">
+            <div className={`chart-chord-now${running ? ' is-live' : ''}`}>
+              <span className="surface-label">{phase === 'countin' ? 'Count in' : 'Now'}</span>
+              {phase === 'countin' ? (
+                <span className="chart-countin readout">{countInBeats + beat + 1}</span>
+              ) : (
+                <>
+                  <span className="chart-chord-name">{current?.symbol ?? '—'}</span>
+                  {currentVoicing && <ChordDiagram frets={currentVoicing.frets} fingers={currentVoicing.fingers} scale={0.58} />}
+                </>
+              )}
+            </div>
+            <div className="chart-chord-next">
+              <span className="surface-label">Next</span>
+              <span className="chart-chord-name">{next?.symbol ?? '—'}</span>
+              {nextVoicing && <ChordDiagram frets={nextVoicing.frets} fingers={nextVoicing.fingers} scale={0.5} />}
+            </div>
+            <div className="chart-progress" aria-hidden="true">
+              <span style={{ width: `${Math.max(0, Math.min(1, beat / Math.max(1, chart.totalBeats))) * 100}%` }} />
+            </div>
+          </div>
+
+          <div className="chart-lines" ref={scroller}>
+            {chart.lines.map(line => (
+              <SheetLine
+                key={line.id}
+                line={line}
+                chart={chart}
+                isNow={currentLine?.index === line.index}
+                live={running ? current : null}
+                beatsPerBar={settings.beatsPerBar}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {mode === 'edit' && (
+        <ChartEditor
+          lines={lines}
+          chart={chart}
+          beatsPerBar={settings.beatsPerBar}
+          transpose={transpose}
+          capo={song.capo}
+          capoShift={capoShift}
+          suggestions={[...new Set([...chart.chords, ...songChords(song).map(toDisplay)])]}
+          onTranspose={t => patch({ transpose: t })}
+          onChange={next => patch({ lines: next })}
+          toDisplay={toDisplay}
+          toStored={toStored}
+        />
+      )}
+    </section>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// One line of the sheet, read-only
+// ---------------------------------------------------------------------------
+
+const SheetLine: React.FC<{
+  line: ChartLine;
+  chart: ParsedChart;
+  isNow: boolean;
+  live: { beat: number } | null;
+  beatsPerBar: number;
+}> = ({ line, chart, isNow, live, beatsPerBar }) => {
+  const showSection = line.section && (line.index === 0 || chart.lines[line.index - 1].section !== line.section);
+  let cursor = 0;
+  return (
+    <>
+      {showSection && <p className="chart-section">{line.section}</p>}
+      <p className={`chart-line${isNow ? ' is-now' : ''}${line.instrumental ? ' is-instrumental' : ''}`} data-line={line.index}>
+        <span className="chart-bar-count readout">{line.beats / beatsPerBar}</span>
+        {line.segments.map((seg, i) => {
+          const chord = seg.chord ? line.chords[cursor++] : null;
+          const isLive = live && chord && Math.abs(chord.beat - live.beat) < 1e-6;
+          return (
+            <span key={i} className="chart-seg">
+              <span className={`chart-seg-chord readout${isLive ? ' is-live' : ''}`}>{seg.chord ?? ''}</span>
+              <span className="chart-seg-text">{seg.text || (seg.chord ? ' ' : '')}</span>
+            </span>
+          );
+        })}
+      </p>
+    </>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Editing
+// ---------------------------------------------------------------------------
+
+interface EditorProps {
+  lines: ChartLineRecord[];
+  chart: ParsedChart;
+  beatsPerBar: number;
+  transpose: number;
+  capo: number | null;
+  capoShift: number;
+  suggestions: string[];
+  onTranspose: (t: number) => void;
+  onChange: (lines: ChartLineRecord[]) => void;
+  toDisplay: (symbol: string) => string;
+  toStored: (symbol: string) => string;
+}
+
+const ChartEditor: React.FC<EditorProps> = ({
+  lines, chart, beatsPerBar, transpose, capo, capoShift, suggestions,
+  onTranspose, onChange, toDisplay, toStored
+}) => {
+  const [chordAt, setChordAt] = useState<{ lineId: string; wordIndex: number } | null>(null);
+  const [lyricAt, setLyricAt] = useState<{ lineId: string; text: string } | null>(null);
+  const [draftChord, setDraftChord] = useState('');
+
+  const mapLine = (id: string, fn: (line: ChartLineRecord) => ChartLineRecord) =>
+    onChange(lines.map(l => (l.id === id ? fn(l) : l)));
+
+  const mapWords = (id: string, fn: (words: ChartWord[]) => ChartWord[]) =>
+    mapLine(id, l => ({ ...l, words: fn(l.words ?? []) }));
+
+  const openChord = (lineId: string, wordIndex: number) => {
+    const word = lines.find(l => l.id === lineId)?.words?.[wordIndex];
+    setDraftChord(word?.chord ? toDisplay(word.chord) : '');
+    setChordAt({ lineId, wordIndex });
+  };
+
+  const commitChord = (symbol: string) => {
+    if (!chordAt) return;
+    const clean = symbol.trim();
+    mapWords(chordAt.lineId, words =>
+      words.map((w, i) => {
+        if (i !== chordAt.wordIndex) return w;
+        if (clean === '') {
+          const { chord: _chord, beat: _beat, ...rest } = w;
+          return rest;
+        }
+        return { ...w, chord: toStored(clean) };
+      })
+    );
+    setChordAt(null);
+  };
+
+  /** The beat a chord currently falls on, relative to its own line. */
+  const beatOf = (lineId: string, wordIndex: number): number => {
+    const line = chart.lines.find(l => l.id === lineId);
+    const chord = line?.chords.find(c => c.wordIndex === wordIndex);
+    return chord && line ? chord.beat - line.startBeat : 0;
+  };
+
+  const nudge = (delta: number) => {
+    if (!chordAt) return;
+    const { lineId, wordIndex } = chordAt;
+    const line = lines.find(l => l.id === lineId);
+    const beats = (line?.bars ?? 1) * beatsPerBar;
+    const at = Math.max(0, Math.min(beats - 0.5, beatOf(lineId, wordIndex) + delta));
+    mapWords(lineId, words => words.map((w, i) => (i === wordIndex ? { ...w, beat: at } : w)));
+  };
+
+  /** Give a chord its share of the line back, instead of a beat of its own. */
+  const evenOut = () => {
+    if (!chordAt) return;
+    mapWords(chordAt.lineId, words => words.map((w, i) => {
+      if (i !== chordAt.wordIndex) return w;
+      const { beat: _beat, ...rest } = w;
+      return rest;
+    }));
+  };
+
+  const setBars = (id: string, delta: number) =>
+    mapLine(id, l => ({ ...l, bars: Math.max(1, (l.bars ?? defaultBars(l.words ?? [])) + delta) }));
+
+  const move = (id: string, delta: number) => {
+    const i = lines.findIndex(l => l.id === id);
+    const j = i + delta;
+    if (i < 0 || j < 0 || j >= lines.length) return;
+    const next = [...lines];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  const removeLine = (id: string) => onChange(lines.filter(l => l.id !== id));
+
+  const addAfter = (id: string | null, kind: 'lyric' | 'section') => {
+    const fresh: ChartLineRecord = kind === 'section'
+      ? { id: newLineId(), kind: 'section', label: 'Section' }
+      : { id: newLineId(), kind: 'lyric', words: [{ text: 'new line' }], bars: 1 };
+    if (id === null) return onChange([...lines, fresh]);
+    const i = lines.findIndex(l => l.id === id);
+    onChange([...lines.slice(0, i + 1), fresh, ...lines.slice(i + 1)]);
+  };
+
+  /**
+   * Re-splitting a line's words keeps the chords on the same word positions.
+   *
+   * Fixing a typo should not cost you the chords over it, and the word index is
+   * the only anchor that survives the text changing underneath — a chord past
+   * the new end moves to the last word rather than being dropped.
+   */
+  const commitLyric = () => {
+    if (!lyricAt) return;
+    const { lineId, text } = lyricAt;
+    mapWords(lineId, words => {
+      const pieces = text.split(/\s+/).filter(Boolean);
+      if (pieces.length === 0) return words;
+      const next: ChartWord[] = pieces.map(t => ({ text: t }));
+      words.forEach((w, i) => {
+        if (!w.chord) return;
+        const at = Math.min(i, next.length - 1);
+        next[at] = { ...next[at], chord: w.chord, ...(w.beat !== undefined ? { beat: w.beat } : {}) };
+      });
+      return next;
+    });
+    setLyricAt(null);
+  };
+
+  return (
+    <div className="chart-editor">
       <div className="chart-key">
         <span className="chart-key-label">Showing</span>
-        <button type="button" className="chart-step" onClick={() => save({ transpose: transpose - 1 })} aria-label="Down a semitone">−</button>
+        <button type="button" className="chart-step" onClick={() => onTranspose(transpose - 1)} aria-label="Down a semitone">−</button>
         <span className="chart-key-state readout">
           {transpose === 0 ? 'as written' : `${transpose > 0 ? '+' : ''}${transpose}`}
-          {capoShift !== 0 && transpose === capoShift && <span> · capo {song.capo} shapes</span>}
+          {capoShift !== 0 && transpose === capoShift && <span> · capo {capo} shapes</span>}
         </span>
-        <button type="button" className="chart-step" onClick={() => save({ transpose: transpose + 1 })} aria-label="Up a semitone">+</button>
+        <button type="button" className="chart-step" onClick={() => onTranspose(transpose + 1)} aria-label="Up a semitone">+</button>
         {capoShift !== 0 && transpose !== capoShift && (
-          <button type="button" className="chart-key-preset" onClick={() => save({ transpose: capoShift })}>
-            Shapes for capo {song.capo}
+          <button type="button" className="chart-key-preset" onClick={() => onTranspose(capoShift)}>
+            Shapes for capo {capo}
           </button>
         )}
         {transpose !== 0 && (
-          <button type="button" className="chart-key-preset" onClick={() => save({ transpose: 0 })}>As written</button>
+          <button type="button" className="chart-key-preset" onClick={() => onTranspose(0)}>As written</button>
         )}
+        <span className="chart-key-hint">Press a chord to change it, the words to retype them.</span>
       </div>
 
-      {/* What you are holding, and what is coming. The next shape is the one
-          that matters — by the time the change lands it is too late to look. */}
-      <div className="chart-now">
-        <div className={`chart-chord-now${running ? ' is-live' : ''}`}>
-          <span className="surface-label">{phase === 'countin' ? 'Count in' : 'Now'}</span>
-          {phase === 'countin' ? (
-            <span className="chart-countin readout">{countInBeats + beat + 1}</span>
-          ) : (
-            <>
-              <span className="chart-chord-name">{current?.symbol ?? '—'}</span>
-              {currentVoicing && <ChordDiagram frets={currentVoicing.frets} fingers={currentVoicing.fingers} scale={0.58} />}
-            </>
-          )}
-        </div>
-        <div className="chart-chord-next">
-          <span className="surface-label">Next</span>
-          <span className="chart-chord-name">{next?.symbol ?? '—'}</span>
-          {nextVoicing && <ChordDiagram frets={nextVoicing.frets} fingers={nextVoicing.fingers} scale={0.5} />}
-        </div>
-        <div className="chart-progress" aria-hidden="true">
-          <span
-            style={{ width: `${Math.max(0, Math.min(1, beat / Math.max(1, chart.totalBeats))) * 100}%` }}
-          />
-        </div>
-      </div>
+      <div className="chart-lines is-editing">
+        {lines.map(line => {
+          if (line.kind === 'section') {
+            return (
+              <div key={line.id} className="ed-row is-section">
+                <input
+                  className="text-field ed-section"
+                  value={line.label ?? ''}
+                  onChange={e => mapLine(line.id, l => ({ ...l, label: e.target.value }))}
+                  aria-label="Section name"
+                />
+                <LineActions
+                  onUp={() => move(line.id, -1)}
+                  onDown={() => move(line.id, 1)}
+                  onDelete={() => removeLine(line.id)}
+                  onAdd={k => addAfter(line.id, k)}
+                />
+              </div>
+            );
+          }
 
-      <div className="chart-lines" ref={scroller}>
-        {chart.lines.map(line => {
-          const isNow = currentLine?.index === line.index;
-          const showSection = line.section && (line.index === 0 || chart.lines[line.index - 1].section !== line.section);
-          let chordCursor = 0;
+          const words = line.words ?? [];
+          const bars = line.bars ?? defaultBars(words);
+          const openHere = chordAt?.lineId === line.id;
+
           return (
-            <React.Fragment key={line.index}>
-              {showSection && <p className="chart-section">{line.section}</p>}
-              <p className={`chart-line${isNow ? ' is-now' : ''}${line.instrumental ? ' is-instrumental' : ''}`} data-line={line.index}>
-                <span className="chart-bar-count readout">{line.beats / settings.beatsPerBar}</span>
-                {line.segments.map((seg, i) => {
-                  const chord = seg.chord ? line.chords[chordCursor++] : null;
-                  const live = running && chord && current && Math.abs(chord.beat - current.beat) < 1e-6;
-                  return (
-                    <span key={i} className="chart-seg">
-                      <span className={`chart-seg-chord readout${live ? ' is-live' : ''}`}>{seg.chord ?? ''}</span>
-                      <span className="chart-seg-text">{seg.text || (seg.chord ? ' ' : '')}</span>
+            <div key={line.id} className="ed-row">
+              <div className="ed-bars" title="Bars this line lasts">
+                <button type="button" className="chart-step" onClick={() => setBars(line.id, -1)} aria-label="One bar fewer">−</button>
+                <span className="readout">{bars}</span>
+                <button type="button" className="chart-step" onClick={() => setBars(line.id, 1)} aria-label="One bar more">+</button>
+              </div>
+
+              {lyricAt?.lineId === line.id ? (
+                <input
+                  className="text-field ed-lyric-input"
+                  autoFocus
+                  value={lyricAt.text}
+                  onChange={e => setLyricAt({ lineId: line.id, text: e.target.value })}
+                  onBlur={commitLyric}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') commitLyric();
+                    if (e.key === 'Escape') setLyricAt(null);
+                  }}
+                  aria-label="Words for this line"
+                />
+              ) : (
+                <div className="ed-words">
+                  {words.map((w, i) => (
+                    <span key={i} className="ed-word">
+                      <button
+                        type="button"
+                        className={`ed-chord${w.chord ? ' has-chord' : ''}${openHere && chordAt?.wordIndex === i ? ' is-open' : ''}`}
+                        onClick={() => openChord(line.id, i)}
+                        title={w.chord ? `Change ${toDisplay(w.chord)}` : 'Put a chord here'}
+                      >
+                        {w.chord ? toDisplay(w.chord) : '+'}
+                      </button>
+                      <button
+                        type="button"
+                        className="ed-text"
+                        onClick={() => setLyricAt({ lineId: line.id, text: words.map(x => x.text).join(' ').trim() })}
+                      >
+                        {w.text || '·'}
+                      </button>
                     </span>
-                  );
-                })}
-              </p>
-            </React.Fragment>
+                  ))}
+                </div>
+              )}
+
+              <LineActions
+                onUp={() => move(line.id, -1)}
+                onDown={() => move(line.id, 1)}
+                onDelete={() => removeLine(line.id)}
+                onAdd={k => addAfter(line.id, k)}
+              />
+
+              {openHere && chordAt && (
+                <div className="ed-chordbox">
+                  <input
+                    className="text-field ed-chord-input readout"
+                    autoFocus
+                    value={draftChord}
+                    placeholder="Am"
+                    onChange={e => setDraftChord(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') commitChord(draftChord);
+                      if (e.key === 'Escape') setChordAt(null);
+                    }}
+                    aria-label="Chord"
+                  />
+                  <button type="button" className="btn btn-primary ed-apply" onClick={() => commitChord(draftChord)}>Set</button>
+                  <button type="button" className="btn" onClick={() => commitChord('')}>Clear</button>
+                  <span className="ed-beat">
+                    beat
+                    <button type="button" className="chart-step" onClick={() => nudge(-0.5)} aria-label="Half a beat earlier">◀</button>
+                    <span className="readout">{(beatOf(line.id, chordAt.wordIndex) + 1).toFixed(1)}</span>
+                    <button type="button" className="chart-step" onClick={() => nudge(0.5)} aria-label="Half a beat later">▶</button>
+                    <button type="button" className="chart-key-preset" onClick={evenOut}>Even</button>
+                  </span>
+                  {suggestions.length > 0 && (
+                    <span className="ed-suggest">
+                      {suggestions.slice(0, 10).map(s => (
+                        <button key={s} type="button" className="chip-btn readout" onClick={() => commitChord(s)}>{s}</button>
+                      ))}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
-    </section>
+
+      <div className="ed-add">
+        <button type="button" className="btn" onClick={() => addAfter(null, 'lyric')}>Add line</button>
+        <button type="button" className="btn" onClick={() => addAfter(null, 'section')}>Add section</button>
+      </div>
+    </div>
+  );
+};
+
+const LineActions: React.FC<{
+  onUp: () => void; onDown: () => void; onDelete: () => void; onAdd: (kind: 'lyric' | 'section') => void;
+}> = ({ onUp, onDown, onDelete, onAdd }) => (
+  <span className="ed-actions">
+    <button type="button" onClick={onUp} title="Move up" aria-label="Move line up">↑</button>
+    <button type="button" onClick={onDown} title="Move down" aria-label="Move line down">↓</button>
+    <button type="button" onClick={() => onAdd('lyric')} title="Add a line below" aria-label="Add a line below">+</button>
+    <button type="button" onClick={onDelete} title="Delete this line" aria-label="Delete line">×</button>
+  </span>
+);
+
+// ---------------------------------------------------------------------------
+// Bringing a sheet in
+// ---------------------------------------------------------------------------
+
+const ChartImport: React.FC<{
+  song: Song;
+  hasChart: boolean;
+  beatsPerBar: number;
+  onApply: (lines: ChartLineRecord[], append: boolean, meta: { capo?: number; key?: string; tempo?: number }) => void;
+}> = ({ song, hasChart, beatsPerBar, onApply }) => {
+  const [text, setText] = useState('');
+  const [takeMeta, setTakeMeta] = useState(true);
+
+  const read = useMemo(() => {
+    if (text.trim() === '') return null;
+    const meta = extractMeta(text);
+    const body = stripHeaders(text);
+    const stacked = looksLikeAboveLine(body);
+    const inline = stacked ? convertAboveLine(body) : body;
+    return { meta, stacked, lines: linesFromText(inline, beatsPerBar) };
+  }, [text, beatsPerBar]);
+
+  const chordCount = read?.lines.reduce((n, l) => n + (l.words ?? []).filter(w => w.chord).length, 0) ?? 0;
+  const found: string[] = [];
+  if (read?.meta.capo !== undefined) found.push(read.meta.capo === 0 ? 'no capo' : `capo ${read.meta.capo}`);
+  if (read?.meta.key) found.push(`key ${read.meta.key}`);
+  if (read?.meta.tempo) found.push(`${read.meta.tempo} bpm`);
+
+  return (
+    <div className="chart-import">
+      <p className="chart-help">
+        Paste a sheet from anywhere — chords above the words or written into them, both work.
+        Section markers, and a capo, key or tempo in the header, are picked up too. Nothing is
+        applied until you press a button below.
+      </p>
+      <textarea
+        className="text-field chart-source"
+        rows={12}
+        spellCheck={false}
+        placeholder={'Verse:\nAm            F\nLa la la la la la'}
+        value={text}
+        onChange={e => setText(e.target.value)}
+      />
+
+      {read && (
+        <div className="import-read">
+          <span className="import-count readout">
+            {read.lines.filter(l => l.kind === 'lyric').length} lines · {chordCount} chords
+          </span>
+          <span className="import-format">{read.stacked ? 'chords above the words' : 'chords written in'}</span>
+          {found.length > 0 && (
+            <label className="chart-toggle import-meta">
+              <input type="checkbox" checked={takeMeta} onChange={e => setTakeMeta(e.target.checked)} />
+              Also take {found.join(' · ')}
+              {song.capo !== null && read.meta.capo !== undefined && read.meta.capo !== song.capo && (
+                <span className="import-warn"> — the song currently says capo {song.capo}</span>
+              )}
+            </label>
+          )}
+        </div>
+      )}
+
+      <div className="chart-edit-actions">
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={!read || read.lines.length === 0}
+          onClick={() => read && onApply(read.lines, false, takeMeta ? read.meta : {})}
+        >
+          {hasChart ? 'Replace the chart' : 'Use this'}
+        </button>
+        {hasChart && (
+          <button
+            type="button"
+            className="btn"
+            disabled={!read || read.lines.length === 0}
+            onClick={() => read && onApply(read.lines, true, takeMeta ? read.meta : {})}
+          >
+            Add to the end
+          </button>
+        )}
+        {text !== '' && <button type="button" className="btn" onClick={() => setText('')}>Clear</button>}
+      </div>
+    </div>
   );
 };
 

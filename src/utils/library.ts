@@ -23,6 +23,7 @@
 
 import { clearStore, deleteRecord, putRecords, readAll, storageKind } from './db';
 import { parseProgressions, uniqueChords } from './songText';
+import { linesFromText, type ChartLineRecord } from './chart';
 import { SEED_CHALLENGE, SEED_SONGS } from '../data/septemberSeed';
 
 export type SongStatus = 'learning' | 'playable' | 'solid' | 'complete';
@@ -37,15 +38,17 @@ export const STATUS_LABEL: Record<SongStatus, string> = {
 export const STATUS_ORDER: SongStatus[] = ['learning', 'playable', 'solid', 'complete'];
 
 /**
- * A song's chart, kept as the text that was typed.
+ * A song's chart: the words, and the chord that starts on each of them.
  *
- * Parsed on the way out by chart.ts, never on the way in — the same treatment
- * chordsRaw gets, and for the same reason: a round trip loses nothing and there
- * is only ever one copy of the fact. The words in `source` are always the
- * user's own; nothing ships with any.
+ * Structure rather than text. Text is how a chart arrives from a chord sheet
+ * and how it leaves, but storing it that way meant every change was a change to
+ * a paragraph of brackets. Storing the words is what lets a chord be edited by
+ * pressing the chord.
+ *
+ * The words are always the user's own. Nothing ships with any.
  */
 export interface SongChartRecord {
-  source: string;
+  lines: ChartLineRecord[];
   tempo: number;
   beatsPerBar: number;
   countInBars: number;
@@ -55,9 +58,11 @@ export interface SongChartRecord {
    * A sheet found online is written at sounding pitch; someone playing with a
    * capo on frets different shapes. Setting this to minus the capo shows the
    * shapes the hands are actually making, which is what the diagrams have to
-   * agree with. The source text is never rewritten — this is a lens over it.
+   * agree with. The stored words are never rewritten — this is a lens.
    */
   transpose: number;
+  /** Charts written before the structure existed. Migrated on load, then dropped. */
+  source?: string;
 }
 
 export interface Song {
@@ -160,6 +165,18 @@ const newId = (): string => {
   }
 };
 
+/**
+ * Charts written when the store held text are read into lines the first time
+ * they are loaded, here rather than at every read — one conversion, and after
+ * it nothing downstream has to know two shapes.
+ */
+function migrateChart(chart: SongChartRecord | null | undefined): SongChartRecord | null {
+  if (!chart) return null;
+  if (Array.isArray(chart.lines)) return chart;
+  const { source, ...rest } = chart;
+  return { ...rest, lines: linesFromText(source ?? '', chart.beatsPerBar ?? 4) };
+}
+
 export function initLibrary(): Promise<void> {
   if (readyPromise) return readyPromise;
   readyPromise = (async () => {
@@ -170,7 +187,7 @@ export function initLibrary(): Promise<void> {
       readAll<Challenge>('challenges'),
       readAll<Setting>('settings')
     ]);
-    songs = loadedSongs.map(song => ({ ...song, chart: song.chart ?? null }));
+    songs = loadedSongs.map(song => ({ ...song, chart: migrateChart(song.chart) }));
     sessions = loadedSessions;
     challenge = loadedChallenges[0] ?? null;
 
@@ -552,7 +569,7 @@ export async function importLibrary(raw: string): Promise<ImportResult> {
   }
   const nextSongs = data.songs
     .filter(s => s && typeof s.id === 'string' && typeof s.title === 'string')
-    .map(s => ({ ...s, chart: s.chart ?? null }));
+    .map(s => ({ ...s, chart: migrateChart(s.chart) }));
   const nextSessions = (Array.isArray(data.sessions) ? data.sessions : [])
     .filter(s => s && typeof s.id === 'string' && typeof s.songId === 'string');
   const nextChallenge = (Array.isArray(data.challenges) ? data.challenges : [])[0] ?? null;
