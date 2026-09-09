@@ -3495,6 +3495,83 @@ button.dash-card:hover .pickup-go svg {
   cursor: pointer;
 }
 
+/* Offered when a pasted sheet has its chords on their own line. Stated rather
+   than done silently — it rewrites what is in the box. */
+.chart-convert {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 9px;
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--primary);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+/* Which set of chord names is on screen: the ones on the page, or the ones
+   your hands are making with the capo on. */
+.chart-key {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.chart-key-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chart-step {
+  width: 1.6rem;
+  height: 1.6rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.chart-step:hover {
+  background: var(--surface-3);
+  color: var(--text-primary);
+}
+
+.chart-key-state {
+  min-width: 4.5rem;
+  color: var(--text-primary);
+}
+
+.chart-key-state span {
+  color: var(--primary);
+}
+
+.chart-key-preset {
+  padding: 0.2rem 0.5rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--surface-2);
+  font-family: inherit;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.chart-key-preset:hover {
+  background: var(--surface-3);
+  color: var(--primary);
+}
+
 /* Now and next. The next shape is the one that matters — by the time the
    change lands there is no time left to look it up. */
 .chart-now {

@@ -49,6 +49,15 @@ export interface SongChartRecord {
   tempo: number;
   beatsPerBar: number;
   countInBars: number;
+  /**
+   * Semitones to shift every chord by for display.
+   *
+   * A sheet found online is written at sounding pitch; someone playing with a
+   * capo on frets different shapes. Setting this to minus the capo shows the
+   * shapes the hands are actually making, which is what the diagrams have to
+   * agree with. The source text is never rewritten — this is a lens over it.
+   */
+  transpose: number;
 }
 
 export interface Song {

@@ -8,8 +8,10 @@ import { useChartTransport } from '../hooks/useChartTransport';
 import {
   chartDuration,
   chordsAtBeat,
+  convertAboveLine,
   DEFAULT_CHART,
   lineAtBeat,
+  looksLikeAboveLine,
   parseChart,
   TEMPO_MAX,
   TEMPO_MIN
@@ -55,13 +57,21 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     countInBars: stored?.countInBars ?? DEFAULT_CHART.countInBars
   };
   const source = stored?.source ?? '';
+  const transpose = stored?.transpose ?? 0;
+  // Minus the capo is the shift that turns a sheet written at sounding pitch
+  // into the shapes the hands are making.
+  const capoShift = song.capo ? -song.capo : 0;
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(source);
   const [playChords, setPlayChords] = useState(false);
 
-  const chart = useMemo(() => parseChart(source, settings.beatsPerBar), [source, settings.beatsPerBar]);
+  const chart = useMemo(
+    () => parseChart(source, settings.beatsPerBar, transpose),
+    [source, settings.beatsPerBar, transpose]
+  );
   const preview = useMemo(() => parseChart(draft, settings.beatsPerBar), [draft, settings.beatsPerBar]);
+  const draftIsAboveLine = useMemo(() => looksLikeAboveLine(draft), [draft]);
 
   const { phase, beat, start, stop, countInBeats } = useChartTransport(chart, settings, { playChords });
   const running = phase === 'countin' || phase === 'playing';
@@ -73,8 +83,8 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   const currentVoicing = useVoicing(current?.symbol ?? null);
   const nextVoicing = useVoicing(next?.symbol ?? null);
 
-  const save = (patch: Partial<{ source: string; tempo: number; beatsPerBar: number; countInBars: number }>) =>
-    void updateSong(song.id, { chart: { source, ...settings, ...patch } });
+  const save = (patch: Partial<{ source: string; tempo: number; beatsPerBar: number; countInBars: number; transpose: number }>) =>
+    void updateSong(song.id, { chart: { source, ...settings, transpose, ...patch } });
 
   // Keep the line being sung in the middle of the panel's own scroller rather
   // than moving the page under you — the transport and the chord you are about
@@ -122,6 +132,18 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
           value={draft}
           onChange={e => setDraft(e.target.value)}
         />
+        {/* Pasted from a chord sheet: the chords are on their own line, spaced
+            over the syllable they land on. That alignment is the data and it
+            does not survive being reflowed, so it is converted rather than
+            supported. */}
+        {draftIsAboveLine && (
+          <div className="chart-convert">
+            <span>These chords sit on a line above the words.</span>
+            <button type="button" className="btn btn-secondary" onClick={() => setDraft(convertAboveLine(draft))}>
+              Write them into the words
+            </button>
+          </div>
+        )}
         <div className="chart-edit-actions">
           <button type="button" className="btn btn-primary" onClick={() => { save({ source: draft }); setEditing(false); }}>
             Save chart
@@ -197,6 +219,28 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
           <input type="checkbox" checked={playChords} onChange={e => setPlayChords(e.target.checked)} />
           Sound the chords
         </label>
+      </div>
+
+      {/* A sheet copied from anywhere is written at sounding pitch. With a capo
+          on, the shapes under your fingers are a different set of names, and
+          the diagrams have to agree with your hands rather than with the page.
+          The text is never rewritten — this shifts what is shown. */}
+      <div className="chart-key">
+        <span className="chart-key-label">Showing</span>
+        <button type="button" className="chart-step" onClick={() => save({ transpose: transpose - 1 })} aria-label="Down a semitone">−</button>
+        <span className="chart-key-state readout">
+          {transpose === 0 ? 'as written' : `${transpose > 0 ? '+' : ''}${transpose}`}
+          {capoShift !== 0 && transpose === capoShift && <span> · capo {song.capo} shapes</span>}
+        </span>
+        <button type="button" className="chart-step" onClick={() => save({ transpose: transpose + 1 })} aria-label="Up a semitone">+</button>
+        {capoShift !== 0 && transpose !== capoShift && (
+          <button type="button" className="chart-key-preset" onClick={() => save({ transpose: capoShift })}>
+            Shapes for capo {song.capo}
+          </button>
+        )}
+        {transpose !== 0 && (
+          <button type="button" className="chart-key-preset" onClick={() => save({ transpose: 0 })}>As written</button>
+        )}
       </div>
 
       {/* What you are holding, and what is coming. The next shape is the one
