@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
 import { Segmented } from './Segmented';
+import { IconPause, IconPlay, IconStop } from './Icons';
 import { getVoicings } from '../utils/chords';
 import { chordShape } from '../utils/songText';
 import { songChords, updateSong } from '../utils/library';
@@ -74,11 +75,18 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     [lines, settings.beatsPerBar, transpose]
   );
 
-  const { phase, beat, start, stop, countInBeats } = useChartTransport(chart, settings, { playChords });
-  const running = phase === 'countin' || phase === 'playing';
+  const { phase, beat, start, stop, pause, resume, countInBeats } = useChartTransport(chart, settings, { playChords });
+  // Three readings of one phase. `moving` is the clock actually running;
+  // `running` is a run in progress, paused or not, and is what locks the tempo
+  // and metre; `holding` is a position worth showing, which a pause keeps.
+  const moving = phase === 'countin' || phase === 'playing';
+  const running = moving || phase === 'paused';
+  const holding = phase === 'playing' || phase === 'paused';
+  // Pausing during the count-in should hold the count, not blank it.
+  const counting = phase === 'countin' || (phase === 'paused' && beat < 0);
 
-  const currentLine = phase === 'playing' ? lineAtBeat(chart, beat) : null;
-  const { current, next } = phase === 'playing'
+  const currentLine = holding ? lineAtBeat(chart, beat) : null;
+  const { current, next } = holding
     ? chordsAtBeat(chart, beat)
     : { current: null, next: chart.lines[0]?.chords[0] ?? null };
   const currentVoicing = useVoicing(current?.symbol ?? null);
@@ -177,9 +185,34 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
       {mode === 'play' && lines.length > 0 && (
         <>
           <div className="chart-transport">
-            <button type="button" className={`btn ${running ? 'btn-secondary' : 'btn-primary'}`} onClick={running ? stop : start}>
-              {running ? 'Stop' : phase === 'done' ? 'Again' : 'Play along'}
-            </button>
+            <div className="transport">
+              <button
+                type="button"
+                className={`transport-btn is-main${moving ? ' is-moving' : ''}${phase === 'paused' ? ' is-held' : ''}`}
+                onClick={moving ? pause : phase === 'paused' ? resume : start}
+                aria-label={moving ? 'Pause' : phase === 'paused' ? 'Resume' : phase === 'done' ? 'Play again' : 'Play along'}
+                title={moving ? 'Pause' : phase === 'paused' ? 'Resume' : phase === 'done' ? 'Play again' : 'Play along'}
+              >
+                {/* Both icons live in the button and trade places, so the
+                    change is a movement rather than a swap. */}
+                <span className="transport-icons" aria-hidden="true">
+                  <IconPlay size={18} className="transport-play" fill="currentColor" strokeWidth={1.5} />
+                  <IconPause size={18} className="transport-pause" fill="currentColor" strokeWidth={1} />
+                </span>
+                {/* One ring per beat, keyed so it starts again on each. */}
+                {moving && <span key={beat} className="transport-beat" aria-hidden="true" />}
+              </button>
+              <button
+                type="button"
+                className="transport-btn is-stop"
+                onClick={stop}
+                disabled={!running && phase !== 'done'}
+                aria-label="Stop"
+                title="Stop"
+              >
+                <IconStop size={15} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
+              </button>
+            </div>
 
             <label className="chart-tempo">
               <span className="field-label">Tempo</span>
@@ -216,9 +249,9 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
           </div>
 
           <div className="chart-now">
-            <div className={`chart-chord-now${running ? ' is-live' : ''}`}>
-              <span className="surface-label">{phase === 'countin' ? 'Count in' : 'Now'}</span>
-              {phase === 'countin' ? (
+            <div className={`chart-chord-now${holding ? ' is-live' : ''}`}>
+              <span className="surface-label">{counting ? 'Count in' : 'Now'}</span>
+              {counting ? (
                 <span className="chart-countin readout">{countInBeats + beat + 1}</span>
               ) : (
                 <>
@@ -244,7 +277,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                 line={line}
                 chart={chart}
                 isNow={currentLine?.index === line.index}
-                live={running ? current : null}
+                live={holding ? current : null}
                 beatsPerBar={settings.beatsPerBar}
               />
             ))}

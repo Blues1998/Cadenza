@@ -73,3 +73,10 @@ export const IconMoon: React.FC<IconProps> = ({ size = 16, ...props }) => (
     <path d="M21 12.6A9 9 0 1 1 11.4 3a7 7 0 0 0 9.6 9.6Z" />
   </svg>
 );
+
+export const IconPause: React.FC<IconProps> = ({ size = 12, ...props }) => (
+  <svg {...base(size)} {...props} strokeWidth={2.5}>
+    <rect x="6" y="4.5" width="4" height="15" rx="1.4" />
+    <rect x="14" y="4.5" width="4" height="15" rx="1.4" />
+  </svg>
+);
