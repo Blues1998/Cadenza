@@ -90,9 +90,11 @@ export function useChartTransport(
   // reading the clock back for the display. Started by play, and again by
   // resume once the anchor has been moved.
   const runLoops = useCallback(() => {
-    const { spb, bpb, lead } = plan.current;
-
     timer.current = window.setInterval(() => {
+      // Read afresh every tick rather than closed over at setup: the tempo can
+      // move while this is running, and a closure taken once would keep the
+      // loop at whatever it started at while the readout said otherwise.
+      const { spb, bpb } = plan.current;
       const { chart: cur, playChords, loop, strum, metronome } = live.current;
       const now = audio.getCurrentTime();
       const horizon = now + AHEAD_SEC;
@@ -141,6 +143,7 @@ export function useChartTransport(
     }, TICK_MS);
 
     const follow = () => {
+      const { spb, lead } = plan.current;
       const elapsed = audio.getCurrentTime() - startTime.current;
       const position = Math.floor(elapsed / spb) - lead;
       setBeat(prev => (position === prev ? prev : position));
@@ -190,6 +193,29 @@ export function useChartTransport(
     setPhase(elapsed < plan.current.lead * plan.current.spb ? 'countin' : 'playing');
     runLoops();
   }, [runLoops]);
+
+  /**
+   * Moving the tempo mid-flight.
+   *
+   * Beat times come from one anchor and one beat length, so changing the beat
+   * length alone would drag the whole timeline sideways — including the beats
+   * already committed to the audio clock inside the look-ahead window. The
+   * anchor is moved with it, chosen so the first beat not yet scheduled keeps
+   * exactly the time it was already going to have. Everything before that
+   * point stands, everything after it runs at the new speed, and the seam is
+   * a beat rather than a jolt.
+   */
+  useEffect(() => {
+    const phaseNow = phaseRef.current;
+    if (phaseNow === 'idle' || phaseNow === 'done') return;   // start() will read it fresh
+    const spb = 60 / tempo;
+    if (spb === plan.current.spb) return;
+    const b0 = nextBeat.current;
+    const keep = timeOf(b0);
+    plan.current = { ...plan.current, spb };
+    startTime.current = keep - (b0 + plan.current.lead) * spb;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tempo]);
 
   // Finishing leaves the position at the end rather than snapping to the top,
   // so the last line is still on screen when the click stops.
