@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { ChordCard } from '../components/ChordCard';
 import { ChordCatalogue } from '../components/ChordCatalogue';
+import { QuickPlay } from '../components/QuickPlay';
+import { makeSlot, type Slot } from '../utils/loop';
 import { Segmented } from '../components/Segmented';
 import { useLibrary } from '../hooks/useLibrary';
 import { getSongs, songChords } from '../utils/library';
@@ -55,6 +57,9 @@ interface Entry {
 export const ChordBookLab: React.FC = () => {
   const ready = useLibrary();
   const [view, setView] = useState<View>('songs');
+  // Null while quick play is shut, a (possibly empty) sequence while it is
+  // open — so opening it with nothing in it is a state, not a special case.
+  const [loop, setLoop] = useState<Slot[] | null>(null);
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
   const [adding, setAdding] = useState('');
@@ -141,6 +146,10 @@ export const ChordBookLab: React.FC = () => {
     setFilter('all');
   };
 
+  // Adding the same chord twice in a row is how a progression is written, so
+  // nothing here dedupes; each press is another bar of it.
+  const pick = loop ? (symbol: string) => setLoop([...loop, makeSlot(symbol)]) : undefined;
+
   if (!ready) return <div className="songs-loading readout">Opening your chord book…</div>;
 
   return (
@@ -159,6 +168,16 @@ export const ChordBookLab: React.FC = () => {
             </span>
           </p>
         </div>
+        <div className="chordbook-actions">
+          <button
+            type="button"
+            className={`btn${loop ? '' : ' btn-primary'}`}
+            onClick={() => setLoop(prev => (prev ? null : []))}
+            aria-pressed={loop !== null}
+          >
+            {loop ? 'Close quick play' : 'Quick play'}
+          </button>
+        </div>
         <form className="chordbook-add" onSubmit={addChord}>
           <input
             className="text-field"
@@ -176,6 +195,10 @@ export const ChordBookLab: React.FC = () => {
         and <strong>Fit</strong> uses it to find the capo that puts a song inside what you already know.
       </p>
 
+      {loop && (
+        <QuickPlay slots={loop} onChange={setLoop} onClose={() => setLoop(null)} />
+      )}
+
       <div className="chordbook-views">
         <Segmented<View> value={view} onChange={setView} options={VIEWS} ariaLabel="Which chords" />
         <span className="chordbook-viewnote readout">
@@ -185,7 +208,7 @@ export const ChordBookLab: React.FC = () => {
         </span>
       </div>
 
-      {view === 'all' && <ChordCatalogue />}
+      {view === 'all' && <ChordCatalogue onPick={pick} />}
 
       {view === 'songs' && queue.length > 0 && (
         <section className="song-panel chordbook-queue">
@@ -197,7 +220,7 @@ export const ChordBookLab: React.FC = () => {
             Easiest first. One press each — nothing here is a test, and you can change any of it later.
           </p>
           <div className="chordcards">
-            {queue.map(e => <ChordCard key={e.symbol} symbol={e.symbol} markable />)}
+            {queue.map(e => <ChordCard key={e.symbol} symbol={e.symbol} markable onPick={pick} />)}
           </div>
         </section>
       )}
@@ -230,6 +253,7 @@ export const ChordBookLab: React.FC = () => {
               markable
               shapes
               scale={0.66}
+              onPick={pick}
               meta={e.songs.length > 0 ? `${e.songs.length} song${e.songs.length === 1 ? '' : 's'}` : 'added by you'}
             />
           ))}

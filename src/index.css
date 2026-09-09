@@ -5239,3 +5239,207 @@ button.dash-card:hover .pickup-go svg {
   padding: 0.2rem 0.8rem 0.9rem;
   animation: shapepickIn 0.2s ease-out;
 }
+
+
+/* ---------------------------------------------------------------------------
+   Quick play: a progression, in time, in about four presses
+   ---------------------------------------------------------------------------
+   Sticky, because the page under it is the chord picker — you scroll the shelf
+   and press what you want while the loop stays in view and keeps running. That
+   is the whole interaction, and it only works if this never scrolls away. */
+
+.quickplay {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.22), inset 2px 0 0 var(--primary);
+  animation: quickplayIn 0.24s cubic-bezier(0.3, 1.1, 0.5, 1);
+}
+
+@keyframes quickplayIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* Running, the edge lights up — the one signal you can catch from across the
+   room while your hands are on the guitar. */
+.quickplay.is-running {
+  box-shadow: 0 6px 22px var(--primary-glow), inset 3px 0 0 var(--primary);
+}
+
+.quickplay-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+}
+
+.quickplay-len {
+  flex: 1 1 auto;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+
+.quickplay-close {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.quickplay-close:hover {
+  background: var(--surface-3);
+  color: var(--danger);
+}
+
+.quickplay-empty {
+  margin: 0;
+  padding: 0.7rem 0.2rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.quickplay-seq {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One chord of the loop. The tools stay hidden until the pointer is on the
+   slot: eight chords each wearing four buttons is a control panel, not a
+   progression. */
+.qslot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  min-width: 5.4rem;
+  padding: 0.4rem 0.5rem 0.3rem;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: var(--surface-1);
+  transition: border-color 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.3, 0.64, 1), background 0.18s ease;
+}
+
+.qslot.is-solid {
+  box-shadow: inset 0 -2px 0 var(--success);
+}
+
+.qslot.is-shaky {
+  box-shadow: inset 0 -2px 0 var(--warning);
+}
+
+/* The chord being played. Lifted rather than recoloured, so the comfort
+   colours underneath keep meaning what they mean everywhere else. */
+.qslot.is-live {
+  border-color: var(--primary);
+  background: var(--surface-3);
+  transform: translateY(-3px);
+}
+
+.qslot-name {
+  font-family: var(--font-display);
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.qslot-shape {
+  font-size: 0.54rem;
+  color: var(--text-muted);
+}
+
+.qslot-bars {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.15rem;
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+}
+
+.qslot-bars button,
+.qslot-tools button {
+  display: grid;
+  place-items: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: var(--surface-2);
+  font-family: inherit;
+  font-size: 0.72rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.qslot-bars button:hover:not(:disabled),
+.qslot-tools button:hover {
+  background: var(--surface-3);
+  color: var(--primary);
+}
+
+.qslot-bars button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.qslot-tools {
+  display: flex;
+  gap: 0.15rem;
+  margin-top: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.qslot:hover .qslot-tools,
+.qslot:focus-within .qslot-tools {
+  opacity: 1;
+}
+
+.qslot-tools button:last-child:hover {
+  color: var(--danger);
+}
+
+.quickplay-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  padding-top: 0.2rem;
+}
+
+.quickplay-clear {
+  margin-left: auto;
+}
+
+/* While quick play is collecting, every shape on the page says so. */
+.chordcard.is-pickable .chordcard-play:hover {
+  background: var(--primary-glow);
+}
+
+.chordbook-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}

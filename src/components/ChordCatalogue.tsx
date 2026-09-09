@@ -33,7 +33,7 @@ const GROUPS: { value: GroupBy; label: string }[] =
  * anything — and a hundred and thirty-two chord diagrams are not built until
  * something is actually being looked at.
  */
-export const ChordCatalogue: React.FC = () => {
+export const ChordCatalogue: React.FC<{ onPick?: (symbol: string) => void }> = ({ onPick }) => {
   const [by, setBy] = useState<GroupBy>('key');
   const [only, setOnly] = useState<Only>('all');
   const [rootPc, setRootPc] = useState(9);           // A — where a guitarist starts
@@ -167,6 +167,7 @@ export const ChordCatalogue: React.FC = () => {
                     markable
                     shapes
                     scale={0.66}
+                    onPick={onPick}
                     meta={chord.numeral ?? chord.typeName}
                   />
                 ))}

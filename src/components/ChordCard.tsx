@@ -60,6 +60,13 @@ interface ChordCardProps {
   /** Anything the caller wants under the name — "in 4 songs", a count. */
   meta?: React.ReactNode;
   scale?: number;
+  /**
+   * Set while something on the page is collecting chords — Quick Play.
+   *
+   * Pressing the shape then adds it there as well as sounding it. The press
+   * means the same thing it always did, and lands somewhere as well.
+   */
+  onPick?: (symbol: string) => void;
 }
 
 /**
@@ -73,7 +80,7 @@ interface ChordCardProps {
  * chord, the play-along included, uses it.
  */
 export const ChordCard: React.FC<ChordCardProps> = ({
-  symbol, markable = false, shapes = false, meta, scale = 0.62
+  symbol, markable = false, shapes = false, meta, scale = 0.62, onPick
 }) => {
   const [open, setOpen] = useState(false);
   // Counts strikes rather than holding a boolean, so a second press while the
@@ -90,8 +97,13 @@ export const ChordCard: React.FC<ChordCardProps> = ({
     setStrikes(n => n + 1);
   };
 
+  const press = (v: ChordVoicing) => {
+    strum(v);
+    onPick?.(symbol);
+  };
+
   return (
-    <div className={`chordcard is-${comfort}${voicing ? '' : ' is-plain'}${open ? ' is-open' : ''}`}>
+    <div className={`chordcard is-${comfort}${voicing ? '' : ' is-plain'}${open ? ' is-open' : ''}${onPick ? ' is-pickable' : ''}`}>
       <div className="chordcard-head">
         <span className="chordcard-name">{symbol}</span>
         {meta && <span className="chordcard-meta readout">{meta}</span>}
@@ -101,9 +113,9 @@ export const ChordCard: React.FC<ChordCardProps> = ({
         <button
           type="button"
           className="chordcard-play"
-          onClick={() => strum(voicing)}
-          title={`Hear ${symbol} — ${voicing.label}`}
-          aria-label={`Hear ${symbol} strummed`}
+          onClick={() => press(voicing)}
+          title={onPick ? `Add ${symbol} to the loop — ${voicing.label}` : `Hear ${symbol} — ${voicing.label}`}
+          aria-label={onPick ? `Add ${symbol} to the loop` : `Hear ${symbol} strummed`}
         >
           <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={scale} />
           {/* Taken off when the animation says it is done, not on a timer: only

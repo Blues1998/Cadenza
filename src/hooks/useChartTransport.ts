@@ -26,7 +26,7 @@ const TICK_MS = 25;
 export function useChartTransport(
   chart: ParsedChart,
   settings: ChartSettings,
-  options: { playChords?: boolean } = {}
+  options: { playChords?: boolean; loop?: boolean; strum?: boolean; metronome?: boolean } = {}
 ) {
   const { tempo, beatsPerBar, countInBars } = settings;
   const countInBeats = countInBars * beatsPerBar;
@@ -54,8 +54,18 @@ export function useChartTransport(
   const plan = useRef({ spb: 0.5, bpb: 4, lead: 0 });
   // Read inside the scheduler, which must not be rebuilt every time the chart
   // text changes under it.
-  const live = useRef({ chart, tempo, beatsPerBar, countInBeats, playChords: options.playChords ?? false });
-  live.current = { chart, tempo, beatsPerBar, countInBeats, playChords: options.playChords ?? false };
+  const settingsRef = {
+    chart,
+    tempo,
+    beatsPerBar,
+    countInBeats,
+    playChords: options.playChords ?? false,
+    loop: options.loop ?? false,
+    strum: options.strum ?? false,
+    metronome: options.metronome ?? true
+  };
+  const live = useRef(settingsRef);
+  live.current = settingsRef;
 
   const timeOf = (b: number) => startTime.current + (b + plan.current.lead) * plan.current.spb;
 
@@ -83,30 +93,47 @@ export function useChartTransport(
     const { spb, bpb, lead } = plan.current;
 
     timer.current = window.setInterval(() => {
-      const { chart: cur, playChords } = live.current;
+      const { chart: cur, playChords, loop, strum, metronome } = live.current;
       const now = audio.getCurrentTime();
       const horizon = now + AHEAD_SEC;
+      const total = cur.totalBeats;
 
-      while (nextBeat.current < cur.totalBeats && timeOf(nextBeat.current) < horizon) {
+      // Looping counts on past the end rather than resetting the clock. The
+      // anchor stays where it was set, so a lap boundary is just another beat
+      // and nothing has to be re-timed at the seam — which is the one place a
+      // loop is heard to stutter.
+      while ((loop || nextBeat.current < total) && timeOf(nextBeat.current) < horizon) {
         const b = nextBeat.current;
-        audio.playClick(timeOf(b), ((b % bpb) + bpb) % bpb === 0);
+        // Silencing the click stops the sound, never the counting: the beats
+        // land in the same places whether or not you can hear them.
+        if (metronome) audio.playClick(timeOf(b), ((b % bpb) + bpb) % bpb === 0);
         nextBeat.current += 1;
       }
 
       if (playChords) {
         const all = chartChords(cur);
-        while (nextChord.current < all.length && timeOf(all[nextChord.current].beat) < horizon) {
-          const chord = all[nextChord.current];
+        const at = (i: number) => (loop
+          // Which chord, and which lap it belongs to.
+          ? all[i % all.length].beat + Math.floor(i / all.length) * total
+          : all[i].beat);
+        while (all.length > 0 && (loop || nextChord.current < all.length) && timeOf(at(nextChord.current)) < horizon) {
+          const i = nextChord.current;
+          const chord = all[loop ? i % all.length : i];
           // The shape you chose, so what you hear is the chord you are being
           // shown rather than a different inversion of the same name.
           const voicing = preferredVoicing(chord.symbol);
-          // Under the click, not over it — this is a reference, not the part.
-          if (voicing) audio.playChord(voicing.midis, spb * 1.6, timeOf(chord.beat));
+          if (voicing) {
+            // Strummed, the chord is the part. Blocked, it is a reference
+            // under the click — which is what a song's play-along wants and
+            // a chord loop does not.
+            if (strum) audio.playStrum(voicing.midis, spb * 1.9, Math.min(0.022, spb / 8), timeOf(at(i)));
+            else audio.playChord(voicing.midis, spb * 1.6, timeOf(at(i)));
+          }
           nextChord.current += 1;
         }
       }
 
-      if (nextBeat.current >= cur.totalBeats && now > timeOf(cur.totalBeats)) {
+      if (!loop && nextBeat.current >= total && now > timeOf(total)) {
         if (timer.current !== null) clearInterval(timer.current);
         timer.current = null;
         setPhase('done');
