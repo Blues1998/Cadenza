@@ -61,6 +61,14 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
   const stats = practiceStats();
   const songs = getSongs();
 
+  // Opening or closing a song is a page change inside one tab, so the window's
+  // scroll offset survives it — from halfway down a long list you would land
+  // halfway down the song, with its title above the fold. App.tsx does this for
+  // tab changes and cannot see this one.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [focusSongId]);
+
   // Arriving from Home's empty state: open the form already on today's day,
   // then hand the intent back so a later re-render does not reopen it over
   // something you have since typed.
@@ -76,7 +84,9 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
       .filter(song => {
         if (filter === 'revisit' ? !song.revisit : filter !== 'all' && song.status !== filter) return false;
         if (!q) return true;
-        return [song.title, song.artist, song.key, song.chordsRaw]
+        // The parsed chords as well as the raw line: the row shows "Am · Em",
+        // so searching "Am" has to find a song whose sheet says "A min".
+        return [song.title, song.artist, song.key, song.chordsRaw, songChords(song).join(' ')]
           .some(field => field.toLowerCase().includes(q));
       })
       // Challenge days first and in order; anything off the calendar follows,
@@ -91,9 +101,15 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
 
   const focused = focusSongId ? getSong(focusSongId) : undefined;
 
+  // A challenge day holds one song. Two on the same day meant one of them was
+  // unreachable from the calendar, so the form says so rather than silently
+  // taking the entry.
+  const draftDayNumber = draft?.day ? Number(draft.day) : null;
+  const dayClash = draftDayNumber ? songs.find(s => s.day === draftDayNumber) : undefined;
+
   const submitDraft = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!draft || !draft.title.trim()) return;
+    if (!draft || !draft.title.trim() || dayClash) return;
     const day = draft.day ? Number(draft.day) : null;
     const song = await createSong({
       title: draft.title,
@@ -229,8 +245,13 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
             </label>
           </div>
           <div className="draft-actions">
-            <button type="submit" className="btn btn-primary" disabled={!draft.title.trim()}>Add song</button>
+            <button type="submit" className="btn btn-primary" disabled={!draft.title.trim() || !!dayClash}>Add song</button>
             <button type="button" className="btn" onClick={() => setDraft(null)}>Cancel</button>
+            {dayClash && (
+              <span className="draft-clash">
+                Day {draftDayNumber} already has “{dayClash.title}”. Clear the day to keep this one in the library.
+              </span>
+            )}
           </div>
         </form>
       )}

@@ -38,8 +38,18 @@ function App() {
     setActiveTab('library');
   };
 
+  // Pressing a destination in the rail goes to that destination. Songs kept the
+  // last song you had open, so the rail's Songs would reopen it — a nav item
+  // that lands somewhere other than the page it names, with no way back to the
+  // list except the arrow inside it. openSong above sets the tab itself and so
+  // is unaffected.
+  const navigate = (tab: ActiveTab) => {
+    if (tab === 'library') setSongFocus(null);
+    setActiveTab(tab);
+  };
+
   // On a phone, a horizontal swipe steps through the current sidebar group
-  useLabSwipe(activeTab, setActiveTab);
+  useLabSwipe(activeTab, navigate);
 
   // Labs are several screens tall and the window keeps its scroll offset when
   // the content under it is swapped, so switching from a scrolled lab used to
@@ -52,9 +62,9 @@ function App() {
   const renderActiveContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardLanding setActiveTab={setActiveTab} onOpenSong={openSong} onAddSongForDay={addSongForDay} />;
+        return <DashboardLanding setActiveTab={navigate} onOpenSong={openSong} onAddSongForDay={addSongForDay} />;
       case 'journey':
-        return <JourneyLab setActiveTab={setActiveTab} />;
+        return <JourneyLab setActiveTab={navigate} />;
       case 'ear-training':
         return <EarTrainingLab />;
       case 'theory':
@@ -81,14 +91,14 @@ function App() {
           />
         );
       default:
-        return <DashboardLanding setActiveTab={setActiveTab} onOpenSong={openSong} onAddSongForDay={addSongForDay} />;
+        return <DashboardLanding setActiveTab={navigate} onOpenSong={openSong} onAddSongForDay={addSongForDay} />;
     }
   };
 
   return (
     <div className="app-container">
       {/* Sidebar Navigation */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} toggleTheme={toggleTheme} />
+      <Sidebar activeTab={activeTab} setActiveTab={navigate} theme={theme} toggleTheme={toggleTheme} />
 
       {/* Main Panel Content Area */}
       {/* key on the tab so each lab mounts fresh and plays the entrance

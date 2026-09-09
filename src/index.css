@@ -2879,8 +2879,15 @@ button.dash-card:hover .pickup-go svg {
 
 .draft-actions {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.8rem;
   margin-top: 0.9rem;
+}
+
+.draft-clash {
+  font-size: 0.76rem;
+  color: var(--warning);
 }
 
 .song-field {

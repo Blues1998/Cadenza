@@ -189,12 +189,21 @@ export const totalMinutes = (song: Song): number => song.practiceMinutes + sessi
 export const minutesOn = (songId: string, date: string): number =>
   sessions.filter(s => s.songId === songId && s.date === date).reduce((sum, s) => sum + s.minutes, 0);
 
-/** day → song, derived rather than stored. See the note at the top of the file. */
+/**
+ * day → song, derived rather than stored. See the note at the top of the file.
+ *
+ * Two songs can end up claiming the same day — nothing stops a day being typed
+ * twice. First one wins, and `songForDay` resolves the same way, because the
+ * two used to disagree: the calendar showed the later song while everything
+ * else worked with the earlier one.
+ */
 export function assignmentsFor(c: Challenge | null = challenge): (Song | null)[] {
   const count = c?.dayCount ?? 0;
   const byDay: (Song | null)[] = Array.from({ length: count }, () => null);
   for (const song of songs) {
-    if (song.day && song.day >= 1 && song.day <= count) byDay[song.day - 1] = song;
+    if (!song.day || song.day < 1 || song.day > count) continue;
+    if (byDay[song.day - 1]) continue;
+    byDay[song.day - 1] = song;
   }
   return byDay;
 }
@@ -327,9 +336,16 @@ function shiftIso(iso: string, days: number): string {
   return isoDate(d);
 }
 
-/** The song you last actually played, by anything the ledger knows about. */
-export function lastPractised(): { song: Song; date: string } | null {
+/**
+ * The song you last actually played, by anything the ledger knows about.
+ *
+ * `exclude` skips one song rather than giving up on it — Home uses this to
+ * avoid repeating the song already at the top of the page, and returning null
+ * there made the card claim nothing had been played on a day something had.
+ */
+export function lastPractised(exclude?: string | null): { song: Song; date: string } | null {
   for (const entry of practiceLedger()) {
+    if (exclude && entry.songId === exclude) continue;
     const song = getSong(entry.songId);
     if (song) return { song, date: entry.date };
   }
@@ -426,7 +442,11 @@ export async function logSession(input: SessionInput): Promise<PracticeSession> 
     songId: input.songId,
     date: isoDate(new Date(startedAt)),
     startedAt,
-    sessionNumber: sessions.filter(s => s.songId === input.songId).length + 1,
+    // Next after the highest, not "how many there are" — deleting the middle
+    // session used to hand the next one a number that already existed.
+    sessionNumber: sessions
+      .filter(s => s.songId === input.songId)
+      .reduce((max, s) => Math.max(max, s.sessionNumber), 0) + 1,
     minutes: Math.max(0, Math.round(input.minutes)),
     chordsNote: (input.chordsNote ?? '').trim(),
     strummingNote: (input.strummingNote ?? '').trim(),

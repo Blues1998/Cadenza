@@ -62,12 +62,12 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
   const todaySong = progress.todaySong;
   const prompt = promptForDate();
 
-  // The song you were last at, unless that is the one already filling the top
-  // of the page — repeating it would waste the only other card that can carry
-  // an unfinished thing.
-  const recent = lastPractised();
-  const pickUp: { song: Song; date: string } | null =
-    recent && recent.song.id !== todaySong?.id ? recent : null;
+  // The song you were last at, skipping the one already filling the top of the
+  // page — repeating it would waste the only other card that can carry an
+  // unfinished thing. Skipping rather than blanking: when today's song was also
+  // the last one played, this card used to say nothing had been played at all,
+  // directly under a card counting the minutes.
+  const pickUp: { song: Song; date: string } | null = lastPractised(todaySong?.id ?? null);
 
   return (
     <div className="dash">
