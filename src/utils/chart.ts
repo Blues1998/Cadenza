@@ -419,15 +419,15 @@ export function extractMeta(text: string): SheetMeta {
   const meta: SheetMeta = {};
   const head = text.split('\n').slice(0, 40).join('\n');
 
-  const capoNone = /capo\s*[:\-]?\s*(?:none|no capo)/i.test(head);
-  const capo = /capo\s*[:\-]?\s*(?:on\s*)?(\d{1,2})(?:\s*(?:st|nd|rd|th)?\s*fret)?/i.exec(head);
+  const capoNone = /capo\s*[:-]?\s*(?:none|no capo)/i.test(head);
+  const capo = /capo\s*[:-]?\s*(?:on\s*)?(\d{1,2})(?:\s*(?:st|nd|rd|th)?\s*fret)?/i.exec(head);
   if (capoNone) meta.capo = 0;
   else if (capo) meta.capo = Number(capo[1]);
 
-  const key = /\bkey\s*[:\-]\s*([A-G][#b]?\s*(?:maj(?:or)?|min(?:or)?|m)?)/i.exec(head);
+  const key = /\bkey\s*[:-]\s*([A-G][#b]?\s*(?:maj(?:or)?|min(?:or)?|m)?)/i.exec(head);
   if (key) meta.key = key[1].trim().replace(/\s+/g, ' ');
 
-  const tempo = /\b(?:tempo|bpm)\s*[:\-]?\s*(\d{2,3})\b/i.exec(head)
+  const tempo = /\b(?:tempo|bpm)\s*[:-]?\s*(\d{2,3})\b/i.exec(head)
     ?? /\b(\d{2,3})\s*bpm\b/i.exec(head);
   if (tempo) {
     const n = Number(tempo[1]);
@@ -439,7 +439,7 @@ export function extractMeta(text: string): SheetMeta {
 
 /** Header and credit lines, dropped so they do not become the first verse. */
 export function stripHeaders(text: string): string {
-  const skip = /^\s*(capo|key|tempo|bpm|tuning|artist|song|title|album|by|chords?\s+by|tabbed\s+by|difficulty|strumming(\s+pattern)?|author|version)\s*[:\-]/i;
+  const skip = /^\s*(capo|key|tempo|bpm|tuning|artist|song|title|album|by|chords?\s+by|tabbed\s+by|difficulty|strumming(\s+pattern)?|author|version)\s*[:-]/i;
   return text
     .replace(/\r/g, '')
     .split('\n')
