@@ -17,7 +17,8 @@
 // one shape. Everything that draws or sounds a chord asks here first.
 
 import { STORE_CHANGE_EVENT, putRecords, readAll, clearStore, deleteRecord } from './db';
-import { getVoicings, type ChordVoicing } from './chords';
+import { CHORD_TYPES, getVoicings, type ChordVoicing } from './chords';
+import { NOTE_NAMES } from './musicTheory';
 import { chordShape, normalizeChordSymbol } from './songText';
 
 export type ChordComfort = 'solid' | 'shaky' | 'none';
@@ -38,8 +39,16 @@ export const COMFORT_HINT: Record<ChordComfort, string> = {
 };
 
 export interface ChordSkill {
-  /** The normalised symbol — "Am", "F", "Bm7". This is the key. */
+  /** The canonical symbol — "Am", "F", "A#m7". This is the key. */
   id: string;
+  /**
+   * How it was written when it was first marked.
+   *
+   * Filing by pitch means a chord typed as Bb is stored under A#, and a card
+   * that answers "Bb" with "A#" reads as the app correcting you. The record
+   * remembers the spelling it was given so it can be shown back in it.
+   */
+  label?: string;
   comfort: ChordComfort;
   /** id of the voicing you actually play, or null for whichever is easiest. */
   voicingId: string | null;
@@ -55,11 +64,39 @@ const announce = () => window.dispatchEvent(new CustomEvent(STORE_CHANGE_EVENT))
 export async function loadChordBook(): Promise<void> {
   if (loaded) return;
   const records = await readAll<ChordSkill>('chords');
-  skills = new Map(records.map(r => [r.id, r]));
+  skills = new Map();
+  // Re-filed on the way in, in case anything was written under a spelling that
+  // is no longer the canonical one. Later records win, so a chord marked under
+  // both spellings keeps the more recent answer rather than an arbitrary one.
+  const rekeyed: ChordSkill[] = [];
+  for (const record of records.sort((a, b) => (a.updatedAt ?? 0) - (b.updatedAt ?? 0))) {
+    const id = chordKey(record.id);
+    if (id !== record.id) rekeyed.push({ ...record, id });
+    skills.set(id, { ...record, id });
+  }
   loaded = true;
+  if (rekeyed.length > 0) {
+    await putRecords('chords', [...skills.values()]);
+    await Promise.all(records.filter(r => !skills.has(r.id)).map(r => deleteRecord('chords', r.id)));
+  }
 }
 
-export const chordKey = (symbol: string): string => normalizeChordSymbol(symbol);
+/**
+ * The one name a chord is filed under.
+ *
+ * By pitch class, not by spelling. B flat and A sharp are the same grip and
+ * the same six strings, and filing them apart would let you mark one solid
+ * while the other still says you cannot play it — which is exactly what would
+ * happen the first time a sheet written in flats met a catalogue written in
+ * sharps. Anything we cannot place on a neck keeps the spelling it came with,
+ * since we have no grounds for changing it.
+ */
+export const chordKey = (symbol: string): string => {
+  const normalised = normalizeChordSymbol(symbol);
+  const shape = chordShape(normalised);
+  if (!shape) return normalised;
+  return normalizeChordSymbol(NOTE_NAMES[shape.rootPc] + CHORD_TYPES[shape.typeId].suffix);
+};
 
 export const getChordSkills = (): ChordSkill[] => [...skills.values()];
 
@@ -114,6 +151,7 @@ export async function setComfort(symbol: string, comfort: ChordComfort): Promise
   const existing = skills.get(id);
   await write({
     id,
+    label: existing?.label ?? normalizeChordSymbol(symbol),
     comfort,
     voicingId: existing?.voicingId ?? null,
     updatedAt: Date.now()
@@ -126,6 +164,7 @@ export async function setPreferredVoicing(symbol: string, voicingId: string | nu
   const existing = skills.get(id);
   await write({
     id,
+    label: existing?.label ?? normalizeChordSymbol(symbol),
     comfort: existing?.comfort ?? 'none',
     voicingId,
     updatedAt: Date.now()

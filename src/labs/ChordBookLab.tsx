@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ChordCard } from '../components/ChordCard';
+import { ChordCatalogue } from '../components/ChordCatalogue';
 import { Segmented } from '../components/Segmented';
 import { useLibrary } from '../hooks/useLibrary';
 import { getSongs, songChords } from '../utils/library';
@@ -15,6 +16,13 @@ import {
 } from '../utils/chordbook';
 import { normalizeChordSymbol } from '../utils/songText';
 
+type View = 'songs' | 'all';
+
+const VIEWS: { value: View; label: string }[] = [
+  { value: 'songs', label: 'In your songs' },
+  { value: 'all', label: 'All chords' }
+];
+
 type Filter = 'all' | ChordComfort | 'unrated';
 
 const FILTERS: { value: Filter; label: string }[] = [
@@ -26,6 +34,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 ];
 
 interface Entry {
+  /** The canonical key, and what the cards show. */
   symbol: string;
   /** Songs in the library that ask for this chord. */
   songs: string[];
@@ -45,6 +54,7 @@ interface Entry {
  */
 export const ChordBookLab: React.FC = () => {
   const ready = useLibrary();
+  const [view, setView] = useState<View>('songs');
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
   const [adding, setAdding] = useState('');
@@ -52,12 +62,15 @@ export const ChordBookLab: React.FC = () => {
   const songs = getSongs();
 
   const entries = useMemo<Entry[]>(() => {
-    const found = new Map<string, Set<string>>();
+    // Keyed canonically so B flat and A sharp are one chord, but shown with
+    // the spelling the songs themselves used — the book is filed by pitch and
+    // read in whatever language your sheets are written in.
+    const found = new Map<string, { display: string; titles: Set<string> }>();
     const note = (symbol: string, title: string) => {
       const key = chordKey(symbol);
       if (!key) return;
-      if (!found.has(key)) found.set(key, new Set());
-      found.get(key)?.add(title);
+      if (!found.has(key)) found.set(key, { display: normalizeChordSymbol(symbol), titles: new Set() });
+      if (title) found.get(key)?.titles.add(title);
     };
 
     for (const song of songs) {
@@ -71,15 +84,17 @@ export const ChordBookLab: React.FC = () => {
       }
     }
     // Anything rated by hand belongs here whether or not a song uses it.
-    for (const skill of skills) if (!found.has(skill.id)) found.set(skill.id, new Set());
+    for (const skill of skills) {
+      if (!found.has(skill.id)) found.set(skill.id, { display: skill.label ?? skill.id, titles: new Set() });
+    }
 
     return [...found.entries()]
-      .map(([symbol, titles]) => ({
-        symbol,
+      .map(([key, { display, titles }]) => ({
+        symbol: display,
         songs: [...titles].sort(),
-        comfort: comfortOf(symbol),
-        rated: skills.some(s => s.id === symbol),
-        difficulty: voicingsFor(symbol)[0]?.difficulty ?? 99
+        comfort: comfortOf(key),
+        rated: skills.some(s => s.id === key),
+        difficulty: voicingsFor(key)[0]?.difficulty ?? 99
       }))
       // Most-used first, then easiest: the order that gets the most songs
       // unlocked for the least work.
@@ -119,8 +134,9 @@ export const ChordBookLab: React.FC = () => {
     if (!symbol) return;
     // Added as "not yet" rather than as solid: putting it in the book is
     // saying you have met it, not that you have it.
-    if (!skills.some(s => s.id === symbol)) await setComfort(symbol, 'none');
+    if (!skills.some(s => s.id === chordKey(symbol))) await setComfort(symbol, 'none');
     setAdding('');
+    setView('songs');
     setQuery(symbol);
     setFilter('all');
   };
@@ -160,7 +176,18 @@ export const ChordBookLab: React.FC = () => {
         and <strong>Fit</strong> uses it to find the capo that puts a song inside what you already know.
       </p>
 
-      {queue.length > 0 && (
+      <div className="chordbook-views">
+        <Segmented<View> value={view} onChange={setView} options={VIEWS} ariaLabel="Which chords" />
+        <span className="chordbook-viewnote readout">
+          {view === 'songs'
+            ? 'The chords your library actually asks for'
+            : 'Every chord, arranged by key, root, quality or difficulty'}
+        </span>
+      </div>
+
+      {view === 'all' && <ChordCatalogue />}
+
+      {view === 'songs' && queue.length > 0 && (
         <section className="song-panel chordbook-queue">
           <div className="surface-label">
             <span>Quick pass</span>
@@ -175,6 +202,8 @@ export const ChordBookLab: React.FC = () => {
         </section>
       )}
 
+      {view === 'songs' && (
+        <>
       <div className="chordbook-filters">
         <Segmented<Filter> value={filter} onChange={setFilter} options={FILTERS} ariaLabel="Filter chords" size="sm" />
         <input
@@ -205,6 +234,8 @@ export const ChordBookLab: React.FC = () => {
             />
           ))}
         </div>
+      )}
+        </>
       )}
     </div>
   );

@@ -29,6 +29,8 @@ const NOTE_INDEX: Record<string, number> = {
 const SUFFIX_ALIASES: [RegExp, string][] = [
   [/^M$/, ''],
   [/^M7$/, 'maj7'],
+  [/^(mmaj7|minmaj7|mM7)$/i, 'mMaj7'],
+  [/^(augmaj7|augM7|\+maj7)$/i, 'augMaj7'],
   [/^(maj|major)$/i, ''],
   [/^(min|minor|m)$/i, 'm'],
   [/^(maj7|major7)$/i, 'maj7'],
@@ -42,7 +44,11 @@ const SUFFIX_ALIASES: [RegExp, string][] = [
 
 const TYPE_BY_SUFFIX: Record<string, ChordTypeId> = {
   '': 'maj', m: 'min', '7': 'dom7', maj7: 'maj7', m7: 'min7',
-  dim: 'dim', dim7: 'dim7', aug: 'aug', m7b5: 'm7b5'
+  dim: 'dim', dim7: 'dim7', aug: 'aug', m7b5: 'm7b5',
+  // Shapes exist for both, so the catalogue can draw them; without these two
+  // the symbol could be written but never read back, and a chord you cannot
+  // read back is one the chord book cannot file.
+  mMaj7: 'mMaj7', augMaj7: 'augMaj7'
 };
 
 /** "A min" → "Am", "F maj" → "F", "B7" → "B7". Unreadable input comes back trimmed. */
