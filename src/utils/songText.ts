@@ -18,10 +18,20 @@ const NOTE_INDEX: Record<string, number> = {
 };
 
 // Every way the workbook and a person write the same quality.
+//
+// The M forms are matched case-sensitively and on their own lines, because M
+// and m are the one place in this notation where case is the whole meaning.
+// Folded in with the rest under /i they silently won the match: "Am" came back
+// as "A" and "Am7" as "Amaj7". Nothing noticed while every symbol was only
+// ever normalised once, straight from what someone typed — but this function
+// has to be safe to run on its own output, since a normalised symbol is what
+// the chord book files a chord under.
 const SUFFIX_ALIASES: [RegExp, string][] = [
-  [/^(maj|major|M)$/i, ''],
+  [/^M$/, ''],
+  [/^M7$/, 'maj7'],
+  [/^(maj|major)$/i, ''],
   [/^(min|minor|m)$/i, 'm'],
-  [/^(maj7|major7|M7)$/i, 'maj7'],
+  [/^(maj7|major7)$/i, 'maj7'],
   [/^(min7|minor7|m7)$/i, 'm7'],
   [/^(dom7|7)$/i, '7'],
   [/^(dim|diminished|o)$/i, 'dim'],

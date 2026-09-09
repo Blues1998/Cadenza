@@ -923,6 +923,35 @@ html {
   animation: channelNoteScroll var(--channel-flash) ease-in-out;
 }
 
+/* Three fingers land on the box, one after another, low string first — the
+   order they actually go down in. Each drops from above its string and holds
+   where it lands, and the whole thing is staggered rather than simultaneous,
+   because three dots appearing at once is a chord being stamped on and three
+   arriving in sequence is a chord being fingered. */
+@keyframes channelFingerDrop {
+  0%, 18% {
+    transform: translateY(-7px);
+    opacity: 0;
+  }
+  38%, 100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.channel.is-flashing[data-nav='chordbook'] .channel-icon svg > circle {
+  transform-box: view-box;
+  animation: channelFingerDrop var(--channel-flash) cubic-bezier(0.3, 0.9, 0.4, 1) backwards;
+}
+
+.channel.is-flashing[data-nav='chordbook'] .channel-icon svg > circle:nth-of-type(2) {
+  animation-delay: 90ms;
+}
+
+.channel.is-flashing[data-nav='chordbook'] .channel-icon svg > circle:nth-of-type(3) {
+  animation-delay: 180ms;
+}
+
 /* The star turns a few degrees and settles back — a nudge, not a spin. Five
    points means a 72deg rotation is indistinguishable from none, so this stays
    well under that: the eye reads it as the star having been knocked. */
@@ -3088,6 +3117,229 @@ button.dash-card:hover .pickup-go svg {
   color: var(--text-muted);
 }
 
+/* ---------------------------------------------------------------------------
+   The chord book: what your hands can do
+   ---------------------------------------------------------------------------
+   Three states, one colour each, used identically everywhere the app asks —
+   on a card, in a sheet, in the Fit table. The colours are the ones already
+   carrying good/careful/no elsewhere, so nothing new has to be learned. */
+
+.chordcard-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.chordcard-meta {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+/* A hairline down the left edge rather than a tinted card: fifty cards each
+   with a coloured ground is a heat map, and the diagrams are the content. */
+.chordcard.is-solid {
+  box-shadow: inset 2px 0 0 var(--success);
+}
+
+.chordcard.is-shaky {
+  box-shadow: inset 2px 0 0 var(--warning);
+}
+
+.chordcard-shape {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 8rem;
+}
+
+.chordcard-more {
+  padding: 0.12rem 0.4rem;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.chordcard-more:hover {
+  background: var(--surface-3);
+  color: var(--primary);
+}
+
+/* The three-state mark. Pressed, the chosen segment takes its own colour and
+   the label appears; the other two stay as dots, so a shelf of cards reads as
+   a row of states rather than a row of paragraphs. */
+.comfort {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.15rem;
+  border-radius: 999px;
+  background: var(--surface-1);
+}
+
+.comfort-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.16rem 0.3rem;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.comfort-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0.5;
+  transition: background 0.18s ease, opacity 0.18s ease, transform 0.24s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.comfort-text {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition: max-width 0.26s ease, opacity 0.2s ease;
+}
+
+.comfort-btn.is-on .comfort-text,
+.comfort-btn:hover .comfort-text {
+  max-width: 4rem;
+  opacity: 1;
+}
+
+.comfort-btn:hover .comfort-dot {
+  opacity: 0.9;
+}
+
+.comfort-btn.is-on .comfort-dot {
+  opacity: 1;
+  transform: scale(1.25);
+}
+
+.comfort-btn.is-solid.is-on {
+  background: var(--success-glow);
+  color: var(--success);
+}
+
+.comfort-btn.is-solid.is-on .comfort-dot {
+  background: var(--success);
+}
+
+.comfort-btn.is-shaky.is-on {
+  background: var(--warning-glow);
+  color: var(--warning);
+}
+
+.comfort-btn.is-shaky.is-on .comfort-dot {
+  background: var(--warning);
+}
+
+.comfort-btn.is-none.is-on {
+  background: var(--surface-3);
+  color: var(--text-secondary);
+}
+
+.comfort-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.comfort-chip {
+  padding: 0.1rem 0.4rem;
+  border-radius: 5px;
+  background: var(--surface-3);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.comfort-chip.is-solid {
+  background: var(--success-glow);
+  color: var(--success);
+}
+
+.comfort-chip.is-shaky {
+  background: var(--warning-glow);
+  color: var(--warning);
+}
+
+/* Every fingering there is, to pick the one you actually play. */
+.shapepick {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.4rem 0.2rem 0.2rem;
+  border-top: 1px solid var(--panel-border);
+  animation: shapepickIn 0.22s ease-out;
+}
+
+@keyframes shapepickIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.shapepick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.3rem 0.25rem 0.2rem;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: var(--surface-1);
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.shapepick-item:hover {
+  background: var(--surface-3);
+  transform: translateY(-1px);
+}
+
+.shapepick-item.is-on {
+  border-color: var(--primary);
+  background: var(--surface-3);
+}
+
+.shapepick-label {
+  font-size: 0.55rem;
+  color: var(--text-secondary);
+}
+
+.shapepick-tier {
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.shapepick-tier.tier-easy {
+  color: var(--success);
+}
+
+.shapepick-tier.tier-hard {
+  color: var(--danger);
+}
+
 .progression-list {
   display: flex;
   flex-direction: column;
@@ -4532,4 +4784,256 @@ button.dash-card:hover .pickup-go svg {
   color: var(--primary);
   margin-bottom: 3px;
   font-size: 0.8rem;
+}
+
+
+/* ---------------------------------------------------------------------------
+   Fit: the capo that puts a song inside what you can already play
+   ---------------------------------------------------------------------------
+   Presented as a recommendation plus the whole table, never as a button that
+   has already rewritten the song. A capo position has a sound and a feel that
+   the app cannot judge; what it can judge is which shapes come out, so it says
+   that and leaves the decision where it belongs. */
+
+.fit-headline {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.fit-headline.is-good {
+  color: var(--success);
+}
+
+.fit-suggest {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 9px;
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+
+.fit-suggest-text {
+  flex: 1 1 12rem;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+}
+
+.fit-suggest-note {
+  color: var(--text-muted);
+}
+
+.fit-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.fit-learn {
+  margin-top: 0.8rem;
+}
+
+.fit-toggle {
+  margin-top: 0.7rem;
+  padding: 0.2rem 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease;
+}
+
+.fit-toggle:hover {
+  color: var(--primary);
+}
+
+.fit-table {
+  margin-top: 0.4rem;
+  animation: shapepickIn 0.22s ease-out;
+}
+
+.fit-row {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.28rem 0.35rem;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.fit-row.is-head {
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.fit-row:not(.is-head):hover {
+  background: var(--surface-2);
+}
+
+.fit-row.is-best {
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+
+.fit-row.is-current {
+  background: var(--surface-2);
+}
+
+.fit-capo {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.fit-shapes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+/* The chords themselves carry the verdict, so a row is read at a glance
+   without a key: solid is unmarked, shaky is underlined, missing is struck
+   through with the colour that means "this one stops you". */
+.fit-chord {
+  padding: 0.05rem 0.25rem;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.fit-chord.is-solid {
+  background: var(--success-glow);
+  color: var(--success);
+}
+
+.fit-chord.is-shaky {
+  background: var(--warning-glow);
+  color: var(--warning);
+}
+
+.fit-chord.is-none {
+  background: var(--danger-glow);
+  color: var(--danger);
+}
+
+.fit-score {
+  font-size: 0.64rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.fit-now {
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+/* The same suggestion, one line, where you are actually playing. */
+.chart-fit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 9px;
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--primary);
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+/* A chord in the sheet that is not in your hands says so quietly — a dotted
+   underline, not a colour wash, because the sheet is for reading while you
+   play and every chord on it is already doing a job. */
+.chart-seg-chord.is-shaky {
+  text-decoration: underline dotted var(--warning);
+  text-underline-offset: 2px;
+}
+
+.chart-seg-chord.is-none {
+  text-decoration: underline dotted var(--danger);
+  text-underline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   The chord book page
+   --------------------------------------------------------------------------- */
+
+.chordbook {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 78rem;
+  margin: 0 auto;
+}
+
+.chordbook-lead {
+  max-width: 46rem;
+  margin: -0.4rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.chordbook-add {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chordbook-add .text-field {
+  width: 11rem;
+}
+
+.chordbook-note {
+  margin: 0 0 0.6rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.chordbook-queue {
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+
+.chordbook-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.chordbook-filters .text-field {
+  width: 10rem;
+}
+
+.chordcards-book .chordcard {
+  width: 9.5rem;
+}
+
+/* Opened, a card takes the row. Seven fingerings stacked in a column nine rems
+   wide is a card three screens tall, and the whole point of showing them
+   together is that they can be compared without scrolling. */
+.chordcards-book .chordcard.is-open {
+  width: 100%;
+  /* Centred contents in a full-width card leave the chord's own name floating
+     in the middle of nothing. Opened, everything lines up on the left edge the
+     shapes start from. */
+  align-items: flex-start;
+  padding-left: 0.7rem;
+}
+
+.chordcard.is-open .shapepick {
+  justify-content: flex-start;
 }

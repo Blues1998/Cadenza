@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { audio } from '../utils/audio';
-import { getVoicings } from '../utils/chords';
 import { chartChords, type ChartSettings, type ParsedChart } from '../utils/chart';
-import { chordShape } from '../utils/songText';
+import { preferredVoicing } from '../utils/chordbook';
 
 export type ChartPhase = 'idle' | 'countin' | 'playing' | 'paused' | 'done';
 
@@ -98,12 +97,11 @@ export function useChartTransport(
         const all = chartChords(cur);
         while (nextChord.current < all.length && timeOf(all[nextChord.current].beat) < horizon) {
           const chord = all[nextChord.current];
-          const shape = chordShape(chord.symbol);
-          if (shape) {
-            const voicing = getVoicings(shape.rootPc, shape.typeId, shape.rootName)[0];
-            // Under the click, not over it — this is a reference, not the part.
-            if (voicing) audio.playChord(voicing.midis, spb * 1.6, timeOf(chord.beat));
-          }
+          // The shape you chose, so what you hear is the chord you are being
+          // shown rather than a different inversion of the same name.
+          const voicing = preferredVoicing(chord.symbol);
+          // Under the click, not over it — this is a reference, not the part.
+          if (voicing) audio.playChord(voicing.midis, spb * 1.6, timeOf(chord.beat));
           nextChord.current += 1;
         }
       }

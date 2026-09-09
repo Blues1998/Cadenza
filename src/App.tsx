@@ -14,6 +14,7 @@ import { TunerLab } from './labs/TunerLab';
 import { TabPlayerLab } from './labs/TabPlayerLab';
 import { SongHeroLab } from './labs/SongHeroLab';
 import { SongsLab } from './labs/SongsLab';
+import { ChordBookLab } from './labs/ChordBookLab';
 
 function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
@@ -81,6 +82,8 @@ function App() {
         return <TabPlayerLab />;
       case 'songs':
         return <SongHeroLab />;
+      case 'chordbook':
+        return <ChordBookLab />;
       case 'library':
         return (
           <SongsLab

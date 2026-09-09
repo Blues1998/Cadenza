@@ -11,13 +11,26 @@
 // small enough (a month of songs, a few hundred sessions) that the fallback is
 // a real fallback rather than a token one.
 
-export type StoreName = 'songs' | 'sessions' | 'challenges' | 'settings';
+export type StoreName = 'songs' | 'sessions' | 'challenges' | 'settings' | 'chords';
+
+/**
+ * "Something in the stores changed."
+ *
+ * One event for every store rather than one per module, so a screen showing a
+ * song and the chords you can play subscribes once. Declared here, at the
+ * layer both stores already depend on, because two modules agreeing on a
+ * string literal is two modules waiting to disagree on it.
+ */
+export const STORE_CHANGE_EVENT = 'cadenza-library-change';
 
 export interface Record_ { id: string }
 
 const DB_NAME = 'cadenza-library';
-const DB_VERSION = 1;
-const STORES: StoreName[] = ['songs', 'sessions', 'challenges', 'settings'];
+// 2 added the chord book. The upgrade handler creates whatever is missing
+// rather than migrating, so an existing database gains the store and keeps
+// everything already in it.
+const DB_VERSION = 2;
+const STORES: StoreName[] = ['songs', 'sessions', 'challenges', 'settings', 'chords'];
 const MIRROR_KEY = 'cadenza-library-mirror-v1';
 const OPEN_TIMEOUT = 3000;
 
@@ -61,7 +74,7 @@ function openDb(): Promise<IDBDatabase | null> {
 
 type Mirror = Record<StoreName, Record<string, unknown>>;
 
-const emptyMirror = (): Mirror => ({ songs: {}, sessions: {}, challenges: {}, settings: {} });
+const emptyMirror = (): Mirror => ({ songs: {}, sessions: {}, challenges: {}, settings: {}, chords: {} });
 
 const readMirror = (): Mirror => {
   try {

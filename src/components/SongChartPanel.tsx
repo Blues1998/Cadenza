@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
 import { Segmented } from './Segmented';
 import { IconPause, IconPlay, IconStop } from './Icons';
-import { getVoicings } from '../utils/chords';
-import { chordShape } from '../utils/songText';
+import { COMFORT_LABEL, comfortOf, preferredVoicing } from '../utils/chordbook';
+import { fitSong } from '../utils/fit';
 import { songChords, updateSong } from '../utils/library';
 import type { Song } from '../utils/library';
 import { useChartTransport } from '../hooks/useChartTransport';
@@ -35,13 +35,10 @@ type Mode = 'play' | 'edit' | 'import';
 const BEATS_PER_BAR = [3, 4, 6];
 
 /** The shape for a chord symbol, or null when we cannot place it on a neck. */
+// The shape you chose for this chord, not whichever one is easiest. A play-along
+// showing a grip you do not use is a play-along you look away from.
 const useVoicing = (symbol: string | null) =>
-  useMemo(() => {
-    if (!symbol) return null;
-    const shape = chordShape(symbol);
-    if (!shape) return null;
-    return getVoicings(shape.rootPc, shape.typeId, shape.rootName)[0] ?? null;
-  }, [symbol]);
+  useMemo(() => (symbol ? preferredVoicing(symbol) : null), [symbol]);
 
 /**
  * The words and the chord changes, in time.
@@ -89,6 +86,10 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   const { current, next } = holding
     ? chordsAtBeat(chart, beat)
     : { current: null, next: chart.lines[0]?.chords[0] ?? null };
+  // Only while playing along — this is the one place the question "can I even
+  // play this?" is worth interrupting for, and only when there is an answer.
+  const fit = useMemo(() => fitSong(song), [song]);
+
   const currentVoicing = useVoicing(current?.symbol ?? null);
   const nextVoicing = useVoicing(next?.symbol ?? null);
 
@@ -184,6 +185,26 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
 
       {mode === 'play' && lines.length > 0 && (
         <>
+          {fit?.improves && (
+            <div className="chart-fit">
+              <span>
+                Capo <strong>{fit.best.capo}</strong> would put{' '}
+                {fit.best.playable ? 'every chord' : `${fit.best.chords.length - fit.best.missing} of ${fit.best.chords.length}`}{' '}
+                inside what you can play — same pitch, easier shapes.
+              </span>
+              <button
+                type="button"
+                className="btn chart-key-preset"
+                onClick={() => void updateSong(song.id, {
+                  capo: fit.best.capo,
+                  chart: { lines, ...settings, transpose: transpose + fit.best.shift }
+                })}
+              >
+                Fit to capo {fit.best.capo}
+              </button>
+            </div>
+          )}
+
           <div className="chart-transport">
             <div className="transport">
               <button
@@ -327,7 +348,10 @@ const SheetLine: React.FC<{
           const isLive = live && chord && Math.abs(chord.beat - live.beat) < 1e-6;
           return (
             <span key={i} className="chart-seg">
-              <span className={`chart-seg-chord readout${isLive ? ' is-live' : ''}`}>{seg.chord ?? ''}</span>
+              <span
+                className={`chart-seg-chord readout${isLive ? ' is-live' : ''}${seg.chord ? ` is-${comfortOf(seg.chord)}` : ''}`}
+                title={seg.chord ? `${seg.chord} · ${COMFORT_LABEL[comfortOf(seg.chord)]}` : undefined}
+              >{seg.chord ?? ''}</span>
               <span className="chart-seg-text">{seg.text || (seg.chord ? ' ' : '')}</span>
             </span>
           );

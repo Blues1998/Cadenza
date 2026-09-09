@@ -21,7 +21,8 @@
 // summed without double counting, and an imported total is never mistaken for
 // a session that was actually logged.
 
-import { clearStore, deleteRecord, putRecords, readAll, storageKind } from './db';
+import { clearStore, deleteRecord, putRecords, readAll, storageKind, STORE_CHANGE_EVENT } from './db';
+import { exportChordSkills, importChordSkills, loadChordBook, type ChordSkill } from './chordbook';
 import { parseProgressions, uniqueChords } from './songText';
 import { linesFromText, type ChartLineRecord } from './chart';
 import { SEED_CHALLENGE, SEED_SONGS } from '../data/septemberSeed';
@@ -111,7 +112,9 @@ export interface Challenge {
   dayCount: number;
 }
 
-const CHANGE_EVENT = 'cadenza-library-change';
+// Shared with the chord book: one event covers both stores, so a screen that
+// shows a song and what you can play of it subscribes once.
+const CHANGE_EVENT = STORE_CHANGE_EVENT;
 const SEEDED_SETTING = 'seeded-september';
 
 interface Setting { id: string; value: unknown }
@@ -185,7 +188,8 @@ export function initLibrary(): Promise<void> {
       readAll<Song>('songs'),
       readAll<PracticeSession>('sessions'),
       readAll<Challenge>('challenges'),
-      readAll<Setting>('settings')
+      readAll<Setting>('settings'),
+      loadChordBook()
     ]);
     songs = loadedSongs.map(song => ({ ...song, chart: migrateChart(song.chart) }));
     sessions = loadedSessions;
@@ -528,6 +532,8 @@ export interface LibraryExport {
   songs: Song[];
   sessions: PracticeSession[];
   challenges: Challenge[];
+  /** Absent in exports written before the chord book existed. */
+  chords?: ChordSkill[];
 }
 
 export function exportLibrary(): LibraryExport {
@@ -537,7 +543,8 @@ export function exportLibrary(): LibraryExport {
     exportedAt: new Date().toISOString(),
     songs,
     sessions,
-    challenges: challenge ? [challenge] : []
+    challenges: challenge ? [challenge] : [],
+    chords: exportChordSkills()
   };
 }
 
@@ -573,6 +580,10 @@ export async function importLibrary(raw: string): Promise<ImportResult> {
   const nextSessions = (Array.isArray(data.sessions) ? data.sessions : [])
     .filter(s => s && typeof s.id === 'string' && typeof s.songId === 'string');
   const nextChallenge = (Array.isArray(data.challenges) ? data.challenges : [])[0] ?? null;
+  // An older export has no chords in it. Replacing with nothing is still the
+  // right move: the backup is the whole library, and half-restoring it would
+  // leave a chord book describing songs that are no longer there.
+  await importChordSkills(data.chords ?? []);
 
   await Promise.all([clearStore('songs'), clearStore('sessions'), clearStore('challenges')]);
   songs = nextSongs;
@@ -597,6 +608,10 @@ export async function importLibrary(raw: string): Promise<ImportResult> {
  * month with dates on it — and nothing in the app can create one, so throwing
  * it away would leave someone with a library that has no calendar and no way
  * to get one back.
+ *
+ * So does the chord book. Clearing the library throws away what you were
+ * learning; it does not un-learn it. What your hands can do is not a property
+ * of the song list, and the next month's songs will want to know.
  */
 export async function clearLibrary(): Promise<void> {
   await Promise.all([clearStore('songs'), clearStore('sessions')]);

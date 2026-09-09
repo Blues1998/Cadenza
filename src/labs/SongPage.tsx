@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChordDiagram } from '../components/ChordDiagram';
+import React, { useEffect, useRef, useState } from 'react';
+import { ChordCard } from '../components/ChordCard';
+import { FitPanel } from '../components/FitPanel';
 import { Segmented } from '../components/Segmented';
 import { SongChartPanel } from '../components/SongChartPanel';
-import { getVoicings } from '../utils/chords';
+import { tally } from '../utils/chordbook';
 import {
   deleteSession,
   deleteSong,
@@ -18,7 +19,7 @@ import {
   updateSong
 } from '../utils/library';
 import type { Song, SongStatus } from '../utils/library';
-import { capoLabel, chordShape } from '../utils/songText';
+import { capoLabel } from '../utils/songText';
 
 interface SessionDraft {
   minutes: string;
@@ -49,26 +50,11 @@ const fmtClock = (ms: number): string => {
 const fmtDate = (iso: string): string =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 
-/** One chord, drawn if we can place it on a neck and named either way. */
-const ChordCard: React.FC<{ symbol: string }> = ({ symbol }) => {
-  const voicing = useMemo(() => {
-    const shape = chordShape(symbol);
-    if (!shape) return null;
-    return getVoicings(shape.rootPc, shape.typeId, shape.rootName)[0] ?? null;
-  }, [symbol]);
-
-  return (
-    <div className={`chordcard${voicing ? '' : ' is-plain'}`}>
-      <span className="chordcard-name">{symbol}</span>
-      {voicing
-        ? <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={0.62} />
-        : <span className="chordcard-note">no shape stored</span>}
-    </div>
-  );
-};
-
 export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
   const chords = songChords(song);
+  // Shown as "4 of 5 in your hands" — the question you actually have when you
+  // open a song you have not played in a fortnight.
+  const chordStanding = tally(chords);
   const progressions = songProgressions(song);
   const sessions = sessionsForSong(song.id);
   const todayMinutes = minutesOn(song.id, today());
@@ -220,11 +206,15 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
         <section className="song-panel song-chords">
           <div className="surface-label">
             <span>Chords</span>
-            <span className="readout">{chords.length}</span>
+            <span className="readout">
+              {chords.length > 0
+                ? `${chordStanding.solid + chordStanding.shaky} of ${chords.length} in your hands`
+                : chords.length}
+            </span>
           </div>
           {chords.length > 0 ? (
             <div className="chordcards">
-              {chords.map(c => <ChordCard key={c} symbol={c} />)}
+              {chords.map(c => <ChordCard key={c} symbol={c} markable shapes />)}
             </div>
           ) : (
             <p className="song-empty">No chords recorded for this song yet.</p>
@@ -253,6 +243,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
         </section>
 
         <div className="song-side">
+          <FitPanel song={song} />
           <section className="song-panel">
             <div className="surface-label"><span>Strumming</span></div>
             {song.strumming ? (
