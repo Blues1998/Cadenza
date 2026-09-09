@@ -2182,43 +2182,1207 @@ input[type='range'] {
   color: var(--text-primary);
 }
 
-.dash-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 0.85rem;
+/* A question, not a tagline. Small enough that the name still carries the
+   frame — the guitar behind it is doing most of the talking. */
+.hero-copy {
+  position: relative;
+  z-index: 2;
 }
 
-/* Icon, name, nothing else. The tile is the button. */
-.dash-tile {
+.hero-eyebrow {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hero-ink);
+  opacity: 0.5;
+}
+
+/* ===== Today =====
+   The one card allowed to be big, because it is the answer to the only
+   question the page asks. Everything below it is context for this. */
+.today {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 1.5rem;
-  min-height: 118px;
-  padding: 1.15rem 1.25rem;
+  padding: 1.5rem 1.6rem 1.6rem;
+  border-radius: 14px;
+  background: var(--elevated-bg);
+  box-shadow: var(--elevation), inset 3px 0 0 var(--primary);
+}
+
+/* Nothing has been chosen for today: the card keeps its size and loses its
+   accent, so an empty day reads as an empty day rather than as an error. */
+.today.is-empty {
+  box-shadow: var(--elevation), inset 3px 0 0 var(--surface-3);
+}
+
+.today-mark {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  width: 100%;
+}
+
+.today-mark .surface-label {
+  margin-bottom: 0;
+}
+
+.today-day {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.today-title {
+  margin: 0.9rem 0 0.2rem;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.today.is-empty .today-title {
+  font-size: 1.45rem;
+  color: var(--text-secondary);
+}
+
+.today-artist {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.today-meta {
+  margin: 0.55rem 0 0;
+  font-size: 0.82rem;
+  color: var(--primary);
+}
+
+.today-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.4rem;
+  margin-top: 1.1rem;
+}
+
+.today-stat {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.today-stat .readout {
+  margin-right: 0.35rem;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.today-go {
+  margin-top: 1.35rem;
+}
+
+/* ===== The cards under it =====
+   Two to a row, equal weight. None of them is the point of the page on its
+   own; together they are the state of the month. */
+.dash-row {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 0.85rem;
+  align-items: stretch;
+}
+
+.dash-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1.1rem 1.2rem 1.15rem;
   border: none;
   border-radius: 12px;
   background: var(--elevated-bg);
   box-shadow: var(--elevation);
-  color: var(--text-secondary);
   font-family: var(--font-ui);
-  font-size: 0.88rem;
-  font-weight: 500;
   text-align: left;
-  cursor: pointer;
-  transition: box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  color: var(--text-secondary);
+  transition: box-shadow 0.15s ease, background 0.15s ease, transform 0.15s ease;
 }
 
-.dash-tile span {
-  margin-top: auto;
+/* Only the ones that go somewhere lift. A panel that rises under the pointer
+   and then does nothing when pressed is a lie told in CSS. */
+button.dash-card {
+  cursor: pointer;
+}
+
+button.dash-card:hover {
+  background: var(--elevated-bg-hover);
+  box-shadow: var(--elevation-hover);
+  transform: translateY(-2px);
+}
+
+button.dash-card:active {
+  transform: translateY(0);
+  box-shadow: var(--elevation-low);
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.card-head .surface-label {
+  margin-bottom: 0;
+}
+
+.card-count {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.card-count strong {
+  font-weight: 600;
   color: var(--text-primary);
 }
 
-.dash-tile:hover {
-  background: var(--elevated-bg-hover);
-  box-shadow: var(--elevation-hover);
+.card-foot {
+  margin-top: auto;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+/* ===== The month, as thirty marks ===== */
+/* Small on purpose. The nodes are capped rather than stretched to fill the
+   card: thirty marks spread across a whole column stop being a run and become
+   a chart of something. */
+.daygrid {
+  display: grid;
+  justify-content: start;
+  gap: 5px;
+  grid-template-columns: repeat(15, minmax(0, 19px));
+}
+
+.daygrid-md {
+  gap: 6px;
+  grid-template-columns: repeat(15, minmax(0, 34px));
+}
+
+/* A day nobody has filled in is an outline. Anything with a song in it is
+   solid — that difference is the whole read of the grid, so it is carried by
+   fill and not by a shade of grey. */
+.daynode {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--panel-border);
+  color: var(--text-muted);
+  transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.daygrid-md .daynode {
+  border-radius: 7px;
+}
+
+/* At the size Home uses them the numbers are unreadable, so they are not
+   drawn — the shape of the run is the whole message and the tooltip carries
+   the day. The Songs page has the room and keeps them. */
+.daygrid-sm .daynode-num {
+  display: none;
+}
+
+.daynode-num {
+  font-size: 0.62rem;
+  font-weight: 500;
+}
+
+/* A day with a song on it, still in progress. Solid, so the run reads as
+   filled-in even before anything is finished. */
+.daynode.is-started {
+  /* Mixed off the muted ink rather than taken from the surface ramp: the next
+     step up that ramp is only a few points of luminance from the card behind
+     it, which made a day with a song on it look like a day without one. */
+  background: color-mix(in srgb, var(--text-muted) 38%, var(--surface-1));
+  box-shadow: inset 0 0 0 1px var(--panel-border-hover);
+  color: var(--text-primary);
+}
+
+/* Finished. Green, and quiet about it. */
+.daynode.is-done {
+  background: var(--success-glow);
+  box-shadow: inset 0 0 0 1px var(--success);
+  color: var(--success);
+}
+
+/* Today, whatever else it is. The only orange on the grid. */
+.daynode.is-today {
+  box-shadow: inset 0 0 0 2px var(--primary);
   color: var(--primary);
+}
+
+button.daynode {
+  cursor: pointer;
+}
+
+button.daynode:hover {
   transform: translateY(-1px);
+  background: var(--surface-3);
+  color: var(--text-primary);
+}
+
+button.daynode.is-done:hover {
+  color: var(--success);
+}
+
+button.daynode:active {
+  transform: translateY(0);
+}
+
+/* One pop, for a day that was finished while you were looking at it. Plays
+   only on the node that changed — see the note in DayGrid. */
+@keyframes dayComplete {
+  35% {
+    transform: scale(1.22);
+  }
+  60% {
+    transform: scale(0.97);
+  }
+}
+
+.daynode.is-fresh {
+  animation: dayComplete 520ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* ===== Practice snapshot =====
+   Four numbers, every one of them derived from something that is actually
+   stored. A metric with no data behind it says "—" rather than nought:
+   nought is a claim, and a claim we cannot support. */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1rem;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.metric-unit {
+  margin-left: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.metric-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* ===== Pick up / Try this ===== */
+.pickup-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.pickup-meta {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.pickup-when {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.pickup-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--primary);
+}
+
+.pickup-go svg {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+button.dash-card:hover .pickup-go svg {
+  transform: translateX(3px);
+}
+
+.tryit-text {
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+/* ===== Songs =====
+   The tracker, as a page. Rows rather than cards: thirty songs is a list you
+   scan down, and a grid of tiles would make each one an announcement. */
+.songs {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.songs-loading {
+  padding: 3rem 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.songs-head {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.songs-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  margin: 0.2rem 0 0;
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.songs-count strong {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.songs-count-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.songs-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.songs-calendar {
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+  box-shadow: var(--elevation-low);
+}
+
+.songs-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--success);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.songs-notice-where {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.songs-notice-close {
+  margin-left: auto;
+  padding: 0 0.3rem;
+  border: none;
+  background: none;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.songs-notice-close:hover {
+  color: var(--text-primary);
+}
+
+.songs-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.songs-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 240px;
+}
+
+.songs-search svg {
+  position: absolute;
+  left: 0.7rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.songs-search .text-field {
+  padding-left: 2.1rem;
+}
+
+/* Shared text input. Matches .select-field so a form is one surface rather
+   than several ideas of one. */
+.text-field {
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background-color: var(--surface-2);
+  color: var(--input-text);
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.text-field::placeholder {
+  color: var(--text-muted);
+}
+
+.text-field:hover {
+  border-color: var(--panel-border-hover);
+}
+
+.text-field:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.songs-empty,
+.song-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.songlist {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.songlist li {
+  position: relative;
+}
+
+/* One line per song, in the order the month happened. The columns are the
+   ones you actually sort by in your head: which day, what it is, how it is
+   tuned, what you play, how it is going. */
+.songrow {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(120px, 1.4fr) minmax(90px, 0.9fr) minmax(110px, 1.3fr) 4.6rem 4rem 5.4rem;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--surface-2);
+  box-shadow: var(--elevation-low);
+  font-family: var(--font-ui);
+  text-align: left;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.songrow:hover {
+  background: var(--surface-3);
+  box-shadow: var(--elevation);
+  transform: translateY(-1px);
+}
+
+.songrow:active {
+  transform: translateY(0);
+  box-shadow: var(--elevation-low);
+}
+
+.songrow-day {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.songrow-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.songrow-title {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.songrow-artist {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.songrow-key {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.songrow-capo {
+  color: var(--text-muted);
+}
+
+.songrow-chords {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.songrow-conf {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.conf-bar {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.songrow:hover .conf-bar {
+  background: var(--surface-1);
+}
+
+.conf-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--text-muted);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.songrow-mins {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+/* Status is the one place a colour is spent in the list, and only the
+   finished state gets one. */
+.status-chip {
+  justify-self: end;
+  padding: 0.18rem 0.5rem;
+  border-radius: 5px;
+  background: var(--surface-3);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.songrow:hover .status-chip {
+  background: var(--surface-1);
+}
+
+.status-chip.is-complete {
+  background: var(--success-glow);
+  color: var(--success);
+}
+
+.status-chip.is-solid {
+  color: var(--text-secondary);
+}
+
+.songrow-titleline {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.revisit-flag {
+  flex-shrink: 0;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  background: var(--warning-glow);
+  color: var(--warning);
+  font-size: 0.58rem;
+}
+
+/* ===== The new-song form ===== */
+.song-draft {
+  padding: 1.1rem 1.2rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+  box-shadow: var(--elevation-low);
+}
+
+.draft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.7rem;
+}
+
+.draft-day,
+.draft-capo {
+  max-width: 5.5rem;
+}
+
+.draft-title,
+.draft-chords {
+  grid-column: span 2;
+}
+
+.draft-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.song-field {
+  display: block;
+  min-width: 0;
+}
+
+.song-field .field-label {
+  margin-bottom: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* ===== One song =====
+   Everything the tracker held about it, plus the thing the tracker could not
+   do: sit here with a timer running while you play it. */
+.songpage {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.song-back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.1rem;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.song-back:hover {
+  color: var(--primary);
+}
+
+.song-back svg {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.song-back:hover svg {
+  transform: translateX(-3px);
+}
+
+.song-head {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.song-head .lab-title {
+  margin-bottom: 0.1rem;
+}
+
+.song-day {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.song-artist {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.song-meta {
+  margin: 0.45rem 0 0;
+  font-size: 0.85rem;
+  color: var(--primary);
+}
+
+.song-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+.revisit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border: none;
+  border-radius: 7px;
+  background: var(--surface-2);
+  font-family: inherit;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.revisit-toggle:hover {
+  background: var(--surface-3);
+  color: var(--text-secondary);
+}
+
+.revisit-toggle.is-on {
+  background: var(--warning-glow);
+  color: var(--warning);
+}
+
+/* What you told yourself to do next time, said before you start rather than
+   filed away in the log. */
+.song-carry {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0.75rem 0.95rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--primary);
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+.song-carry .surface-label {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.song-body {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.song-panel {
+  padding: 1.1rem 1.2rem;
+  border-radius: 12px;
+  background: var(--elevated-bg);
+  box-shadow: var(--elevation);
+}
+
+.song-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.song-subhead {
+  margin-top: 1.4rem;
+}
+
+/* Chord shapes, drawn. The tracker could only ever name them. */
+.chordcards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.chordcard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.35rem 0.2rem;
+  border-radius: 9px;
+  background: var(--surface-2);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.chordcard:hover {
+  background: var(--surface-3);
+  transform: translateY(-1px);
+}
+
+.chordcard-name {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* A chord we can name but not place — "G(single strum)", a sus we do not
+   model. It keeps its card so the progression is still complete. */
+.chordcard.is-plain {
+  justify-content: center;
+  min-width: 5rem;
+  padding: 0.7rem 0.6rem;
+}
+
+.chordcard-note {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.progression-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.progression-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.progression-index {
+  width: 1.1rem;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.progression-chords {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.progression-chord {
+  padding: 0.15rem 0.45rem;
+  border-radius: 5px;
+  background: var(--surface-2);
+  font-size: 0.76rem;
+  color: var(--text-primary);
+}
+
+.progression-arrow {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.strumming-pattern {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: 0.14em;
+  color: var(--text-primary);
+}
+
+.strumming-ideas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.chip-btn {
+  padding: 0.3rem 0.55rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--surface-2);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.chip-btn:hover {
+  background: var(--surface-3);
+  color: var(--primary);
+}
+
+.confidence-range {
+  width: 100%;
+}
+
+.confidence-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.minute-pair {
+  display: flex;
+  gap: 2rem;
+  margin: 0;
+}
+
+.minute-pair dt {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.minute-pair dd {
+  margin: 0.1rem 0 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+/* ===== The timer =====
+   Large, monospaced, and the only thing in the panel until it is stopped. */
+.practice-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.timer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.timer-clock {
+  font-size: 2.6rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+}
+
+/* Running, it takes the accent and breathes once a second — one beat, at the
+   rate the clock is actually counting, rather than decoration. */
+.timer-clock.is-running {
+  color: var(--primary);
+  animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  50% {
+    opacity: 0.82;
+  }
+}
+
+.timer-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.timer-reset {
+  color: var(--text-muted);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.session-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.7rem;
+}
+
+.session-minutes {
+  max-width: 7rem;
+}
+
+.session-actions {
+  display: flex;
+  gap: 0.5rem;
+  grid-column: 1 / -1;
+  margin-top: 0.3rem;
+}
+
+.session-log {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.session-row {
+  display: grid;
+  grid-template-columns: 3.6rem 2rem 4rem 1fr 1.4rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 7px;
+  background: var(--surface-2);
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.session-when,
+.session-num,
+.session-mins {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.session-mins {
+  color: var(--text-primary);
+}
+
+.session-notes {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-delete {
+  border: none;
+  background: none;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.session-row:hover .session-delete,
+.session-delete:focus-visible {
+  opacity: 1;
+}
+
+.session-delete:hover {
+  color: var(--danger);
+}
+
+.song-notes {
+  resize: vertical;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Last on the page and no colour until it is armed. Deleting a song takes its
+   practice log with it, so the first press only asks. */
+.song-danger {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.2rem 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.song-delete-link {
+  padding: 0.2rem 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.song-delete-link:hover {
+  color: var(--danger);
+}
+
+.song-delete {
+  background: var(--danger-glow);
+  color: var(--danger);
+}
+
+.song-delete:hover {
+  background: var(--danger);
+  color: var(--text-on-primary);
+}
+
+@media (max-width: 1000px) {
+  .dash-row,
+  .song-body {
+    grid-template-columns: 1fr;
+  }
+
+  /* Seven columns of a song row will not fit, and the ones that go are the
+     ones you can read on the song's own page: what it is and how it is going
+     stay. */
+  .songrow {
+    grid-template-columns: 2rem minmax(0, 1fr) 3.6rem 5rem;
+  }
+
+  .songrow-key,
+  .songrow-chords,
+  .songrow-mins {
+    display: none;
+  }
+
+  .daygrid {
+    grid-template-columns: repeat(10, minmax(0, 19px));
+  }
+
+  .daygrid-md {
+    grid-template-columns: repeat(10, minmax(0, 34px));
+  }
+
+  .today-title {
+    font-size: 1.6rem;
+  }
+
+  .timer-clock {
+    font-size: 2.1rem;
+  }
 }
 
 @media (max-width: 900px) {
@@ -2249,13 +3413,13 @@ input[type='range'] {
     font-size: 2.3rem;
   }
 
-  .dash-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  .songs-actions {
+    margin-left: 0;
   }
 
-  .dash-tile {
-    min-height: 96px;
-    gap: 1rem;
+  .song-head-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
   }
 }
 

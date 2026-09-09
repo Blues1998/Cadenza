@@ -13,10 +13,30 @@ import { RhythmLab } from './labs/RhythmLab';
 import { TunerLab } from './labs/TunerLab';
 import { TabPlayerLab } from './labs/TabPlayerLab';
 import { SongHeroLab } from './labs/SongHeroLab';
+import { SongsLab } from './labs/SongsLab';
 
 function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const { theme, toggleTheme } = useTheme();
+
+  // Which song the library is showing, and whether it should open on a blank
+  // one. Held here rather than inside the library so that Home can send you
+  // straight to a song or straight to adding today's — the two things Home
+  // exists to do — without the two screens having to know about each other.
+  const [songFocus, setSongFocus] = useState<string | null>(null);
+  const [draftDay, setDraftDay] = useState<number | null>(null);
+
+  const openSong = (id: string) => {
+    setSongFocus(id);
+    setDraftDay(null);
+    setActiveTab('library');
+  };
+
+  const addSongForDay = (day: number | null) => {
+    setSongFocus(null);
+    setDraftDay(day ?? 0);   // 0 = open the form with no day filled in
+    setActiveTab('library');
+  };
 
   // On a phone, a horizontal swipe steps through the current sidebar group
   useLabSwipe(activeTab, setActiveTab);
@@ -32,7 +52,7 @@ function App() {
   const renderActiveContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardLanding setActiveTab={setActiveTab} />;
+        return <DashboardLanding setActiveTab={setActiveTab} onOpenSong={openSong} onAddSongForDay={addSongForDay} />;
       case 'journey':
         return <JourneyLab setActiveTab={setActiveTab} />;
       case 'ear-training':
@@ -51,8 +71,17 @@ function App() {
         return <TabPlayerLab />;
       case 'songs':
         return <SongHeroLab />;
+      case 'library':
+        return (
+          <SongsLab
+            focusSongId={songFocus}
+            onOpenSong={setSongFocus}
+            draftDay={draftDay}
+            onDraftOpened={() => setDraftDay(null)}
+          />
+        );
       default:
-        return <DashboardLanding setActiveTab={setActiveTab} />;
+        return <DashboardLanding setActiveTab={setActiveTab} onOpenSong={openSong} onAddSongForDay={addSongForDay} />;
     }
   };
 

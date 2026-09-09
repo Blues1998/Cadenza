@@ -3,7 +3,7 @@ import React from 'react';
 // The rail's contents, kept out of Sidebar.tsx so that both the sidebar and
 // the phone swipe gesture can read the same structure without a component
 // file having to export a constant — which breaks Fast Refresh.
-export type ActiveTab = 'dashboard' | 'journey' | 'ear-training' | 'theory' | 'play' | 'physics' | 'rhythm' | 'tuner' | 'tabs' | 'songs';
+export type ActiveTab = 'dashboard' | 'journey' | 'ear-training' | 'theory' | 'play' | 'physics' | 'rhythm' | 'tuner' | 'tabs' | 'songs' | 'library';
 
 const icon = (path: React.ReactNode) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -32,6 +32,10 @@ export const GROUPS: { name?: string; items: { id: ActiveTab; label: string; ico
   {
     name: 'Practice',
     items: [
+      // First in the group: the month's songs are what practice actually is,
+      // and the drills below are what you reach for when one of them is
+      // fighting you.
+      { id: 'library', label: 'Songs', icon: icon(<><line x1="3" y1="6" x2="16" y2="6" /><line x1="3" y1="12" x2="12" y2="12" /><line x1="3" y1="18" x2="12" y2="18" /><path d="M21 15V5l-4 1" /><circle cx="18.5" cy="16" r="2.5" /></>) },
       // Band, then the near cup, then the far one — three paths rather than
       // the usual two, because a pulse cannot travel across a pair of cups
       // drawn as one shape.
