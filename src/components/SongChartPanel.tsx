@@ -95,13 +95,22 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
 
   // Keep the line being sung in the middle of the panel's own scroller rather
   // than moving the page under you.
+  //
+  // Measured between the two rectangles, not from offsetTop. offsetTop is the
+  // distance to the nearest *positioned* ancestor, and a scroller is not one
+  // unless it says so — so it was reporting the panel's distance down the page,
+  // several times the scroller's own height, and the first line of every song
+  // scrolled the sheet straight to the bottom.
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!running || !currentLine) return;
     const box = scroller.current;
     const el = box?.querySelector<HTMLElement>(`[data-line="${currentLine.index}"]`);
     if (!el || !box) return;
-    box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.offsetHeight / 2, behavior: 'smooth' });
+    const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
+    // Negative for the opening lines, which scrollTo clamps to 0: nothing to
+    // centre onto until the song is deep enough to have something above it.
+    box.scrollTo({ top: top - box.clientHeight / 2 + el.offsetHeight / 2, behavior: 'smooth' });
   }, [running, currentLine]);
 
   // Tap tempo: the interval between the last few taps, which is how you find a
