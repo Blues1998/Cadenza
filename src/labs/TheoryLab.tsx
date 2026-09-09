@@ -167,10 +167,7 @@ export const TheoryLab: React.FC = () => {
     audio.init();
     reportProgress('theory-diatonic-played');
     reportProgress('theory-chord-shape-played');
-    const now = audio.getCurrentTime();
-    [...midis].sort((a, b) => a - b).forEach((midi, i) => {
-      audio.playMidi(midi, 2.2, now + i * 0.045);
-    });
+    audio.playStrum(midis);
     setActiveMidis(midis);
     setTimeout(() => setActiveMidis([]), 1100);
   };

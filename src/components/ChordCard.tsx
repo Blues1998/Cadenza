@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
+import { audio } from '../utils/audio';
+import type { ChordVoicing } from '../utils/chords';
 import {
   COMFORT_HINT,
   COMFORT_LABEL,
@@ -74,10 +76,19 @@ export const ChordCard: React.FC<ChordCardProps> = ({
   symbol, markable = false, shapes = false, meta, scale = 0.62
 }) => {
   const [open, setOpen] = useState(false);
+  // Counts strikes rather than holding a boolean, so a second press while the
+  // first is still ringing starts a new flash instead of doing nothing — the
+  // ring is a fresh element each time, keyed on the count.
+  const [strikes, setStrikes] = useState(0);
   const voicing = preferredVoicing(symbol);
   const all = voicingsFor(symbol);
   const comfort = comfortOf(symbol);
   const chosenId = voicing?.id ?? null;
+
+  const strum = (v: ChordVoicing) => {
+    audio.playStrum(v.midis);
+    setStrikes(n => n + 1);
+  };
 
   return (
     <div className={`chordcard is-${comfort}${voicing ? '' : ' is-plain'}${open ? ' is-open' : ''}`}>
@@ -86,9 +97,31 @@ export const ChordCard: React.FC<ChordCardProps> = ({
         {meta && <span className="chordcard-meta readout">{meta}</span>}
       </div>
 
-      {voicing
-        ? <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={scale} />
-        : <span className="chordcard-note">no shape stored</span>}
+      {voicing ? (
+        <button
+          type="button"
+          className="chordcard-play"
+          onClick={() => strum(voicing)}
+          title={`Hear ${symbol} — ${voicing.label}`}
+          aria-label={`Hear ${symbol} strummed`}
+        >
+          <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={scale} />
+          {/* Taken off when the animation says it is done, not on a timer: only
+              one ring exists at a time, so the event always belongs to the one
+              on screen. Left in place it would be an invisible element that
+              never goes away. */}
+          {strikes > 0 && (
+            <span
+              key={strikes}
+              className="chordcard-ring"
+              aria-hidden="true"
+              onAnimationEnd={() => setStrikes(0)}
+            />
+          )}
+        </button>
+      ) : (
+        <span className="chordcard-note">no shape stored</span>
+      )}
 
       {voicing && (
         <span className={`chordcard-shape readout tier-${voicing.tier}`}>
@@ -113,8 +146,8 @@ export const ChordCard: React.FC<ChordCardProps> = ({
               role="radio"
               aria-checked={v.id === chosenId}
               className={`shapepick-item${v.id === chosenId ? ' is-on' : ''}`}
-              onClick={() => void setPreferredVoicing(symbol, v.id)}
-              title={v.substituteFor ? `${v.label} — played instead of ${v.substituteFor}` : v.label}
+              onClick={() => { strum(v); void setPreferredVoicing(symbol, v.id); }}
+              title={`${v.substituteFor ? `${v.label} — played instead of ${v.substituteFor}` : v.label} · press to hear it and keep it`}
             >
               <ChordDiagram frets={v.frets} fingers={v.fingers} scale={0.44} />
               <span className="shapepick-label readout">{v.label}</span>

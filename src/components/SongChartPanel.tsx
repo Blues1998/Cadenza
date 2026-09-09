@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
+import { audio } from '../utils/audio';
 import { Segmented } from './Segmented';
 import { IconPause, IconPlay, IconStop } from './Icons';
 import { COMFORT_LABEL, comfortOf, preferredVoicing } from '../utils/chordbook';
@@ -277,14 +278,34 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
               ) : (
                 <>
                   <span className="chart-chord-name">{current?.symbol ?? '—'}</span>
-                  {currentVoicing && <ChordDiagram frets={currentVoicing.frets} fingers={currentVoicing.fingers} scale={0.58} />}
+                  {currentVoicing && (
+                    <button
+                      type="button"
+                      className="chordcard-play"
+                      onClick={() => audio.playStrum(currentVoicing.midis)}
+                      aria-label={`Hear ${current?.symbol ?? 'this chord'} strummed`}
+                      title={`Hear it — ${currentVoicing.label}`}
+                    >
+                      <ChordDiagram frets={currentVoicing.frets} fingers={currentVoicing.fingers} scale={0.58} />
+                    </button>
+                  )}
                 </>
               )}
             </div>
             <div className="chart-chord-next">
               <span className="surface-label">Next</span>
               <span className="chart-chord-name">{next?.symbol ?? '—'}</span>
-              {nextVoicing && <ChordDiagram frets={nextVoicing.frets} fingers={nextVoicing.fingers} scale={0.5} />}
+              {nextVoicing && (
+                <button
+                  type="button"
+                  className="chordcard-play"
+                  onClick={() => audio.playStrum(nextVoicing.midis)}
+                  aria-label={`Hear ${next?.symbol ?? 'the next chord'} strummed`}
+                  title={`Hear it — ${nextVoicing.label}`}
+                >
+                  <ChordDiagram frets={nextVoicing.frets} fingers={nextVoicing.fingers} scale={0.5} />
+                </button>
+              )}
             </div>
             <div className="chart-progress" aria-hidden="true">
               <span style={{ width: `${Math.max(0, Math.min(1, beat / Math.max(1, chart.totalBeats))) * 100}%` }} />

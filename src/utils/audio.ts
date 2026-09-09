@@ -123,6 +123,24 @@ class AudioEngine {
   }
 
   // Play a chords of MIDI numbers
+  /**
+   * A chord struck one string at a time, low to high.
+   *
+   * playChord starts every note on the same instant, which is a piano. A
+   * guitar cannot do that: the pick crosses the strings, and the gap is what
+   * makes two voicings of the same chord sound like two different things
+   * rather than the same six notes twice. Slow enough here to hear the shape
+   * being laid down, which is the point when you are auditioning one.
+   */
+  public playStrum(midis: number[], duration: number = 2.2, spread: number = 0.045, time?: number) {
+    this.init();
+    const start = time !== undefined ? time : this.getCurrentTime();
+    // By pitch, which is the string order for every shape we can draw.
+    [...midis].sort((a, b) => a - b).forEach((midi, i) => {
+      this.playMidi(midi, duration, start + i * spread);
+    });
+  }
+
   public playChord(midis: number[], duration: number = 2.0, time?: number) {
     const playTime = time !== undefined ? time : this.getCurrentTime();
     midis.forEach((midi) => {
