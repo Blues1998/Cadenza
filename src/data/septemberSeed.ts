@@ -155,6 +155,9 @@ export const SEED_SONGS: Song[] = ROWS.map(row => ({
   practiceMinutes: row.practiceMinutes,
   notes: '',
   revisit: false,
+  // No charts in the seed. The words to these are the user's to type; the app
+  // ships the tool, not anybody's lyrics.
+  chart: null,
   createdAt: stampFor(row.day),
   updatedAt: stampFor(row.day)
 }));

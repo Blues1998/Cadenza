@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordDiagram } from '../components/ChordDiagram';
 import { Segmented } from '../components/Segmented';
+import { SongChartPanel } from '../components/SongChartPanel';
 import { getVoicings } from '../utils/chords';
 import {
   deleteSession,
@@ -304,6 +305,8 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
           </section>
         </div>
       </div>
+
+      <SongChartPanel song={song} />
 
       <section className="song-panel practice-panel">
         <div className="surface-label">

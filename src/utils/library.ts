@@ -36,6 +36,21 @@ export const STATUS_LABEL: Record<SongStatus, string> = {
 
 export const STATUS_ORDER: SongStatus[] = ['learning', 'playable', 'solid', 'complete'];
 
+/**
+ * A song's chart, kept as the text that was typed.
+ *
+ * Parsed on the way out by chart.ts, never on the way in — the same treatment
+ * chordsRaw gets, and for the same reason: a round trip loses nothing and there
+ * is only ever one copy of the fact. The words in `source` are always the
+ * user's own; nothing ships with any.
+ */
+export interface SongChartRecord {
+  source: string;
+  tempo: number;
+  beatsPerBar: number;
+  countInBars: number;
+}
+
 export interface Song {
   id: string;
   title: string;
@@ -54,6 +69,8 @@ export interface Song {
   practiceMinutes: number; // imported baseline; sessions are counted on top
   notes: string;
   revisit: boolean;
+  /** The words and where the changes land, or null while nobody has written it. */
+  chart: SongChartRecord | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -144,7 +161,7 @@ export function initLibrary(): Promise<void> {
       readAll<Challenge>('challenges'),
       readAll<Setting>('settings')
     ]);
-    songs = loadedSongs;
+    songs = loadedSongs.map(song => ({ ...song, chart: song.chart ?? null }));
     sessions = loadedSessions;
     challenge = loadedChallenges[0] ?? null;
 
@@ -369,6 +386,7 @@ export interface SongInput {
   practiceMinutes?: number;
   notes?: string;
   revisit?: boolean;
+  chart?: SongChartRecord | null;
 }
 
 const dateForDay = (day: number | null | undefined): string | null => {
@@ -394,6 +412,7 @@ export async function createSong(input: SongInput): Promise<Song> {
     practiceMinutes: input.practiceMinutes ?? 0,
     notes: (input.notes ?? '').trim(),
     revisit: input.revisit ?? false,
+    chart: input.chart ?? null,
     createdAt: now,
     updatedAt: now
   };
@@ -522,7 +541,9 @@ export async function importLibrary(raw: string): Promise<ImportResult> {
   if (!data || data.format !== 'cadenza-library' || !Array.isArray(data.songs)) {
     return { ok: false, message: 'That is not a Cadenza library export.' };
   }
-  const nextSongs = data.songs.filter(s => s && typeof s.id === 'string' && typeof s.title === 'string');
+  const nextSongs = data.songs
+    .filter(s => s && typeof s.id === 'string' && typeof s.title === 'string')
+    .map(s => ({ ...s, chart: s.chart ?? null }));
   const nextSessions = (Array.isArray(data.sessions) ? data.sessions : [])
     .filter(s => s && typeof s.id === 'string' && typeof s.songId === 'string');
   const nextChallenge = (Array.isArray(data.challenges) ? data.challenges : [])[0] ?? null;

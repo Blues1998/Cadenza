@@ -3356,6 +3356,303 @@ button.dash-card:hover .pickup-go svg {
   color: var(--text-on-primary);
 }
 
+/* ===== The chart =====
+   The words with the changes written into them, run against a click. Laid out
+   the way a chord sheet is: the chord sits above the syllable it lands on, and
+   the line you are singing is the one that is lit. */
+.chart-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.chart-help {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.chart-help code {
+  padding: 0 0.25rem;
+  border-radius: 3px;
+  background: var(--surface-3);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.chart-source {
+  min-height: 14rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.chart-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chart-example {
+  color: var(--text-muted);
+}
+
+.chart-start {
+  align-self: flex-start;
+}
+
+.chart-edit {
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.chart-edit:hover {
+  color: var(--primary);
+}
+
+/* Transport. Tempo is the control that gets touched most — it is how you
+   practise a song you cannot yet play — so it takes the width. */
+.chart-transport {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.chart-tempo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1 1 180px;
+  min-width: 140px;
+}
+
+.chart-tempo .field-label {
+  margin-bottom: 0;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.chart-tempo input[type='range'] {
+  flex: 1;
+  min-width: 90px;
+}
+
+.chart-bpm {
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.chart-bpm span {
+  margin-left: 0.2rem;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.chart-tap {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.chart-signature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chart-signature .field-label {
+  margin-bottom: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.chart-signature .select-field {
+  width: 4.4rem;
+}
+
+.chart-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* Now and next. The next shape is the one that matters — by the time the
+   change lands there is no time left to look it up. */
+.chart-now {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.4rem;
+  padding: 0.9rem 1rem 1.1rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.chart-chord-now,
+.chart-chord-next {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 5.5rem;
+}
+
+.chart-chord-now .surface-label,
+.chart-chord-next .surface-label {
+  margin-bottom: 0;
+}
+
+.chart-chord-name {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.chart-chord-now.is-live .chart-chord-name {
+  color: var(--primary);
+}
+
+.chart-chord-next .chart-chord-name {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+}
+
+.chart-countin {
+  font-size: 2.4rem;
+  line-height: 1.1;
+  color: var(--primary);
+}
+
+.chart-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 0 0 10px 10px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.chart-progress span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.2s linear;
+}
+
+/* The sheet. Scrolls inside its own box so the transport and the next chord
+   stay where you left them while the words move. */
+.chart-lines {
+  max-height: 22rem;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+}
+
+.chart-section {
+  margin: 1.1rem 0 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.chart-section:first-child {
+  margin-top: 0;
+}
+
+.chart-line {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0 0.1rem;
+  margin: 0;
+  padding: 0.25rem 0.5rem 0.25rem 0;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+/* The line being sung. A tonal lift rather than an accent — the accent is
+   spent on the chord you have to change to. */
+.chart-line.is-now {
+  background: var(--surface-2);
+}
+
+.chart-line.is-instrumental .chart-seg-text {
+  min-width: 1.2rem;
+}
+
+.chart-bar-count {
+  flex-shrink: 0;
+  width: 1.4rem;
+  align-self: center;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.chart-line.is-now .chart-bar-count {
+  opacity: 1;
+  color: var(--primary);
+}
+
+.chart-seg {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-seg-chord {
+  height: 1.1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--primary);
+  opacity: 0.72;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* The change happening right now. */
+.chart-seg-chord.is-live {
+  opacity: 1;
+  transform: translateY(-1px);
+  text-shadow: 0 0 12px var(--primary-glow);
+}
+
+.chart-seg-text {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+.chart-line.is-now .chart-seg-text {
+  color: var(--text-primary);
+}
+
 @media (max-width: 1000px) {
   .dash-row,
   .song-body {
@@ -3389,6 +3686,15 @@ button.dash-card:hover .pickup-go svg {
 
   .timer-clock {
     font-size: 2.1rem;
+  }
+
+  .chart-now {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .chart-lines {
+    max-height: 17rem;
   }
 }
 
