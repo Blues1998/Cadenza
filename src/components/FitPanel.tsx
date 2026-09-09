@@ -73,6 +73,13 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
 
       <p className={`fit-headline${now.playable ? ' is-good' : ''}`}>{headline}</p>
 
+      {now.capo > 0 && (
+        <p className="fit-frame readout">
+          Reading {now.chords.slice(0, 4).map(c => c.to).join(' · ')}
+          {now.chords.length > 4 ? ' …' : ''} as the shapes you finger with the capo at {now.capo}.
+        </p>
+      )}
+
       {/* The one sentence this panel exists to say. */}
       {improves && (
         <div className="fit-suggest">
@@ -88,7 +95,7 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
         </div>
       )}
 
-      {!improves && !now.playable && best.capo === now.capo && (
+      {!improves && !now.playable && (
         <p className="fit-note">
           No capo position gets round this one — these shapes are the work.
         </p>

@@ -121,7 +121,8 @@ export function fitAt(uses: ChordUse[], capo: number, currentCapo: number): FitO
   // Ordered, not weighted: a wall beats any amount of tidiness below it, and a
   // shaky chord beats any capo position. The last two terms only break ties —
   // the lower capo, and the setting the song already has, so a song that is
-  // already right does not get told to move.
+  // already right does not get told to move. They order equal options; they
+  // never make one option better than another. See `better` below.
   const cost =
     missingChords.length * 1000 +
     shaky * 20 +
@@ -151,13 +152,27 @@ export function fitOptions(uses: ChordUse[], currentCapo: number | null): FitOpt
   return out.sort((a, b) => a.cost - b.cost || a.capo - b.capo);
 }
 
+/**
+ * Is `a` actually a better place to play from than `b`?
+ *
+ * Only the chords count. The cost used to order the table also carries a mild
+ * preference for a low capo, and comparing two costs let that preference alone
+ * argue for a move: a song at capo 4 with nothing playable anywhere was told
+ * to go to capo 0, which changed every grip and helped with none of them — the
+ * suggestion said so itself, in the same sentence. A tie-break may order equal
+ * options. It may never make one of them better.
+ */
+const better = (a: FitOption, b: FitOption): boolean =>
+  a.missing < b.missing || (a.missing === b.missing && a.shaky < b.shaky);
+
 export interface FitVerdict {
+  /** Where to play it: somewhere better if there is one, otherwise where you are. */
   best: FitOption;
   now: FitOption;
   options: FitOption[];
   /** Worth moving to: it is not where we already are, and it is genuinely better. */
   improves: boolean;
-  /** Chords to learn to play the song at the best position we could find. */
+  /** Chords to learn to play the song at that position. */
   learn: string[];
 }
 
@@ -166,13 +181,12 @@ export function fitSong(song: Song): FitVerdict | null {
   if (uses.length === 0) return null;
   const currentCapo = song.capo ?? 0;
   const options = fitOptions(uses, currentCapo);
-  const best = options[0];
-  const now = options.find(o => o.capo === currentCapo) ?? best;
-  return {
-    best,
-    now,
-    options,
-    improves: best.capo !== now.capo && best.cost < now.cost - 0.5,
-    learn: best.missingChords
-  };
+  const now = options.find(o => o.capo === currentCapo) ?? options[0];
+  const candidate = options[0];
+  const improves = candidate.capo !== now.capo && better(candidate, now);
+  // With nothing to move to, where you already are is the answer — so the
+  // highlighted row, the chords to learn and the offer all talk about the capo
+  // the song actually has rather than an arbitrary one that ranked first.
+  const best = improves ? candidate : now;
+  return { best, now, options, improves, learn: best.missingChords };
 }

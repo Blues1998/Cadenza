@@ -4877,6 +4877,12 @@ button.dash-card:hover .pickup-go svg {
   color: var(--text-muted);
 }
 
+.fit-frame {
+  margin: 0.3rem 0 0;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+
 .fit-note {
   margin: 0.5rem 0 0;
   font-size: 0.74rem;
