@@ -19,6 +19,11 @@ const RELEASE_S = 0.42;
 // Nothing should ring forever if a pointerup is somehow missed.
 const MAX_SUSTAIN_S = 30;
 
+// What an up-stroke is: the top few strings, crossed faster, ringing shorter.
+const UP_STRINGS = 4;
+const UP_HASTE = 0.66;
+const UP_RING = 0.72;
+
 class AudioEngine {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
@@ -139,6 +144,83 @@ class AudioEngine {
     [...midis].sort((a, b) => a - b).forEach((midi, i) => {
       this.playMidi(midi, duration, start + i * spread);
     });
+  }
+
+  /**
+   * One stroke of a strumming pattern.
+   *
+   * A down-stroke and an up-stroke are not the same event played backwards.
+   * The arm falls through all six strings on the way down and clips the top
+   * three or four on the way back, faster and shorter, because the wrist is
+   * already returning. Written as one method because a pattern is a sequence
+   * of these and the difference between them is most of what a pattern sounds
+   * like.
+   *
+   * A muted stroke has no pitch at all: the fretting hand is resting on the
+   * strings, so what you hear is the pick crossing them.
+   */
+  public playStroke(
+    midis: number[],
+    stroke: 'D' | 'U' | 'X',
+    duration: number = 1.4,
+    spread: number = 0.02,
+    time?: number
+  ) {
+    this.init();
+    const start = time !== undefined ? time : this.getCurrentTime();
+    if (stroke === 'X') return this.playMuted(start);
+
+    // By pitch, which is the string order for every shape we can draw.
+    const byPitch = [...midis].sort((a, b) => a - b);
+    // Up-strokes catch the thin strings. Taking the top four rather than all
+    // six is what keeps a pattern from sounding like the same chord hammered
+    // eight times: the ups are lighter, and lighter here means fewer strings.
+    const ordered = stroke === 'U' ? byPitch.slice(-UP_STRINGS).reverse() : byPitch;
+    const gap = stroke === 'U' ? spread * UP_HASTE : spread;
+    const ring = stroke === 'U' ? duration * UP_RING : duration;
+
+    ordered.forEach((midi, i) => {
+      this.playMidi(midi, ring, start + i * gap);
+    });
+  }
+
+  /**
+   * The chuck: strings crossed with the fretting hand laid across them.
+   *
+   * Pitchless on purpose. Filtered noise rather than a damped chord, because a
+   * damped chord still has a chord in it and this does not — it is the sound
+   * of the pick, and it is what makes a pattern feel like it has a backbeat.
+   */
+  public playMuted(time?: number) {
+    this.init();
+    if (!this.ctx || !this.masterGain) return;
+    const at = time !== undefined ? time : this.ctx.currentTime;
+
+    const seconds = 0.09;
+    const buffer = this.ctx.createBuffer(1, Math.ceil(this.ctx.sampleRate * seconds), this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+
+    // Wound strings under a resting hand: a band low enough to have body,
+    // narrow enough to have no note.
+    const band = this.ctx.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.setValueAtTime(1800, at);
+    band.Q.setValueAtTime(1.1, at);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(0.34, at + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + seconds);
+
+    source.connect(band);
+    band.connect(gain);
+    gain.connect(this.masterGain);
+    source.start(at);
+    source.stop(at + seconds + 0.02);
   }
 
   public playChord(midis: number[], duration: number = 2.0, time?: number) {

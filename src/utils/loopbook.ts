@@ -12,7 +12,8 @@
 // changed your mind about is a history nobody reads.
 
 import { STORE_CHANGE_EVENT, clearStore, deleteRecord, putRecords, readAll } from './db';
-import { makeSlot, type LoopStrum, type Slot } from './loop';
+import { makeSlot, type Slot } from './loop';
+import { PLAIN_PATTERN } from './strum';
 
 /** How many are kept. Enough for a week of practice, short enough to scan. */
 const MAX_LOOPS = 12;
@@ -23,7 +24,10 @@ export interface SavedLoop {
   chords: [string, number][];
   tempo: number;
   beatsPerBar: number;
-  strum: LoopStrum;
+  /** The strumming pattern, as written. */
+  pattern?: string;
+  /** What the pattern was before patterns: 'bar' or 'beat'. Read, never written. */
+  strum?: 'bar' | 'beat';
   playedAt: number;
   /** How many times it has been run. A loop you keep returning to says so. */
   runs: number;
@@ -60,6 +64,17 @@ export const loopSignature = (chords: [string, number][], beatsPerBar: number): 
 export const slotChords = (slots: Slot[]): [string, number][] =>
   slots.map(slot => [slot.symbol, slot.bars] as [string, number]);
 
+/**
+ * The pattern a saved loop was played with.
+ *
+ * Loops recorded before patterns existed carry the two-way switch they were
+ * played with instead, which said the same thing in fewer words: once a bar,
+ * or once a beat. They are read as the patterns they always were rather than
+ * migrated, because a record of what you played is not ours to rewrite.
+ */
+export const loopPattern = (loop: SavedLoop): string =>
+  loop.pattern ?? (loop.strum === 'beat' ? PLAIN_PATTERN : 'D');
+
 /** Fresh slots from a saved loop — new ids, so React sees new rows. */
 export const loopSlots = (loop: SavedLoop): Slot[] =>
   loop.chords.map(([symbol, bars]) => makeSlot(symbol, bars));
@@ -68,7 +83,7 @@ export interface RememberInput {
   chords: [string, number][];
   tempo: number;
   beatsPerBar: number;
-  strum: LoopStrum;
+  pattern: string;
 }
 
 /** Records a run: a new entry, or a bump to the one that is already this loop. */
@@ -81,7 +96,7 @@ export async function rememberLoop(input: RememberInput): Promise<void> {
     chords: input.chords,
     tempo: input.tempo,
     beatsPerBar: input.beatsPerBar,
-    strum: input.strum,
+    pattern: input.pattern,
     playedAt: Date.now(),
     runs: (existing?.runs ?? 0) + 1
   };

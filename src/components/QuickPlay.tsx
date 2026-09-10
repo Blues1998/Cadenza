@@ -1,14 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { IconPause, IconPlay, IconStop, IconX } from './Icons';
 import { LoopShelf, type LoopSetup } from './LoopShelf';
-import { Segmented } from './Segmented';
+import { StrumGrid } from './StrumGrid';
 import { useChartTransport } from '../hooks/useChartTransport';
 import { TEMPO_MAX, TEMPO_MIN, lineAtBeat, timeChart } from '../utils/chart';
 import { comfortOf, preferredVoicing } from '../utils/chordbook';
-import { loopLines, type LoopStrum, type Slot } from '../utils/loop';
+import { loopLines, type Slot } from '../utils/loop';
+import { DEFAULT_PATTERN, parseStrum, strokeCount } from '../utils/strum';
 import { loopSignature, rememberLoop, slotChords } from '../utils/loopbook';
 
 const BEATS_PER_BAR = [3, 4, 6];
+
+// The handful worth a press. Everything else is typed, or built by pressing
+// cells in the grid — which is how most patterns here will actually be made.
+const PATTERN_IDEAS = ['D', 'D D D D', 'D D U U D U', 'D U D U', 'D - D U - U D U', 'D U X U D U'];
 
 interface QuickPlayProps {
   slots: Slot[];
@@ -31,7 +36,9 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
   const [startOpen] = useState(() => slots.length === 0);
   const [tempo, setTempo] = useState(80);
   const [beatsPerBar, setBeatsPerBar] = useState(4);
-  const [strum, setStrum] = useState<LoopStrum>('bar');
+  // The pattern as written, not as resolved: what somebody typed is what the
+  // field goes on showing, and the grid underneath says what it came to.
+  const [patternText, setPatternText] = useState(DEFAULT_PATTERN);
   const [click, setClick] = useState(true);
 
   const settings = useMemo(
@@ -39,14 +46,18 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
     [tempo, beatsPerBar]
   );
   const chart = useMemo(
-    () => timeChart(loopLines(slots, beatsPerBar, strum), beatsPerBar, 0),
-    [slots, beatsPerBar, strum]
+    () => timeChart(loopLines(slots), beatsPerBar, 0),
+    [slots, beatsPerBar]
   );
+  const pattern = useMemo(() => parseStrum(patternText, beatsPerBar), [patternText, beatsPerBar]);
 
-  const { phase, beat, start, stop, pause, resume } = useChartTransport(
+  const { phase, beat, slot, start, stop, pause, resume } = useChartTransport(
     chart,
     settings,
-    { playChords: true, loop: true, strum: true, metronome: click }
+    // The pattern is the strumming hand. With the field empty there is no
+    // hand, and the loop becomes a click and a set of chord names to strum
+    // against yourself — which is the other half of what this is for.
+    { playChords: pattern !== null, loop: true, strum: true, metronome: click, pattern }
   );
   const moving = phase === 'countin' || phase === 'playing';
   const running = moving || phase === 'paused';
@@ -70,8 +81,8 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
     const signature = loopSignature(chords, beatsPerBar);
     if (kept.current === signature) return;
     kept.current = signature;
-    void rememberLoop({ chords, tempo, beatsPerBar, strum });
-  }, [phase, slots, beatsPerBar, tempo, strum]);
+    void rememberLoop({ chords, tempo, beatsPerBar, pattern: patternText });
+  }, [phase, slots, beatsPerBar, tempo, patternText]);
 
   // A loop from the shelf arrives whole — chords, tempo and metre — because
   // the tempo a progression was written for is part of what it is. Stopped
@@ -81,7 +92,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
     onChange(next);
     setTempo(setup.tempo);
     setBeatsPerBar(setup.beatsPerBar);
-    if (setup.strum) setStrum(setup.strum);
+    if (setup.pattern) setPatternText(setup.pattern);
   };
 
   // Which slot is sounding. The beat counts on past the end for ever, so the
@@ -204,17 +215,6 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
           </select>
         </label>
 
-        <label className="catalogue-field">
-          <span className="field-label">Strum</span>
-          <Segmented<LoopStrum>
-            value={strum}
-            onChange={setStrum}
-            options={[{ value: 'bar', label: 'Once a bar' }, { value: 'beat', label: 'Every beat' }]}
-            ariaLabel="How often to strum"
-            size="sm"
-          />
-        </label>
-
         <label className="chart-toggle">
           <input type="checkbox" checked={click} onChange={e => setClick(e.target.checked)} />
           Click
@@ -224,6 +224,46 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
           <button type="button" className="btn quickplay-clear" onClick={() => { stop(); onChange([]); }}>
             Clear
           </button>
+        )}
+      </div>
+
+      <div className="quickplay-strum">
+        <label className="catalogue-field quickplay-pattern">
+          <span className="field-label">Strumming</span>
+          <input
+            className="text-field readout"
+            value={patternText}
+            onChange={e => setPatternText(e.target.value)}
+            placeholder="D D U U D U"
+            aria-label="Strumming pattern"
+            spellCheck={false}
+          />
+        </label>
+        <div className="quickplay-ideas">
+          {PATTERN_IDEAS.map(idea => (
+            <button
+              key={idea}
+              type="button"
+              className={`chip-btn readout${idea === patternText ? ' is-on' : ''}`}
+              onClick={() => setPatternText(idea)}
+            >
+              {idea}
+            </button>
+          ))}
+        </div>
+        {pattern ? (
+          <>
+            <StrumGrid pattern={pattern} live={slot} onChange={setPatternText} />
+            <p className="quickplay-strumnote readout">
+              {strokeCount(pattern) === 0
+                ? 'nothing lands — the chords will not sound'
+                : `${strokeCount(pattern)} stroke${strokeCount(pattern) === 1 ? '' : 's'} over ${pattern.bars} bar${pattern.bars === 1 ? '' : 's'} · press a cell to change it`}
+            </p>
+          </>
+        ) : (
+          <p className="quickplay-strumnote readout">
+            No pattern — the chords stay silent under the click. Write D and U, or take one above.
+          </p>
         )}
       </div>
 

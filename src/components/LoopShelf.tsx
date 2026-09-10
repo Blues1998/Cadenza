@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { comfortOf } from '../utils/chordbook';
 import { useLibrary } from '../hooks/useLibrary';
-import type { LoopStrum, Slot } from '../utils/loop';
+import type { Slot } from '../utils/loop';
 import {
   LOOP_LEVELS,
   LOOP_TEMPLATES,
@@ -10,14 +10,15 @@ import {
   templateSlots,
   type LoopTemplate
 } from '../utils/loopTemplates';
-import { forgetLoop, getSavedLoops, loopSlots, whenLabel, type SavedLoop } from '../utils/loopbook';
+import { forgetLoop, getSavedLoops, loopPattern, loopSlots, whenLabel, type SavedLoop } from '../utils/loopbook';
 
 type Tab = 'templates' | 'recent';
 
 export interface LoopSetup {
   tempo: number;
   beatsPerBar: number;
-  strum?: LoopStrum;
+  /** The strumming pattern, as written. */
+  pattern?: string;
 }
 
 interface LoopShelfProps {
@@ -87,7 +88,7 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, startOpen
   const loadTemplate = (t: LoopTemplate) =>
     onUse(templateSlots(t), { tempo: t.tempo, beatsPerBar: t.beatsPerBar });
   const loadLoop = (loop: SavedLoop) =>
-    onUse(loopSlots(loop), { tempo: loop.tempo, beatsPerBar: loop.beatsPerBar, strum: loop.strum });
+    onUse(loopSlots(loop), { tempo: loop.tempo, beatsPerBar: loop.beatsPerBar, pattern: loopPattern(loop) });
 
   return (
     <div className="quickplay-shelf">
@@ -180,7 +181,7 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, startOpen
                   >
                     <Chips symbols={chords} />
                     <span className="loopcard-meta readout">
-                      {loop.tempo} bpm{loop.beatsPerBar === 4 ? '' : ` · in ${loop.beatsPerBar}`} · {loop.strum === 'beat' ? 'every beat' : 'once a bar'} · {whenLabel(loop.playedAt)}{loop.runs > 1 ? ` · ×${loop.runs}` : ''}
+                      {loop.tempo} bpm{loop.beatsPerBar === 4 ? '' : ` · in ${loop.beatsPerBar}`} · <span className="readout">{loopPattern(loop)}</span> · {whenLabel(loop.playedAt)}{loop.runs > 1 ? ` · ×${loop.runs}` : ''}
                     </span>
                   </button>
                   <button

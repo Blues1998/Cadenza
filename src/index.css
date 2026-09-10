@@ -5815,3 +5815,129 @@ button.dash-card:hover .pickup-go svg {
   align-items: center;
   gap: 0.4rem;
 }
+
+/* ===== Strumming patterns =====
+   A pattern is written as text and read as a grid. The grid is the part that
+   is true — it is what the hand will do and what the transport will play — so
+   it is drawn at full size under the field rather than tucked away as a
+   preview, and every cell is a button. */
+.strumgrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+}
+
+/* One bar per group, so a two-bar pattern reads as two bars rather than as a
+   long row somebody has to count. */
+.strumbar {
+  display: grid;
+  grid-template-columns: repeat(var(--slots), minmax(1.9rem, 2.4rem));
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--panel-border);
+}
+
+.strumcell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 0.3rem 0 0.35rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: default;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+button.strumcell { cursor: pointer; }
+button.strumcell:hover { background: var(--surface-3); }
+
+/* The count, which is the row people already know how to read. */
+.strumcell-count {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+.strumcell.is-beat .strumcell-count { color: var(--text-secondary); opacity: 1; }
+
+.strumcell-face {
+  font-size: 1.05rem;
+  line-height: 1.1;
+}
+
+/* Down is the weight of the pattern and up is the answer to it, so the two
+   are not the same colour: an accented row of identical arrows would say the
+   arm does the same thing eight times, which is the one thing it never does. */
+.strumcell.is-d .strumcell-face { color: var(--primary); }
+.strumcell.is-u .strumcell-face { color: var(--text-secondary); }
+.strumcell.is-x .strumcell-face { color: var(--warning); font-size: 0.85rem; }
+.strumcell.is-rest .strumcell-face { color: var(--text-muted); opacity: 0.35; }
+
+.strumcell.is-live {
+  background: var(--primary-glow);
+}
+.strumcell.is-live .strumcell-face { color: var(--primary); }
+
+/* The pattern's own row in quick play, under the transport. */
+.quickplay-strum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.6rem 0.9rem;
+  padding: 0.7rem 0.85rem 0.8rem;
+  border-top: 1px solid var(--panel-border);
+}
+.quickplay-pattern { flex: 0 0 auto; }
+.quickplay-pattern .text-field { width: 11rem; letter-spacing: 0.08em; }
+
+.quickplay-ideas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-self: center;
+}
+.quickplay-ideas .chip-btn.is-on {
+  background: var(--primary-glow);
+  color: var(--primary);
+}
+
+.quickplay-strum .strumgrid { flex: 1 0 100%; margin-top: 0; }
+
+.quickplay-strumnote {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .strumbar { grid-template-columns: repeat(var(--slots), minmax(1.6rem, 1fr)); }
+  .quickplay-pattern .text-field { width: 100%; }
+  .quickplay-pattern { flex: 1 0 100%; }
+}
+
+/* The play-along's copy of the pattern, under the transport. */
+.chart-strum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+  padding: 0.15rem 0 0.35rem;
+}
+.chart-strum .strumgrid { margin-top: 0; }
+.chart-strumnote {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  max-width: 26rem;
+}
+
+/* On the song page the grid is a reading of the line above it, not a control. */
+.strumming-pattern + .strumgrid { margin-top: 0.5rem; }

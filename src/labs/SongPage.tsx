@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordCard } from '../components/ChordCard';
 import { FitPanel } from '../components/FitPanel';
 import { Segmented } from '../components/Segmented';
 import { SongChartPanel } from '../components/SongChartPanel';
+import { StrumGrid } from '../components/StrumGrid';
 import { tally } from '../utils/chordbook';
 import {
   deleteSession,
@@ -20,6 +21,7 @@ import {
 } from '../utils/library';
 import type { Song, SongStatus } from '../utils/library';
 import { capoLabel } from '../utils/songText';
+import { parseStrum } from '../utils/strum';
 
 interface SessionDraft {
   minutes: string;
@@ -52,6 +54,12 @@ const fmtDate = (iso: string): string =>
 
 export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
   const chords = songChords(song);
+  // The written pattern as a hand would play it. Read at the sheet's own
+  // metre, so a song in 3 does not get a bar of 4 drawn under it.
+  const strumPattern = useMemo(
+    () => parseStrum(song.strumming ?? '', song.chart?.beatsPerBar ?? 4),
+    [song.strumming, song.chart?.beatsPerBar]
+  );
   // Shown as "4 of 5 in your hands" — the question you actually have when you
   // open a song you have not played in a fortnight.
   const chordStanding = tally(chords);
@@ -247,7 +255,12 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
           <section className="song-panel">
             <div className="surface-label"><span>Strumming</span></div>
             {song.strumming ? (
-              <p className="strumming-pattern readout">{song.strumming}</p>
+              <>
+                <p className="strumming-pattern readout">{song.strumming}</p>
+                {/* What it comes to when a hand plays it — the same grid the
+                    play-along runs, so the sheet and the sound agree. */}
+                {strumPattern && <StrumGrid pattern={strumPattern} />}
+              </>
             ) : (
               <div className="strumming-pick">
                 <p className="song-empty">Nothing recorded. Pick a pattern to start with:</p>

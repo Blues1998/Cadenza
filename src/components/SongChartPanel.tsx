@@ -2,12 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
 import { audio } from '../utils/audio';
 import { Segmented } from './Segmented';
+import { StrumGrid } from './StrumGrid';
 import { IconPause, IconPlay, IconStop } from './Icons';
 import { COMFORT_LABEL, comfortOf, preferredVoicing } from '../utils/chordbook';
 import { fitSong } from '../utils/fit';
 import { songChords, updateSong } from '../utils/library';
 import type { Song } from '../utils/library';
 import { useChartTransport } from '../hooks/useChartTransport';
+import { parseStrum } from '../utils/strum';
 import {
   chartDuration,
   chordsAtBeat,
@@ -68,12 +70,24 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   const [mode, setMode] = useState<Mode>(lines.length === 0 ? 'import' : 'play');
   const [playChords, setPlayChords] = useState(false);
 
+  // The song's own strumming, if it has any recorded. A sheet with a pattern
+  // written on it should play with that pattern — otherwise the play-along is
+  // telling you one thing and playing you another.
+  const pattern = useMemo(
+    () => parseStrum(song.strumming ?? '', settings.beatsPerBar),
+    [song.strumming, settings.beatsPerBar]
+  );
+
   const chart = useMemo(
     () => timeChart(lines, settings.beatsPerBar, transpose),
     [lines, settings.beatsPerBar, transpose]
   );
 
-  const { phase, beat, start, stop, pause, resume, countInBeats } = useChartTransport(chart, settings, { playChords });
+  const { phase, beat, slot, start, stop, pause, resume, countInBeats } = useChartTransport(
+    chart,
+    settings,
+    { playChords, pattern: playChords ? pattern : null }
+  );
   // Three readings of one phase. `moving` is the clock actually running;
   // `running` is a run in progress, paused or not, and is what locks the tempo
   // and metre; `holding` is a position worth showing, which a pause keeps.
@@ -269,6 +283,27 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
               Sound the chords
             </label>
           </div>
+
+          {playChords && (
+            <div className="chart-strum">
+              {pattern ? (
+                <>
+                  <StrumGrid
+                    pattern={pattern}
+                    live={slot}
+                    onChange={text => void updateSong(song.id, { strumming: text })}
+                  />
+                  <span className="readout chart-strumnote">
+                    this song's strumming · press a cell to change it
+                  </span>
+                </>
+              ) : (
+                <span className="readout chart-strumnote">
+                  No strumming pattern recorded, so the chords land on the changes. Write one beside the sheet and it plays that instead.
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="chart-now">
             <div className={`chart-chord-now${holding ? ' is-live' : ''}`}>

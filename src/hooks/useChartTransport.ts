@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { audio } from '../utils/audio';
-import { chartChords, type ChartSettings, type ParsedChart } from '../utils/chart';
+import { chartChords, chordsAtBeat, type ChartSettings, type ParsedChart } from '../utils/chart';
 import { preferredVoicing } from '../utils/chordbook';
+import { slotBeats, type StrumPattern } from '../utils/strum';
 
 export type ChartPhase = 'idle' | 'countin' | 'playing' | 'paused' | 'done';
 
 const LEAD_SEC = 0.2;      // breathing room before the count-in's first click
+const PATTERN_RING = 1.5;  // beats a strummed chord rings for inside a pattern
 const AHEAD_SEC = 0.15;    // how far ahead of the clock we schedule
 const TICK_MS = 25;
 
@@ -26,13 +28,24 @@ const TICK_MS = 25;
 export function useChartTransport(
   chart: ParsedChart,
   settings: ChartSettings,
-  options: { playChords?: boolean; loop?: boolean; strum?: boolean; metronome?: boolean } = {}
+  options: {
+    playChords?: boolean;
+    loop?: boolean;
+    strum?: boolean;
+    metronome?: boolean;
+    /** A strumming pattern to play the chords with, instead of one hit each. */
+    pattern?: StrumPattern | null;
+  } = {}
 ) {
   const { tempo, beatsPerBar, countInBars } = settings;
   const countInBeats = countInBars * beatsPerBar;
 
   const [phase, setPhase] = useState<ChartPhase>('idle');
   const [beat, setBeat] = useState(-1);
+  // Where the strumming hand is, in subdivisions. Reported separately from the
+  // beat because a pattern moves twice or four times as often as one, and
+  // everything else watching this only wants to know about beats.
+  const [slot, setSlot] = useState(-1);
 
   // The phase as the buttons see it. Play, pause and resume all have to look
   // at where we are before they act, and they cannot do it inside a setState
@@ -46,6 +59,11 @@ export function useChartTransport(
   const pausedAt = useRef(0);
   const nextBeat = useRef(0);
   const nextChord = useRef(0);
+  // The pattern's own cursor, counting subdivisions rather than chords, plus
+  // the pattern it belongs to — changing the pattern mid-loop has to re-seat
+  // it or the new grid would be read at the old one's position.
+  const nextStep = useRef(0);
+  const patternKey = useRef<string | null>(null);
   const timer = useRef<number | null>(null);
   const frame = useRef<number | null>(null);
   // The tempo and metre this run was started at. Held apart from the settings
@@ -62,7 +80,8 @@ export function useChartTransport(
     playChords: options.playChords ?? false,
     loop: options.loop ?? false,
     strum: options.strum ?? false,
-    metronome: options.metronome ?? true
+    metronome: options.metronome ?? true,
+    pattern: options.pattern ?? null
   };
   const live = useRef(settingsRef);
   live.current = settingsRef;
@@ -82,6 +101,7 @@ export function useChartTransport(
     halt();
     setPhase('idle');
     setBeat(-1);
+    setSlot(-1);
   }, [halt]);
 
   useEffect(() => stop, [stop]);
@@ -95,7 +115,7 @@ export function useChartTransport(
       // move while this is running, and a closure taken once would keep the
       // loop at whatever it started at while the readout said otherwise.
       const { spb, bpb } = plan.current;
-      const { chart: cur, playChords, loop, strum, metronome } = live.current;
+      const { chart: cur, playChords, loop, strum, metronome, pattern } = live.current;
       const now = audio.getCurrentTime();
       const horizon = now + AHEAD_SEC;
       const total = cur.totalBeats;
@@ -112,7 +132,43 @@ export function useChartTransport(
         nextBeat.current += 1;
       }
 
-      if (playChords) {
+      // A strumming pattern turns the chords into a part: the hand keeps its
+      // own time and plays whatever is being held when each stroke comes
+      // round, which is the other way up from striking each chord once as it
+      // arrives. So the scheduling walks subdivisions and asks the chart what
+      // is held, rather than walking chords and asking when.
+      if (playChords && pattern) {
+        const key = `${pattern.steps.join('')}|${pattern.perBeat}`;
+        const step = slotBeats(pattern);
+        if (patternKey.current !== key) {
+          patternKey.current = key;
+          // From here, not from the top: a pattern changed mid-loop should
+          // take over at the next stroke rather than jump the hand back.
+          const beatNow = (now - startTime.current) / spb - plan.current.lead;
+          nextStep.current = Math.max(0, Math.ceil(beatNow / step - 1e-6));
+        }
+
+        while (timeOf(nextStep.current * step) < horizon) {
+          const i = nextStep.current;
+          const beatAt = i * step;
+          if (!loop && beatAt >= total) break;
+          nextStep.current += 1;
+
+          const stroke = pattern.steps[i % pattern.steps.length];
+          if (stroke === '-') continue;
+          // Where in the song this stroke lands, with the laps taken off.
+          const held = chordsAtBeat(cur, loop && total > 0 ? beatAt % total : beatAt).current;
+          if (!held) continue;
+          // The shape you chose, so what you hear is the chord you are being
+          // shown rather than a different inversion of the same name.
+          const voicing = preferredVoicing(held.symbol);
+          if (!voicing) continue;
+          // Shorter than a single strike would ring: eight of these a bar all
+          // holding a chord apiece is a wash, and a strummed guitar is not a
+          // wash — each stroke is still audible over the last.
+          audio.playStroke(voicing.midis, stroke, spb * PATTERN_RING, Math.min(0.018, spb / 10), timeOf(beatAt));
+        }
+      } else if (playChords) {
         const all = chartChords(cur);
         const at = (i: number) => (loop
           // Which chord, and which lap it belongs to.
@@ -121,8 +177,6 @@ export function useChartTransport(
         while (all.length > 0 && (loop || nextChord.current < all.length) && timeOf(at(nextChord.current)) < horizon) {
           const i = nextChord.current;
           const chord = all[loop ? i % all.length : i];
-          // The shape you chose, so what you hear is the chord you are being
-          // shown rather than a different inversion of the same name.
           const voicing = preferredVoicing(chord.symbol);
           if (voicing) {
             // Strummed, the chord is the part. Blocked, it is a reference
@@ -145,8 +199,13 @@ export function useChartTransport(
     const follow = () => {
       const { spb, lead } = plan.current;
       const elapsed = audio.getCurrentTime() - startTime.current;
-      const position = Math.floor(elapsed / spb) - lead;
+      const exact = elapsed / spb - lead;
+      const position = Math.floor(exact);
       setBeat(prev => (position === prev ? prev : position));
+
+      const pat = live.current.pattern;
+      const cell = pat && exact >= 0 ? Math.floor(exact * pat.perBeat) : -1;
+      setSlot(prev => (cell === prev ? prev : cell));
       setPhase(prev => {
         if (prev === 'done' || prev === 'idle' || prev === 'paused') return prev;
         return position < 0 ? 'countin' : 'playing';
@@ -166,6 +225,8 @@ export function useChartTransport(
     startTime.current = audio.getCurrentTime() + LEAD_SEC;
     nextBeat.current = -lead;
     nextChord.current = 0;
+    nextStep.current = 0;
+    patternKey.current = null;
     setPhase(lead > 0 ? 'countin' : 'playing');
     setBeat(-lead);
     runLoops();
@@ -225,5 +286,5 @@ export function useChartTransport(
     frame.current = null;
   }, [phase]);
 
-  return { phase, beat, start, stop, pause, resume, countInBeats };
+  return { phase, beat, slot, start, stop, pause, resume, countInBeats };
 }

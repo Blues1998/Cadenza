@@ -13,9 +13,6 @@ export interface Slot {
   bars: number;
 }
 
-/** How often the chord is struck while it is being held. */
-export type LoopStrum = 'bar' | 'beat';
-
 let counter = 0;
 
 /**
@@ -33,24 +30,15 @@ export const makeSlot = (symbol: string, bars = 1): Slot => ({ id: `q${++counter
  * songs use — one clock, one count-in, one set of timing bugs already found —
  * rather than a second scheduler that would drift away from it.
  *
- * Strumming every beat is the same chord written once per beat, with the beat
- * said explicitly. timeChart spreads chords with no beat of their own evenly
- * across the line, which is not the same thing and comes apart on any bar
- * that is not four.
+ * One entry per chord, and no more: how often it is struck while it is held is
+ * the strumming pattern's business, and a chart that also had an opinion about
+ * it would be two hands fighting over the same arm.
  */
-export function loopLines(slots: Slot[], beatsPerBar: number, strum: LoopStrum): ChartLineRecord[] {
-  return slots.map(slot => {
-    const beats = slot.bars * beatsPerBar;
-    const hits = strum === 'beat' ? beats : 1;
-    return {
-      id: slot.id,
-      kind: 'lyric' as const,
-      bars: slot.bars,
-      words: Array.from({ length: hits }, (_, i) => ({
-        text: '',
-        chord: slot.symbol,
-        beat: (i * beats) / hits
-      }))
-    };
-  });
+export function loopLines(slots: Slot[]): ChartLineRecord[] {
+  return slots.map(slot => ({
+    id: slot.id,
+    kind: 'lyric' as const,
+    bars: slot.bars,
+    words: [{ text: '', chord: slot.symbol, beat: 0 }]
+  }));
 }
