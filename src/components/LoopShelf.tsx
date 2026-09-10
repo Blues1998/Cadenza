@@ -42,11 +42,6 @@ const distinct = (chords: [string, number][]): string[] => {
 
 const newCount = (symbols: string[]): number => symbols.filter(s => comfortOf(s) === 'none').length;
 
-const learnLabel = (symbols: string[]): string => {
-  const n = newCount(symbols);
-  return n === 0 ? 'all in your book' : `${n} new for you`;
-};
-
 /**
  * Which rung to open on: the first one that asks for a chord you have not
  * marked, which is the edge of what you can already play.
@@ -86,7 +81,6 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, startOpen
 
   const recent = getSavedLoops();
   const templates = useMemo(() => LOOP_TEMPLATES.filter(t => t.level === level), [level]);
-  const levelNote = LOOP_LEVELS.find(l => l.level === level)?.note ?? '';
 
   const press = (next: Tab) => setTab(cur => (cur === next ? null : next));
 
@@ -136,7 +130,6 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, startOpen
               </button>
             ))}
           </div>
-          <p className="qlevel-note readout">{levelNote}</p>
           <div className="loopcards">
             {templates.map(t => {
               const chords = templateChords(t);
@@ -147,12 +140,12 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, startOpen
                     className="loopcard-main"
                     onClick={() => loadTemplate(t)}
                     aria-label={`Play ${t.name}`}
-                    title="Load this loop"
+                    title={t.note}
                   >
                     <Chips symbols={chords} />
-                    <span className="loopcard-note">{t.note}</span>
+                    <span className="loopcard-name">{t.name}</span>
                     <span className="loopcard-meta readout">
-                      {templateBars(t)} bars · {t.tempo} bpm{t.beatsPerBar === 4 ? '' : ` · in ${t.beatsPerBar}`} · {learnLabel(chords)}
+                      {templateBars(t)} bars · {t.tempo} bpm{t.beatsPerBar === 4 ? '' : ` · in ${t.beatsPerBar}`}
                     </span>
                   </button>
                   <button
@@ -173,7 +166,6 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, startOpen
 
       {tab === 'recent' && (
         <div className="quickplay-drawer">
-          <p className="qlevel-note readout">Kept as you play them. The last {recent.length === 1 ? 'one' : `${recent.length}`} you ran.</p>
           <div className="loopcards">
             {recent.map(loop => {
               const chords = distinct(loop.chords);
@@ -188,10 +180,7 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, startOpen
                   >
                     <Chips symbols={chords} />
                     <span className="loopcard-meta readout">
-                      {loop.tempo} bpm{loop.beatsPerBar === 4 ? '' : ` · in ${loop.beatsPerBar}`} · {loop.strum === 'beat' ? 'every beat' : 'once a bar'}
-                    </span>
-                    <span className="loopcard-meta readout">
-                      {whenLabel(loop.playedAt)}{loop.runs > 1 ? ` · played ${loop.runs}×` : ''}
+                      {loop.tempo} bpm{loop.beatsPerBar === 4 ? '' : ` · in ${loop.beatsPerBar}`} · {loop.strum === 'beat' ? 'every beat' : 'once a bar'} · {whenLabel(loop.playedAt)}{loop.runs > 1 ? ` · ×${loop.runs}` : ''}
                     </span>
                   </button>
                   <button

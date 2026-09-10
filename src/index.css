@@ -5036,14 +5036,6 @@ button.dash-card:hover .pickup-go svg {
   margin: 0 auto;
 }
 
-.chordbook-lead {
-  max-width: 46rem;
-  margin: -0.4rem 0 0;
-  font-size: 0.82rem;
-  line-height: 1.55;
-  color: var(--text-secondary);
-}
-
 .chordbook-add {
   display: flex;
   align-items: center;
@@ -5052,12 +5044,6 @@ button.dash-card:hover .pickup-go svg {
 
 .chordbook-add .text-field {
   width: 11rem;
-}
-
-.chordbook-note {
-  margin: 0 0 0.6rem;
-  font-size: 0.72rem;
-  color: var(--text-muted);
 }
 
 .chordbook-queue {
@@ -5109,11 +5095,6 @@ button.dash-card:hover .pickup-go svg {
   align-items: center;
   gap: 0.8rem;
   flex-wrap: wrap;
-}
-
-.chordbook-viewnote {
-  font-size: 0.7rem;
-  color: var(--text-muted);
 }
 
 .catalogue {
@@ -5566,12 +5547,6 @@ button.dash-card:hover .pickup-go svg {
   color: var(--surface-1);
 }
 
-.qlevel-note {
-  margin: 0;
-  font-size: 0.66rem;
-  color: var(--text-muted);
-}
-
 .loopcards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
@@ -5640,10 +5615,10 @@ button.dash-card:hover .pickup-go svg {
   color: var(--text-secondary);
 }
 
-/* Notes run to one line or two depending on the card. The margin takes up the
+/* Names run to one line or two depending on the width. The margin takes up the
    slack so every card's meta line sits on the same baseline as its neighbours
-   rather than floating up under a short note. */
-.loopcard-note {
+   rather than floating up under a short name. */
+.loopcard-name {
   margin-bottom: auto;
   font-size: 0.7rem;
   color: var(--text-secondary);

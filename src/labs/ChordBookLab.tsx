@@ -183,17 +183,12 @@ export const ChordBookLab: React.FC = () => {
             className="text-field"
             value={adding}
             onChange={e => setAdding(e.target.value)}
-            placeholder="Add a chord — Bm7"
+            placeholder="Add a chord"
             aria-label="Add a chord by name"
           />
           <button type="submit" className="btn" disabled={!adding.trim()}>Add</button>
         </form>
       </header>
-
-      <p className="chordbook-lead">
-        Mark what your hands can actually do. Songs use this to tell you whether you can play them,
-        and <strong>Fit</strong> uses it to find the capo that puts a song inside what you already know.
-      </p>
 
       {loop && (
         <QuickPlay slots={loop} onChange={setLoop} onClose={() => setLoop(null)} />
@@ -201,11 +196,6 @@ export const ChordBookLab: React.FC = () => {
 
       <div className="chordbook-views">
         <Segmented<View> value={view} onChange={setView} options={VIEWS} ariaLabel="Which chords" />
-        <span className="chordbook-viewnote readout">
-          {view === 'songs'
-            ? 'The chords your library actually asks for'
-            : 'Every chord, arranged by key, root, quality or difficulty'}
-        </span>
       </div>
 
       {view === 'all' && <ChordCatalogue onPick={pick} />}
@@ -214,11 +204,8 @@ export const ChordBookLab: React.FC = () => {
         <section className="song-panel chordbook-queue">
           <div className="surface-label">
             <span>Quick pass</span>
-            <span className="readout">{counts.unrated} left</span>
+            <span className="readout">{counts.unrated} left · easiest first</span>
           </div>
-          <p className="chordbook-note">
-            Easiest first. One press each — nothing here is a test, and you can change any of it later.
-          </p>
           <div className="chordcards">
             {queue.map(e => <ChordCard key={e.symbol} symbol={e.symbol} markable onPick={pick} />)}
           </div>

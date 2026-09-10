@@ -129,9 +129,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
       </div>
 
       {slots.length === 0 ? (
-        <p className="quickplay-empty">
-          Press any chord below to add it. They play in the order you add them, round and round.
-        </p>
+        <p className="quickplay-empty">Press any chord to add it, or take one from the shelf below.</p>
       ) : (
         <ol className="quickplay-seq">
           {slots.map((slot, i) => (
