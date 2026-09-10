@@ -10,7 +10,18 @@
 // thing in an address bar — 'library' is the song list and 'songs' is the
 // rhythm game — and an address is something people read.
 
-import type { ActiveTab } from '../components/navGroups';
+/**
+ * Every destination the app has.
+ *
+ * Declared here rather than beside the rail's icons because this is the
+ * module the addresses are built from, and the build reads it directly to
+ * write the 404 page — which it can only do while nothing else has to be
+ * loaded to make sense of it. The rail re-exports it, so nothing that already
+ * imports it from there had to change.
+ */
+export type ActiveTab =
+  | 'dashboard' | 'journey' | 'ear-training' | 'theory' | 'play' | 'physics'
+  | 'rhythm' | 'tuner' | 'tabs' | 'songs' | 'library' | 'chordbook';
 
 export interface Route {
   tab: ActiveTab;
@@ -22,7 +33,11 @@ export const HOME: Route = { tab: 'dashboard', songId: null };
 
 // Exhaustive by type rather than by care: adding a destination to the rail
 // without giving it an address stops the build.
-const SLUG: Record<ActiveTab, string> = {
+//
+// Each slug is also its own label: title-cased with the hyphens opened out,
+// every one of these is the word on the rail. The 404 page leans on that to
+// name a destination without a second list to keep in step.
+export const SLUG: Record<ActiveTab, string> = {
   dashboard: 'home',
   journey: 'journey',
   theory: 'theory',
@@ -36,6 +51,9 @@ const SLUG: Record<ActiveTab, string> = {
   tabs: 'tabs',
   songs: 'song-hero'
 };
+
+/** Every address there is, in the order the rail offers them. */
+export const SLUGS: string[] = Object.values(SLUG);
 
 const TAB_BY_SLUG = new Map<string, ActiveTab>(
   (Object.entries(SLUG) as [ActiveTab, string][]).map(([tab, slug]) => [slug, tab])

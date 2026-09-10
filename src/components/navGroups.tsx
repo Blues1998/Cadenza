@@ -1,9 +1,14 @@
 import React from 'react';
+import type { ActiveTab } from '../utils/route';
 
 // The rail's contents, kept out of Sidebar.tsx so that both the sidebar and
 // the phone swipe gesture can read the same structure without a component
 // file having to export a constant — which breaks Fast Refresh.
-export type ActiveTab = 'dashboard' | 'journey' | 'ear-training' | 'theory' | 'play' | 'physics' | 'rhythm' | 'tuner' | 'tabs' | 'songs' | 'library' | 'chordbook';
+//
+// The destinations themselves are declared next to the addresses they answer
+// to, and re-exported from here because this is where the rest of the app has
+// always taken them from.
+export type { ActiveTab };
 
 const icon = (path: React.ReactNode) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
