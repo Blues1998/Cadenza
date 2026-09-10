@@ -5342,12 +5342,19 @@ button.dash-card:hover .pickup-go svg {
    ---------------------------------------------------------------------------
    Sticky, because the page under it is the chord picker — you scroll the shelf
    and press what you want while the loop stays in view and keeps running. That
-   is the whole interaction, and it only works if this never scrolls away. */
+   is the whole interaction, and it only works if this never scrolls away.
+   Which is also why it is capped: a sticky panel with no ceiling pins whatever
+   height it happens to have, so a long progression or a long pattern would
+   take the screen away from the chords it exists to be filled from. It gives
+   up its own room first, and the chords keep theirs. */
 
 .quickplay {
   position: sticky;
   top: 0;
   z-index: 6;
+  max-height: 62vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -5829,8 +5836,11 @@ button.dash-card:hover .pickup-go svg {
 }
 
 /* One bar per group, so a two-bar pattern reads as two bars rather than as a
-   long row somebody has to count. */
+   long row somebody has to count. The gutter on the right is where the bar's
+   own remove button lives — inside the bar's box rather than hung off its
+   corner, so it survives being put in something that scrolls. */
 .strumbar {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(var(--slots), minmax(1.9rem, 2.4rem));
   gap: 2px;
@@ -5838,6 +5848,41 @@ button.dash-card:hover .pickup-go svg {
   border-radius: 9px;
   background: var(--surface-2);
   border: 1px solid var(--panel-border);
+}
+
+.strumbar:has(.strumbar-drop) { padding-right: 19px; }
+
+/* Always drawn, never on hover: a pattern is as likely to be edited on a
+   phone as anywhere else, and a control that only exists under a pointer does
+   not exist there. */
+.strumbar-drop {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: background 0.12s ease, color 0.12s ease, opacity 0.12s ease;
+}
+
+.strumbar-drop:hover,
+.strumbar-drop:focus-visible {
+  background: var(--surface-3);
+  color: var(--danger);
+  opacity: 1;
 }
 
 .strumcell {
@@ -5909,7 +5954,16 @@ button.strumcell:hover { background: var(--surface-3); }
   color: var(--primary);
 }
 
-.quickplay-strum .strumgrid { flex: 1 0 100%; margin-top: 0; }
+/* The pattern is the one part of the panel with no natural length — bars can
+   be added until the metre says stop — so it is the part that scrolls, and it
+   gives out at about three bars rather than pushing everything below it down. */
+.quickplay-strum .strumgrid {
+  flex: 1 0 100%;
+  margin-top: 0;
+  max-height: 11.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 
 .quickplay-strumnote {
   flex: 1 0 100%;

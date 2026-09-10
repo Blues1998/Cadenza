@@ -257,7 +257,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
             <p className="quickplay-strumnote readout">
               {strokeCount(pattern) === 0
                 ? 'nothing lands — the chords will not sound'
-                : `${strokeCount(pattern)} stroke${strokeCount(pattern) === 1 ? '' : 's'} over ${pattern.bars} bar${pattern.bars === 1 ? '' : 's'} · press a cell to change it`}
+                : `${strokeCount(pattern)} stroke${strokeCount(pattern) === 1 ? '' : 's'} over ${pattern.bars} bar${pattern.bars === 1 ? '' : 's'} · press a cell to change it${pattern.bars > 1 ? ' · × drops a bar' : ''}`}
             </p>
           </>
         ) : (

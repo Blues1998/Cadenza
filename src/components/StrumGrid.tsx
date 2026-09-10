@@ -1,10 +1,11 @@
 import React from 'react';
 import {
-  STROKE_CYCLE,
   countLabel,
+  nextStroke,
   onBeat,
   perBar,
   withStroke,
+  withoutBar,
   type Stroke,
   type StrumPattern
 } from '../utils/strum';
@@ -17,7 +18,7 @@ interface StrumGridProps {
   pattern: StrumPattern;
   /** Which subdivision is sounding, counting on past the end. -1 for none. */
   live?: number;
-  /** Given the whole pattern rewritten, when a cell is pressed. */
+  /** Given the whole pattern rewritten, when a cell or a bar is pressed. */
   onChange?: (text: string) => void;
 }
 
@@ -28,6 +29,12 @@ interface StrumGridProps {
  * resolved to, which is not the same thing and is the thing you are about to
  * hear. Every cell can be pressed, so a pattern that came out wrong is fixed
  * where it is wrong rather than by rewriting the line and trying again.
+ *
+ * Pressing a cell changes that cell and nothing else. The placement rule that
+ * decides where a written stroke lands has already run by the time this is
+ * drawn, and re-running it on an edit would let one press shunt the whole
+ * pattern sideways — so a cell only ever offers the strokes its own slot can
+ * hold, and the edit is written back with its bar lines intact.
  *
  * The count runs above it — 1 & 2 & — because that is the part people already
  * have, and against it the pattern reads without being explained.
@@ -59,9 +66,10 @@ export const StrumGrid: React.FC<StrumGridProps> = ({ pattern, live = -1, onChan
                 </span>
               );
             }
-            // Pressing steps down, up, muted, pass — the four things the hand
-            // can do at one place in the bar, in the order they are common.
-            const next = STROKE_CYCLE[(STROKE_CYCLE.indexOf(stroke) + 1) % STROKE_CYCLE.length];
+            // Down slots offer down, muted, pass; up slots offer up, muted,
+            // pass. Which way the arm is going at this point in the bar is not
+            // a choice anybody has, so it is not offered as one.
+            const next = nextStroke(index, stroke);
             return (
               <button
                 key={index}
@@ -76,6 +84,20 @@ export const StrumGrid: React.FC<StrumGridProps> = ({ pattern, live = -1, onChan
               </button>
             );
           })}
+          {/* A bar is easy to gain — writing one stroke too many for the metre
+              adds one — so it has to be as easy to lose. Not on a one-bar
+              pattern: the field is where you get rid of that. */}
+          {onChange && pattern.bars > 1 && (
+            <button
+              type="button"
+              className="strumbar-drop"
+              onClick={() => onChange(withoutBar(pattern, bar))}
+              aria-label={`Remove bar ${bar + 1}`}
+              title={`Remove bar ${bar + 1}`}
+            >
+              ×
+            </button>
+          )}
         </div>
       ))}
     </div>
