@@ -1,10 +1,12 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { IconPause, IconPlay, IconStop, IconX } from './Icons';
+import { LoopShelf, type LoopSetup } from './LoopShelf';
 import { Segmented } from './Segmented';
 import { useChartTransport } from '../hooks/useChartTransport';
 import { TEMPO_MAX, TEMPO_MIN, lineAtBeat, timeChart } from '../utils/chart';
 import { comfortOf, preferredVoicing } from '../utils/chordbook';
 import { loopLines, type LoopStrum, type Slot } from '../utils/loop';
+import { loopSignature, rememberLoop, slotChords } from '../utils/loopbook';
 
 const BEATS_PER_BAR = [3, 4, 6];
 
@@ -23,6 +25,10 @@ interface QuickPlayProps {
  * the palette, and nothing has to be typed or searched for twice.
  */
 export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }) => {
+  // Whether the shelf opens on the templates is decided once, when quick play
+  // is opened: with nothing in the loop, somewhere to start is the whole
+  // screen; with chords already in it, the shelf would be in the way.
+  const [startOpen] = useState(() => slots.length === 0);
   const [tempo, setTempo] = useState(80);
   const [beatsPerBar, setBeatsPerBar] = useState(4);
   const [strum, setStrum] = useState<LoopStrum>('bar');
@@ -44,6 +50,39 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
   );
   const moving = phase === 'countin' || phase === 'playing';
   const running = moving || phase === 'paused';
+
+  // A loop is kept once it has actually started sounding. The count-in is
+  // still a chance to change your mind, and a history full of things nobody
+  // played is a history nobody reads.
+  //
+  // Guarded by the loop's own signature rather than by a flag, so editing a
+  // chord and playing again records the new loop, while a pause and a resume
+  // in the middle of one record nothing twice. Stopping clears it, because
+  // playing the same loop again tomorrow is another run of it.
+  const kept = useRef<string | null>(null);
+  useEffect(() => {
+    if (phase === 'idle' || phase === 'done') {
+      kept.current = null;
+      return;
+    }
+    if (phase !== 'playing') return;
+    const chords = slotChords(slots);
+    const signature = loopSignature(chords, beatsPerBar);
+    if (kept.current === signature) return;
+    kept.current = signature;
+    void rememberLoop({ chords, tempo, beatsPerBar, strum });
+  }, [phase, slots, beatsPerBar, tempo, strum]);
+
+  // A loop from the shelf arrives whole — chords, tempo and metre — because
+  // the tempo a progression was written for is part of what it is. Stopped
+  // first: the metre cannot change under a running clock.
+  const applyLoop = (next: Slot[], setup: LoopSetup) => {
+    stop();
+    onChange(next);
+    setTempo(setup.tempo);
+    setBeatsPerBar(setup.beatsPerBar);
+    if (setup.strum) setStrum(setup.strum);
+  };
 
   // Which slot is sounding. The beat counts on past the end for ever, so the
   // lap has to be taken off before it is looked up.
@@ -190,6 +229,11 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
         )}
       </div>
 
+      <LoopShelf
+        onUse={applyLoop}
+        onAppend={next => onChange([...slots, ...next])}
+        startOpen={startOpen}
+      />
     </section>
   );
 };
