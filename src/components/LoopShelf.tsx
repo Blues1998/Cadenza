@@ -61,7 +61,7 @@ function suggestedLevel(): number {
 const Chips: React.FC<{ symbols: string[] }> = ({ symbols }) => (
   <span className="loopcard-chords">
     {symbols.map((symbol, i) => (
-      <span key={`${symbol}-${i}`} className={`loopchip is-${comfortOf(symbol)}`}>{symbol}</span>
+      <span key={`${symbol}-${i}`} className={`chordchip is-${comfortOf(symbol)}`}>{symbol}</span>
     ))}
   </span>
 );

@@ -151,6 +151,20 @@ export function groupChords(chords: CatalogueChord[], by: GroupBy): ChordGroup[]
     .filter(g => g.chords.length > 0);
 }
 
+/**
+ * The part of a chord's name that varies inside its group.
+ *
+ * A shut group shows its chords as chips, and in a group of C chords eleven
+ * chips all starting with C say nothing: the row is already titled C. So each
+ * arrangement previews the thing it arranges by — the quality in a root group,
+ * the root in a quality group, the whole symbol where neither is fixed.
+ */
+export function chipLabel(chord: CatalogueChord, by: GroupBy): string {
+  if (by === 'root') return CHORD_TYPES[chord.typeId].suffix || 'maj';
+  if (by === 'quality') return chord.rootName;
+  return chord.symbol;
+}
+
 export interface KeyChoice {
   rootPc: number;
   scaleName: string;

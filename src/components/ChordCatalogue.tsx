@@ -4,6 +4,7 @@ import { Segmented } from './Segmented';
 import {
   GROUP_LABEL,
   allChords,
+  chipLabel,
   groupChords,
   keyGroup,
   noteLabel,
@@ -24,6 +25,16 @@ const ONLY: { value: Only; label: string }[] = [
 
 const GROUPS: { value: GroupBy; label: string }[] =
   (['key', 'root', 'quality', 'difficulty'] as GroupBy[]).map(value => ({ value, label: GROUP_LABEL[value] }));
+
+/**
+ * How many chips a shut row builds.
+ *
+ * A cap on the work, not on what is shown: the strip is masked to the width it
+ * has, so a difficulty band of fifty chords fades out where it runs off the
+ * end. Nothing is lost by that — the tally on the right says how many are in
+ * there, which is what a "+34" chip would have said less clearly.
+ */
+const PEEK = 16;
 
 /**
  * The whole catalogue, arranged four ways.
@@ -72,7 +83,7 @@ export const ChordCatalogue: React.FC<{ onPick?: (symbol: string) => void }> = (
   const allOpen = shown.every(g => isOpen(g.id));
 
   return (
-    <div className="catalogue">
+    <div className={`catalogue by-${by}`}>
       <div className="catalogue-bar">
         <label className="catalogue-field">
           <span className="field-label">Arrange by</span>
@@ -137,8 +148,28 @@ export const ChordCatalogue: React.FC<{ onPick?: (symbol: string) => void }> = (
                   <polyline points="9 5 16 12 9 19" />
                 </svg>
               )}
-              <span className="catgroup-title">{group.title}</span>
-              {group.subtitle && <span className="catgroup-sub readout">{group.subtitle}</span>}
+              <span className="catgroup-lead">
+                <span className="catgroup-title">{group.title}</span>
+                {group.subtitle && <span className="catgroup-sub readout">{group.subtitle}</span>}
+              </span>
+              {/* Shut, a row used to be a title and a number: twelve of them
+                  read as twelve identical rows. The chips say which chords are
+                  in there and, in the book's three colours, how you stand with
+                  each — the reason to open one, without opening it. Decoration
+                  to a screen reader, which is given the tally in words. */}
+              {!opened && (
+                <span className="catgroup-peek" aria-hidden="true">
+                  {group.chords.slice(0, PEEK).map(chord => (
+                    <span
+                      key={chord.symbol}
+                      className={`chordchip is-sm is-${comfortOf(chord.symbol)}`}
+                      title={`${chord.symbol} — ${COMFORT_LABEL[comfortOf(chord.symbol)]}`}
+                    >
+                      {chipLabel(chord, by)}
+                    </span>
+                  ))}
+                </span>
+              )}
               {/* The tally is the reason a collapsed group is still worth
                   having on screen: coverage, one key at a time. */}
               <span className="catgroup-tally" aria-label={`${counts.solid} solid, ${counts.shaky} shaky, ${counts.none} not yet`}>
