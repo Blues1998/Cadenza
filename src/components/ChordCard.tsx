@@ -57,8 +57,12 @@ interface ChordCardProps {
   markable?: boolean;
   /** Let the fingering be chosen from every shape we know. */
   shapes?: boolean;
+  /** An action for this chord, under everything else — used by "Learn next". */
+  footer?: React.ReactNode;
   /** Anything the caller wants under the name — "in 4 songs", a count. */
   meta?: React.ReactNode;
+  /** What the footnote is short for — the songs behind "7 songs", on hover. */
+  metaTitle?: string;
   scale?: number;
   /**
    * Set while something on the page is collecting chords — Quick Play.
@@ -80,7 +84,7 @@ interface ChordCardProps {
  * chord, the play-along included, uses it.
  */
 export const ChordCard: React.FC<ChordCardProps> = ({
-  symbol, markable = false, shapes = false, meta, scale = 0.62, onPick
+  symbol, markable = false, shapes = false, meta, metaTitle, footer, scale = 0.62, onPick
 }) => {
   const [open, setOpen] = useState(false);
   // Counts strikes rather than holding a boolean, so a second press while the
@@ -106,7 +110,9 @@ export const ChordCard: React.FC<ChordCardProps> = ({
     <div className={`chordcard is-${comfort}${voicing ? '' : ' is-plain'}${open ? ' is-open' : ''}${onPick ? ' is-pickable' : ''}`}>
       <div className="chordcard-head">
         <span className="chordcard-name">{symbol}</span>
-        {meta && <span className="chordcard-meta readout">{meta}</span>}
+        {meta && (
+          <span className="chordcard-meta readout" title={metaTitle ?? (typeof meta === 'string' ? meta : undefined)}>{meta}</span>
+        )}
       </div>
 
       {voicing ? (
@@ -142,6 +148,8 @@ export const ChordCard: React.FC<ChordCardProps> = ({
       )}
 
       {markable && <ComfortMark symbol={symbol} size="sm" />}
+
+      {footer}
 
       {shapes && all.length > 1 && (
         <button type="button" className="chordcard-more" onClick={() => setOpen(o => !o)} aria-expanded={open}>

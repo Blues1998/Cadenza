@@ -16,6 +16,7 @@ import {
   voicingsFor,
   type ChordComfort
 } from '../utils/chordbook';
+import { drillSlots, nextChords, reasonFor, type NextChord } from '../utils/next';
 import { normalizeChordSymbol } from '../utils/songText';
 
 type View = 'songs' | 'all';
@@ -133,6 +134,12 @@ export const ChordBookLab: React.FC = () => {
     [entries]
   );
 
+  // And once you have said what you cannot play, what to do about it. The two
+  // lists hand off to each other: the quick pass shrinks as chords are rated,
+  // and this one fills with what the rating turned up.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const next = useMemo(() => nextChords(4), [songs, skills]);
+
   const addChord = async (e: React.FormEvent) => {
     e.preventDefault();
     const symbol = normalizeChordSymbol(adding);
@@ -145,6 +152,11 @@ export const ChordBookLab: React.FC = () => {
     setQuery(symbol);
     setFilter('all');
   };
+
+  // A suggestion you can act on in one press. Quick play opens on the drill
+  // whether or not it was already open, because pressing Drill is a decision
+  // about what to practise next and nothing else in the panel is.
+  const drill = (chord: NextChord) => setLoop(drillSlots(chord));
 
   // Adding the same chord twice in a row is how a progression is written, so
   // nothing here dedupes; each press is another bar of it.
@@ -159,6 +171,13 @@ export const ChordBookLab: React.FC = () => {
           <h2 className="lab-title">Chords</h2>
           <p className="songs-count readout">
             <strong>{String(counts.solid).padStart(2, '0')}</strong> / {entries.length}
+            {entries.length > 0 && (
+              <span className="tallybar is-wide" aria-hidden="true">
+                <span className="tallybar-seg is-solid" style={{ flexGrow: counts.solid }} />
+                <span className="tallybar-seg is-shaky" style={{ flexGrow: counts.shaky }} />
+                <span className="tallybar-seg is-none" style={{ flexGrow: counts.none + counts.unrated }} />
+              </span>
+            )}
             <span className="songs-count-sub">
               {[
                 counts.shaky > 0 && `${counts.shaky} shaky`,
@@ -212,6 +231,40 @@ export const ChordBookLab: React.FC = () => {
         </section>
       )}
 
+      {view === 'songs' && next.length > 0 && (
+        <section className="song-panel chordbook-next">
+          <div className="surface-label">
+            <span>Learn next</span>
+            <span className="readout">closest to a song first</span>
+          </div>
+          <div className="chordcards">
+            {next.map(chord => (
+              <ChordCard
+                key={chord.key}
+                symbol={chord.symbol}
+                markable
+                onPick={pick}
+                meta={reasonFor(chord)}
+                footer={
+                  <button
+                    type="button"
+                    className="btn chordcard-drill"
+                    onClick={() => drill(chord)}
+                    title={
+                      chord.partners.length > 0
+                        ? `Loop ${chord.symbol} against ${chord.partners.join(' and ')}`
+                        : `Loop ${chord.symbol}`
+                    }
+                  >
+                    Drill
+                  </button>
+                }
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       {view === 'songs' && (
         <>
       <div className="chordbook-filters">
@@ -242,6 +295,7 @@ export const ChordBookLab: React.FC = () => {
               scale={0.66}
               onPick={pick}
               meta={e.songs.length > 0 ? `${e.songs.length} song${e.songs.length === 1 ? '' : 's'}` : 'added by you'}
+              metaTitle={e.songs.length > 0 ? e.songs.join(' · ') : undefined}
             />
           ))}
         </div>

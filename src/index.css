@@ -3098,7 +3098,12 @@ button.dash-card:hover .pickup-go svg {
   transform: translateY(-1px);
 }
 
+/* A name we could not place keeps its aside — "G (single strum)" — and wraps
+   rather than being cut short: the aside is the part someone typed on purpose.
+   The footnote beside it shrinks first. */
 .chordcard-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-family: var(--font-display);
   font-size: 0.88rem;
   font-weight: 600;
@@ -3132,6 +3137,11 @@ button.dash-card:hover .pickup-go svg {
 }
 
 .chordcard-meta {
+  flex: 0 1 auto;
+  min-width: 2.6rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: 0.6rem;
   color: var(--text-muted);
 }
@@ -5050,6 +5060,43 @@ button.dash-card:hover .pickup-go svg {
   box-shadow: inset 2px 0 0 var(--primary);
 }
 
+/* The other half of the same idea: the quick pass asks what you can play,
+   this one answers what to do about it. Marked in the colour of the thing it
+   is aiming at — a chord you are about to be able to play. */
+/* The one press that turns a suggestion into practice: this chord and the
+   changes into it, looped at a tempo you can move. A pill rather than a bar,
+   so it reads as an offer on the card and not as the card's floor. */
+.chordcard-drill {
+  align-self: center;
+  margin-top: 0.15rem;
+  padding: 0.22rem 0.9rem;
+  border-radius: 999px;
+  /* A step lighter than the card it sits on. The button ground and the card
+     ground were the same token, which made the pill invisible and the word
+     look like a caption. */
+  background: var(--surface-3);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.chordcard-drill:hover {
+  background: var(--success);
+  color: var(--surface-1);
+}
+
+.chordbook-next {
+  width: fit-content;
+  max-width: 100%;
+  box-shadow: inset 2px 0 0 var(--success);
+}
+
+/* Four cards at most, so they keep their own width instead of being stretched
+   across a row built for fifty. */
+.chordbook-next .chordcards {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .chordbook-filters {
   display: flex;
   align-items: center;
@@ -5252,6 +5299,14 @@ button.dash-card:hover .pickup-go svg {
 
 .tallybar-seg {
   transition: flex-grow 0.3s ease;
+}
+
+/* The same bar at the top of the page, where it is the headline rather than a
+   row's footnote. */
+.tallybar.is-wide {
+  width: 9rem;
+  height: 6px;
+  align-self: center;
 }
 
 .tallybar-seg.is-solid {
