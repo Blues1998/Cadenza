@@ -1,53 +1,81 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
-import type { ActiveTab } from './components/Sidebar';
+import { GROUPS, type ActiveTab } from './components/navGroups';
 import { useTheme } from './hooks/useTheme';
 import { useLabSwipe } from './hooks/useLabSwipe';
-import { DashboardLanding } from './labs/DashboardLanding';
-import { JourneyLab } from './labs/JourneyLab';
-import { EarTrainingLab } from './labs/EarTrainingLab';
-import { TheoryLab } from './labs/TheoryLab';
-import { PlayLab } from './labs/PlayLab';
-import { PhysicsLab } from './labs/PhysicsLab';
-import { RhythmLab } from './labs/RhythmLab';
-import { TunerLab } from './labs/TunerLab';
-import { TabPlayerLab } from './labs/TabPlayerLab';
-import { SongHeroLab } from './labs/SongHeroLab';
-import { SongsLab } from './labs/SongsLab';
-import { ChordBookLab } from './labs/ChordBookLab';
+import { go, useRoute } from './hooks/useRoute';
+import { parseHash } from './utils/route';
+import { LAB_CHUNKS } from './labs/chunks';
+
+// One download per destination.
+//
+// Imported together they came to a 1.6 MB bundle, most of it the score
+// renderer the Tab Player needs — paid for in full by someone opening the
+// tuner. Split, the shell and the screen you asked for are all that is
+// fetched, and the rail warms the rest as you point at it.
+const DashboardLanding = lazy(LAB_CHUNKS.dashboard);
+const JourneyLab = lazy(LAB_CHUNKS.journey);
+const TheoryLab = lazy(LAB_CHUNKS.theory);
+const PhysicsLab = lazy(LAB_CHUNKS.physics);
+const SongsLab = lazy(LAB_CHUNKS.library);
+const ChordBookLab = lazy(LAB_CHUNKS.chordbook);
+const EarTrainingLab = lazy(LAB_CHUNKS['ear-training']);
+const RhythmLab = lazy(LAB_CHUNKS.rhythm);
+const TunerLab = lazy(LAB_CHUNKS.tuner);
+const PlayLab = lazy(LAB_CHUNKS.play);
+const TabPlayerLab = lazy(LAB_CHUNKS.tabs);
+const SongHeroLab = lazy(LAB_CHUNKS.songs);
+
+const LABELS = new Map<ActiveTab, string>(
+  GROUPS.flatMap(group => group.items.map(item => [item.id, item.label] as [ActiveTab, string]))
+);
 
 function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  // The address bar is the state. Everything that used to be held here — which
+  // lab, which song — is read back from it, so a reload lands where you were,
+  // Back goes back, and a screen can be linked to.
+  const { tab: activeTab, songId } = useRoute();
   const { theme, toggleTheme } = useTheme();
 
-  // Which song the library is showing, and whether it should open on a blank
-  // one. Held here rather than inside the library so that Home can send you
-  // straight to a song or straight to adding today's — the two things Home
-  // exists to do — without the two screens having to know about each other.
-  const [songFocus, setSongFocus] = useState<string | null>(null);
+  // Opening the form on a given day is an intention, not a place: it is spent
+  // the moment the form appears, and an address you could return to would keep
+  // reopening a blank form over whatever you had since typed.
   const [draftDay, setDraftDay] = useState<number | null>(null);
 
-  const openSong = (id: string) => {
-    setSongFocus(id);
-    setDraftDay(null);
-    setActiveTab('library');
-  };
+  // Whatever was typed, tidied to the address that was actually shown — a bare
+  // URL, a stale slug, the wrong case. Replaced rather than pushed: the
+  // correction is not a step anyone should be able to walk back into.
+  //
+  // Read from the bar at the moment it runs rather than from the render that
+  // scheduled it. Effects run child-first, so a screen that corrects its own
+  // address on the way up — SongsLab does, for a link to a song that is gone —
+  // would otherwise be overruled here by a parent still holding the address it
+  // just replaced.
+  useEffect(() => {
+    go(parseHash(window.location.hash), true);
+  }, [activeTab, songId]);
+
+  const openSong = (id: string) => go({ tab: 'library', songId: id });
+
+  // Stable, because SongsLab watches both of these from effects.
+  const showSong = useCallback(
+    (id: string | null, replace = false) => go({ tab: 'library', songId: id }, replace),
+    []
+  );
 
   const addSongForDay = (day: number | null) => {
-    setSongFocus(null);
     setDraftDay(day ?? 0);   // 0 = open the form with no day filled in
-    setActiveTab('library');
+    go({ tab: 'library', songId: null });
   };
 
-  // Pressing a destination in the rail goes to that destination. Songs kept the
-  // last song you had open, so the rail's Songs would reopen it — a nav item
-  // that lands somewhere other than the page it names, with no way back to the
-  // list except the arrow inside it. openSong above sets the tab itself and so
-  // is unaffected.
-  const navigate = (tab: ActiveTab) => {
-    if (tab === 'library') setSongFocus(null);
-    setActiveTab(tab);
-  };
+  // Pressing a destination in the rail goes to that destination. Songs used to
+  // reopen the last song you had read, which made a nav item land somewhere
+  // other than the page it names; carrying the song in the address makes the
+  // list and the song two different places, so the plain destination is the
+  // list and Back is how you get out of a song.
+  const navigate = (tab: ActiveTab) => go({ tab, songId: null });
+
+  const clearDraft = useCallback(() => setDraftDay(null), []);
 
   // On a phone, a horizontal swipe steps through the current sidebar group
   useLabSwipe(activeTab, navigate);
@@ -87,10 +115,10 @@ function App() {
       case 'library':
         return (
           <SongsLab
-            focusSongId={songFocus}
-            onOpenSong={setSongFocus}
+            focusSongId={songId}
+            onOpenSong={showSong}
             draftDay={draftDay}
-            onDraftOpened={() => setDraftDay(null)}
+            onDraftOpened={clearDraft}
           />
         );
       default:
@@ -108,7 +136,15 @@ function App() {
           transition, instead of the new content appearing mid-swap */}
       <main className="main-content">
         <div key={activeTab} className="lab-enter">
-          {renderActiveContent()}
+          {/* Shown only the first time a lab is opened, and usually not even
+              then: the rail has normally started the download already. */}
+          <Suspense fallback={
+            <p className="lab-loading readout" role="status">
+              Opening {LABELS.get(activeTab) ?? 'Cadenza'}…
+            </p>
+          }>
+            {renderActiveContent()}
+          </Suspense>
         </div>
       </main>
     </div>

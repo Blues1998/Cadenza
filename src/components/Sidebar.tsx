@@ -3,6 +3,7 @@ import type { Theme } from '../hooks/useTheme';
 import type { ActiveTab } from './navGroups';
 import { IconSun, IconMoon } from './Icons';
 import { GROUPS } from './navGroups';
+import { preloadLab } from '../labs/chunks';
 
 export type { ActiveTab } from './navGroups';
 
@@ -112,6 +113,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
     });
   };
 
+  // Pointing at a row is most of a decision, so the lab starts downloading
+  // here rather than on the press. By the time the button goes down the screen
+  // is usually already in memory and the loading line never appears.
+  const enter = (id: ActiveTab) => {
+    startFlash(id);
+    preloadLab(id);
+  };
+
   const endFlash = (id: ActiveTab) => {
     setFlashing(prev => {
       if (!prev.has(id)) return prev;
@@ -164,7 +173,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
                   className={`channel${isActive ? ' is-live' : ''}${flashing.has(item.id) ? ' is-flashing' : ''}`}
-                  onMouseEnter={() => startFlash(item.id)}
+                  onMouseEnter={() => enter(item.id)}
+                  onFocus={() => preloadLab(item.id)}
                   onAnimationEnd={e => {
                     if (e.animationName === FLASH_CLOCK) endFlash(item.id);
                   }}

@@ -23,7 +23,9 @@ import { capoLabel, parseCapo } from '../utils/songText';
 
 interface SongsLabProps {
   focusSongId: string | null;
-  onOpenSong: (id: string | null) => void;
+  /** Open a song, or (null) go back to the list. `replace` for a correction
+   *  rather than a move — see the dead-link effect below. */
+  onOpenSong: (id: string | null, replace?: boolean) => void;
   /** Set when Home sent you here to write today's song down. 0 = no day. */
   draftDay: number | null;
   onDraftOpened: () => void;
@@ -100,6 +102,15 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
   }, [songs, query, filter]);
 
   const focused = focusSongId ? getSong(focusSongId) : undefined;
+
+  // A link to a song that is no longer here — deleted, or carried over from
+  // someone else's library — lands on the list. The address is corrected with
+  // it so the bar agrees with the screen and a reload does not try the dead id
+  // again; replaced rather than pushed, or Back would walk straight into it.
+  // Only once the library is open: until then every id is unresolved.
+  useEffect(() => {
+    if (ready && focusSongId && !focused) onOpenSong(null, true);
+  }, [ready, focusSongId, focused, onOpenSong]);
 
   // A challenge day holds one song. Two on the same day meant one of them was
   // unreachable from the calendar, so the form says so rather than silently

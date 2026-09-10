@@ -424,6 +424,16 @@ body {
   animation: labEnter 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* The gap while a lab's own chunk arrives. Held at the height of a screen so
+   the rail and the page under it do not jump when the content lands, and
+   quiet: on a warm cache it is on screen for a frame or not at all. */
+.lab-loading {
+  min-height: 60vh;
+  padding: 3rem 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 /* ===== Motion =====
    Anchored scrolling glides rather than jumping, and everything that moves
    stops moving for anyone who has asked their system for less of it. The
