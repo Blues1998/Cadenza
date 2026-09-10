@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
+import { ChordPalette } from './ChordPalette';
 import { comfortOf } from '../utils/chordbook';
 import { useLibrary } from '../hooks/useLibrary';
-import type { Slot } from '../utils/loop';
+import { makeSlot, type Slot } from '../utils/loop';
 import {
   LOOP_LEVELS,
   LOOP_TEMPLATES,
@@ -12,7 +13,7 @@ import {
 } from '../utils/loopTemplates';
 import { forgetLoop, getSavedLoops, loopPattern, loopSlots, whenLabel, type SavedLoop } from '../utils/loopbook';
 
-type Tab = 'templates' | 'recent';
+type Tab = 'chords' | 'templates' | 'recent';
 
 export interface LoopSetup {
   tempo: number;
@@ -26,8 +27,6 @@ interface LoopShelfProps {
   onUse: (slots: Slot[], setup: LoopSetup) => void;
   /** Put these chords on the end of what is already there. */
   onAppend: (slots: Slot[]) => void;
-  /** Open on the templates — true when quick play was opened with nothing in it. */
-  startOpen?: boolean;
 }
 
 const distinct = (chords: [string, number][]): string[] => {
@@ -68,16 +67,22 @@ const Chips: React.FC<{ symbols: string[] }> = ({ symbols }) => (
 );
 
 /**
- * Somewhere to start, and somewhere to come back to.
+ * Where the next chords come from.
  *
- * Two shelves under the loop: progressions worth practising, arranged by how
- * hard they are on the hand, and the ones you have played before. Both hand
- * back the same thing — a sequence, a tempo and a metre — because to quick
- * play there is no difference between a loop we suggested and one you built.
+ * Three drawers under the loop, one open at a time: the chords of a key, a
+ * progression worth practising, or one you have played before. They are one
+ * strip rather than three panels because they answer the same question and you
+ * only ever ask it once — and because quick play has to stay one glance tall
+ * or it takes the screen away from everything it is sitting on top of.
+ *
+ * It opens on the chords, always. The two shelves are for when you want a
+ * suggestion; the picker is for the other nine times out of ten, and a picker
+ * you have to open first is a picker that has already cost you the press it
+ * was meant to save.
  */
-export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, startOpen = false }) => {
+export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend }) => {
   useLibrary();   // recent loops are written by the panel above; redraw when they change
-  const [tab, setTab] = useState<Tab | null>(startOpen ? 'templates' : null);
+  const [tab, setTab] = useState<Tab | null>('chords');
   const [level, setLevel] = useState(suggestedLevel);
 
   const recent = getSavedLoops();
@@ -93,6 +98,14 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, startOpen
   return (
     <div className="quickplay-shelf">
       <div className="quickplay-tabs">
+        <button
+          type="button"
+          className={`qtab${tab === 'chords' ? ' is-on' : ''}`}
+          onClick={() => press('chords')}
+          aria-expanded={tab === 'chords'}
+        >
+          Chords
+        </button>
         <button
           type="button"
           className={`qtab${tab === 'templates' ? ' is-on' : ''}`}
@@ -113,6 +126,12 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, startOpen
           {recent.length > 0 && <span className="qtab-count">{recent.length}</span>}
         </button>
       </div>
+
+      {tab === 'chords' && (
+        <div className="quickplay-drawer">
+          <ChordPalette onAdd={symbols => onAppend(symbols.map(symbol => makeSlot(symbol)))} />
+        </div>
+      )}
 
       {tab === 'templates' && (
         <div className="quickplay-drawer">

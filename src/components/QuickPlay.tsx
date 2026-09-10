@@ -30,10 +30,6 @@ interface QuickPlayProps {
  * the palette, and nothing has to be typed or searched for twice.
  */
 export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }) => {
-  // Whether the shelf opens on the templates is decided once, when quick play
-  // is opened: with nothing in the loop, somewhere to start is the whole
-  // screen; with chords already in it, the shelf would be in the way.
-  const [startOpen] = useState(() => slots.length === 0);
   const [tempo, setTempo] = useState(80);
   const [beatsPerBar, setBeatsPerBar] = useState(4);
   // The pattern as written, not as resolved: what somebody typed is what the
@@ -147,6 +143,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
             <li
               key={slot.id}
               className={`qslot is-${comfortOf(slot.symbol)}${slot.id === liveId ? ' is-live' : ''}`}
+              title={`${slot.symbol} — ${preferredVoicing(slot.symbol)?.label ?? 'no shape'}`}
             >
               <span className="qslot-name">{slot.symbol}</span>
               <span className="qslot-shape readout">{preferredVoicing(slot.symbol)?.label ?? 'no shape'}</span>
@@ -227,6 +224,13 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
         )}
       </div>
 
+      {/* Above the strumming, not below it. Both are drawers on the same
+          panel, but picking is what you are doing over and over while a loop
+          is being built, and the pattern is a thing you set and then watch. On
+          a short screen the panel runs out of room, and what runs out of it
+          has to be the one you are not using. */}
+      <LoopShelf onUse={applyLoop} onAppend={next => onChange([...slots, ...next])} />
+
       <div className="quickplay-strum">
         <label className="catalogue-field quickplay-pattern">
           <span className="field-label">Strumming</span>
@@ -267,11 +271,6 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
         )}
       </div>
 
-      <LoopShelf
-        onUse={applyLoop}
-        onAppend={next => onChange([...slots, ...next])}
-        startOpen={startOpen}
-      />
     </section>
   );
 };

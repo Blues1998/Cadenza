@@ -69,6 +69,27 @@ export function normalizeChordSymbol(raw: string): string {
   return root + (rest.startsWith('(') ? ' ' + rest : rest);
 }
 
+/**
+ * A progression somebody typed, as chord symbols.
+ *
+ * Written progressions arrive in every notation there is — "Am Em F G",
+ * "Am - Em - F - G", "Am → Em → F → G", a line copied out of a chat — and all
+ * of them mean the same four chords. So every plausible separator is one:
+ * spaces, commas, arrows, bar lines and the dashes people put between chords
+ * when they are drawing the movement rather than subtracting anything.
+ *
+ * A dash on its own is dropped rather than read, which is the one place this
+ * differs from the pattern parser next door, where a dash is a real rest.
+ */
+export function readChordLine(raw: string): string[] {
+  return raw
+    .split(/[\s,;|]+|→|->|>/)
+    .map(token => token.trim())
+    .filter(token => token.length > 0 && !/^[-–—]+$/.test(token))
+    .map(token => normalizeChordSymbol(token))
+    .filter(Boolean);
+}
+
 /** The progressions on one line, in order, each already normalised. */
 export function parseProgressions(raw: string | undefined | null): string[][] {
   if (!raw) return [];

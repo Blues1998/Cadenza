@@ -5354,7 +5354,6 @@ button.dash-card:hover .pickup-go svg {
   z-index: 6;
   max-height: 62vh;
   overflow-y: auto;
-  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -5364,6 +5363,12 @@ button.dash-card:hover .pickup-go svg {
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.22), inset 2px 0 0 var(--primary);
   animation: quickplayIn 0.24s cubic-bezier(0.3, 1.1, 0.5, 1);
 }
+
+/* The panel is what gives when it runs out of room, not the blocks inside it.
+   A flex child shrinks by default, and the two blocks here that can scroll —
+   the loop and the pattern — will happily shrink to nothing to let the panel
+   keep its ceiling, which reads on a phone as the loop having vanished. */
+.quickplay > * { flex-shrink: 0; }
 
 @keyframes quickplayIn {
   from {
@@ -5415,12 +5420,20 @@ button.dash-card:hover .pickup-go svg {
   color: var(--text-muted);
 }
 
+/* Capped at two rows. A long progression is worth scrolling a strip for; it
+   is not worth pushing the picker off the bottom of the panel, which is the
+   one thing you are certainly still using while the loop is getting long. */
 .quickplay-seq {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  max-height: 9.6rem;
   margin: 0;
-  padding: 0;
+  padding: 0.35rem 0.35rem 0;
+  margin-left: -0.35rem;
+  margin-right: -0.35rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   list-style: none;
 }
 
@@ -5433,7 +5446,8 @@ button.dash-card:hover .pickup-go svg {
   flex-direction: column;
   align-items: center;
   gap: 0.1rem;
-  min-width: 5.4rem;
+  min-width: 4.8rem;
+  max-width: 7.5rem;
   padding: 0.4rem 0.5rem 0.3rem;
   border: 1px solid transparent;
   border-radius: 9px;
@@ -5464,9 +5478,17 @@ button.dash-card:hover .pickup-go svg {
   color: var(--text-primary);
 }
 
+/* Clipped rather than allowed to set the width. "Middle-3 triad" is twice as
+   wide as the chord it belongs to, and a loop of eight is easier to read as
+   eight narrow chords with a truncated shape name than as four wide ones and
+   a second row. The whole label is on the slot's title. */
 .qslot-shape {
+  max-width: 100%;
+  overflow: hidden;
   font-size: 0.54rem;
   color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .qslot-bars {
@@ -5507,12 +5529,27 @@ button.dash-card:hover .pickup-go svg {
   cursor: default;
 }
 
+/* Lifted out of the flow entirely rather than merely faded: reserving a row
+   for four buttons that are only there under the pointer cost every chord in
+   the loop twenty pixels, all the time, for nothing. */
 .qslot-tools {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.3rem;
   display: flex;
   gap: 0.15rem;
-  margin-top: 0.25rem;
+  padding: 0.1rem;
+  border-radius: 6px;
+  background: var(--surface-3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.16s ease;
+}
+
+.qslot:hover .qslot-tools,
+.qslot:focus-within .qslot-tools {
+  pointer-events: auto;
 }
 
 .qslot:hover .qslot-tools,
@@ -5534,6 +5571,134 @@ button.dash-card:hover .pickup-go svg {
 
 .quickplay-clear {
   margin-left: auto;
+}
+
+
+/* ---------------------------------------------------------------------------
+   The palette: where the next chord comes from
+   ---------------------------------------------------------------------------
+   Seven chords and a text field, in about a hundred pixels. It replaces going
+   looking through the chord book underneath, which was two hundred pixels of
+   fretboard diagram per chord and a scroll for anything past the first six. */
+
+.palette {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.palette-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+}
+
+.palette-bar .catalogue-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* The notes of the key, so the row of chords has something to be true to. */
+.palette-notes {
+  margin-left: auto;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+/* Seven across on a laptop, and as many as fit anywhere else. Sized by the
+   longest name it has to hold — Bm7b5 — rather than by the count, so turning
+   sevenths on widens the chords rather than reflowing the row. */
+.palette-chords {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4.6rem, 1fr));
+  gap: 0.35rem;
+}
+
+.palette-chord {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.42rem 0.3rem 0.45rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--surface-1);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.14s ease, background 0.14s ease, transform 0.14s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+.palette-chord:hover {
+  border-color: var(--primary);
+  background: var(--surface-2);
+  transform: translateY(-2px);
+}
+
+.palette-chord:active { transform: translateY(0); }
+
+.palette-chord:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* The same three colours the chord book uses everywhere else, so a row of
+   these says what you can already play without being read. */
+.palette-chord.is-solid { box-shadow: inset 0 -2px 0 var(--success); }
+.palette-chord.is-shaky { box-shadow: inset 0 -2px 0 var(--warning); }
+
+.palette-numeral {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.palette-name {
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.palette-write {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.palette-write .text-field {
+  width: 12rem;
+  letter-spacing: 0.04em;
+}
+
+/* What the line was understood to say, which is the whole reason it is safe to
+   paste something in and press once. */
+.palette-read {
+  flex: 1 1 8rem;
+  min-width: 0;
+  font-size: 0.66rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette-lost { color: var(--warning); }
+
+@media (max-width: 640px) {
+  /* Less of the loop on a phone, because the picker under it is the part
+     being used. It scrolls; the panel is not the place to read a long
+     progression, and the chord names are on the sheet anyway. */
+  .quickplay-seq { max-height: 5rem; }
+  /* The notes of the key are context, not a control, and on a phone they cost
+     a whole line of the one panel that has none to spare. */
+  .palette-notes { display: none; }
+  .palette-chords { grid-template-columns: repeat(auto-fit, minmax(3.9rem, 1fr)); }
+  .palette-write .text-field { flex: 1 1 auto; width: auto; }
+  .palette-read { flex-basis: 100%; white-space: normal; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -5940,7 +6105,15 @@ button.strumcell:hover { background: var(--surface-3); }
   padding: 0.7rem 0.85rem 0.8rem;
   border-top: 1px solid var(--panel-border);
 }
-.quickplay-pattern { flex: 0 0 auto; }
+/* Label beside the field rather than over it. A stacked label is right in a
+   form; here it is one of four things competing for a panel that has to stay
+   short enough to leave the chords on the screen. */
+.quickplay-pattern {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
 .quickplay-pattern .text-field { width: 11rem; letter-spacing: 0.08em; }
 
 .quickplay-ideas {
