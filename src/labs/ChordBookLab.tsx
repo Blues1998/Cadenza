@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ChordBucket } from '../components/ChordBucket';
 import { ChordCard } from '../components/ChordCard';
 import { ChordCatalogue } from '../components/ChordCatalogue';
 import { QuickPlay } from '../components/QuickPlay';
@@ -58,9 +59,11 @@ interface Entry {
 export const ChordBookLab: React.FC = () => {
   const ready = useLibrary();
   const [view, setView] = useState<View>('songs');
-  // Null while quick play is shut, a (possibly empty) sequence while it is
-  // open — so opening it with nothing in it is a state, not a special case.
-  const [loop, setLoop] = useState<Slot[] | null>(null);
+  // The bucket: what has been ticked, in the order it was ticked. It outlives
+  // the panel, so shutting quick play to go and find two more chords does not
+  // throw away the four you had.
+  const [picked, setPicked] = useState<Slot[]>([]);
+  const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
   const [adding, setAdding] = useState('');
@@ -153,14 +156,43 @@ export const ChordBookLab: React.FC = () => {
     setFilter('all');
   };
 
+  // Ticked by canonical key, so B flat and A sharp are the one chord here as
+  // they are everywhere else in the book.
+  const pickedKeys = useMemo(() => new Set(picked.map(slot => chordKey(slot.symbol))), [picked]);
+  const isPicked = (symbol: string) => pickedKeys.has(chordKey(symbol));
+
+  // A tick is set membership, so unticking takes the chord out wherever it
+  // sits. A progression that wants the same chord twice is written in the
+  // panel, where there is a sequence to write it on; a checkbox cannot say
+  // "twice" and should not pretend to.
+  const toggle = (symbol: string) => setPicked(prev => {
+    const key = chordKey(symbol);
+    return prev.some(slot => chordKey(slot.symbol) === key)
+      ? prev.filter(slot => chordKey(slot.symbol) !== key)
+      : [...prev, makeSlot(symbol)];
+  });
+
+  // Quick play sits at the top of a page that is several screens long, so
+  // opening it from the bucket has to bring it into view as well. Counted
+  // rather than watched, so pressing again when it is already open still
+  // takes you there.
+  const panel = useRef<HTMLDivElement>(null);
+  const [calls, setCalls] = useState(0);
+  useEffect(() => {
+    if (calls > 0) panel.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [calls]);
+  const play = () => {
+    setOpen(true);
+    setCalls(n => n + 1);
+  };
+
   // A suggestion you can act on in one press. Quick play opens on the drill
   // whether or not it was already open, because pressing Drill is a decision
   // about what to practise next and nothing else in the panel is.
-  const drill = (chord: NextChord) => setLoop(drillSlots(chord));
-
-  // Adding the same chord twice in a row is how a progression is written, so
-  // nothing here dedupes; each press is another bar of it.
-  const pick = loop ? (symbol: string) => setLoop([...loop, makeSlot(symbol)]) : undefined;
+  const drill = (chord: NextChord) => {
+    setPicked(drillSlots(chord));
+    play();
+  };
 
   if (!ready) return <div className="songs-loading readout">Opening your chord book…</div>;
 
@@ -190,11 +222,11 @@ export const ChordBookLab: React.FC = () => {
         <div className="chordbook-actions">
           <button
             type="button"
-            className={`btn${loop ? '' : ' btn-primary'}`}
-            onClick={() => setLoop(prev => (prev ? null : []))}
-            aria-pressed={loop !== null}
+            className={`btn${open ? '' : ' btn-primary'}`}
+            onClick={() => setOpen(o => !o)}
+            aria-pressed={open}
           >
-            {loop ? 'Close quick play' : 'Quick play'}
+            {open ? 'Close quick play' : 'Quick play'}
           </button>
         </div>
         <form className="chordbook-add" onSubmit={addChord}>
@@ -209,15 +241,17 @@ export const ChordBookLab: React.FC = () => {
         </form>
       </header>
 
-      {loop && (
-        <QuickPlay slots={loop} onChange={setLoop} onClose={() => setLoop(null)} />
-      )}
+      <div ref={panel} className="chordbook-panel">
+        {open && (
+          <QuickPlay slots={picked} onChange={setPicked} onClose={() => setOpen(false)} />
+        )}
+      </div>
 
       <div className="chordbook-views">
         <Segmented<View> value={view} onChange={setView} options={VIEWS} ariaLabel="Which chords" />
       </div>
 
-      {view === 'all' && <ChordCatalogue onPick={pick} />}
+      {view === 'all' && <ChordCatalogue isPicked={isPicked} onToggle={toggle} />}
 
       {view === 'songs' && queue.length > 0 && (
         <section className="song-panel chordbook-queue">
@@ -226,7 +260,9 @@ export const ChordBookLab: React.FC = () => {
             <span className="readout">{counts.unrated} left · easiest first</span>
           </div>
           <div className="chordcards">
-            {queue.map(e => <ChordCard key={e.symbol} symbol={e.symbol} markable onPick={pick} />)}
+            {queue.map(e => (
+              <ChordCard key={e.symbol} symbol={e.symbol} markable picked={isPicked(e.symbol)} onToggle={toggle} />
+            ))}
           </div>
         </section>
       )}
@@ -243,7 +279,8 @@ export const ChordBookLab: React.FC = () => {
                 key={chord.key}
                 symbol={chord.symbol}
                 markable
-                onPick={pick}
+                picked={isPicked(chord.symbol)}
+                onToggle={toggle}
                 meta={reasonFor(chord)}
                 footer={
                   <button
@@ -293,7 +330,8 @@ export const ChordBookLab: React.FC = () => {
               markable
               shapes
               scale={0.66}
-              onPick={pick}
+              picked={isPicked(e.symbol)}
+              onToggle={toggle}
               meta={e.songs.length > 0 ? `${e.songs.length} song${e.songs.length === 1 ? '' : 's'}` : 'added by you'}
               metaTitle={e.songs.length > 0 ? e.songs.join(' · ') : undefined}
             />
@@ -301,6 +339,18 @@ export const ChordBookLab: React.FC = () => {
         </div>
       )}
         </>
+      )}
+
+      {/* Last in the page, so it pins to the bottom of the window for as long
+          as there is chord book above it and then comes to rest at the end. */}
+      {picked.length > 0 && (
+        <ChordBucket
+          slots={picked}
+          open={open}
+          onRemove={id => setPicked(prev => prev.filter(slot => slot.id !== id))}
+          onClear={() => setPicked([])}
+          onPlay={play}
+        />
       )}
     </div>
   );

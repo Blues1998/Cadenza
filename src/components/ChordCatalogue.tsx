@@ -36,6 +36,12 @@ const GROUPS: { value: GroupBy; label: string }[] =
  */
 const PEEK = 16;
 
+interface ChordCatalogueProps {
+  /** Whether a chord is already in the bucket. Undefined means no bucket. */
+  isPicked?: (symbol: string) => boolean;
+  onToggle?: (symbol: string) => void;
+}
+
 /**
  * The whole catalogue, arranged four ways.
  *
@@ -44,7 +50,7 @@ const PEEK = 16;
  * anything — and a hundred and thirty-two chord diagrams are not built until
  * something is actually being looked at.
  */
-export const ChordCatalogue: React.FC<{ onPick?: (symbol: string) => void }> = ({ onPick }) => {
+export const ChordCatalogue: React.FC<ChordCatalogueProps> = ({ isPicked, onToggle }) => {
   const [by, setBy] = useState<GroupBy>('key');
   const [only, setOnly] = useState<Only>('all');
   const [rootPc, setRootPc] = useState(9);           // A — where a guitarist starts
@@ -198,7 +204,8 @@ export const ChordCatalogue: React.FC<{ onPick?: (symbol: string) => void }> = (
                     markable
                     shapes
                     scale={0.66}
-                    onPick={onPick}
+                    picked={isPicked?.(chord.symbol)}
+                    onToggle={onToggle}
                     meta={chord.numeral ?? chord.typeName}
                   />
                 ))}

@@ -24,10 +24,10 @@ interface QuickPlayProps {
 /**
  * A progression, in time, in about four presses.
  *
- * The page it sits on is already a wall of chords, so it does not carry a
- * chord picker of its own: while this is open, pressing any chord on the page
- * adds it here. That is the whole design — the shelf you were browsing becomes
- * the palette, and nothing has to be typed or searched for twice.
+ * Chords arrive three ways and the panel owns none of them outright: ticked
+ * off the page it sits on, taken from the shelf below, or built in the key
+ * picker there. What the panel is for is everything after that — the order,
+ * how long each chord is held, the tempo, and the strumming hand.
  */
 export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }) => {
   const [tempo, setTempo] = useState(80);
@@ -136,7 +136,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
       </div>
 
       {slots.length === 0 ? (
-        <p className="quickplay-empty">Press any chord to add it, or take one from the shelf below.</p>
+        <p className="quickplay-empty">Tick any chord on the page to add it, or take one from the shelf below.</p>
       ) : (
         <ol className="quickplay-seq">
           {slots.map((slot, i) => (

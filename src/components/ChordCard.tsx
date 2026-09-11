@@ -65,12 +65,15 @@ interface ChordCardProps {
   metaTitle?: string;
   scale?: number;
   /**
-   * Set while something on the page is collecting chords — Quick Play.
+   * Whether this chord is in the bucket, when the page is collecting.
    *
-   * Pressing the shape then adds it there as well as sounding it. The press
-   * means the same thing it always did, and lands somewhere as well.
+   * Pressing the shape always did one thing — sound it — and it still does.
+   * Collecting is a tick, because a tick says it is a set you are building and
+   * shows you what is in it without you having to remember what you pressed.
    */
-  onPick?: (symbol: string) => void;
+  picked?: boolean;
+  /** Put it in the bucket or take it out. Undefined means nobody is collecting. */
+  onToggle?: (symbol: string) => void;
 }
 
 /**
@@ -84,7 +87,7 @@ interface ChordCardProps {
  * chord, the play-along included, uses it.
  */
 export const ChordCard: React.FC<ChordCardProps> = ({
-  symbol, markable = false, shapes = false, meta, metaTitle, footer, scale = 0.62, onPick
+  symbol, markable = false, shapes = false, meta, metaTitle, footer, scale = 0.62, picked = false, onToggle
 }) => {
   const [open, setOpen] = useState(false);
   // Counts strikes rather than holding a boolean, so a second press while the
@@ -101,13 +104,25 @@ export const ChordCard: React.FC<ChordCardProps> = ({
     setStrikes(n => n + 1);
   };
 
-  const press = (v: ChordVoicing) => {
-    strum(v);
-    onPick?.(symbol);
-  };
-
   return (
-    <div className={`chordcard is-${comfort}${voicing ? '' : ' is-plain'}${open ? ' is-open' : ''}${onPick ? ' is-pickable' : ''}`}>
+    <div className={`chordcard is-${comfort}${voicing ? '' : ' is-plain'}${open ? ' is-open' : ''}${onToggle ? ' is-pickable' : ''}${picked ? ' is-picked' : ''}`}>
+      {/* A real checkbox, drawn the way the browser draws one. Every other
+          control on this card had to be invented; this one already means
+          "in the set" to everybody who has ever used a computer, and the
+          bucket it fills is on screen at the same time. */}
+      {onToggle && (
+        <label
+          className="chordpick"
+          title={picked ? `Take ${symbol} out of the bucket` : `Put ${symbol} in the bucket`}
+        >
+          <input
+            type="checkbox"
+            checked={picked}
+            onChange={() => onToggle(symbol)}
+            aria-label={`${symbol} in the bucket`}
+          />
+        </label>
+      )}
       <div className="chordcard-head">
         <span className="chordcard-name">{symbol}</span>
         {meta && (
@@ -119,9 +134,9 @@ export const ChordCard: React.FC<ChordCardProps> = ({
         <button
           type="button"
           className="chordcard-play"
-          onClick={() => press(voicing)}
-          title={onPick ? `Add ${symbol} to the loop — ${voicing.label}` : `Hear ${symbol} — ${voicing.label}`}
-          aria-label={onPick ? `Add ${symbol} to the loop` : `Hear ${symbol} strummed`}
+          onClick={() => strum(voicing)}
+          title={`Hear ${symbol} — ${voicing.label}`}
+          aria-label={`Hear ${symbol} strummed`}
         >
           <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={scale} />
           {/* Taken off when the animation says it is done, not on a timer: only

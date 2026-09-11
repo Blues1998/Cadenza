@@ -5977,6 +5977,176 @@ button.dash-card:hover .pickup-go svg {
   }
 }
 
+/* ===== Ticking chords into the bucket =====
+   The tick sits in the card's top-right corner, and the head is padded on
+   both sides to clear it — symmetric, so the chord's name stays centred over
+   its own diagram rather than being nudged off by a control. */
+.chordpick {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.35rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  /* Unticked it is nearly out of the way: a hundred and thirty-two cards each
+     shouting a checkbox is a form, not a chord book. Hovering the card, or
+     ticking it, brings it up to full. */
+  opacity: 0.35;
+  transition: opacity 0.15s ease;
+}
+
+.chordpick input {
+  margin: 0;
+  width: 0.92rem;
+  height: 0.92rem;
+  cursor: pointer;
+}
+
+.chordcard:hover .chordpick,
+.chordcard:focus-within .chordpick,
+.chordcard.is-picked .chordpick {
+  opacity: 1;
+}
+
+/* Nothing hovers on a phone. */
+@media (hover: none) {
+  .chordpick {
+    opacity: 0.8;
+  }
+}
+
+.chordcard.is-pickable {
+  position: relative;
+}
+
+.chordcard.is-pickable .chordcard-head {
+  padding: 0 1.1rem;
+}
+
+/* Ticked, the whole card says so from across the page — the tick alone is
+   four square millimetres and the point of a bucket is seeing what is in it
+   at a glance. The comfort hairline down the left edge survives it. */
+.chordcard.is-picked {
+  /* A tint rather than the full glow: eight picked cards at 22% orange is a
+     heat map, and the diagrams still have to be readable through it. The ring
+     is what does the saying. */
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface-2));
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.chordcard.is-picked.is-solid {
+  box-shadow: inset 0 0 0 1px var(--primary), inset 2px 0 0 var(--success);
+}
+
+.chordcard.is-picked.is-shaky {
+  box-shadow: inset 0 0 0 1px var(--primary), inset 2px 0 0 var(--warning);
+}
+
+/* ===== The bucket =====
+   Pinned to the foot of the window while there is chord book left below it,
+   then coming to rest at the end of the page. Last child of the lab for that
+   reason: a sticky element only sticks inside its own parent's box. */
+.bucket {
+  position: sticky;
+  bottom: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding: 0.55rem 0.8rem;
+  border-radius: 12px;
+  background: var(--toolbar-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--elevation);
+  animation: bucketIn 0.18s ease both;
+}
+
+@keyframes bucketIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+}
+
+.bucket-count {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+/* The chords take whatever width is left and scroll sideways inside it. A
+   bucket that wrapped would grow up the screen and eat the page it is meant
+   to be a footnote to. */
+.bucket-chords {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.15rem 0;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.bucket-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  border: none;
+  font-family: var(--font-display);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.bucket-x {
+  font-size: 0.9em;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.bucket-chip:hover {
+  background: var(--surface-3);
+}
+
+.bucket-chip:hover .bucket-x {
+  color: var(--danger);
+}
+
+.bucket-clear,
+.bucket-play {
+  flex-shrink: 0;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.78rem;
+}
+
+/* The panel's own wrapper. Empty it must take no room at all, or the page
+   carries a gap where quick play would have been. */
+.chordbook-panel:empty {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .bucket {
+    gap: 0.4rem;
+    padding: 0.45rem 0.5rem;
+  }
+
+  .bucket-count {
+    display: none;
+  }
+
+  .bucket-clear {
+    padding: 0.4rem 0.55rem;
+  }
+}
+
 /* While quick play is collecting, every shape on the page says so. */
 .chordcard.is-pickable .chordcard-play:hover {
   background: var(--primary-glow);
