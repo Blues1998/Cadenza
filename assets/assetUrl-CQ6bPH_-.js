@@ -1,0 +1,1 @@
+function e(e){return`/Cadenza/`+e.replace(/^\/+/,``)}export{e as t};

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/Cadenza/brand/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/Cadenza/brand/icon-192.png" />
+    <link rel="apple-touch-icon" href="/Cadenza/brand/icon-180.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadenza - Music Lab</title>
+    <meta name="description" content="An interactive music theory companion: fretboard, circle of fifths, ear training, and a keyboard-driven rhythm game, in light and dark themes." />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('cadenza-theme');
+          var theme = stored === 'dark' || stored === 'light'
+            ? stored
+            : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/Cadenza/assets/index-W3-_ry1M.js"></script>
+    <link rel="stylesheet" crossorigin href="/Cadenza/assets/index-rPtC9qK8.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
