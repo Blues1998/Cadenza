@@ -73,7 +73,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
     <div className="dash">
       <header
         className="hero"
-        style={{ ['--hero-image' as string]: `url(${assetUrl('hero-guitar.webp')})` } as React.CSSProperties}
+        style={{ ['--hero-image' as string]: `url(${assetUrl('img/hero-guitar.webp')})` } as React.CSSProperties}
       >
         <div className="hero-copy">
           <span className="hero-eyebrow">Ready to play?</span>

@@ -41,6 +41,25 @@ base General MIDI soundfont's piano programs. The file is too large to commit,
 so it is gitignored and this script recreates it on a fresh clone. Everything
 except realistic Tab Player tones works without it.
 
+## Where things are
+
+```
+public/          served as-is at the site root
+  brand/         the app icon, at the sizes browsers and phones ask for
+  img/           images the app loads at runtime
+  font/          \
+  soundfont/      | fetched at dev/build time, gitignored — see setup:soundfont
+  instruments/   /
+src/             the app
+design/          full-size sources for everything in public/, never shipped
+reference/       local working material, gitignored (Guitar Pro tab files)
+```
+
+Code reaches anything under `public/` through `assetUrl()`, which prefixes
+Vite's `BASE_URL`: the site is served from `/Cadenza/` on Pages and from `/`
+in dev, so a bare absolute path would work in exactly one of those. The links
+in `index.html` are the exception — Vite rewrites those itself at build time.
+
 ## Built with
 
 React 19, TypeScript, Vite, the Web Audio API for synthesis and analysis, and

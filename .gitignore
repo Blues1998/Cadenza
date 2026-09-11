@@ -20,8 +20,11 @@ public/soundfont
 public/instruments
 
 # Reference Guitar Pro tab files used while hand-authoring Song Hero's chart
-# data (src/data/songCharts.ts). Several are commercial/copyrighted songs,
-# never commit these to a repo that gets deployed publicly.
+# data (src/data/songCharts.ts), kept in reference/tabs/. Several are
+# commercial/copyrighted songs, never commit these to a repo that gets
+# deployed publicly. The extensions are ignored at any depth as a second
+# guard, in case one is ever dropped somewhere else.
+reference/
 *.gp3
 *.gp4
 *.gp5
