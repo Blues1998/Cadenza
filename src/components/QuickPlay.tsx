@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { IconPause, IconPlay, IconStop, IconX } from './Icons';
 import { LoopShelf, type LoopSetup } from './LoopShelf';
 import { StrumGrid } from './StrumGrid';
-import { useChartTransport } from '../hooks/useChartTransport';
+import { useChartTransport, type ChartPhase } from '../hooks/useChartTransport';
 import { TEMPO_MAX, TEMPO_MIN, lineAtBeat, timeChart } from '../utils/chart';
 import { comfortOf, preferredVoicing } from '../utils/chordbook';
 import { loopLines, type Slot } from '../utils/loop';
@@ -15,10 +15,27 @@ const BEATS_PER_BAR = [3, 4, 6];
 // cells in the grid — which is how most patterns here will actually be made.
 const PATTERN_IDEAS = ['D', 'D D D D', 'D D U U D U', 'D U D U', 'D - D U - U D U', 'D U X U D U'];
 
+/**
+ * A start or a stop asked for from somewhere else on the page.
+ *
+ * Carries an id rather than being a bare verb, because the answer to "has
+ * this already been acted on" cannot be read off 'start' — pressing play,
+ * stopping, and pressing play again is two identical orders that both have
+ * to land.
+ */
+export interface TransportOrder {
+  id: number;
+  action: 'start' | 'stop';
+}
+
 interface QuickPlayProps {
   slots: Slot[];
   onChange: (slots: Slot[]) => void;
   onClose: () => void;
+  /** Play or stop, asked for by the page's own button. */
+  order?: TransportOrder | null;
+  /** Where the transport has got to, for anything outside drawing a button. */
+  onPhase?: (phase: ChartPhase) => void;
 }
 
 /**
@@ -29,7 +46,7 @@ interface QuickPlayProps {
  * picker there. What the panel is for is everything after that — the order,
  * how long each chord is held, the tempo, and the strumming hand.
  */
-export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }) => {
+export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, order, onPhase }) => {
   const [tempo, setTempo] = useState(80);
   const [beatsPerBar, setBeatsPerBar] = useState(4);
   // The pattern as written, not as resolved: what somebody typed is what the
@@ -57,6 +74,28 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose }
   );
   const moving = phase === 'countin' || phase === 'playing';
   const running = moving || phase === 'paused';
+
+  // The page has a play button of its own — the one on the bucket, which is
+  // in reach while the panel itself is several screens up.
+  //
+  // The order is the whole dependency, and it is a fresh object per press, so
+  // this runs once for each press and not once per render. Deliberately not
+  // guarded by a "have I already done this id" flag: in development React
+  // mounts, tears down and remounts, and the teardown stops the transport —
+  // so an effect that refused to repeat itself would leave the loop stopped
+  // by the very cleanup that was meant to be undone. Start is idempotent; it
+  // halts whatever is running before it begins.
+  const act = useRef({ start, stop });
+  act.current = { start, stop };
+  useEffect(() => {
+    if (!order) return;
+    if (order.action === 'start') act.current.start();
+    else act.current.stop();
+  }, [order]);
+
+  useEffect(() => {
+    onPhase?.(phase);
+  }, [phase, onPhase]);
 
   // A loop is kept once it has actually started sounding. The count-in is
   // still a chance to change your mind, and a history full of things nobody

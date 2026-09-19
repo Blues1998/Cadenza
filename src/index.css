@@ -6126,6 +6126,18 @@ button.dash-card:hover .pickup-go svg {
   font-size: 0.78rem;
 }
 
+/* Play and stop have to be the same size or the bar twitches every time the
+   loop starts. The word is shorter, so the button keeps a floor. */
+.bucket-play {
+  justify-content: center;
+  min-width: 7.2rem;
+}
+
+.bucket-clear:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* The panel's own wrapper. Empty it must take no room at all, or the page
    carries a gap where quick play would have been. */
 .chordbook-panel:empty {

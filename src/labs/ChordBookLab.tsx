@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordBucket } from '../components/ChordBucket';
 import { ChordCard } from '../components/ChordCard';
 import { ChordCatalogue } from '../components/ChordCatalogue';
-import { QuickPlay } from '../components/QuickPlay';
+import { QuickPlay, type TransportOrder } from '../components/QuickPlay';
 import { makeSlot, type Slot } from '../utils/loop';
 import { Segmented } from '../components/Segmented';
 import { useLibrary } from '../hooks/useLibrary';
@@ -18,6 +18,7 @@ import {
   type ChordComfort
 } from '../utils/chordbook';
 import { drillSlots, nextChords, reasonFor, type NextChord } from '../utils/next';
+import type { ChartPhase } from '../hooks/useChartTransport';
 import { normalizeChordSymbol } from '../utils/songText';
 
 type View = 'songs' | 'all';
@@ -172,18 +173,43 @@ export const ChordBookLab: React.FC = () => {
       : [...prev, makeSlot(symbol)];
   });
 
+  // The bucket's button is the page's transport: down among the chords it is
+  // the only one in reach, so it starts and stops the loop rather than going
+  // to find the panel that can. The panel reports back where it has got to,
+  // which is what tells the button whether to offer play or stop.
+  const [order, setOrder] = useState<TransportOrder | null>(null);
+  const [phase, setPhase] = useState<ChartPhase>('idle');
+  const tell = (action: 'start' | 'stop') =>
+    setOrder(prev => ({ id: (prev?.id ?? 0) + 1, action }));
+
   // Quick play sits at the top of a page that is several screens long, so
-  // opening it from the bucket has to bring it into view as well. Counted
-  // rather than watched, so pressing again when it is already open still
-  // takes you there.
+  // showing it has to bring it into view as well. Counted rather than
+  // watched, so it fires again on a second showing.
   const panel = useRef<HTMLDivElement>(null);
   const [calls, setCalls] = useState(0);
   useEffect(() => {
     if (calls > 0) panel.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [calls]);
-  const play = () => {
+  const show = () => {
     setOpen(true);
     setCalls(n => n + 1);
+  };
+
+  // Shutting the panel takes the standing order with it. The panel is where
+  // the transport lives, so closing it stops the loop — and an order left
+  // lying about would be obeyed by the next panel the moment it opened.
+  const close = () => {
+    setOpen(false);
+    setOrder(null);
+  };
+
+  // Pressing play from the bucket opens the panel if it was shut — what is
+  // playing is worth seeing — but leaves you where you are if it was already
+  // open, because being yanked to the top of the page is not what pressing
+  // play asked for.
+  const play = () => {
+    if (!open) show();
+    tell('start');
   };
 
   // A suggestion you can act on in one press. Quick play opens on the drill
@@ -191,7 +217,7 @@ export const ChordBookLab: React.FC = () => {
   // about what to practise next and nothing else in the panel is.
   const drill = (chord: NextChord) => {
     setPicked(drillSlots(chord));
-    play();
+    show();
   };
 
   if (!ready) return <div className="songs-loading readout">Opening your chord book…</div>;
@@ -223,7 +249,7 @@ export const ChordBookLab: React.FC = () => {
           <button
             type="button"
             className={`btn${open ? '' : ' btn-primary'}`}
-            onClick={() => setOpen(o => !o)}
+            onClick={() => (open ? close() : show())}
             aria-pressed={open}
           >
             {open ? 'Close quick play' : 'Quick play'}
@@ -243,7 +269,13 @@ export const ChordBookLab: React.FC = () => {
 
       <div ref={panel} className="chordbook-panel">
         {open && (
-          <QuickPlay slots={picked} onChange={setPicked} onClose={() => setOpen(false)} />
+          <QuickPlay
+            slots={picked}
+            onChange={setPicked}
+            onClose={close}
+            order={order}
+            onPhase={setPhase}
+          />
         )}
       </div>
 
@@ -346,10 +378,11 @@ export const ChordBookLab: React.FC = () => {
       {picked.length > 0 && (
         <ChordBucket
           slots={picked}
-          open={open}
+          running={open && phase !== 'idle' && phase !== 'done'}
           onRemove={id => setPicked(prev => prev.filter(slot => slot.id !== id))}
           onClear={() => setPicked([])}
           onPlay={play}
+          onStop={() => tell('stop')}
         />
       )}
     </div>
