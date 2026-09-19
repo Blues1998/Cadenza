@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ChordDiagram } from './ChordDiagram';
 import { IconPause, IconPlay, IconStop, IconX } from './Icons';
 import { LoopShelf, type LoopSetup } from './LoopShelf';
 import { StrumGrid } from './StrumGrid';
 import { useChartTransport, type ChartPhase } from '../hooks/useChartTransport';
 import { TEMPO_MAX, TEMPO_MIN, lineAtBeat, timeChart } from '../utils/chart';
-import { comfortOf } from '../utils/chordbook';
+import { audio } from '../utils/audio';
+import { comfortOf, preferredVoicing, voicingsFor } from '../utils/chordbook';
+import type { ChordVoicing } from '../utils/chords';
 import { loopLines, slotShapes, slotVoicing, type Slot } from '../utils/loop';
 import { DEFAULT_PATTERN, parseStrum, strokeCount } from '../utils/strum';
 import { loopSignature, rememberLoop, slotChords, slotShapeNames } from '../utils/loopbook';
@@ -164,6 +167,48 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
     if (bpm >= TEMPO_MIN && bpm <= TEMPO_MAX) setTempo(bpm);
   };
 
+  // Which chord's shapes are open, by name rather than by slot: the pick lands
+  // on every slot of that chord, so opening it from one of two Fs and having
+  // it belong to only that one would be a lie the loop could not keep.
+  const [picking, setPicking] = useState<string | null>(null);
+
+  // A chord taken out of the loop takes its open shape drawer with it.
+  useEffect(() => {
+    if (picking !== null && !slots.some(slot => slot.symbol === picking)) setPicking(null);
+  }, [slots, picking]);
+
+  useEffect(() => {
+    if (picking === null) return;
+    const shut = (e: KeyboardEvent) => { if (e.key === 'Escape') setPicking(null); };
+    window.addEventListener('keydown', shut);
+    return () => window.removeEventListener('keydown', shut);
+  }, [picking]);
+
+  /**
+   * Play this chord that way from now on — in this loop, and only in it.
+   *
+   * Choosing your own shape back clears the pin rather than storing it, so the
+   * loop stops overruling the chord book the moment it has nothing to say.
+   * Nothing here writes to the book: a shape tried out for four bars is not
+   * the answer to "what do you play F with", and quietly making it the answer
+   * would change every song in the app from inside a practice panel.
+   */
+  const choose = (symbol: string, voicing: ChordVoicing) => {
+    const mine = preferredVoicing(symbol)?.label;
+    const shape = voicing.label === mine ? undefined : voicing.label;
+    onChange(slots.map(slot => (slot.symbol === symbol ? { ...slot, shape } : slot)));
+    // Running, the next stroke is the answer and is a beat away. Stopped,
+    // nothing would happen at all, and a shape you cannot hear is a picture.
+    if (!moving) audio.playStrum(voicing.midis);
+    setPicking(null);
+  };
+
+  // What the open drawer is set to, read off the loop rather than off the
+  // chord book: a pinned slot is playing something the book does not know
+  // about, and that is the one the drawer has to tick.
+  const held = picking === null ? undefined : slots.find(slot => slot.symbol === picking);
+  const chosen = held ? slotVoicing(held)?.label ?? null : null;
+
   return (
     <section className={`quickplay${moving ? ' is-running' : ''}`} aria-label="Quick play">
       <div className="quickplay-head">
@@ -185,16 +230,37 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           {slots.map((slot, i) => {
             const voicing = slotVoicing(slot);
             const label = voicing?.label ?? 'no shape';
+            const all = voicingsFor(slot.symbol);
             return (
             <li
               key={slot.id}
-              className={`qslot is-${comfortOf(slot.symbol)}${slot.id === liveId ? ' is-live' : ''}${slot.shape ? ' is-pinned' : ''}`}
-              title={slot.shape
-                ? `${slot.symbol} — ${label}, asked for by this exercise`
-                : `${slot.symbol} — ${label}`}
+              className={`qslot is-${comfortOf(slot.symbol)}${slot.id === liveId ? ' is-live' : ''}${slot.shape ? ' is-pinned' : ''}${picking === slot.symbol ? ' is-picking' : ''}`}
             >
               <span className="qslot-name">{slot.symbol}</span>
-              <span className="qslot-shape readout">{label}</span>
+              {/* The shape itself, not the name of it. What is about to be
+                  played is a picture of where the fingers go, and it is also
+                  the way to change it — a chord with one shape is not a
+                  button, because there is nothing on the other side of it. */}
+              {voicing && all.length > 1 ? (
+                <button
+                  type="button"
+                  className="qslot-shape"
+                  onClick={() => setPicking(p => (p === slot.symbol ? null : slot.symbol))}
+                  aria-expanded={picking === slot.symbol}
+                  aria-label={`${slot.symbol} is ${label} — choose another shape`}
+                  title={`${slot.symbol} — ${label} · press to change the shape`}
+                >
+                  <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={0.5} />
+                  <span className="qslot-shapename readout">{label}</span>
+                </button>
+              ) : voicing ? (
+                <span className="qslot-shape is-only" title={`${slot.symbol} — ${label}`}>
+                  <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={0.5} />
+                  <span className="qslot-shapename readout">{label}</span>
+                </span>
+              ) : (
+                <span className="qslot-shapename readout">{label}</span>
+              )}
               <span className="qslot-bars">
                 <button type="button" onClick={() => set(slot.id, { bars: Math.max(1, slot.bars - 1) })} aria-label={`Fewer bars of ${slot.symbol}`} disabled={slot.bars <= 1}>−</button>
                 <span className="readout">{slot.bars}</span>
@@ -209,6 +275,33 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
             );
           })}
         </ol>
+      )}
+
+      {/* Under the sequence rather than inside the slot: a slot is the width of
+          a chord name and the shapes are wider than that, and a drawer that
+          opened inside one would push the rest of the loop around it. The slot
+          it belongs to is ringed, which is the whole of the explanation. */}
+      {picking !== null && (
+        <div className="shapepick qshapes" role="radiogroup" aria-label={`Shapes for ${picking}`}>
+          {voicingsFor(picking).map(v => {
+            const on = v.label === chosen;
+            return (
+              <button
+                key={v.id}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                className={`shapepick-item${on ? ' is-on' : ''}`}
+                onClick={() => choose(picking, v)}
+                title={v.substituteFor ? `${v.label} — played instead of ${v.substituteFor}` : v.label}
+              >
+                <ChordDiagram frets={v.frets} fingers={v.fingers} scale={0.44} />
+                <span className="shapepick-label readout">{v.label}</span>
+                <span className={`shapepick-tier tier-${v.tier}`}>{v.tier}</span>
+              </button>
+            );
+          })}
+        </div>
       )}
 
       <div className="quickplay-bar">

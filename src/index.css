@@ -3411,6 +3411,22 @@ button.dash-card:hover .pickup-go svg {
   color: var(--danger);
 }
 
+/* The same strip of shapes the chord card offers, borrowed whole. Capped and
+   scrolled because a C has seven of them and the loop above has to stay on
+   screen while you choose — a drawer that pushes its own subject out of view
+   is asking you to remember what you opened it for. */
+.qshapes {
+  /* Left, under the loop, rather than centred under the panel: the row it
+     belongs to starts at the left edge and a drawer that drifts to the middle
+     reads as belonging to the panel instead of to the slot that opened it. */
+  justify-content: flex-start;
+  max-height: 11.5rem;
+  margin-top: 0.15rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-top-color: var(--panel-border);
+}
+
 .progression-list {
   display: flex;
   flex-direction: column;
@@ -5427,7 +5443,7 @@ button.dash-card:hover .pickup-go svg {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-  max-height: 9.6rem;
+  max-height: 15.5rem;
   margin: 0;
   padding: 0.35rem 0.35rem 0;
   margin-left: -0.35rem;
@@ -5463,11 +5479,18 @@ button.dash-card:hover .pickup-go svg {
   box-shadow: inset 0 -2px 0 var(--warning);
 }
 
-/* A shape the exercise chose rather than one you did. Marked on the shape
-   name only, because the chord is still your chord — it is the line
-   underneath that is not saying what it usually says. */
-.qslot.is-pinned .qslot-shape {
+/* A shape this loop chose rather than the one your chord book would. Marked
+   on the shape's name only, because the chord is still your chord — it is the
+   line underneath that is not saying what it usually says. */
+.qslot.is-pinned .qslot-shapename {
   color: var(--warning);
+}
+
+/* Which slot the open drawer belongs to. The drawer carries no heading of its
+   own and does not need one: this says what it is for. */
+.qslot.is-picking {
+  border-color: var(--primary);
+  background: var(--surface-3);
 }
 
 /* The chord being played. Lifted rather than recoloured, so the comfort
@@ -5485,11 +5508,48 @@ button.dash-card:hover .pickup-go svg {
   color: var(--text-primary);
 }
 
+/* The shape, drawn. A press-target when the chord has more than one way of
+   being played and a plain block when it has not, so nothing on screen offers
+   a choice that does not exist. */
+.qslot-shape {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+  max-width: 100%;
+  margin-top: 0.1rem;
+  padding: 0.18rem 0.2rem 0.1rem;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.qslot-shape.is-only {
+  cursor: default;
+}
+
+/* The diagram is the face of the button, never a target of its own — left to
+   itself it would hand back the default cursor over the middle of a control. */
+.qslot-shape svg,
+.shapepick-item svg {
+  pointer-events: none;
+}
+
+button.qslot-shape:hover,
+button.qslot-shape:focus-visible {
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--panel-border);
+  outline: none;
+}
+
 /* Clipped rather than allowed to set the width. "Middle-3 triad" is twice as
    wide as the chord it belongs to, and a loop of eight is easier to read as
    eight narrow chords with a truncated shape name than as four wide ones and
    a second row. The whole label is on the slot's title. */
-.qslot-shape {
+.qslot-shapename {
   max-width: 100%;
   overflow: hidden;
   font-size: 0.54rem;
@@ -5699,7 +5759,11 @@ button.dash-card:hover .pickup-go svg {
   /* Less of the loop on a phone, because the picker under it is the part
      being used. It scrolls; the panel is not the place to read a long
      progression, and the chord names are on the sheet anyway. */
-  .quickplay-seq { max-height: 5rem; }
+  .quickplay-seq { max-height: 11.5rem; }
+  /* The box still reads at this size — six strings and five frets is not much
+     detail — and the panel has a phone's worth of height to spend. */
+  .qslot-shape svg { width: 42px; height: 45px; }
+  .qshapes { max-height: 9rem; }
   /* The notes of the key are context, not a control, and on a phone they cost
      a whole line of the one panel that has none to spare. */
   .palette-notes { display: none; }
