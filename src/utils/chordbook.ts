@@ -139,6 +139,20 @@ export function preferredVoicing(symbol: string): ChordVoicing | null {
   return (wanted ? list.find(v => v.id === wanted) : null) ?? list[0];
 }
 
+/**
+ * A shape asked for by name — "E-shape barre", "Open C".
+ *
+ * Every other lookup here answers "what do you play this with", which is a
+ * fact about the person. This one answers "which of these is that one", which
+ * is what a drill needs: an exercise about the barre has to get the barre
+ * whatever shape you normally reach for, or it is not the exercise.
+ *
+ * Null when the label names nothing this chord can be played with, so a caller
+ * can fall back to the book rather than fall silent.
+ */
+export const namedVoicing = (symbol: string, label: string): ChordVoicing | null =>
+  voicingsFor(symbol).find(v => v.label === label) ?? null;
+
 const write = async (skill: ChordSkill): Promise<void> => {
   skills.set(skill.id, skill);
   await putRecords('chords', [skill]);

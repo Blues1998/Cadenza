@@ -5463,6 +5463,13 @@ button.dash-card:hover .pickup-go svg {
   box-shadow: inset 0 -2px 0 var(--warning);
 }
 
+/* A shape the exercise chose rather than one you did. Marked on the shape
+   name only, because the chord is still your chord — it is the line
+   underneath that is not saying what it usually says. */
+.qslot.is-pinned .qslot-shape {
+  color: var(--warning);
+}
+
 /* The chord being played. Lifted rather than recoloured, so the comfort
    colours underneath keep meaning what they mean everywhere else. */
 .qslot.is-live {
@@ -5930,6 +5937,20 @@ button.dash-card:hover .pickup-go svg {
 .loopcard-meta {
   font-size: 0.6rem;
   color: var(--text-muted);
+}
+
+/* The one word on the meta line that is not a number, and the one anybody is
+   scanning this shelf for. Warning rather than danger: a barre is what you
+   came to practise, not a thing to be steered away from. */
+.loopcard-barre {
+  margin-left: 0.3rem;
+  padding: 0.02rem 0.28rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--warning) 20%, transparent);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
 }
 
 .loopcard-add {

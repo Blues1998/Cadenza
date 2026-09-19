@@ -486,6 +486,29 @@ export function getVoicings(rootPc: number, typeId: ChordTypeId, rootName?: stri
   return unique;
 }
 
+/** How many strings one finger is asked to cover at once. */
+export function barreWidth(fingers: (number | null)[]): number {
+  let widest = 0;
+  for (const finger of new Set(fingers.filter((f): f is number => f !== null && f > 0))) {
+    const count = fingers.filter(f => f === finger).length;
+    if (count > widest) widest = count;
+  }
+  return widest;
+}
+
+/**
+ * Whether this shape lays the index across the neck.
+ *
+ * The finger numbers alone do not settle it. An Am-shape barre is written
+ * with finger 1 at each end of the grip and three fingers over the middle:
+ * two entries in the table, one bar under the hand, and exactly the thing an
+ * F asks for. So the name is what is read — the shape tables call every
+ * movable form what it is — with the finger count as a backstop for anything
+ * added later that does not say so in its label.
+ */
+export const isBarre = (v: ChordVoicing): boolean =>
+  /barre/i.test(v.label) || barreWidth(v.fingers) >= 3;
+
 // Lowest fret the diagram needs to show (1 when the shape uses open strings).
 export function voicingBaseFret(frets: (number | null)[]): number {
   const fretted = frets.filter((f): f is number => f !== null && f > 0);

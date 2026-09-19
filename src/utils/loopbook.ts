@@ -24,6 +24,13 @@ export interface SavedLoop {
   chords: [string, number][];
   tempo: number;
   beatsPerBar: number;
+  /**
+   * Shapes the loop pinned, by chord — only ever set by a drill that is about
+   * a grip. Without it, replaying a barre exercise off this shelf would hand
+   * back whatever you normally play those chords with, which for most of them
+   * is a three-string triad, and the exercise would quietly stop being one.
+   */
+  shapes?: Record<string, string>;
   /** The strumming pattern, as written. */
   pattern?: string;
   /** What the pattern was before patterns: 'bar' or 'beat'. Read, never written. */
@@ -64,6 +71,13 @@ export const loopSignature = (chords: [string, number][], beatsPerBar: number): 
 export const slotChords = (slots: Slot[]): [string, number][] =>
   slots.map(slot => [slot.symbol, slot.bars] as [string, number]);
 
+/** The shapes a loop pinned, by chord — undefined when it pinned none. */
+export function slotShapeNames(slots: Slot[]): Record<string, string> | undefined {
+  const out: Record<string, string> = {};
+  for (const slot of slots) if (slot.shape) out[slot.symbol] = slot.shape;
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 /**
  * The pattern a saved loop was played with.
  *
@@ -77,13 +91,14 @@ export const loopPattern = (loop: SavedLoop): string =>
 
 /** Fresh slots from a saved loop — new ids, so React sees new rows. */
 export const loopSlots = (loop: SavedLoop): Slot[] =>
-  loop.chords.map(([symbol, bars]) => makeSlot(symbol, bars));
+  loop.chords.map(([symbol, bars]) => makeSlot(symbol, bars, loop.shapes?.[symbol]));
 
 export interface RememberInput {
   chords: [string, number][];
   tempo: number;
   beatsPerBar: number;
   pattern: string;
+  shapes?: Record<string, string>;
 }
 
 /** Records a run: a new entry, or a bump to the one that is already this loop. */
@@ -96,6 +111,10 @@ export async function rememberLoop(input: RememberInput): Promise<void> {
     chords: input.chords,
     tempo: input.tempo,
     beatsPerBar: input.beatsPerBar,
+    // Not part of the signature: the same progression barred and open is the
+    // same progression, and the run you kept last is the one it remembers —
+    // as with the tempo, and for the same reason.
+    ...(input.shapes && Object.keys(input.shapes).length > 0 ? { shapes: input.shapes } : {}),
     pattern: input.pattern,
     playedAt: Date.now(),
     runs: (existing?.runs ?? 0) + 1

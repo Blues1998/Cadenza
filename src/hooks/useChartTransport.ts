@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { audio } from '../utils/audio';
 import { chartChords, chordsAtBeat, type ChartSettings, type ParsedChart } from '../utils/chart';
 import { preferredVoicing } from '../utils/chordbook';
+import type { ChordVoicing } from '../utils/chords';
 import { slotBeats, type StrumPattern } from '../utils/strum';
 
 export type ChartPhase = 'idle' | 'countin' | 'playing' | 'paused' | 'done';
@@ -10,6 +11,10 @@ const LEAD_SEC = 0.2;      // breathing room before the count-in's first click
 const PATTERN_RING = 1.5;  // beats a strummed chord rings for inside a pattern
 const AHEAD_SEC = 0.15;    // how far ahead of the clock we schedule
 const TICK_MS = 25;
+
+// One object for every run that pins nothing, so the mirrored settings do not
+// get a fresh literal each render for the overwhelmingly common case.
+const EMPTY_SHAPES: Record<string, ChordVoicing> = {};
 
 /**
  * Runs a chart in time: a count-in, then a click on every beat while the
@@ -35,6 +40,14 @@ export function useChartTransport(
     metronome?: boolean;
     /** A strumming pattern to play the chords with, instead of one hit each. */
     pattern?: StrumPattern | null;
+    /**
+     * Shapes this run insists on, by chord name.
+     *
+     * Empty for a song, where the shape you play a chord with is yours. A
+     * drill that is about one grip has to name it, or it would be run with
+     * whatever the chord book says and stop being about the grip.
+     */
+    shapes?: Record<string, ChordVoicing>;
   } = {}
 ) {
   const { tempo, beatsPerBar, countInBars } = settings;
@@ -81,7 +94,8 @@ export function useChartTransport(
     loop: options.loop ?? false,
     strum: options.strum ?? false,
     metronome: options.metronome ?? true,
-    pattern: options.pattern ?? null
+    pattern: options.pattern ?? null,
+    shapes: options.shapes ?? EMPTY_SHAPES
   };
   const live = useRef(settingsRef);
   live.current = settingsRef;
@@ -115,7 +129,7 @@ export function useChartTransport(
       // move while this is running, and a closure taken once would keep the
       // loop at whatever it started at while the readout said otherwise.
       const { spb, bpb } = plan.current;
-      const { chart: cur, playChords, loop, strum, metronome, pattern } = live.current;
+      const { chart: cur, playChords, loop, strum, metronome, pattern, shapes } = live.current;
       const now = audio.getCurrentTime();
       const horizon = now + AHEAD_SEC;
       const total = cur.totalBeats;
@@ -160,8 +174,10 @@ export function useChartTransport(
           const held = chordsAtBeat(cur, loop && total > 0 ? beatAt % total : beatAt).current;
           if (!held) continue;
           // The shape you chose, so what you hear is the chord you are being
-          // shown rather than a different inversion of the same name.
-          const voicing = preferredVoicing(held.symbol);
+          // shown rather than a different inversion of the same name — unless
+          // the run has pinned one, which is a drill saying which grip it is
+          // about.
+          const voicing = shapes[held.symbol] ?? preferredVoicing(held.symbol);
           if (!voicing) continue;
           // Shorter than a single strike would ring: eight of these a bar all
           // holding a chord apiece is a wash, and a strummed guitar is not a
@@ -177,7 +193,7 @@ export function useChartTransport(
         while (all.length > 0 && (loop || nextChord.current < all.length) && timeOf(at(nextChord.current)) < horizon) {
           const i = nextChord.current;
           const chord = all[loop ? i % all.length : i];
-          const voicing = preferredVoicing(chord.symbol);
+          const voicing = shapes[chord.symbol] ?? preferredVoicing(chord.symbol);
           if (voicing) {
             // Strummed, the chord is the part. Blocked, it is a reference
             // under the click — which is what a song's play-along wants and

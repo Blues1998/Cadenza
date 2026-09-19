@@ -4,10 +4,10 @@ import { LoopShelf, type LoopSetup } from './LoopShelf';
 import { StrumGrid } from './StrumGrid';
 import { useChartTransport, type ChartPhase } from '../hooks/useChartTransport';
 import { TEMPO_MAX, TEMPO_MIN, lineAtBeat, timeChart } from '../utils/chart';
-import { comfortOf, preferredVoicing } from '../utils/chordbook';
-import { loopLines, type Slot } from '../utils/loop';
+import { comfortOf } from '../utils/chordbook';
+import { loopLines, slotShapes, slotVoicing, type Slot } from '../utils/loop';
 import { DEFAULT_PATTERN, parseStrum, strokeCount } from '../utils/strum';
-import { loopSignature, rememberLoop, slotChords } from '../utils/loopbook';
+import { loopSignature, rememberLoop, slotChords, slotShapeNames } from '../utils/loopbook';
 
 const BEATS_PER_BAR = [3, 4, 6];
 
@@ -63,6 +63,10 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
     [slots, beatsPerBar]
   );
   const pattern = useMemo(() => parseStrum(patternText, beatsPerBar), [patternText, beatsPerBar]);
+  // Shapes the loop insists on — a drill saying which grip it is about. Empty
+  // for anything built by hand, which is nearly everything that comes through
+  // here, and then every chord is sounded with the one you play it with.
+  const shapes = useMemo(() => slotShapes(slots), [slots]);
 
   const { phase, beat, slot, start, stop, pause, resume } = useChartTransport(
     chart,
@@ -70,7 +74,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
     // The pattern is the strumming hand. With the field empty there is no
     // hand, and the loop becomes a click and a set of chord names to strum
     // against yourself — which is the other half of what this is for.
-    { playChords: pattern !== null, loop: true, strum: true, metronome: click, pattern }
+    { playChords: pattern !== null, loop: true, strum: true, metronome: click, pattern, shapes }
   );
   const moving = phase === 'countin' || phase === 'playing';
   const running = moving || phase === 'paused';
@@ -116,7 +120,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
     const signature = loopSignature(chords, beatsPerBar);
     if (kept.current === signature) return;
     kept.current = signature;
-    void rememberLoop({ chords, tempo, beatsPerBar, pattern: patternText });
+    void rememberLoop({ chords, tempo, beatsPerBar, pattern: patternText, shapes: slotShapeNames(slots) });
   }, [phase, slots, beatsPerBar, tempo, patternText]);
 
   // A loop from the shelf arrives whole — chords, tempo and metre — because
@@ -178,14 +182,19 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
         <p className="quickplay-empty">Tick any chord on the page to add it, or take one from the shelf below.</p>
       ) : (
         <ol className="quickplay-seq">
-          {slots.map((slot, i) => (
+          {slots.map((slot, i) => {
+            const voicing = slotVoicing(slot);
+            const label = voicing?.label ?? 'no shape';
+            return (
             <li
               key={slot.id}
-              className={`qslot is-${comfortOf(slot.symbol)}${slot.id === liveId ? ' is-live' : ''}`}
-              title={`${slot.symbol} — ${preferredVoicing(slot.symbol)?.label ?? 'no shape'}`}
+              className={`qslot is-${comfortOf(slot.symbol)}${slot.id === liveId ? ' is-live' : ''}${slot.shape ? ' is-pinned' : ''}`}
+              title={slot.shape
+                ? `${slot.symbol} — ${label}, asked for by this exercise`
+                : `${slot.symbol} — ${label}`}
             >
               <span className="qslot-name">{slot.symbol}</span>
-              <span className="qslot-shape readout">{preferredVoicing(slot.symbol)?.label ?? 'no shape'}</span>
+              <span className="qslot-shape readout">{label}</span>
               <span className="qslot-bars">
                 <button type="button" onClick={() => set(slot.id, { bars: Math.max(1, slot.bars - 1) })} aria-label={`Fewer bars of ${slot.symbol}`} disabled={slot.bars <= 1}>−</button>
                 <span className="readout">{slot.bars}</span>
@@ -197,7 +206,8 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
                 <button type="button" onClick={() => remove(slot.id)} aria-label={`Remove ${slot.symbol}`} title="Remove">×</button>
               </span>
             </li>
-          ))}
+            );
+          })}
         </ol>
       )}
 

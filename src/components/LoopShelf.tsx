@@ -8,6 +8,7 @@ import {
   LOOP_TEMPLATES,
   templateBars,
   templateChords,
+  templateHasBarre,
   templateSlots,
   type LoopTemplate
 } from '../utils/loopTemplates';
@@ -166,6 +167,11 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend }) => {
                     <span className="loopcard-name">{t.name}</span>
                     <span className="loopcard-meta readout">
                       {templateBars(t)} bars · {t.tempo} bpm{t.beatsPerBar === 4 ? '' : ` · in ${t.beatsPerBar}`}
+                      {/* On the card rather than only in the level's name,
+                          because the barre rungs are not the only place a bar
+                          turns up and "which of these makes me do the hard
+                          thing" is the question being asked of this shelf. */}
+                      {templateHasBarre(t) && <span className="loopcard-barre">barre</span>}
                     </span>
                   </button>
                   <button
