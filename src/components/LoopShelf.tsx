@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordPalette } from './ChordPalette';
 import { comfortOf } from '../utils/chordbook';
 import { useLibrary } from '../hooks/useLibrary';
@@ -28,6 +28,17 @@ interface LoopShelfProps {
   onUse: (slots: Slot[], setup: LoopSetup) => void;
   /** Put these chords on the end of what is already there. */
   onAppend: (slots: Slot[]) => void;
+  /**
+   * Shut the open drawer, because the loop has started.
+   *
+   * Everything on this shelf is for deciding what to play, and that is decided
+   * by the time anybody presses play — after which it is a screenful of things
+   * to read instead of the two you need. Put back on stop, and put back open
+   * at whatever it was showing: pressing stop is going back to the workbench,
+   * and making someone re-find their place in a ladder of drills after every
+   * run is a toll on the thing they are here to do.
+   */
+  shut?: boolean;
 }
 
 const distinct = (chords: [string, number][]): string[] => {
@@ -81,10 +92,26 @@ const Chips: React.FC<{ symbols: string[] }> = ({ symbols }) => (
  * you have to open first is a picker that has already cost you the press it
  * was meant to save.
  */
-export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend }) => {
+export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, shut = false }) => {
   useLibrary();   // recent loops are written by the panel above; redraw when they change
   const [tab, setTab] = useState<Tab | null>('chords');
   const [level, setLevel] = useState(suggestedLevel);
+
+  // Mirrored on render so the effect can read the current tab without taking
+  // it as a dependency — depending on it would park the drawer every time
+  // somebody merely changed which one was open.
+  const open = useRef(tab);
+  open.current = tab;
+  const parked = useRef<Tab | null>(null);
+  useEffect(() => {
+    if (shut) {
+      parked.current = open.current;
+      setTab(null);
+    } else if (parked.current !== null) {
+      setTab(parked.current);
+      parked.current = null;
+    }
+  }, [shut]);
 
   const recent = getSavedLoops();
   const templates = useMemo(() => LOOP_TEMPLATES.filter(t => t.level === level), [level]);

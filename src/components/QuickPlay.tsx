@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
 import { IconPause, IconPlay, IconStop, IconX } from './Icons';
 import { LoopShelf, type LoopSetup } from './LoopShelf';
+import { LoopStage } from './LoopStage';
 import { StrumGrid } from './StrumGrid';
 import { useChartTransport, type ChartPhase } from '../hooks/useChartTransport';
 import { TEMPO_MAX, TEMPO_MIN, lineAtBeat, timeChart } from '../utils/chart';
@@ -143,6 +144,16 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
   const liveLine = phase === 'playing' || phase === 'paused' ? lineAtBeat(chart, lap) : null;
   const liveId = liveLine ? chart.lines[liveLine.index]?.id : null;
 
+  // Where the hands are, for the stage. One slot is one line of the chart, so
+  // the line being played is the chord being held and the one after it in the
+  // loop is what to get ready for.
+  const nowIndex = liveLine?.index ?? -1;
+  const beatsLeft = liveLine ? liveLine.startBeat + liveLine.beats - lap : 0;
+  // The count-in is a bar like any other, so the same lamps count it: the beat
+  // runs negative before the first chord and the modulo brings it home.
+  const pulse = ((beat % beatsPerBar) + beatsPerBar) % beatsPerBar;
+  const countIn = phase === 'countin' ? Math.max(1, -beat) : 0;
+
   const bars = slots.reduce((n, s) => n + s.bars, 0);
   const seconds = (bars * beatsPerBar * 60) / tempo;
 
@@ -171,6 +182,12 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
   // on every slot of that chord, so opening it from one of two Fs and having
   // it belong to only that one would be a lie the loop could not keep.
   const [picking, setPicking] = useState<string | null>(null);
+
+  // Pressing play shuts the shape drawer. The slots it opens from are a thin
+  // strip by then, so it would be a panel of diagrams pointing at nothing.
+  useEffect(() => {
+    if (running) setPicking(null);
+  }, [running]);
 
   // A chord taken out of the loop takes its open shape drawer with it.
   useEffect(() => {
@@ -226,7 +243,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
       {slots.length === 0 ? (
         <p className="quickplay-empty">Tick any chord on the page to add it, or take one from the shelf below.</p>
       ) : (
-        <ol className="quickplay-seq">
+        <ol className={`quickplay-seq${running ? ' is-compact' : ''}`}>
           {slots.map((slot, i) => {
             const voicing = slotVoicing(slot);
             const label = voicing?.label ?? 'no shape';
@@ -281,6 +298,17 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           a chord name and the shapes are wider than that, and a drawer that
           opened inside one would push the rest of the loop around it. The slot
           it belongs to is ringed, which is the whole of the explanation. */}
+      {running && (
+        <LoopStage
+          slots={slots}
+          now={nowIndex}
+          left={beatsLeft}
+          pulse={pulse}
+          beatsPerBar={beatsPerBar}
+          countIn={countIn}
+        />
+      )}
+
       {picking !== null && (
         <div className="shapepick qshapes" role="radiogroup" aria-label={`Shapes for ${picking}`}>
           {voicingsFor(picking).map(v => {
@@ -371,7 +399,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           is being built, and the pattern is a thing you set and then watch. On
           a short screen the panel runs out of room, and what runs out of it
           has to be the one you are not using. */}
-      <LoopShelf onUse={applyLoop} onAppend={next => onChange([...slots, ...next])} />
+      <LoopShelf onUse={applyLoop} onAppend={next => onChange([...slots, ...next])} shut={moving} />
 
       <div className="quickplay-strum">
         <label className="catalogue-field quickplay-pattern">

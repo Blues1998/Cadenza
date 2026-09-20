@@ -5479,6 +5479,205 @@ button.dash-card:hover .pickup-go svg {
   box-shadow: inset 0 -2px 0 var(--warning);
 }
 
+/* ---------------------------------------------------------------------------
+   The stage: what is on screen while the loop is running.
+
+   Sized for the distance it is actually read at. Everything else in the panel
+   assumes a pointer half a metre away; this assumes both hands on a guitar and
+   a glance of about a third of a second, which is a different set of sizes —
+   the chord name is bigger than anything else in the app, and there are four
+   things on it in total.
+   --------------------------------------------------------------------------- */
+.loopstage {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  margin-top: 0.55rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 14px;
+  background: var(--surface-1);
+  box-shadow: inset 0 0 0 1px var(--panel-border);
+  animation: stageIn 0.2s ease both;
+}
+
+@keyframes stageIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+.stage-now {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.stage-said {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* The single largest thing in the app, on purpose: at a metre it is the only
+   part of this that can be read without stopping playing. */
+.stage-chord {
+  font-family: var(--font-display);
+  font-size: 2.9rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.stage-chord.is-shaky {
+  color: var(--warning);
+}
+
+.stage-shape {
+  margin-top: 0.25rem;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.stage-noshape {
+  color: var(--text-muted);
+}
+
+/* The bar, as lamps. Wide enough to be caught without looking straight at it,
+   which is the whole job — counting you have to read is still counting. */
+.stage-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  /* Centred in whatever is left between the two chords rather than pushed
+     against either — it belongs to the bar, not to one of them. */
+  margin: 0 auto;
+}
+
+.stage-beats {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.stage-beat {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--panel-border);
+  transition: transform 0.06s ease-out, background 0.09s ease-out;
+}
+
+/* The downbeat is a different lamp even when it is off, so "where the bar
+   starts" is readable in a still frame and not only in motion. */
+.stage-beat.is-one {
+  box-shadow: inset 0 0 0 1px var(--text-muted);
+}
+
+.stage-beat.is-on {
+  background: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+  transform: scale(1.45);
+}
+
+.stage-in {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--primary);
+}
+
+/* The reason the stage exists. Changing is the hard part, and a chord you find
+   out about on the beat it lands is a chord you have already missed. */
+.stage-next {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-left: 1.2rem;
+  border-left: 1px solid var(--panel-border);
+}
+
+.stage-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stage-nextbox {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.stage-nextchord {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+
+.stage-countdown {
+  margin-top: 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--primary);
+}
+
+.stage-countunit {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* Nothing has been played yet, so the chord under the hands is a chord to get
+   ready on rather than one being held. */
+.loopstage.is-countin .stage-now {
+  opacity: 0.55;
+}
+
+/* While the loop runs, the sequence is a map and not a workbench: the shapes
+   are on the stage at four times the size and the bars, the ordering and the
+   bin cannot be used with a guitar in your hands anyway. */
+.quickplay-seq.is-compact {
+  max-height: none;
+  gap: 0.3rem;
+  overflow: visible;
+}
+
+.is-compact .qslot {
+  min-width: 0;
+  max-width: none;
+  padding: 0.2rem 0.55rem;
+}
+
+.is-compact .qslot-shape,
+.is-compact .qslot-shapename,
+.is-compact .qslot-bars,
+.is-compact .qslot-tools {
+  display: none;
+}
+
+.is-compact .qslot-name {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.is-compact .qslot.is-live {
+  transform: none;
+}
+
+.is-compact .qslot.is-live .qslot-name {
+  color: var(--text-primary);
+}
+
 /* A shape this loop chose rather than the one your chord book would. Marked
    on the shape's name only, because the chord is still your chord — it is the
    line underneath that is not saying what it usually says. */
@@ -5760,6 +5959,22 @@ button.qslot-shape:focus-visible {
      being used. It scrolls; the panel is not the place to read a long
      progression, and the chord names are on the sheet anyway. */
   .quickplay-seq { max-height: 11.5rem; }
+  /* Stacked, because side by side each half would be too small to read at the
+     distance a phone on a music stand actually sits at. */
+  .loopstage {
+    flex-wrap: wrap;
+    gap: 0.7rem 1rem;
+    padding: 0.7rem 0.8rem;
+  }
+  .stage-chord { font-size: 2.3rem; }
+  .stage-next {
+    flex-basis: 100%;
+    margin-left: 0;
+    padding: 0.6rem 0 0;
+    border-left: none;
+    border-top: 1px solid var(--panel-border);
+  }
+  .stage-next .stage-nextbox { gap: 0.6rem; }
   /* The box still reads at this size — six strings and five frets is not much
      detail — and the panel has a phone's worth of height to spend. */
   .qslot-shape svg { width: 42px; height: 45px; }
