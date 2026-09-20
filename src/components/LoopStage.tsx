@@ -1,7 +1,9 @@
 import React from 'react';
 import { ChordDiagram } from './ChordDiagram';
+import { StrumGrid } from './StrumGrid';
 import { comfortOf } from '../utils/chordbook';
 import { slotVoicing, type Slot } from '../utils/loop';
+import type { StrumPattern } from '../utils/strum';
 
 interface LoopStageProps {
   slots: Slot[];
@@ -14,6 +16,10 @@ interface LoopStageProps {
   beatsPerBar: number;
   /** Beats until the first chord. 0 once the loop is actually running. */
   countIn: number;
+  /** What the strumming arm is doing, or null when there is no pattern. */
+  pattern: StrumPattern | null;
+  /** Which subdivision the arm is on. -1 through the count-in. */
+  stroke: number;
 }
 
 /**
@@ -25,15 +31,23 @@ interface LoopStageProps {
  * through the strings — so what it shows has to be readable at that distance
  * in that time, and there has to be almost nothing of it.
  *
- * Three things, in the order they are wanted. The chord under your hands, big
- * enough to check a finger against. The beat, so you know where you are in the
- * bar without counting. And — the one this was really built for — the chord
- * coming next and how long you have got, because changing is the hard part and
- * a barre you find out about on the beat it lands is a barre you miss. Four
- * beats of warning is the difference between practising the change and
- * practising the recovery.
+ * Three things, left to right, which is also the order they happen in. The
+ * chord under your left hand, big enough to check a finger against. The bar
+ * itself — the strumming pattern, with the stroke you are on lit, because the
+ * right hand is half of what is being practised and reading it off a grid at
+ * the bottom of the panel meant reading it off a different part of the room.
+ * And the chord coming next with how long you have got, which is the one this
+ * was really built for: changing is the hard part, and a barre you find out
+ * about on the beat it lands is a barre you have already missed.
+ *
+ * The pattern is shown, not edited. Everything that edits — the bars, the
+ * ordering, the shelf, the pattern field — belongs to the stopped state, and
+ * one rule applied everywhere is worth more than four controls kept within
+ * reach of a hand that is holding a plectrum.
  */
-export const LoopStage: React.FC<LoopStageProps> = ({ slots, now, left, pulse, beatsPerBar, countIn }) => {
+export const LoopStage: React.FC<LoopStageProps> = ({
+  slots, now, left, pulse, beatsPerBar, countIn, pattern, stroke
+}) => {
   if (slots.length === 0) return null;
 
   const pending = now < 0;
@@ -61,13 +75,20 @@ export const LoopStage: React.FC<LoopStageProps> = ({ slots, now, left, pulse, b
       </div>
 
       <div className="stage-mid">
-        {/* The bar, as four lamps. Counting is something you should be able to
-            stop doing, and a number you have to read is still counting. */}
-        <div className="stage-beats" aria-hidden="true">
-          {Array.from({ length: beatsPerBar }, (_, i) => (
-            <span key={i} className={`stage-beat${i === pulse ? ' is-on' : ''}${i === 0 ? ' is-one' : ''}`} />
-          ))}
-        </div>
+        {/* The arm, and where in the bar it has got to. With no pattern there
+            is no arm — the chords stay silent under the click — and then the
+            bar is just four lamps, which is all there is to say. */}
+        {pattern ? (
+          <div className="stage-strum">
+            <StrumGrid pattern={pattern} live={stroke} />
+          </div>
+        ) : (
+          <div className="stage-beats" aria-hidden="true">
+            {Array.from({ length: beatsPerBar }, (_, i) => (
+              <span key={i} className={`stage-beat${i === pulse ? ' is-on' : ''}${i === 0 ? ' is-one' : ''}`} />
+            ))}
+          </div>
+        )}
         {pending && <span className="stage-in">in {countIn}</span>}
       </div>
 

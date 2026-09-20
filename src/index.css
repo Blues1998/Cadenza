@@ -5557,6 +5557,54 @@ button.dash-card:hover .pickup-go svg {
   margin: 0 auto;
 }
 
+/* The pattern, at stage size. Bigger cells and a heavier count than the field
+   below uses, because down there it is being written and up here it is being
+   read at arm's length by somebody who cannot look for long. */
+.stage-strum .strumgrid {
+  margin-top: 0;
+  gap: 0.5rem;
+}
+
+.stage-strum .strumbar {
+  grid-template-columns: repeat(var(--slots), minmax(2.15rem, 2.75rem));
+  gap: 3px;
+  padding: 4px;
+  background: var(--surface-2);
+}
+
+.stage-strum .strumcell {
+  gap: 2px;
+  padding: 0.34rem 0 0.4rem;
+}
+
+.stage-strum .strumcell-count {
+  font-size: 0.68rem;
+  opacity: 0.85;
+}
+
+.stage-strum .strumcell-face {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.stage-strum .strumcell.is-x .strumcell-face {
+  font-size: 1.15rem;
+}
+
+/* Where the arm is. Ringed and lifted rather than filled: a solid block
+   flicking across six cells twice a second is a strobe, and the thing being
+   said is "here", not "look at me". */
+.stage-strum .strumcell.is-live {
+  background: var(--primary-glow);
+  box-shadow: inset 0 0 0 2px var(--primary);
+  transform: scale(1.06);
+}
+
+.stage-strum .strumcell.is-live .strumcell-count {
+  color: var(--primary);
+  opacity: 1;
+}
+
 .stage-beats {
   display: flex;
   gap: 0.5rem;
@@ -5975,6 +6023,9 @@ button.qslot-shape:focus-visible {
     border-top: 1px solid var(--panel-border);
   }
   .stage-next .stage-nextbox { gap: 0.6rem; }
+  .stage-mid { flex-basis: 100%; margin: 0; }
+  .stage-strum .strumbar { grid-template-columns: repeat(var(--slots), minmax(1.9rem, 1fr)); }
+  .stage-strum .strumgrid { width: 100%; }
   /* The box still reads at this size — six strings and five frets is not much
      detail — and the panel has a phone's worth of height to spend. */
   .qslot-shape svg { width: 42px; height: 45px; }
@@ -6544,7 +6595,9 @@ button.qslot-shape:focus-visible {
   color: var(--text-muted);
   font: inherit;
   cursor: default;
-  transition: background 0.12s ease, color 0.12s ease;
+  /* The ring and the wash have to arrive together — lit instantly over a
+     background still fading out of the cell before it reads as two cells. */
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
 }
 button.strumcell { cursor: pointer; }
 button.strumcell:hover { background: var(--surface-3); }

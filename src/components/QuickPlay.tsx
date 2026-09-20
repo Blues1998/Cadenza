@@ -306,6 +306,8 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           pulse={pulse}
           beatsPerBar={beatsPerBar}
           countIn={countIn}
+          pattern={pattern}
+          stroke={slot}
         />
       )}
 
@@ -401,6 +403,11 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           has to be the one you are not using. */}
       <LoopShelf onUse={applyLoop} onAppend={next => onChange([...slots, ...next])} shut={moving} />
 
+      {/* Where the pattern is written. While the loop runs it is on the stage
+          instead, at a size you can read from where a guitar is actually
+          played — and writing one is setup, which stops when playing starts
+          for the same reason the shelf and the slot tools do. */}
+      {!running && (
       <div className="quickplay-strum">
         <label className="catalogue-field quickplay-pattern">
           <span className="field-label">Strumming</span>
@@ -440,6 +447,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           </p>
         )}
       </div>
+      )}
 
     </section>
   );
