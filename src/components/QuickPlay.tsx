@@ -311,12 +311,12 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
                   aria-label={`${slot.symbol} is ${label} — choose another shape`}
                   title={`${slot.symbol} — ${label} · press to change the shape`}
                 >
-                  <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={0.5} />
+                  <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={0.56} />
                   <span className="qslot-shapename readout">{label}</span>
                 </button>
               ) : voicing ? (
                 <span className="qslot-shape is-only" title={`${slot.symbol} — ${label}`}>
-                  <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={0.5} />
+                  <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={0.56} />
                   <span className="qslot-shapename readout">{label}</span>
                 </span>
               ) : (
@@ -369,7 +369,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
                 onClick={() => choose(picking, v)}
                 title={v.substituteFor ? `${v.label} — played instead of ${v.substituteFor}` : v.label}
               >
-                <ChordDiagram frets={v.frets} fingers={v.fingers} scale={0.44} />
+                <ChordDiagram frets={v.frets} fingers={v.fingers} scale={0.5} />
                 <span className="shapepick-label readout">{v.label}</span>
                 <span className={`shapepick-tier tier-${v.tier}`}>{v.tier}</span>
               </button>

@@ -5070,6 +5070,7 @@ button.dash-card:hover .pickup-go svg {
   gap: 1rem;
   max-width: 78rem;
   margin: 0 auto;
+  min-width: 0;
 }
 
 .chordbook-add {
@@ -5491,6 +5492,10 @@ button.dash-card:hover .pickup-go svg {
 .loopstage {
   display: flex;
   align-items: center;
+  /* Wraps rather than crushes. On a narrow window the next chord drops to its
+     own line, which costs a glance; shaving the shapes down until they cannot
+     be read from where a guitar is played costs the whole point of it. */
+  flex-wrap: wrap;
   gap: 1.4rem;
   margin-top: 0.55rem;
   padding: 0.9rem 1.1rem;
@@ -5518,6 +5523,10 @@ button.dash-card:hover .pickup-go svg {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* Never squeezed. The chord name is the one thing on this stage that has to
+     be right, and a flex row given one pixel too few takes them out of the
+     text before it takes them out of a picture. */
+  flex: 0 0 auto;
 }
 
 /* The single largest thing in the app, on purpose: at a metre it is the only
@@ -5528,6 +5537,7 @@ button.dash-card:hover .pickup-go svg {
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.02em;
+  white-space: nowrap;
   color: var(--text-primary);
 }
 
@@ -5536,8 +5546,12 @@ button.dash-card:hover .pickup-go svg {
 }
 
 .stage-shape {
+  max-width: 9rem;
   margin-top: 0.25rem;
+  overflow: hidden;
   font-size: 0.68rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--text-muted);
 }
 
@@ -6033,6 +6047,19 @@ button.qslot-shape:focus-visible {
 
 .palette-lost { color: var(--warning); }
 
+/* A laptop window, where the three across still fit if the shapes give back
+   what the fret column took. Sized here rather than by the scale prop so the
+   grid keeps its aspect and only gets smaller. */
+@media (max-width: 1340px) {
+  .loopstage { gap: 1rem; padding: 0.85rem 0.9rem; }
+  .stage-now { gap: 0.7rem; }
+  .stage-now > svg { width: 158px; height: auto; }
+  .stage-next { padding-left: 0.9rem; }
+  .stage-next svg { width: 102px; height: auto; }
+  .stage-strum .strumbar { grid-template-columns: repeat(var(--slots), minmax(1.9rem, 2.1rem)); }
+  .stage-strum .strumcell-face { font-size: 1.32rem; }
+}
+
 @media (max-width: 640px) {
   /* Less of the loop on a phone, because the picker under it is the part
      being used. It scrolls; the panel is not the place to read a long
@@ -6059,7 +6086,11 @@ button.qslot-shape:focus-visible {
   .stage-strum .strumgrid { width: 100%; }
   /* The box still reads at this size — six strings and five frets is not much
      detail — and the panel has a phone's worth of height to spend. */
-  .qslot-shape svg { width: 42px; height: 45px; }
+  /* Height, not width: a shape sitting up the neck carries a fret number in
+     the margin and is the wider box for it. */
+  .qslot-shape svg { width: auto; height: 46px; }
+  .stage-now > svg { width: 152px; height: auto; }
+  .stage-next svg { width: 96px; height: auto; }
   .qshapes { max-height: 9rem; }
   /* The notes of the key are context, not a control, and on a phone they cost
      a whole line of the one panel that has none to spare. */

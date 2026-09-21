@@ -7,6 +7,15 @@ interface ChordDiagramProps {
   fingers: (number | null)[]; // 0 = open, 1 = index … 4 = pinky
   onClick?: () => void;
   scale?: number; // 1 = default size
+  /**
+   * Keep the fret-number column even when this shape does not need one.
+   *
+   * For somewhere that shows one diagram after another in the same place: the
+   * column is 38px wide at stage size, so a loop that alternates an open shape
+   * with a barred one would otherwise shunt everything beside it sideways on
+   * every change.
+   */
+  reserveFret?: boolean;
 }
 
 const FRET_ROWS = 5;
@@ -21,9 +30,16 @@ const stringX = (appIdx: number) => X0 + (5 - appIdx) * GAP;
 const BOX_RIGHT = X0 + 5 * GAP;
 const BOX_BOTTOM = Y0 + FRET_ROWS * ROW;
 
-export const ChordDiagram: React.FC<ChordDiagramProps> = ({ frets, fingers, onClick, scale = 1 }) => {
+export const ChordDiagram: React.FC<ChordDiagramProps> = ({ frets, fingers, onClick, scale = 1, reserveFret = false }) => {
   const baseFret = voicingBaseFret(frets);
   const showNut = baseFret === 1;
+
+  // Room to the left for the position marker, and only when there is one. It
+  // has to be legible from where a guitar is actually played, which is a metre
+  // further away than a screen is designed for, and "which fret" is the one
+  // thing about a barre shape you cannot work out from the picture.
+  const gutter = showNut && !reserveFret ? 0 : 30;
+  const width = BOX_RIGHT + 14 + gutter;
 
   // Same finger on several strings at the same fret = a barre, drawn as a bar.
   const barres: { finger: number; fret: number; from: number; to: number }[] = [];
@@ -52,8 +68,8 @@ export const ChordDiagram: React.FC<ChordDiagramProps> = ({ frets, fingers, onCl
 
   return (
     <svg
-      viewBox={`0 0 ${BOX_RIGHT + 14} ${BOX_BOTTOM + 8}`}
-      width={(BOX_RIGHT + 14) * 0.78 * scale}
+      viewBox={`${-gutter} 0 ${width} ${BOX_BOTTOM + 8}`}
+      width={width * 0.78 * scale}
       height={(BOX_BOTTOM + 8) * 0.78 * scale}
       role="img"
       onClick={onClick}
@@ -88,8 +104,9 @@ export const ChordDiagram: React.FC<ChordDiagramProps> = ({ frets, fingers, onCl
 
       {/* Position marker when the shape sits up the neck */}
       {!showNut && (
-        <text x={X0 - 9} y={Y0 + ROW * 0.62} textAnchor="end" fontSize="13" fontWeight="600" fill="var(--text-secondary)">
-          {baseFret}fr
+        <text x={X0 - 10} y={Y0 + ROW * 0.85} textAnchor="end" fill="var(--text-primary)">
+          <tspan fontSize="23" fontWeight="700">{baseFret}</tspan>
+          <tspan fontSize="12" fontWeight="600" fill="var(--text-muted)" dx="1.5">fr</tspan>
         </text>
       )}
 
@@ -132,7 +149,7 @@ export const ChordDiagram: React.FC<ChordDiagramProps> = ({ frets, fingers, onCl
           x={(stringX(b.from) + stringX(b.to)) / 2}
           y={rowY(b.fret) + 4}
           textAnchor="middle"
-          fontSize="11"
+          fontSize="12"
           fontWeight="700"
           fill={dotText}
         >
@@ -146,7 +163,7 @@ export const ChordDiagram: React.FC<ChordDiagramProps> = ({ frets, fingers, onCl
             x={stringX(i)}
             y={rowY(f) + 4}
             textAnchor="middle"
-            fontSize="11"
+            fontSize="12"
             fontWeight="700"
             fill={dotText}
           >

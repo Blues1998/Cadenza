@@ -66,7 +66,7 @@ export const LoopStage: React.FC<LoopStageProps> = ({
     <div className={`loopstage${pending ? ' is-countin' : ''}`}>
       <div className="stage-now">
         {held
-          ? <ChordDiagram frets={held.frets} fingers={held.fingers} scale={1.32} />
+          ? <ChordDiagram frets={held.frets} fingers={held.fingers} scale={1.5} reserveFret />
           : <span className="stage-noshape readout">no shape</span>}
         <div className="stage-said">
           <span className={`stage-chord is-${comfortOf(here.symbol)}`}>{here.symbol}</span>
@@ -95,7 +95,7 @@ export const LoopStage: React.FC<LoopStageProps> = ({
       <div className="stage-next">
         <span className="stage-label readout">next</span>
         <div className="stage-nextbox">
-          {coming && <ChordDiagram frets={coming.frets} fingers={coming.fingers} scale={0.78} />}
+          {coming && <ChordDiagram frets={coming.frets} fingers={coming.fingers} scale={0.92} reserveFret />}
           <div className="stage-said">
             <span className="stage-nextchord">{after.symbol}</span>
             {!pending && (

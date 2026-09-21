@@ -422,11 +422,19 @@ function finish(
 
 // Slide a movable form up the neck until its root lands on `rootPc` and every
 // fret fits on the instrument. Lowest workable position wins.
+//
+// A barre form never starts at fret 0, because a bar at fret 0 is not a bar —
+// the nut is already holding those strings down, and what you get is the open
+// chord the form was named after. Placed there it was dropped anyway, as a
+// duplicate of that open chord, which quietly meant E, A, Em and Am had no
+// barre shape at all: the one place on the neck the form fits them is the
+// twelfth fret, an octave above the nut, and the search had already stopped.
 function placeForm(form: MovableForm, rootPc: number, type: ChordType): ChordVoicing | null {
   const rootStringApp = APP_STRING_INDEX(form.rootString);
   const openPc = GUITAR_STRINGS[rootStringApp].midi % 12;
+  const lowest = /barre/i.test(form.label) ? 1 : 0;
 
-  for (let rootFret = 0; rootFret <= MAX_FRET; rootFret++) {
+  for (let rootFret = lowest; rootFret <= MAX_FRET; rootFret++) {
     if ((openPc + rootFret) % 12 !== rootPc) continue;
 
     const lowToHigh = form.offsets.map(o => (o === null ? null : rootFret + o));

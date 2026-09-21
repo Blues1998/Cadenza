@@ -59,7 +59,8 @@ export const LOOP_LEVELS: LoopLevel[] = [
   { level: 5, name: 'Barres in a loop', note: 'The same bar, now with a progression running past it' },
   { level: 6, name: 'Sevenths and the blues', note: 'Dominant colour, and changes that arrive on the bar line' },
   { level: 7, name: 'Movement', note: 'Longer shapes, minor keys, and chords that walk' },
-  { level: 8, name: 'Every chord a barre', note: 'Keys with nothing open in them, where the hand never gets to rest' }
+  { level: 8, name: 'Every chord a barre', note: 'Keys with nothing open in them, where the hand never gets to rest' },
+  { level: 9, name: 'Up the neck', note: 'One grip, carried across the whole fretboard — position work with a tune in it' }
 ];
 
 export const LOOP_TEMPLATES: LoopTemplate[] = [
@@ -123,7 +124,25 @@ export const LOOP_TEMPLATES: LoopTemplate[] = [
   { id: 't-barre-bb', name: 'Nothing open', level: 8, note: 'The pop loop in B flat, where not one of the four rings open', tempo: 74, beatsPerBar: 4, chords: [['Bb', 1], ['F', 1], ['Gm', 1], ['Eb', 1]], shapes: { Bb: 'A-shape barre', F: 'E-shape barre', Gm: 'Em-shape barre', Eb: 'A-shape barre' } },
   { id: 't-barre-blues', name: 'Barred blues', level: 8, note: 'The twelve bars you know open, played where nothing rings for you', tempo: 84, beatsPerBar: 4, chords: [['A7', 4], ['D7', 2], ['A7', 2], ['E7', 1], ['D7', 1], ['A7', 1], ['E7', 1]], shapes: { A7: 'E-shape barre', D7: 'A-shape barre', E7: 'A-shape barre' } },
   { id: 't-barre-fm', name: 'Minor, barred', level: 8, note: 'Both shapes alternating, low on the neck, in a minor key', tempo: 72, beatsPerBar: 4, chords: [['Fm', 1], ['Db', 1], ['Ab', 1], ['Eb', 1]], shapes: { Fm: 'Em-shape barre', Db: 'A-shape barre', Ab: 'E-shape barre', Eb: 'A-shape barre' } },
-  { id: 't-barre-neck', name: 'All the way up', level: 8, note: 'Four barres at four positions — the hand never gets to settle', tempo: 70, beatsPerBar: 4, chords: [['C#m', 1], ['A', 1], ['E', 1], ['B', 1]], shapes: { 'C#m': 'Am-shape barre', A: 'E-shape barre', E: 'A-shape barre', B: 'A-shape barre' } }
+  { id: 't-barre-neck', name: 'All the way up', level: 8, note: 'Four barres at four positions — the hand never gets to settle', tempo: 70, beatsPerBar: 4, chords: [['C#m', 1], ['A', 1], ['E', 1], ['B', 1]], shapes: { 'C#m': 'Am-shape barre', A: 'E-shape barre', E: 'A-shape barre', B: 'A-shape barre' } },
+
+  // 9 — one grip and the whole neck. Everything below this rung is about the
+  // hand that makes the shape; this one is about the arm that puts it
+  // somewhere, which is the half of barre playing that no amount of squeezing
+  // teaches you. The shape never changes, so there is nothing to think about
+  // except where it lands, and the ear tells you whether it landed right.
+  //
+  // Each of these is a real progression and not a scale exercise, because a
+  // drill you can hear going wrong corrects itself and a drill you cannot hear
+  // gets played through. Frets are named in the notes: they are the point.
+  { id: 't-up-e', name: 'Low E ladder', level: 9, note: 'The E shape at the 3rd, 5th, 8th and 10th — four rungs and back down', tempo: 74, beatsPerBar: 4, chords: [['G', 1], ['A', 1], ['C', 1], ['D', 1]], shapes: { G: 'E-shape barre', A: 'E-shape barre', C: 'E-shape barre', D: 'E-shape barre' } },
+  { id: 't-up-a', name: 'A string ladder', level: 9, note: 'The same four rungs on the A string, where the bar carries five', tempo: 74, beatsPerBar: 4, chords: [['C', 1], ['D', 1], ['F', 1], ['G', 1]], shapes: { C: 'A-shape barre', D: 'A-shape barre', F: 'A-shape barre', G: 'A-shape barre' } },
+  { id: 't-up-minor', name: 'Minor stairs', level: 9, note: 'The Em shape climbing to the twelfth — the same grip an octave above the nut', tempo: 70, beatsPerBar: 4, chords: [['Am', 1], ['Cm', 1], ['Dm', 1], ['Em', 1]], shapes: { Am: 'Em-shape barre', Cm: 'Em-shape barre', Dm: 'Em-shape barre', Em: 'Em-shape barre' } },
+  // Twelve fourths is the whole circle, and on one shape the circle is also
+  // every fret: 1, 6, 11, 4, 9, 2, 7, 12, 5, 10, 3, 8 and home. Nothing here
+  // is a jump you have to find — each change is the same hand five frets up or
+  // seven down, and the ear knows where it is going the whole way round.
+  { id: 't-up-circle', name: 'Round the neck', level: 9, note: 'The circle of fourths on one shape, which lands on all twelve frets in turn', tempo: 66, beatsPerBar: 4, chords: [['F', 1], ['Bb', 1], ['Eb', 1], ['Ab', 1], ['Db', 1], ['F#', 1], ['B', 1], ['E', 1], ['A', 1], ['D', 1], ['G', 1], ['C', 1]], shapes: { F: 'E-shape barre', Bb: 'E-shape barre', Eb: 'E-shape barre', Ab: 'E-shape barre', Db: 'E-shape barre', 'F#': 'E-shape barre', B: 'E-shape barre', E: 'E-shape barre', A: 'E-shape barre', D: 'E-shape barre', G: 'E-shape barre', C: 'E-shape barre' } }
 ];
 
 /** Fresh slots for a template — new ids, so React sees new rows. */
