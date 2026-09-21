@@ -55,7 +55,7 @@ export const LOOP_LEVELS: LoopLevel[] = [
   { level: 1, name: 'First changes', note: 'Two open shapes, back and forth, until the change stops being a decision' },
   { level: 2, name: 'Three chords', note: 'The I–IV–V families most songs are still made of' },
   { level: 3, name: 'Four-chord loops', note: 'The turnarounds you already know by ear' },
-  { level: 4, name: 'First barres', note: 'One shape you already make, moved up the neck with the index laid behind it' },
+  { level: 4, name: 'First barres', note: 'One shape you already make, laid on the index and moved two frets — every chord barred' },
   { level: 5, name: 'Barres in a loop', note: 'The same bar, now with a progression running past it' },
   { level: 6, name: 'Sevenths and the blues', note: 'Dominant colour, and changes that arrive on the bar line' },
   { level: 7, name: 'Movement', note: 'Longer shapes, minor keys, and chords that walk' },
@@ -83,17 +83,21 @@ export const LOOP_TEMPLATES: LoopTemplate[] = [
   // stepping stone and not yet the barre a level above asks for.
   { id: 't-c-g-am-f', name: 'First F', level: 3, note: 'Three you have and one you are learning, on four strings', tempo: 78, beatsPerBar: 4, chords: [['C', 1], ['G', 1], ['Am', 1], ['F', 1]], shapes: { F: 'F on 4 strings' } },
 
-  // 4 — the barre, met one shape at a time and met in the middle of the neck.
-  // A bar at the fifth fret takes about half the squeeze a bar at the first
-  // does, so the shape is learned where it can be held before it is asked for
-  // where it cannot. Both chords are pinned: the exercise is the open grip and
-  // the same grip barred, and it only reads as that if the open one is the one
-  // the barre came from.
-  { id: 't-barre-em', name: 'Em shape, moved', level: 4, note: 'The Em you already make, five frets up with the index laid behind it', tempo: 64, beatsPerBar: 4, chords: [['Em', 2], ['Am', 2]], shapes: { Em: 'Open Em', Am: 'Em-shape barre' } },
-  { id: 't-barre-e', name: 'E shape, moved', level: 4, note: 'The same again with the full E under it — the grip every F is made of', tempo: 64, beatsPerBar: 4, chords: [['E', 2], ['A', 2]], shapes: { E: 'Open E', A: 'E-shape barre' } },
-  { id: 't-barre-am', name: 'Am shape, moved', level: 4, note: 'Over to the A string, where the bar carries five strings instead of six', tempo: 66, beatsPerBar: 4, chords: [['Am', 2], ['Dm', 2]], shapes: { Am: 'Open Am', Dm: 'Am-shape barre' } },
-  { id: 't-barre-a', name: 'A shape, moved', level: 4, note: 'The one where the ring finger has to bar three strings for itself', tempo: 66, beatsPerBar: 4, chords: [['A', 2], ['D', 2]], shapes: { A: 'Open A', D: 'A-shape barre' } },
-  { id: 't-barre-f', name: 'Down to the F', level: 4, note: 'The E shape carried back to the first fret, where the strings fight hardest', tempo: 62, beatsPerBar: 4, chords: [['C', 2], ['F', 2]], shapes: { C: 'Open C', F: 'E-shape barre' } },
+  // 4 — the barre, met one shape at a time, and met in the middle of the neck:
+  // a bar at the fifth fret takes about half the squeeze a bar at the first
+  // does, so the grip is learned where it can be held before it is asked for
+  // where it cannot. Every chord on this rung is the same shape barred, two
+  // frets apart, because what is hard about a barre is not making it once —
+  // it is letting it go and making it again somewhere else.
+  //
+  // Both chords are pinned, and have to be. Ask the chord book for Bm and it
+  // hands back a three-string triad: a perfectly good Bm, and the exact thing
+  // this rung exists to stop you reaching for.
+  { id: 't-barre-em', name: 'Em shape, moved', level: 4, note: 'The Em grip barred twice — the Am you know, then the Bm you cannot play open', tempo: 64, beatsPerBar: 4, chords: [['Am', 2], ['Bm', 2]], shapes: { Am: 'Em-shape barre', Bm: 'Em-shape barre' } },
+  { id: 't-barre-e', name: 'E shape, moved', level: 4, note: 'The same two frets with the full E under it — the grip every F is made of', tempo: 64, beatsPerBar: 4, chords: [['A', 2], ['B', 2]], shapes: { A: 'E-shape barre', B: 'E-shape barre' } },
+  { id: 't-barre-am', name: 'Am shape, moved', level: 4, note: 'Over to the A string, where the bar carries five strings instead of six', tempo: 66, beatsPerBar: 4, chords: [['Dm', 2], ['Em', 2]], shapes: { Dm: 'Am-shape barre', Em: 'Am-shape barre' } },
+  { id: 't-barre-a', name: 'A shape, moved', level: 4, note: 'The one where the ring finger has to bar three strings for itself', tempo: 66, beatsPerBar: 4, chords: [['D', 2], ['E', 2]], shapes: { D: 'A-shape barre', E: 'A-shape barre' } },
+  { id: 't-barre-f', name: 'Down to the F', level: 4, note: 'The E shape carried back to the first fret, where the strings fight hardest', tempo: 60, beatsPerBar: 4, chords: [['F', 2], ['G', 2]], shapes: { F: 'E-shape barre', G: 'E-shape barre' } },
 
   // 5 — one bar inside something moving. Two bars to arrive becomes one, and
   // the chord either side is open, so the hand has to make the shape and let
