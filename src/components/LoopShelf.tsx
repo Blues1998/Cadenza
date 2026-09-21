@@ -12,15 +12,36 @@ import {
   templateSlots,
   type LoopTemplate
 } from '../utils/loopTemplates';
-import { forgetLoop, getSavedLoops, loopPattern, loopSlots, whenLabel, type SavedLoop } from '../utils/loopbook';
+import {
+  deleteSavedLoop,
+  forgetLoop,
+  getPlayedLoops,
+  getSavedLoops,
+  loopPattern,
+  loopSlots,
+  savedPattern,
+  savedSlots,
+  whenLabel,
+  type PlayedLoop,
+  type SavedLoop
+} from '../utils/loopbook';
 
-type Tab = 'chords' | 'templates' | 'recent';
+type Tab = 'chords' | 'templates' | 'saved' | 'recent';
 
 export interface LoopSetup {
   tempo: number;
   beatsPerBar: number;
   /** The strumming pattern, as written. */
   pattern?: string;
+  /**
+   * What this loop was called where it came from.
+   *
+   * Only so the save field can open with something already in it. A loop that
+   * arrived as "Andalusian" and had a chord moved is still most easily named
+   * by starting from "Andalusian", and a field you have to fill from nothing
+   * every time is a field that gets filled with "asdf".
+   */
+  name?: string;
 }
 
 interface LoopShelfProps {
@@ -39,6 +60,14 @@ interface LoopShelfProps {
    * run is a toll on the thing they are here to do.
    */
   shut?: boolean;
+  /**
+   * Something was just saved — open the saved drawer so it can be seen.
+   *
+   * A counter rather than a flag, because saving twice over the same name is
+   * two events that both have to land, and "has this already been shown" is
+   * not answerable from a boolean that is true both times.
+   */
+  reveal?: number;
 }
 
 const distinct = (chords: [string, number][]): string[] => {
@@ -81,18 +110,23 @@ const Chips: React.FC<{ symbols: string[] }> = ({ symbols }) => (
 /**
  * Where the next chords come from.
  *
- * Three drawers under the loop, one open at a time: the chords of a key, a
- * progression worth practising, or one you have played before. They are one
- * strip rather than three panels because they answer the same question and you
- * only ever ask it once — and because quick play has to stay one glance tall
- * or it takes the screen away from everything it is sitting on top of.
+ * Four drawers under the loop, one open at a time: the chords of a key, a
+ * progression worth practising, one you kept, or one you merely played. They
+ * are one strip rather than four panels because they answer the same question
+ * and you only ever ask it once — and because quick play has to stay one
+ * glance tall or it takes the screen away from everything it sits on top of.
  *
- * It opens on the chords, always. The two shelves are for when you want a
+ * Saved sits before Recent because it is the deliberate one: everything in it
+ * is there because somebody named it, and everything in Recent is there
+ * because somebody pressed play. When you are looking for a loop, the one you
+ * meant to keep is the likelier answer.
+ *
+ * It opens on the chords, always. The shelves are for when you want a
  * suggestion; the picker is for the other nine times out of ten, and a picker
  * you have to open first is a picker that has already cost you the press it
  * was meant to save.
  */
-export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, shut = false }) => {
+export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, shut = false, reveal = 0 }) => {
   useLibrary();   // recent loops are written by the panel above; redraw when they change
   const [tab, setTab] = useState<Tab | null>('chords');
   const [level, setLevel] = useState(suggestedLevel);
@@ -113,15 +147,33 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, shut = fa
     }
   }, [shut]);
 
-  const recent = getSavedLoops();
+  // Saving puts you in front of what you saved. Nothing else on the page says
+  // it worked, and a store that swallows things silently is a store nobody
+  // trusts with the thing they wanted kept.
+  useEffect(() => {
+    if (reveal > 0) {
+      setTab('saved');
+      parked.current = null;
+    }
+  }, [reveal]);
+
+  const recent = getPlayedLoops();
+  const saved = getSavedLoops();
   const templates = useMemo(() => LOOP_TEMPLATES.filter(t => t.level === level), [level]);
 
   const press = (next: Tab) => setTab(cur => (cur === next ? null : next));
 
   const loadTemplate = (t: LoopTemplate) =>
-    onUse(templateSlots(t), { tempo: t.tempo, beatsPerBar: t.beatsPerBar });
-  const loadLoop = (loop: SavedLoop) =>
+    onUse(templateSlots(t), { tempo: t.tempo, beatsPerBar: t.beatsPerBar, name: t.name });
+  const loadLoop = (loop: PlayedLoop) =>
     onUse(loopSlots(loop), { tempo: loop.tempo, beatsPerBar: loop.beatsPerBar, pattern: loopPattern(loop) });
+  const loadSaved = (loop: SavedLoop) =>
+    onUse(savedSlots(loop), {
+      tempo: loop.tempo,
+      beatsPerBar: loop.beatsPerBar,
+      pattern: savedPattern(loop),
+      name: loop.name
+    });
 
   return (
     <div className="quickplay-shelf">
@@ -141,6 +193,17 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, shut = fa
           aria-expanded={tab === 'templates'}
         >
           Templates
+        </button>
+        <button
+          type="button"
+          className={`qtab${tab === 'saved' ? ' is-on' : ''}`}
+          onClick={() => press('saved')}
+          aria-expanded={tab === 'saved'}
+          disabled={saved.length === 0}
+          title={saved.length === 0 ? 'Name a loop with Save and it is kept here for good' : undefined}
+        >
+          Saved
+          {saved.length > 0 && <span className="qtab-count">{saved.length}</span>}
         </button>
         <button
           type="button"
@@ -209,6 +272,45 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, shut = fa
                     title="Add to the end"
                   >
                     +
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {tab === 'saved' && (
+        <div className="quickplay-drawer">
+          <div className="loopcards">
+            {saved.map(loop => {
+              const chords = distinct(loop.chords);
+              return (
+                <article key={loop.id} className="loopcard">
+                  <button
+                    type="button"
+                    className="loopcard-main"
+                    onClick={() => loadSaved(loop)}
+                    aria-label={`Load ${loop.name}`}
+                    title={`Load ${loop.name}`}
+                  >
+                    <Chips symbols={chords} />
+                    {/* The name is the card here. On a template it is a label
+                        for chords somebody else chose; on this shelf it is the
+                        only thing that tells two of your own loops apart. */}
+                    <span className="loopcard-name is-given">{loop.name}</span>
+                    <span className="loopcard-meta readout">
+                      {loop.chords.reduce((n, [, bars]) => n + bars, 0)} bars · {loop.tempo} bpm{loop.beatsPerBar === 4 ? '' : ` · in ${loop.beatsPerBar}`} · <span className="readout">{savedPattern(loop)}</span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="loopcard-add is-drop"
+                    onClick={() => void deleteSavedLoop(loop.id)}
+                    aria-label={`Delete ${loop.name}`}
+                    title="Delete this loop"
+                  >
+                    ×
                   </button>
                 </article>
               );

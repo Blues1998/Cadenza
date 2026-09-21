@@ -23,7 +23,16 @@
 
 import { clearStore, deleteRecord, putRecords, readAll, storageKind, STORE_CHANGE_EVENT } from './db';
 import { exportChordSkills, importChordSkills, loadChordBook, type ChordSkill } from './chordbook';
-import { exportSavedLoops, importSavedLoops, loadLoopBook, type SavedLoop } from './loopbook';
+import {
+  exportPlayedLoops,
+  exportSavedLoops,
+  importPlayedLoops,
+  importSavedLoops,
+  loadLoopBook,
+  loadSavedLoops,
+  type PlayedLoop,
+  type SavedLoop
+} from './loopbook';
 import { parseProgressions, uniqueChords } from './songText';
 import { linesFromText, type ChartLineRecord } from './chart';
 import { SEED_CHALLENGE, SEED_SONGS } from '../data/septemberSeed';
@@ -191,7 +200,8 @@ export function initLibrary(): Promise<void> {
       readAll<Challenge>('challenges'),
       readAll<Setting>('settings'),
       loadChordBook(),
-      loadLoopBook()
+      loadLoopBook(),
+      loadSavedLoops()
     ]);
     songs = loadedSongs.map(song => ({ ...song, chart: migrateChart(song.chart) }));
     sessions = loadedSessions;
@@ -537,7 +547,9 @@ export interface LibraryExport {
   /** Absent in exports written before the chord book existed. */
   chords?: ChordSkill[];
   /** Likewise, for the quick-play loops. */
-  loops?: SavedLoop[];
+  loops?: PlayedLoop[];
+  /** And for the ones kept by name, which is the half nobody can rebuild. */
+  keeps?: SavedLoop[];
 }
 
 export function exportLibrary(): LibraryExport {
@@ -549,7 +561,8 @@ export function exportLibrary(): LibraryExport {
     sessions,
     challenges: challenge ? [challenge] : [],
     chords: exportChordSkills(),
-    loops: exportSavedLoops()
+    loops: exportPlayedLoops(),
+    keeps: exportSavedLoops()
   };
 }
 
@@ -589,7 +602,8 @@ export async function importLibrary(raw: string): Promise<ImportResult> {
   // right move: the backup is the whole library, and half-restoring it would
   // leave a chord book describing songs that are no longer there.
   await importChordSkills(data.chords ?? []);
-  await importSavedLoops(data.loops ?? []);
+  await importPlayedLoops(data.loops ?? []);
+  await importSavedLoops(data.keeps ?? []);
 
   await Promise.all([clearStore('songs'), clearStore('sessions'), clearStore('challenges')]);
   songs = nextSongs;

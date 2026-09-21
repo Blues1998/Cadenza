@@ -11,7 +11,7 @@ import { comfortOf, preferredVoicing, voicingsFor } from '../utils/chordbook';
 import type { ChordVoicing } from '../utils/chords';
 import { loopLines, slotShapes, slotVoicing, type Slot } from '../utils/loop';
 import { DEFAULT_PATTERN, parseStrum, strokeCount } from '../utils/strum';
-import { loopSignature, rememberLoop, slotChords, slotShapeNames } from '../utils/loopbook';
+import { loopSignature, rememberLoop, saveLoop, savedNamed, slotChords, slotShapeNames } from '../utils/loopbook';
 
 const BEATS_PER_BAR = [3, 4, 6];
 
@@ -136,6 +136,50 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
     setTempo(setup.tempo);
     setBeatsPerBar(setup.beatsPerBar);
     if (setup.pattern) setPatternText(setup.pattern);
+    setCameFrom(setup.name ?? '');
+    setNaming(false);
+  };
+
+  // What the loop was called where it came from, so saving an edited template
+  // opens with the template's name rather than an empty box. Cleared by
+  // building from scratch, because a loop with nothing left of the Andalusian
+  // in it should not be offered that name.
+  const [cameFrom, setCameFrom] = useState('');
+  const [naming, setNaming] = useState(false);
+  const [name, setName] = useState('');
+  const [saved, setSaved] = useState(0);
+  const nameField = useRef<HTMLInputElement>(null);
+
+  const startNaming = () => {
+    setName(cameFrom || slotChords(slots).map(([symbol]) => symbol).join(' '));
+    setNaming(true);
+  };
+
+  // Focused and selected, so the suggestion is a starting point and not
+  // something to delete before you can type.
+  useEffect(() => {
+    if (naming) nameField.current?.select();
+  }, [naming]);
+
+  // Nothing to name once there is nothing there.
+  useEffect(() => {
+    if (slots.length === 0) { setNaming(false); setCameFrom(''); }
+  }, [slots.length]);
+
+  const keep = () => {
+    const trimmed = name.trim();
+    if (trimmed === '' || slots.length === 0) return;
+    void saveLoop({
+      name: trimmed,
+      chords: slotChords(slots),
+      shapes: slotShapeNames(slots),
+      tempo,
+      beatsPerBar,
+      pattern: patternText
+    });
+    setCameFrom(trimmed);
+    setNaming(false);
+    setSaved(n => n + 1);
   };
 
   // Which slot is sounding. The beat counts on past the end for ever, so the
@@ -389,11 +433,42 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           Click
         </label>
 
-        {slots.length > 0 && (
-          <button type="button" className="btn quickplay-clear" onClick={() => { stop(); onChange([]); }}>
-            Clear
-          </button>
-        )}
+        {/* Keep and discard, side by side, because they are the two things
+            you can do with a finished loop and putting them anywhere else
+            would mean looking for one of them. The field takes the pair's
+            place while it is open rather than appearing beside them: naming
+            is the only thing being done at that moment. */}
+        {slots.length > 0 && (naming ? (
+          <form
+            className="quickplay-name"
+            onSubmit={e => { e.preventDefault(); keep(); }}
+          >
+            <input
+              ref={nameField}
+              className="text-field"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setNaming(false); } }}
+              placeholder="Name this loop"
+              aria-label="Name for this loop"
+              maxLength={60}
+              spellCheck={false}
+            />
+            <button type="submit" className="btn btn-primary" disabled={name.trim() === ''}>
+              {savedNamed(name) ? 'Replace' : 'Save'}
+            </button>
+            <button type="button" className="btn" onClick={() => setNaming(false)}>Cancel</button>
+          </form>
+        ) : (
+          <>
+            <button type="button" className="btn quickplay-keep" onClick={startNaming}>
+              Save
+            </button>
+            <button type="button" className="btn quickplay-clear" onClick={() => { stop(); onChange([]); }}>
+              Clear
+            </button>
+          </>
+        ))}
       </div>
 
       {/* Above the strumming, not below it. Both are drawers on the same
@@ -401,7 +476,12 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           is being built, and the pattern is a thing you set and then watch. On
           a short screen the panel runs out of room, and what runs out of it
           has to be the one you are not using. */}
-      <LoopShelf onUse={applyLoop} onAppend={next => onChange([...slots, ...next])} shut={moving} />
+      <LoopShelf
+        onUse={applyLoop}
+        onAppend={next => onChange([...slots, ...next])}
+        shut={moving}
+        reveal={saved}
+      />
 
       {/* Where the pattern is written. While the loop runs it is on the stage
           instead, at a size you can read from where a guitar is actually

@@ -5883,8 +5883,39 @@ button.qslot-shape:focus-visible {
   padding-top: 0.2rem;
 }
 
-.quickplay-clear {
+/* Pushed to the far end together, away from the transport: these two finish
+   with a loop and everything to their left is done while you still have one. */
+.quickplay-keep {
   margin-left: auto;
+}
+
+.quickplay-clear {
+  margin-left: 0;
+}
+
+/* Takes the whole end of the bar while it is open. A name wants room to be
+   read back before it is committed, and there is nothing else to press at
+   that moment anyway. */
+.quickplay-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 16rem;
+  margin-left: auto;
+}
+
+.quickplay-name .text-field {
+  flex: 1 1 auto;
+  min-width: 6rem;
+}
+
+/* A name somebody chose, rather than one shipped with a template: it is the
+   only thing telling two of your own loops apart, so it leads the card. */
+.loopcard-name.is-given {
+  margin-bottom: 0.1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 
