@@ -1,9 +1,13 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import { KeySheet } from './components/KeySheet';
+import { JumpTo } from './components/JumpTo';
 import { Sidebar } from './components/Sidebar';
 import { GROUPS, type ActiveTab } from './components/navGroups';
 import { useTheme } from './hooks/useTheme';
 import { useLabSwipe } from './hooks/useLabSwipe';
 import { go, useRoute } from './hooks/useRoute';
+import { pressPlay } from './hooks/usePlayKey';
+import { isTypingTarget } from './utils/keys';
 import { parseHash } from './utils/route';
 import { LAB_CHUNKS } from './labs/chunks';
 
@@ -80,6 +84,34 @@ function App() {
   // On a phone, a horizontal swipe steps through the current sidebar group
   useLabSwipe(activeTab, navigate);
 
+  // The keys that belong to the app rather than to a screen.
+  //
+  // One listener at the top rather than one per lab, because the whole point
+  // of these is that they are the same wherever you are — and because a page
+  // that forgot to add them is how Space came to work on Rhythm and nowhere
+  // else. Anything being typed into keeps its keystrokes.
+  const [overlay, setOverlay] = useState<'jump' | 'keys' | null>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setOverlay(o => (o === 'jump' ? null : 'jump'));
+        return;
+      }
+      if (isTypingTarget(e.target)) return;
+      if (e.key === '?') { e.preventDefault(); setOverlay(o => (o === 'keys' ? null : 'keys')); return; }
+      if (e.key === 'Escape') { setOverlay(null); return; }
+      // Held down, the bar would start and stop the loop forty times a second.
+      if (e.code === 'Space' && !e.repeat && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        // Only swallow the scroll when something actually took the press —
+        // on a screen with no transport the bar should still page down.
+        if (pressPlay()) e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   // Labs are several screens tall and the window keeps its scroll offset when
   // the content under it is swapped, so switching from a scrolled lab used to
   // drop you into the middle of the next one with its header off-screen.
@@ -147,6 +179,9 @@ function App() {
           </Suspense>
         </div>
       </main>
+
+      {overlay === 'jump' && <JumpTo onClose={() => setOverlay(null)} onToggleTheme={toggleTheme} />}
+      {overlay === 'keys' && <KeySheet onClose={() => setOverlay(null)} />}
     </div>
   );
 }

@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChordBucket } from '../components/ChordBucket';
 import { LabIcon } from '../components/LabIcon';
 import { IconComfort } from '../components/Icons';
 import { ChordCard } from '../components/ChordCard';
 import { ChordCatalogue } from '../components/ChordCatalogue';
 import { QuickPlay, type TransportOrder } from '../components/QuickPlay';
+import { onHandoff, takeLoop, type Handoff } from '../utils/handoff';
 import { makeSlot, type Slot } from '../utils/loop';
 import { Segmented } from '../components/Segmented';
 import { useLibrary } from '../hooks/useLibrary';
@@ -230,6 +231,29 @@ export const ChordBookLab: React.FC = () => {
     show();
   };
 
+  /**
+   * A loop sent here from somewhere else — the palette, or today's run.
+   *
+   * Taken twice over, because there are two ways one can arrive. Sent from
+   * another screen it is left waiting and the navigation brings us here, so
+   * the pickup has to happen on mount; sent from this page it arrives as an
+   * event while we are already standing here. Taking is destructive, so
+   * whichever gets there first is the only one that finds anything.
+   */
+  const [preset, setPreset] = useState<Handoff | null>(null);
+  const accept = useCallback(() => {
+    const loop = takeLoop();
+    if (!loop) return;
+    setPicked(loop.slots);
+    setPreset(loop);
+    setOpen(true);
+    setCalls(n => n + 1);
+  }, []);
+  useEffect(() => {
+    accept();
+    return onHandoff(accept);
+  }, [accept]);
+
   if (!ready) return <div className="songs-loading readout">Opening your chord book…</div>;
 
   return (
@@ -281,6 +305,7 @@ export const ChordBookLab: React.FC = () => {
         {open && (
           <QuickPlay
             slots={picked}
+            preset={preset}
             onChange={setPicked}
             onClose={close}
             order={order}

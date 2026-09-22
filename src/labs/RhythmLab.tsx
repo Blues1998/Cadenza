@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Segmented } from '../components/Segmented';
 import { LabIcon } from '../components/LabIcon';
+import { usePlayKey } from '../hooks/usePlayKey';
 import { audio } from '../utils/audio';
 import { reportProgress } from '../utils/progress';
 
@@ -412,22 +413,9 @@ export const RhythmLab: React.FC = () => {
   };
 
   // Keyboard support: Spacebar taps the beat
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        e.preventDefault(); // Prevent page scrolling
-        if (e.repeat) return; // Ignore OS key-repeat while holding the bar
-        if (isGameMode) {
-          handleTap();
-        } else {
-          handleTogglePlay();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPlaying, isGameMode]);
+  // The bar is the app's now, not this page's. In the game it is the thing you
+  // tap with, which is still "what this screen does when you press Space".
+  usePlayKey(() => { if (isGameMode) handleTap(); else handleTogglePlay(); });
 
   // Clean up timers on unmount
   useEffect(() => {

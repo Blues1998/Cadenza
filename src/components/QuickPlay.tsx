@@ -6,6 +6,8 @@ import { LoopResult, type RunResult } from './LoopResult';
 import { LoopStage } from './LoopStage';
 import { StrumGrid } from './StrumGrid';
 import { useChartTransport, type ChartPhase } from '../hooks/useChartTransport';
+import { usePlayKey } from '../hooks/usePlayKey';
+import type { Handoff } from '../utils/handoff';
 import { TEMPO_MAX, TEMPO_MIN, lineAtBeat, timeChart } from '../utils/chart';
 import { audio } from '../utils/audio';
 import { comfortOf, preferredVoicing, voicingsFor } from '../utils/chordbook';
@@ -42,6 +44,13 @@ interface QuickPlayProps {
   order?: TransportOrder | null;
   /** Where the transport has got to, for anything outside drawing a button. */
   onPhase?: (phase: ChartPhase) => void;
+  /**
+   * A loop handed in from outside — the palette, or today's run.
+   *
+   * The chords arrive through `slots` like any others; this carries the rest
+   * of what a loop is, which is its tempo, its metre and what it was called.
+   */
+  preset?: Handoff | null;
 }
 
 /**
@@ -52,7 +61,7 @@ interface QuickPlayProps {
  * picker there. What the panel is for is everything after that — the order,
  * how long each chord is held, the tempo, and the strumming hand.
  */
-export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, order, onPhase }) => {
+export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, order, onPhase, preset }) => {
   const [tempo, setTempo] = useState(80);
   const [beatsPerBar, setBeatsPerBar] = useState(4);
   // The pattern as written, not as resolved: what somebody typed is what the
@@ -128,6 +137,14 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
     kept.current = signature;
     void rememberLoop({ chords, tempo, beatsPerBar, pattern: patternText, shapes: slotShapeNames(slots) });
   }, [phase, slots, beatsPerBar, tempo, patternText]);
+
+  // Space is the app's play button and this is the app's transport while the
+  // panel is open, so the bar does here what the big round button does.
+  usePlayKey(() => {
+    if (moving) pause();
+    else if (phase === 'paused') resume();
+    else if (slots.length > 0) start();
+  });
 
   // ---------------------------------------------------------------------
   // What the run came to
@@ -243,6 +260,24 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
   const [name, setName] = useState('');
   const [saved, setSaved] = useState(0);
   const nameField = useRef<HTMLInputElement>(null);
+
+  // The settings half of a handed-in loop. Its chords came through `slots`,
+  // which the page above owns; everything else about it lands here.
+  //
+  // Keyed on the handover's id rather than on the object, so the same drill
+  // sent twice in a row lands twice — and so that editing the loop afterwards
+  // does not snap the tempo back to what it arrived with.
+  const handed = useRef(0);
+  useEffect(() => {
+    if (!preset || preset.id === handed.current) return;
+    handed.current = preset.id;
+    stop();
+    setTempo(preset.tempo);
+    setBeatsPerBar(preset.beatsPerBar);
+    if (preset.pattern) setPatternText(preset.pattern);
+    setCameFrom(preset.name ?? '');
+    setNaming(false);
+  }, [preset, stop]);
 
   const startNaming = () => {
     setName(cameFrom || slotChords(slots).map(([symbol]) => symbol).join(' '));
