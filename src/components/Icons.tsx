@@ -80,3 +80,19 @@ export const IconPause: React.FC<IconProps> = ({ size = 12, ...props }) => (
     <rect x="14" y="4.5" width="4" height="15" rx="1.4" />
   </svg>
 );
+
+/**
+ * How a chord sits in your hands, as one mark.
+ *
+ * Three states of the same ring — empty, half, full — rather than three
+ * different pictures. The shape carries the answer on its own, which is what
+ * lets the word beside it go away; and because it is one object being filled
+ * rather than three lamps, the control reads as a dial you turn.
+ */
+export const IconComfort: React.FC<IconProps & { state: 'solid' | 'shaky' | 'none' }> = ({ size = 13, state, ...props }) => (
+  <svg {...base(size)} strokeWidth={2.4} {...props}>
+    <circle cx="12" cy="12" r="7.8" />
+    {state === 'shaky' && <path d="M12 4.2a7.8 7.8 0 0 1 0 15.6z" fill="currentColor" stroke="none" />}
+    {state === 'solid' && <circle cx="12" cy="12" r="7.8" fill="currentColor" stroke="none" />}
+  </svg>
+);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Segmented } from '../components/Segmented';
+import { LabIcon } from '../components/LabIcon';
 import { audio } from '../utils/audio';
 import { reportProgress } from '../utils/progress';
 
@@ -442,7 +443,7 @@ export const RhythmLab: React.FC = () => {
       
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title">Rhythm &amp; Timing</h2>
+        <h2 className="lab-title"><LabIcon tab="rhythm" />Rhythm &amp; Timing</h2>
       </div>
 
       <div className="grid-2">

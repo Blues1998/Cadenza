@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Segmented } from '../components/Segmented';
+import { LabIcon } from '../components/LabIcon';
 import { useMicPitch } from '../hooks/useMicPitch';
 import { useSpringValue } from '../hooks/useSpringValue';
 import { audio } from '../utils/audio';
@@ -145,7 +146,7 @@ export const TunerLab: React.FC = () => {
       
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title">Pitch &amp; Tuner</h2>
+        <h2 className="lab-title"><LabIcon tab="tuner" />Pitch &amp; Tuner</h2>
       </div>
 
       <div className="grid-2">

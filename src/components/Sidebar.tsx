@@ -172,7 +172,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`channel${isActive ? ' is-live' : ''}${flashing.has(item.id) ? ' is-flashing' : ''}`}
+                  className={`channel navmark${isActive ? ' is-live' : ''}${flashing.has(item.id) ? ' is-flashing' : ''}`}
                   onMouseEnter={() => enter(item.id)}
                   onFocus={() => preloadLab(item.id)}
                   onAnimationEnd={e => {

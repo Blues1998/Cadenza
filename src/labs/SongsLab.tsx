@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DayGrid } from '../components/DayGrid';
+import { LabIcon } from '../components/LabIcon';
 import { Segmented } from '../components/Segmented';
 import { SongPage } from './SongPage';
 import { useLibrary } from '../hooks/useLibrary';
@@ -172,7 +173,7 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
     <div className="songs">
       <header className="songs-head">
         <div>
-          <h2 className="lab-title">{progress.challenge?.name ?? 'Songs'}</h2>
+          <h2 className="lab-title"><LabIcon tab="library" />{progress.challenge?.name ?? 'Songs'}</h2>
           <p className="songs-count readout">
             <strong>{String(progress.entered).padStart(2, '0')}</strong> / {progress.dayCount || songs.length}
             <span className="songs-count-sub">
@@ -301,7 +302,17 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
             const chords = songChords(song);
             return (
               <li key={song.id}>
-                <button type="button" className="songrow" onClick={() => onOpenSong(song.id)}>
+                <button
+                  type="button"
+                  className="songrow"
+                  onClick={() => onOpenSong(song.id)}
+                  title={`${song.title} — ${STATUS_LABEL[song.status]}`}
+                >
+                  {/* How far along, as the row's own edge. Eight rows of the
+                      same two shouted words was the loudest thing on a quiet
+                      page, and said it in the column furthest from the title
+                      it was about. */}
+                  <span className={`songrow-state is-${song.status}`} aria-hidden="true" />
                   <span className="songrow-day readout">
                     {song.day ? String(song.day).padStart(2, '0') : '—'}
                   </span>
@@ -325,7 +336,7 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
                     <span className="readout">{song.confidence}</span>
                   </span>
                   <span className="songrow-mins readout">{totalMinutes(song)} min</span>
-                  <span className={`status-chip is-${song.status}`}>{STATUS_LABEL[song.status]}</span>
+                  <span className="sr-only">{STATUS_LABEL[song.status]}</span>
                 </button>
               </li>
             );

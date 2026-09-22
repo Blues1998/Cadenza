@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Keyboard } from '../components/Keyboard';
+import { LabIcon } from '../components/LabIcon';
 import { Fretboard } from '../components/Fretboard';
 import { NoteHighway } from '../components/NoteHighway';
 import { audio } from '../utils/audio';
@@ -73,7 +74,7 @@ export const SongHeroLab: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div className="lab-header">
-        <h2 className="lab-title">Song Hero</h2>
+        <h2 className="lab-title"><LabIcon tab="songs" />Song Hero</h2>
       </div>
 
       <div className="grid-2">

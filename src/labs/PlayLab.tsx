@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useMicPitch } from '../hooks/useMicPitch';
 import { Fretboard } from '../components/Fretboard';
+import { LabIcon } from '../components/LabIcon';
 import { audio } from '../utils/audio';
 import {
   NOTE_NAMES,
@@ -359,7 +360,7 @@ export const PlayLab: React.FC = () => {
 
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title">Play Challenges</h2>
+        <h2 className="lab-title"><LabIcon tab="play" />Play Challenges</h2>
       </div>
 
       {!isActive ? (

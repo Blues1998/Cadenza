@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Keyboard } from '../components/Keyboard';
+import { LabIcon } from '../components/LabIcon';
 import { Fretboard } from '../components/Fretboard';
 import { Term } from '../components/Term';
 import { ScaleChords } from '../components/ScaleChords';
@@ -406,7 +407,7 @@ export const TheoryLab: React.FC = () => {
       
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title">Theory &amp; Scales</h2>
+        <h2 className="lab-title"><LabIcon tab="theory" />Theory &amp; Scales</h2>
       </div>
 
       {/* Dismissible "Start here" guide for first-time visitors */}

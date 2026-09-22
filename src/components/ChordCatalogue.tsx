@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ChordCard } from './ChordCard';
 import { Segmented } from './Segmented';
+import { IconComfort } from './Icons';
 import {
   GROUP_LABEL,
   allChords,
@@ -16,11 +17,19 @@ import { COMFORT_LABEL, comfortOf, tally, type ChordComfort } from '../utils/cho
 
 type Only = 'all' | ChordComfort;
 
-const ONLY: { value: Only; label: string }[] = [
+
+// A filter names one of the states the cards are marked with, so it shows the
+// same ring the cards show. Without it the row of words and the rings under
+// them are two vocabularies for one idea.
+const comfortOption = (value: ChordComfort, label: string) => (
+  <span className="filter-mark"><IconComfort state={value} />{label}</span>
+);
+
+const ONLY: { value: Only; label: React.ReactNode }[] = [
   { value: 'all', label: 'All' },
-  { value: 'solid', label: 'Solid' },
-  { value: 'shaky', label: 'Shaky' },
-  { value: 'none', label: 'Not yet' }
+  { value: 'solid', label: comfortOption('solid', 'Solid') },
+  { value: 'shaky', label: comfortOption('shaky', 'Shaky') },
+  { value: 'none', label: comfortOption('none', 'Not yet') }
 ];
 
 const GROUPS: { value: GroupBy; label: string }[] =

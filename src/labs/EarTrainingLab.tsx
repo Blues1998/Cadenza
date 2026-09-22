@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Keyboard } from '../components/Keyboard';
+import { LabIcon } from '../components/LabIcon';
 import { Fretboard } from '../components/Fretboard';
 import { Segmented } from '../components/Segmented';
 import { audio } from '../utils/audio';
@@ -422,7 +423,7 @@ export const EarTrainingLab: React.FC = () => {
       
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title">Ear Training</h2>
+        <h2 className="lab-title"><LabIcon tab="ear-training" />Ear Training</h2>
       </div>
 
       <div className="grid-2">

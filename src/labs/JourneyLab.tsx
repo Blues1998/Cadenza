@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ActiveTab } from '../components/Sidebar';
+import { LabIcon } from '../components/LabIcon';
 import { Journey } from '../components/Journey';
 
 // The curriculum used to sit under the dashboard hero, which made the landing
@@ -8,7 +9,7 @@ import { Journey } from '../components/Journey';
 export const JourneyLab: React.FC<{ setActiveTab: (tab: ActiveTab) => void }> = ({ setActiveTab }) => (
   <div>
     <div className="lab-header">
-      <h2 className="lab-title">Journey</h2>
+      <h2 className="lab-title"><LabIcon tab="journey" />Journey</h2>
     </div>
     <Journey setActiveTab={setActiveTab} />
   </div>

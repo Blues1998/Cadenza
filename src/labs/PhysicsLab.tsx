@@ -3,6 +3,7 @@ import { audio } from '../utils/audio';
 import { NOTE_NAMES } from '../utils/musicTheory';
 import { reportProgress } from '../utils/progress';
 import { IconPlay, IconStop } from '../components/Icons';
+import { LabIcon } from '../components/LabIcon';
 
 // ---- Shared drawing helpers ----
 // Literal rather than var(--…): these are fed to canvas fillStyle/strokeStyle,
@@ -580,7 +581,7 @@ const ModularCircle: React.FC = () => {
 export const PhysicsLab: React.FC = () => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
     <div className="lab-header">
-      <h2 className="lab-title">Sound Physics</h2>
+      <h2 className="lab-title"><LabIcon tab="physics" />Sound Physics</h2>
     </div>
     <HarmonicExplorer />
     <RatioExplorer />

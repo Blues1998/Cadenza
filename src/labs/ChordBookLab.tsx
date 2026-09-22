@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordBucket } from '../components/ChordBucket';
+import { LabIcon } from '../components/LabIcon';
+import { IconComfort } from '../components/Icons';
 import { ChordCard } from '../components/ChordCard';
 import { ChordCatalogue } from '../components/ChordCatalogue';
 import { QuickPlay, type TransportOrder } from '../components/QuickPlay';
@@ -30,11 +32,19 @@ const VIEWS: { value: View; label: string }[] = [
 
 type Filter = 'all' | ChordComfort | 'unrated';
 
-const FILTERS: { value: Filter; label: string }[] = [
+
+// A filter names one of the states the cards are marked with, so it shows the
+// same ring the cards show. Without it the row of words and the rings under
+// them are two vocabularies for one idea.
+const comfortOption = (value: ChordComfort, label: string) => (
+  <span className="filter-mark"><IconComfort state={value} />{label}</span>
+);
+
+const FILTERS: { value: Filter; label: React.ReactNode }[] = [
   { value: 'all', label: 'All' },
-  { value: 'solid', label: 'Solid' },
-  { value: 'shaky', label: 'Shaky' },
-  { value: 'none', label: 'Not yet' },
+  { value: 'solid', label: comfortOption('solid', 'Solid') },
+  { value: 'shaky', label: comfortOption('shaky', 'Shaky') },
+  { value: 'none', label: comfortOption('none', 'Not yet') },
   { value: 'unrated', label: 'Unrated' }
 ];
 
@@ -226,7 +236,7 @@ export const ChordBookLab: React.FC = () => {
     <div className="chordbook">
       <header className="songs-head">
         <div>
-          <h2 className="lab-title">Chords</h2>
+          <h2 className="lab-title"><LabIcon tab="chordbook" />Chords</h2>
           <p className="songs-count readout">
             <strong>{String(counts.solid).padStart(2, '0')}</strong> / {entries.length}
             {entries.length > 0 && (

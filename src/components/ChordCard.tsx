@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
+import { IconComfort } from './Icons';
 import { audio } from '../utils/audio';
 import type { ChordVoicing } from '../utils/chords';
 import {
@@ -20,24 +21,39 @@ import {
  * Deliberately not a slider or a five-point scale. The question is asked in
  * passing, while you are looking at a song, and it has to be answerable in the
  * time it takes to notice you got the change wrong again.
+ *
+ * Three fills of one ring, and no word unless you ask for it. A catalogue page
+ * carries fourteen of these and a song page five, and the answer was printed
+ * next to every one of them — the same three words over and over, saying what
+ * the mark beside them already said. The ring reads at a glance because empty,
+ * half and full are the same object at three settings; the word comes back on
+ * hover, on keyboard focus, and in the tooltip, where a word is worth having.
  */
 export const ComfortMark: React.FC<{
   symbol: string;
   size?: 'sm' | 'md';
 }> = ({ symbol, size = 'md' }) => {
   const comfort = comfortOf(symbol);
+  // Which ring to congratulate, if any. Held rather than derived because the
+  // flourish belongs to the act of answering, not to the answer: mounting a
+  // page of already-marked chords should not set fourteen rings off at once.
+  const [justSet, setJustSet] = useState<ChordComfort | null>(null);
   return (
     <div className={`comfort comfort-${size}`} role="group" aria-label={`How ${symbol} feels`}>
       {COMFORT_ORDER.map(value => (
         <button
           key={value}
           type="button"
-          className={`comfort-btn is-${value}${comfort === value ? ' is-on' : ''}`}
+          className={`comfort-btn is-${value}${comfort === value ? ' is-on' : ''}${justSet === value ? ' is-set' : ''}`}
           aria-pressed={comfort === value}
           title={`${COMFORT_LABEL[value]} — ${COMFORT_HINT[value]}`}
-          onClick={() => void setComfort(symbol, value)}
+          onClick={() => {
+            setJustSet(value);
+            void setComfort(symbol, value);
+          }}
+          onAnimationEnd={() => setJustSet(null)}
         >
-          <span className="comfort-dot" aria-hidden="true" />
+          <span className="comfort-glyph" aria-hidden="true"><IconComfort state={value} /></span>
           <span className="comfort-text">{COMFORT_LABEL[value]}</span>
         </button>
       ))}
