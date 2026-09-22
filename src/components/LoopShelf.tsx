@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordPalette } from './ChordPalette';
+import { IconBest } from './Icons';
 import { comfortOf } from '../utils/chordbook';
 import { useLibrary } from '../hooks/useLibrary';
 import { makeSlot, type Slot } from '../utils/loop';
@@ -21,10 +22,12 @@ import {
   loopSlots,
   savedPattern,
   savedSlots,
+  loopSignature,
   whenLabel,
   type PlayedLoop,
   type SavedLoop
 } from '../utils/loopbook';
+import { bestFor } from '../utils/records';
 
 type Tab = 'chords' | 'templates' | 'saved' | 'recent';
 
@@ -98,6 +101,25 @@ function suggestedLevel(): number {
   }
   return LOOP_LEVELS[LOOP_LEVELS.length - 1].level;
 }
+
+/**
+ * The fastest this loop has been held, where you choose which to play.
+ *
+ * The number belongs on the shelf and not only on the card that set it: the
+ * question this drawer is asked is "which of these am I working on", and the
+ * one you left at 74 last week is a better answer than the one you have never
+ * banked. Absent until there is something to say — a row of "—" would be a
+ * reproach on nine drills nobody has got to yet.
+ */
+const Best: React.FC<{ chords: [string, number][]; beatsPerBar: number }> = ({ chords, beatsPerBar }) => {
+  const best = bestFor(loopSignature(chords, beatsPerBar));
+  if (best === null) return null;
+  return (
+    <span className="loopcard-best" title={`Your best clean run here: ${best} bpm`}>
+      <IconBest size={11} />{best}
+    </span>
+  );
+};
 
 const Chips: React.FC<{ symbols: string[] }> = ({ symbols }) => (
   <span className="loopcard-chords">
@@ -262,6 +284,7 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, shut = fa
                           turns up and "which of these makes me do the hard
                           thing" is the question being asked of this shelf. */}
                       {templateHasBarre(t) && <span className="loopcard-barre">barre</span>}
+                      <Best chords={t.chords} beatsPerBar={t.beatsPerBar} />
                     </span>
                   </button>
                   <button
@@ -301,6 +324,7 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, shut = fa
                     <span className="loopcard-name is-given">{loop.name}</span>
                     <span className="loopcard-meta readout">
                       {loop.chords.reduce((n, [, bars]) => n + bars, 0)} bars · {loop.tempo} bpm{loop.beatsPerBar === 4 ? '' : ` · in ${loop.beatsPerBar}`} · <span className="readout">{savedPattern(loop)}</span>
+                      <Best chords={loop.chords} beatsPerBar={loop.beatsPerBar} />
                     </span>
                   </button>
                   <button
@@ -336,6 +360,7 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, shut = fa
                     <Chips symbols={chords} />
                     <span className="loopcard-meta readout">
                       {loop.tempo} bpm{loop.beatsPerBar === 4 ? '' : ` · in ${loop.beatsPerBar}`} · <span className="readout">{loopPattern(loop)}</span> · {whenLabel(loop.playedAt)}{loop.runs > 1 ? ` · ×${loop.runs}` : ''}
+                      <Best chords={loop.chords} beatsPerBar={loop.beatsPerBar} />
                     </span>
                   </button>
                   <button

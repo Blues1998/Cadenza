@@ -6856,3 +6856,139 @@ button.strumcell:hover { background: var(--surface-3); }
   align-items: center;
   gap: 0.3rem;
 }
+
+/* ---------------------------------------------------------------------------
+   What the run came to
+   ---------------------------------------------------------------------------
+   Stands where the stage was standing, takes the stage's plate and its
+   entrance, and is read at the other distance: the guitar is down by the time
+   anybody looks at this, so the four numbers are figures on a line rather than
+   the metre-away lettering the stage is set in.
+   --------------------------------------------------------------------------- */
+.runcard {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.5rem;
+  margin-top: 0.55rem;
+  padding: 0.85rem 2.4rem 0.85rem 1.1rem;
+  border-radius: 14px;
+  background: var(--surface-1);
+  box-shadow: inset 0 0 0 1px var(--panel-border);
+  animation: stageIn 0.2s ease both;
+}
+
+/* A record is the one thing on this card worth a colour, so it is the only
+   thing that gets one. */
+.runcard.is-record {
+  box-shadow: inset 0 0 0 1px var(--success), 0 0 0 4px var(--success-glow);
+}
+
+.runcard-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.runcard.is-record .runcard-label {
+  color: var(--success);
+}
+
+.runcard-nums {
+  display: flex;
+  gap: 1.15rem;
+  margin: 0;
+}
+
+.runcard-nums > div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.28rem;
+}
+
+.runcard-nums dt {
+  order: 2;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.runcard-nums dd {
+  order: 1;
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.runcard.is-record .runcard-nums dd {
+  color: var(--success);
+}
+
+.runcard-said {
+  flex: 1 1 14rem;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.runcard-acts {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.runcard-shut {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.6rem;
+  display: flex;
+  padding: 0.25rem;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.runcard-shut:hover {
+  background: var(--surface-3);
+  color: var(--text-primary);
+}
+
+/* The record, on the shelf. Reads as a number with a mark rather than as a
+   badge, because the meta line it joins is already a row of numbers. */
+.loopcard-best {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.16rem;
+  margin-left: 0.34rem;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+@media (max-width: 640px) {
+  .runcard {
+    gap: 0.5rem 1rem;
+    padding: 0.8rem 2.2rem 0.8rem 0.9rem;
+  }
+
+  .runcard-nums {
+    gap: 0.9rem;
+  }
+
+  .runcard-nums dd {
+    font-size: 1rem;
+  }
+}

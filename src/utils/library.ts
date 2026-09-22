@@ -33,6 +33,7 @@ import {
   type PlayedLoop,
   type SavedLoop
 } from './loopbook';
+import { exportRecords, importRecords, loadRecords, type LoopRecord } from './records';
 import { parseProgressions, uniqueChords } from './songText';
 import { linesFromText, type ChartLineRecord } from './chart';
 import { SEED_CHALLENGE, SEED_SONGS } from '../data/septemberSeed';
@@ -201,7 +202,8 @@ export function initLibrary(): Promise<void> {
       readAll<Setting>('settings'),
       loadChordBook(),
       loadLoopBook(),
-      loadSavedLoops()
+      loadSavedLoops(),
+      loadRecords()
     ]);
     songs = loadedSongs.map(song => ({ ...song, chart: migrateChart(song.chart) }));
     sessions = loadedSessions;
@@ -550,6 +552,8 @@ export interface LibraryExport {
   loops?: PlayedLoop[];
   /** And for the ones kept by name, which is the half nobody can rebuild. */
   keeps?: SavedLoop[];
+  /** The tempo each loop has been held at. The one number that only goes up. */
+  records?: LoopRecord[];
 }
 
 export function exportLibrary(): LibraryExport {
@@ -562,7 +566,8 @@ export function exportLibrary(): LibraryExport {
     challenges: challenge ? [challenge] : [],
     chords: exportChordSkills(),
     loops: exportPlayedLoops(),
-    keeps: exportSavedLoops()
+    keeps: exportSavedLoops(),
+    records: exportRecords()
   };
 }
 
@@ -604,6 +609,7 @@ export async function importLibrary(raw: string): Promise<ImportResult> {
   await importChordSkills(data.chords ?? []);
   await importPlayedLoops(data.loops ?? []);
   await importSavedLoops(data.keeps ?? []);
+  await importRecords(data.records ?? []);
 
   await Promise.all([clearStore('songs'), clearStore('sessions'), clearStore('challenges')]);
   songs = nextSongs;

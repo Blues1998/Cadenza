@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
 import { IconPause, IconPlay, IconStop, IconX } from './Icons';
 import { LoopShelf, type LoopSetup } from './LoopShelf';
+import { LoopResult, type RunResult } from './LoopResult';
 import { LoopStage } from './LoopStage';
 import { StrumGrid } from './StrumGrid';
 import { useChartTransport, type ChartPhase } from '../hooks/useChartTransport';
@@ -12,6 +13,7 @@ import type { ChordVoicing } from '../utils/chords';
 import { loopLines, slotShapes, slotVoicing, type Slot } from '../utils/loop';
 import { DEFAULT_PATTERN, parseStrum, strokeCount } from '../utils/strum';
 import { loopSignature, rememberLoop, saveLoop, savedNamed, slotChords, slotShapeNames } from '../utils/loopbook';
+import { bankRun, bestFor } from '../utils/records';
 
 const BEATS_PER_BAR = [3, 4, 6];
 
@@ -126,6 +128,98 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
     kept.current = signature;
     void rememberLoop({ chords, tempo, beatsPerBar, pattern: patternText, shapes: slotShapeNames(slots) });
   }, [phase, slots, beatsPerBar, tempo, patternText]);
+
+  // ---------------------------------------------------------------------
+  // What the run came to
+  // ---------------------------------------------------------------------
+
+  /**
+   * The run in progress.
+   *
+   * A ref rather than state, because it is written on every beat and nothing
+   * looks at it until it is over — and because stop() clears the beat in the
+   * same breath as the phase, so the count has to have been kept somewhere
+   * that does not get torn down with the render that reported it.
+   *
+   * Beats are the only thing recorded. Laps, bars and the time it took all
+   * come out of them and the tempo, which sidesteps having to account for how
+   * long the panel spent paused: a run that was held for ninety-six beats at
+   * 74 took a minute and eighteen seconds of playing whatever else happened.
+   */
+  const live = useRef<{ tempo: number; beatsPerBar: number; chords: [string, number][]; totalBeats: number; beats: number } | null>(null);
+  const [result, setResult] = useState<RunResult | null>(null);
+
+  // Read at the moment a run opens rather than closed over, so the effect can
+  // depend on the phase alone and not restart every time a slider moves.
+  const at = useRef({ tempo, beatsPerBar, slots, totalBeats: chart.totalBeats });
+  at.current = { tempo, beatsPerBar, slots, totalBeats: chart.totalBeats };
+
+  useEffect(() => {
+    if (phase === 'playing' && live.current === null) {
+      const { tempo: t, beatsPerBar: b, slots: sl, totalBeats } = at.current;
+      live.current = { tempo: t, beatsPerBar: b, chords: slotChords(sl), totalBeats, beats: 0 };
+      return;
+    }
+    if (phase !== 'idle' && phase !== 'done') return;
+
+    const run = live.current;
+    live.current = null;
+    // Nothing to report on a loop that never came round. A card saying you
+    // played two bars of a four-bar loop is a card about pressing stop.
+    if (!run || run.totalBeats <= 0 || run.beats < run.totalBeats) return;
+    const signature = loopSignature(run.chords, run.beatsPerBar);
+    setResult({
+      signature,
+      chords: run.chords,
+      beatsPerBar: run.beatsPerBar,
+      tempo: run.tempo,
+      laps: Math.floor(run.beats / run.totalBeats),
+      bars: Math.floor(run.beats / run.beatsPerBar),
+      seconds: (run.beats * 60) / run.tempo,
+      best: bestFor(signature),
+      banked: null
+    });
+  }, [phase]);
+
+  // The high-water mark. The beat counts on past the end of the loop for ever,
+  // so this is simply how far it got.
+  useEffect(() => {
+    if (phase !== 'playing' || live.current === null) return;
+    live.current.beats = Math.max(live.current.beats, beat + 1);
+  }, [beat, phase]);
+
+  // A result belongs to the loop it was played on. Editing a chord, or playing
+  // again, is a new question and the old answer stops being one.
+  useEffect(() => { setResult(null); }, [slots]);
+  useEffect(() => { if (phase === 'countin' || phase === 'playing') setResult(null); }, [phase]);
+
+  const bank = async () => {
+    if (!result) return;
+    const banked = await bankRun({
+      signature: result.signature,
+      chords: result.chords,
+      beatsPerBar: result.beatsPerBar,
+      tempo: result.tempo
+    });
+    setResult(r => (r && r.signature === result.signature ? { ...r, banked } : r));
+  };
+
+  // The next rung: set the tempo and go, so the offer is the whole action.
+  const again = (next: number) => {
+    setTempo(next);
+    setResult(null);
+    startAt.current = next;
+  };
+
+  // start() reads the tempo off the render it was called in, and setTempo does
+  // not land until the next one — so a ramp has to wait a beat before it plays
+  // or it would run the new rung at the old tempo.
+  const startAt = useRef<number | null>(null);
+  useEffect(() => {
+    if (startAt.current === null || startAt.current !== tempo) return;
+    startAt.current = null;
+    start();
+  }, [tempo, start]);
 
   // A loop from the shelf arrives whole — chords, tempo and metre — because
   // the tempo a progression was written for is part of what it is. Stopped
@@ -352,6 +446,18 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           countIn={countIn}
           pattern={pattern}
           stroke={slot}
+        />
+      )}
+
+      {/* Where the stage was standing a second ago. A drill that ends by
+          restoring the screen to how it looked before you played is a drill
+          with no evidence that it happened. */}
+      {!running && result && (
+        <LoopResult
+          result={result}
+          onBank={() => void bank()}
+          onAgain={again}
+          onClose={() => setResult(null)}
         />
       )}
 

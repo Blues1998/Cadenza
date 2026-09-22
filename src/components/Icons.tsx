@@ -96,3 +96,17 @@ export const IconComfort: React.FC<IconProps & { state: 'solid' | 'shaky' | 'non
     {state === 'solid' && <circle cx="12" cy="12" r="7.8" fill="currentColor" stroke="none" />}
   </svg>
 );
+
+/**
+ * A record, and only a record.
+ *
+ * Kept for the one number in the app that goes up, so that a personal best
+ * always looks like a personal best wherever it turns up — on the card that
+ * sets it, and on the shelf beside the loop that holds it.
+ */
+export const IconBest: React.FC<IconProps> = ({ size = 14, ...props }) => (
+  <svg {...base(size)} {...props}>
+    <polyline points="3 17.5 8.5 11.5 13 15 21 6.5" />
+    <polyline points="16 6.5 21 6.5 21 11.5" />
+  </svg>
+);
