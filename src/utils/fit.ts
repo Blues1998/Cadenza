@@ -33,7 +33,7 @@
 // agree they are describing.
 
 import { timeChart, transposeSymbol } from './chart';
-import { comfortOf, chordKey, type ChordComfort } from './chordbook';
+import { comfortOf, chordKey, skillFor, type ChordComfort } from './chordbook';
 import { parseProgressions } from './songText';
 import type { Song } from './library';
 
@@ -189,4 +189,40 @@ export function fitSong(song: Song): FitVerdict | null {
   // the song actually has rather than an arbitrary one that ranked first.
   const best = improves ? candidate : now;
   return { best, now, options, improves, learn: best.missingChords };
+}
+
+/**
+ * The part of a position this app is entitled to describe.
+ *
+ * `missing` above files a chord nobody has rated under "not in your hands",
+ * which is the right call for ordering positions — an unknown may well turn
+ * out to be a wall, and a ranking that assumed otherwise would recommend a
+ * capo on no evidence. It is the wrong thing to read back to someone, though:
+ * counted that way, a chord book nobody has opened turns into four chords of
+ * homework. So the ordering keeps the cautious count and everything with
+ * words on it uses this one.
+ */
+export function spokenFor(option: FitOption): {
+  rated: number;
+  all: boolean;
+  missing: number;
+  shaky: number;
+  learn: string[];
+} {
+  const rated = option.chords.filter(chord => skillFor(chord.to) !== undefined);
+  return {
+    rated: rated.length,
+    all: rated.length === option.chords.length,
+    missing: rated.filter(chord => chord.comfort === 'none').length,
+    shaky: rated.filter(chord => chord.comfort === 'shaky').length,
+    learn: rated.filter(chord => chord.comfort === 'none').map(chord => chord.to)
+  };
+}
+
+/** The same, in the few words a row or a caption has room for. */
+export function scoreLine(option: FitOption): string {
+  const said = spokenFor(option);
+  if (said.rated === 0) return 'none of these rated yet';
+  const verdict = said.missing > 0 ? `${said.missing} to learn` : said.shaky > 0 ? `${said.shaky} shaky` : 'all solid';
+  return said.all ? verdict : `${verdict}, of ${said.rated} rated`;
 }

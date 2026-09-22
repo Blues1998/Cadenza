@@ -5114,6 +5114,260 @@ button.dash-card:hover .pickup-go svg {
   color: var(--primary);
 }
 
+/* ---------------------------------------------------------------------------
+   The capo bar: Fit made into something you move
+   ---------------------------------------------------------------------------
+   Seven fret spaces and the nut, spaced the way frets actually fall, so it is
+   recognisable to someone holding the instrument. Running along it previews —
+   the clamp slides and the letters under it redraw — and only a press moves
+   the song. */
+
+.capobar {
+  margin-top: 0.7rem;
+}
+
+.capobar-neck {
+  position: relative;
+  height: 40px;
+  border-radius: 4px 7px 7px 4px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px rgba(var(--surface-tint-rgb), 0.08);
+}
+
+/* Thickening toward the low E along the bottom, the way tab is written. */
+.capobar-string {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(var(--surface-tint-rgb), 0.22);
+  border-radius: 2px;
+}
+
+.capobar-fret {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: 1.5px;
+  margin-left: -0.75px;
+  background: rgba(var(--surface-tint-rgb), 0.3);
+  border-radius: 1px;
+}
+
+.capobar-inlay {
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: rgba(var(--surface-tint-rgb), 0.16);
+}
+
+/* The nut is the capo you already have on, so it lights up when there is no
+   other one. */
+.capobar-nut {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--text-muted);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.capobar-nut.is-on {
+  background: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.capobar-clamp {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 7px;
+  margin-left: -3.5px;
+  border-radius: 4px;
+  background: var(--primary);
+  box-shadow: 0 2px 7px var(--primary-glow);
+  transition: left 0.32s cubic-bezier(0.22, 0.9, 0.25, 1), opacity 0.2s ease;
+}
+
+.capobar-clamp.is-off {
+  opacity: 0;
+}
+
+.capobar-frets {
+  display: flex;
+  margin-top: 0.25rem;
+}
+
+.capobar-slot {
+  position: relative;
+  flex: 0 0 auto;
+  min-height: 1.5rem;
+  padding: 0.2rem 0 0.45rem;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.capobar-slot:hover {
+  color: var(--primary);
+  background: var(--surface-2);
+}
+
+.capobar-slot.is-on {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Where Fit would put it. A dot rather than a second bar — two clamps on one
+   neck is a picture of nothing anybody can do. */
+.capobar-slot.is-best::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0.1rem;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.capobar-shapes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  min-height: 1.1rem;
+  animation: capoLetters 0.26s ease-out;
+}
+
+@keyframes capoLetters {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: none; }
+}
+
+.capobar-said {
+  margin: 0.35rem 0 0;
+  font-size: 0.64rem;
+  color: var(--text-muted);
+}
+
+.capobar-press {
+  color: var(--primary);
+}
+
+/* ---------------------------------------------------------------------------
+   The drill this song is asking for
+   ---------------------------------------------------------------------------
+   The panel above it says which chords are in the way. This is the press that
+   does something about it, and it names the loop it is about to hand over so
+   nobody arrives on the chord page wondering what happened. */
+
+.song-drill {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 9px;
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+
+.song-drill-text {
+  flex: 1 1 11rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.song-drill-chords {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.song-drill-why {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.song-drill-tempo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.song-drill-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+/* A progression you can hear, and take away to practise. */
+button.progression-chord {
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+button.progression-chord:hover {
+  background: var(--primary-glow);
+  color: var(--primary);
+}
+
+.progression-drill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: auto;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.progression-list li:hover .progression-drill,
+.progression-drill:focus-visible {
+  opacity: 1;
+}
+
+.progression-drill:hover {
+  background: var(--primary-glow);
+  color: var(--primary);
+}
+
+/* Nothing reveals itself on hover where there is no hover. */
+@media (hover: none) {
+  .progression-drill {
+    opacity: 1;
+  }
+}
+
 /* The same suggestion, one line, where you are actually playing. */
 .chart-fit {
   display: flex;

@@ -1,10 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordCard } from '../components/ChordCard';
 import { FitPanel } from '../components/FitPanel';
+import { IconBest, IconPlay } from '../components/Icons';
 import { Segmented } from '../components/Segmented';
 import { SongChartPanel } from '../components/SongChartPanel';
 import { StrumGrid } from '../components/StrumGrid';
-import { tally } from '../utils/chordbook';
+import { audio } from '../utils/audio';
+import { preferredVoicing, tally } from '../utils/chordbook';
+import { go } from '../hooks/useRoute';
+import { handLoop } from '../utils/handoff';
+import { drillFrom, drillReason, songDrill, type SongDrill } from '../utils/songDrill';
 import {
   deleteSession,
   deleteSong,
@@ -64,6 +69,12 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
   // open a song you have not played in a fortnight.
   const chordStanding = tally(chords);
   const progressions = songProgressions(song);
+  // Recomputed every render rather than memoised on the song: rating a chord
+  // on this very page changes which progression is the one in the way, and the
+  // chord book is a different store — the song object it would be keyed on
+  // never moves.
+  const drill = songDrill(song);
+  const progressionDrills = progressions.map(prog => drillFrom(song, prog));
   const sessions = sessionsForSong(song.id);
   const todayMinutes = minutesOn(song.id, today());
   const total = totalMinutes(song);
@@ -163,6 +174,23 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
   // in front of you before you play rather than after.
   const lastAction = sessions.find(s => s.nextAction)?.nextAction;
 
+  // The changes, put where you can practise them. The loop goes over as an
+  // intention rather than an address — the chord page picks it up, loads it
+  // and spends it, so coming back here later does not re-load a drill over
+  // whatever you had since built.
+  const takeToDrill = (loop: SongDrill) => {
+    handLoop({ slots: loop.slots, tempo: loop.tempo, beatsPerBar: loop.beatsPerBar, name: loop.name });
+    go({ tab: 'chordbook', songId: null });
+  };
+
+  // The cards above already sound when pressed; a progression is the one place
+  // where hearing it is the whole question, and it was the one place that was
+  // silent.
+  const hear = (chord: string) => {
+    const voicing = preferredVoicing(chord);
+    if (voicing) audio.playStrum(voicing.midis);
+  };
+
   return (
     <div className="songpage">
       <button type="button" className="song-back" onClick={onBack}>
@@ -228,6 +256,42 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
             <p className="song-empty">No chords recorded for this song yet.</p>
           )}
 
+          {/* The panel above says which chords are in the way. This is the
+              thing to press about it. */}
+          {drill && (
+            <div className="song-drill">
+              <span className="song-drill-text">
+                <span className="song-drill-chords readout">
+                  {drill.chords.map((chord, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && <span className="progression-arrow" aria-hidden="true">→</span>}
+                      {chord}
+                    </React.Fragment>
+                  ))}
+                </span>
+                <span className="song-drill-why">{drillReason(drill)}</span>
+              </span>
+              <span
+                className="song-drill-tempo readout"
+                title={drill.held
+                  ? 'The fastest you have held this loop clean'
+                  : 'Slow enough to build the shape that is in the way'}
+              >
+                {drill.held && <IconBest size={10} />}
+                {drill.tempo} bpm
+              </span>
+              <button
+                type="button"
+                className="btn btn-primary song-drill-go"
+                onClick={() => takeToDrill(drill)}
+                title={`Open the chord page with these four bars loaded at ${drill.tempo} bpm`}
+              >
+                <IconPlay size={11} />
+                Drill these changes
+              </button>
+            </div>
+          )}
+
           {progressions.length > 0 && (
             <>
               <div className="surface-label song-subhead"><span>Progressions</span></div>
@@ -239,10 +303,32 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
                       {prog.map((chord, j) => (
                         <React.Fragment key={j}>
                           {j > 0 && <span className="progression-arrow" aria-hidden="true">→</span>}
-                          <span className="progression-chord readout">{chord}</span>
+                          {preferredVoicing(chord) ? (
+                            <button
+                              type="button"
+                              className="progression-chord readout is-live"
+                              title={`Hear ${chord}`}
+                              onClick={() => hear(chord)}
+                            >
+                              {chord}
+                            </button>
+                          ) : (
+                            <span className="progression-chord readout">{chord}</span>
+                          )}
                         </React.Fragment>
                       ))}
                     </span>
+                    {progressionDrills[i] && (
+                      <button
+                        type="button"
+                        className="progression-drill"
+                        aria-label={`Drill progression ${i + 1}`}
+                        title={`Drill this one at ${progressionDrills[i]?.tempo} bpm`}
+                        onClick={() => takeToDrill(progressionDrills[i] as SongDrill)}
+                      >
+                        <IconPlay size={10} />
+                      </button>
+                    )}
                   </li>
                 ))}
               </ol>
