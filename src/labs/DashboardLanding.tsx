@@ -15,6 +15,7 @@ import {
 } from '../utils/library';
 import type { Song } from '../utils/library';
 import { promptForDate } from '../data/tryThis';
+import { getRun, startRun } from '../utils/practiceRun';
 import { capoLabel } from '../utils/songText';
 
 interface DashboardLandingProps {
@@ -146,6 +147,27 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
             </button>
           </section>
         )
+      )}
+
+      {/* One press instead of a decision.
+          Deciding what to practise is itself work, and it falls due at the
+          exact moment somebody has picked up a guitar and would rather be
+          playing. This answers it: tune, two things actually in your way,
+          then the song you are on. */}
+      {ready && !getRun() && (
+        <button type="button" className="dash-run" onClick={() => startRun()}>
+          <span className="dash-run-said">
+            <span className="surface-label">Today's run</span>
+            <span className="dash-run-title">Start a session</span>
+            <span className="dash-run-note">Tune, two drills picked from what is in your way, then your song.</span>
+          </span>
+          <span className="dash-run-go">
+            Begin
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            </svg>
+          </span>
+        </button>
       )}
 
       <div className="dash-row">

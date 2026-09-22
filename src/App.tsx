@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { KeySheet } from './components/KeySheet';
 import { JumpTo } from './components/JumpTo';
+import { RunBar, useRunning } from './components/RunBar';
 import { Sidebar } from './components/Sidebar';
 import { GROUPS, type ActiveTab } from './components/navGroups';
 import { useTheme } from './hooks/useTheme';
@@ -158,8 +159,12 @@ function App() {
     }
   };
 
+  // Sticky toolbars inside the labs pin to the same edge the run bar does, so
+  // the shell has to say when there is a bar for them to get out from under.
+  const running = useRunning();
+
   return (
-    <div className="app-container">
+    <div className={`app-container${running ? ' has-run' : ''}`}>
       {/* Sidebar Navigation */}
       <Sidebar activeTab={activeTab} setActiveTab={navigate} theme={theme} toggleTheme={toggleTheme} />
 
@@ -167,6 +172,10 @@ function App() {
       {/* key on the tab so each lab mounts fresh and plays the entrance
           transition, instead of the new content appearing mid-swap */}
       <main className="main-content">
+        {/* Above the lab rather than over it. The run is a thread through the
+            screens that already exist, so it takes a strip of the page and
+            leaves everything under it exactly where it was. */}
+        <RunBar />
         <div key={activeTab} className="lab-enter">
           {/* Shown only the first time a lab is opened, and usually not even
               then: the rail has normally started the download already. */}
