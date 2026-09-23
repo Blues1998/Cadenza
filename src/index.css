@@ -2539,34 +2539,132 @@ button.daynode:active {
    Four numbers, every one of them derived from something that is actually
    stored. A metric with no data behind it says "—" rather than nought:
    nought is a claim, and a claim we cannot support. */
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem 1rem;
+/* ===== This week ===== */
+/* Four unrelated metrics became one span. The strip carries the shape of the
+   week, the list says what it contained, and the footer is the only thing on
+   the card talking about any other stretch of time — which is why it says so
+   in its first two words. */
+.weekpanel {
+  gap: 0.85rem;
 }
 
-.metric {
+.weekstrip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.3rem;
+  align-items: end;
+}
+
+.weekbar {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  align-items: stretch;
+  gap: 0.3rem;
 }
 
-.metric-value {
-  font-size: 1.5rem;
+.weekbar-track {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  max-width: 26px;
+  height: 44px;
+  margin: 0 auto;
+  border-radius: 4px;
+  background: rgba(var(--surface-tint-rgb), 0.07);
+}
+
+/* Today is not a day you failed to practise — it has not finished. An outline
+   where an empty past day has a flat fill keeps the difference visible even
+   before anything is logged. */
+.weekbar.is-today .weekbar-track {
+  box-shadow: inset 0 0 0 1px rgba(var(--surface-tint-rgb), 0.22);
+  background: transparent;
+}
+
+/* No floor on the height. A minimum kept a sliver of accent sitting at the
+   bottom of every blank day, which read as a day with something in it — the
+   share is already held above a visible fraction for days that do. */
+.weekbar-fill {
+  width: 100%;
+  border-radius: 4px;
+  background: var(--primary);
+  opacity: 0.55;
+  transition: height 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.weekbar.is-today .weekbar-fill {
+  opacity: 1;
+}
+
+.weekbar-day {
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.weekbar.is-today .weekbar-day {
+  color: var(--text-secondary);
+}
+
+.weekfacts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.weekfact {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+/* Three characters wide whatever the number is, so 1, 2 and 112 start their
+   sentences at the same place rather than stepping to the right. */
+.weekfact-value {
+  min-width: 3ch;
+  font-size: 1.15rem;
   font-weight: 500;
-  line-height: 1.1;
+  line-height: 1;
+  text-align: right;
   color: var(--text-primary);
 }
 
-.metric-unit {
-  margin-left: 0.25rem;
-  font-size: 0.72rem;
+.week-quiet {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
   color: var(--text-muted);
 }
 
-.metric-label {
-  font-size: 0.72rem;
+.week-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: 0.15rem;
+  border-top: 1px solid rgba(var(--surface-tint-rgb), 0.07);
+}
+
+.week-most strong {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.week-alltime {
+  font-size: 0.7rem;
   color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weekbar-fill {
+    transition: none;
+  }
 }
 
 /* ===== Pick up / Try this ===== */

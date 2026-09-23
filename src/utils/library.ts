@@ -391,7 +391,7 @@ export function practiceStats(): PracticeStats {
   };
 }
 
-function shiftIso(iso: string, days: number): string {
+export function shiftIso(iso: string, days: number): string {
   const d = dateFromIso(iso);
   d.setDate(d.getDate() + days);
   return isoDate(d);

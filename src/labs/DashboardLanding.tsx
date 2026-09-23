@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { ActiveTab } from '../components/Sidebar';
 import { DayGrid } from '../components/DayGrid';
+import { WeekPanel } from '../components/WeekPanel';
 import { assetUrl } from '../utils/assetUrl';
 import { ALL_LEVELS, isLevelComplete } from '../utils/journey';
 import { subscribeProgress } from '../utils/progress';
@@ -17,6 +18,7 @@ import type { Song } from '../utils/library';
 import { promptForDate } from '../data/tryThis';
 import { getRun, startRun } from '../utils/practiceRun';
 import { capoLabel } from '../utils/songText';
+import { weekLine, weekRecap } from '../utils/weekly';
 
 interface DashboardLandingProps {
   setActiveTab: (tab: ActiveTab) => void;
@@ -31,13 +33,6 @@ const fmtWhen = (iso: string): string => {
   if (days < 7) return `${days} days ago`;
   return new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 };
-
-const Metric: React.FC<{ label: string; value: React.ReactNode; unit?: string }> = ({ label, value, unit }) => (
-  <div className="metric">
-    <span className="metric-value readout">{value}{unit && <span className="metric-unit">{unit}</span>}</span>
-    <span className="metric-label">{label}</span>
-  </div>
-);
 
 /**
  * Home answers one question: what should I do right now?
@@ -60,6 +55,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
 
   const progress = challengeProgress();
   const stats = practiceStats();
+  const recap = weekRecap();
   const todaySong = progress.todaySong;
   const prompt = promptForDate();
 
@@ -77,7 +73,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         style={{ ['--hero-image' as string]: `url(${assetUrl('img/hero-guitar.webp')})` } as React.CSSProperties}
       >
         <div className="hero-copy">
-          <span className="hero-eyebrow">Ready to play?</span>
+          <span className="hero-eyebrow">{weekLine(recap)}</span>
           <h2 className="hero-title">
             Cadenza <span>Lab</span>
           </h2>
@@ -191,20 +187,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
           </span>
         </button>
 
-        {/* Only numbers the library can actually account for. */}
-        <section className="dash-card snapshot">
-          <div className="card-head"><span className="surface-label">Practice</span></div>
-          <div className="metrics">
-            <Metric label="This week" value={stats.weekMinutes} unit="min" />
-            <Metric label="Streak" value={stats.streakDays} unit={stats.streakDays === 1 ? 'day' : 'days'} />
-            <Metric
-              label="Avg confidence"
-              value={stats.avgConfidence === null ? '—' : stats.avgConfidence.toFixed(1)}
-              unit={stats.avgConfidence === null ? undefined : '/10'}
-            />
-            <Metric label="Complete" value={stats.songsComplete} unit={`/${stats.songsEntered}`} />
-          </div>
-        </section>
+        <WeekPanel recap={recap} />
       </div>
 
       <div className="dash-row">

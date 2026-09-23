@@ -97,9 +97,17 @@ export function clearTempoLog(): TempoRun[] {
   return [];
 }
 
-/** "4 min", "40 sec" — the shape a practice log is read in. */
+/**
+ * "4 min", "40 sec" — the shape a practice log is read in.
+ *
+ * Rounded down once it reaches minutes, and not reaching them until two are
+ * genuinely there. Rounding to the nearest minute reported a minute and a half
+ * as "2 min", which is a quarter more than was actually held; a figure this
+ * app puts on the front page should err towards saying you did slightly less
+ * than you did, never slightly more.
+ */
 export const heldLabel = (seconds: number): string =>
-  seconds < 90 ? `${Math.round(seconds)} sec` : `${Math.round(seconds / 60)} min`;
+  seconds < 120 ? `${Math.round(seconds)} sec` : `${Math.floor(seconds / 60)} min`;
 
 /** "just now", "earlier today", "yesterday", "3 days ago". */
 export function whenHeld(at: number): string {
