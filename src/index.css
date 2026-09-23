@@ -5114,6 +5114,284 @@ button.dash-card:hover .pickup-go svg {
   color: var(--primary);
 }
 
+/* A lab with no more to say. Some screens are a small tool and will not fill a
+   laptop however much is added to them; narrowing the column makes the space
+   below read as composition rather than as something missing. */
+.lab-narrow {
+  max-width: 940px;
+}
+
+/* ---------------------------------------------------------------------------
+   Tuner: a needle, and six strings with an end to them
+   ---------------------------------------------------------------------------
+   The meter is on the page before the microphone is, greyed and inert. A
+   permission prompt standing alone asks for a yes before anything has said
+   what the yes is for. */
+
+.tunerface {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  min-height: 340px;
+  padding: 1.5rem;
+}
+
+.tunerface-meter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+
+.tunerface.is-off .tunerface-meter {
+  /* Legibly present, legibly off. Grayscale as well as fade, so an idle
+     meter never shows the green that means "stop turning". */
+  opacity: 0.42;
+  filter: grayscale(1);
+  pointer-events: none;
+}
+
+.tuner-note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.tuner-note-name {
+  font-size: 3.4rem;
+  font-weight: 500;
+  line-height: 1.05;
+  color: var(--text-muted);
+  transition: color 0.15s ease, text-shadow 0.15s ease;
+}
+
+.tuner-note-name.is-live {
+  color: var(--primary);
+}
+
+.tuner-note-name.is-home {
+  color: var(--success);
+  text-shadow: 0 0 26px var(--success-glow);
+}
+
+.tuner-note-hz {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.dial {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+}
+
+.dial-track {
+  fill: none;
+  stroke: var(--surface-3);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* Where you stop turning. */
+.dial-home {
+  fill: none;
+  stroke: var(--success);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.dial-tick {
+  stroke: rgba(var(--surface-tint-rgb), 0.22);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.dial-tick.is-home {
+  stroke: var(--success);
+  stroke-width: 2;
+}
+
+.dial-side {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  fill: var(--text-muted);
+  dominant-baseline: middle;
+}
+
+.dial-needle {
+  stroke: var(--primary);
+  stroke-width: 3.4;
+  stroke-linecap: round;
+}
+
+.dial-hand.is-home .dial-needle {
+  stroke: var(--success);
+}
+
+.dial-hand.is-idle .dial-needle {
+  stroke: var(--surface-3);
+}
+
+.dial-pivot {
+  fill: var(--text-muted);
+}
+
+.tuner-off {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.tuner-off.is-home {
+  color: var(--success);
+}
+
+.tuner-stop {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.78rem;
+}
+
+.tuner-stop-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.micbar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border-radius: 9px;
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--primary);
+  color: var(--text-muted);
+}
+
+.micbar-said {
+  flex: 1 1 12rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.micbar-error {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--danger);
+  text-align: center;
+}
+
+/* Six strings, and an end to them. */
+.strings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+/* Six, always — auto-fit drops to five on a narrow panel and orphans the top
+   E on a line of its own, which reads as a bug in the guitar. */
+.strings-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+@media (max-width: 720px) {
+  .strings-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stringcard {
+  position: relative;
+  display: flex;
+  border: none;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.5rem 0.3rem;
+  border-radius: 8px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px transparent;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* The one you are playing. */
+.stringcard.is-here {
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.stringcard.is-done {
+  background: var(--success-glow);
+}
+
+.stringcard-ord {
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stringcard-note {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stringcard.is-done .stringcard-note {
+  color: var(--success);
+}
+
+.stringcard-hz {
+  font-size: 0.6rem;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.stringcard.is-here .stringcard-hz {
+  color: var(--primary);
+}
+
+.stringcard-tick {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.35rem;
+  display: inline-flex;
+  color: var(--success);
+}
+
+.strings-hint {
+  margin: 0.1rem 0 0.3rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.strings-again {
+  align-self: flex-start;
+  padding: 0.1rem 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.strings-again:hover {
+  color: var(--primary);
+}
+
 /* ---------------------------------------------------------------------------
    Rhythm: the page called Timing, finally moving in time
    ---------------------------------------------------------------------------

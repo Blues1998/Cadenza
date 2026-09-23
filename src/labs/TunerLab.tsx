@@ -1,11 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Segmented } from '../components/Segmented';
 import { LabIcon } from '../components/LabIcon';
+import { TunerDial } from '../components/TunerDial';
+import { IconCheck } from '../components/Icons';
 import { useMicPitch } from '../hooks/useMicPitch';
 import { useSpringValue } from '../hooks/useSpringValue';
 import { audio } from '../utils/audio';
 import { noteNameToMidi } from '../utils/musicTheory';
+import { HOLD_MS, IN_TUNE_CENTS, TUNINGS, nearestString, stringsOf } from '../utils/tuning';
 import { reportProgress } from '../utils/progress';
+
+const TUNING_KEY = 'cadenza-tuning';
 
 export const TunerLab: React.FC = () => {
   // Shared microphone + YIN pitch detection pipeline
@@ -24,13 +29,69 @@ export const TunerLab: React.FC = () => {
   //
   // Only the gauge is smoothed. The matching game below still judges the raw
   // estimate, so what it accepts is not softened by a display decision.
+  // ---- tuning up, as a thing with a finish line -------------------------
+  // Six strings, ticked off as each one is held in tune. The app's own
+  // counters all report a level; this one reports a job you can finish, which
+  // is the only shape "tune up" has ever had.
+  const [tuned, setTuned] = useState<Record<number, boolean>>({});
+  const settling = useRef<{ string: number; since: number } | null>(null);
+
+  // Which tuning the guitar is in. Kept across visits, because somebody who
+  // plays in DADGAD plays in DADGAD, and re-picking it every time you sit
+  // down is the app forgetting something it was told.
+  const [tuningId, setTuningId] = useState<string>(() => {
+    try { return localStorage.getItem(TUNING_KEY) ?? TUNINGS[0].id; } catch { return TUNINGS[0].id; }
+  });
+  const tuning = TUNINGS.find(t => t.id === tuningId) ?? TUNINGS[0];
+  const targets = useMemo(() => stringsOf(tuning), [tuning]);
+  const pickTuning = (id: string) => {
+    setTuningId(id);
+    setTuned({});
+    settling.current = null;
+    try { localStorage.setItem(TUNING_KEY, id); } catch { /* a blocked store is not worth failing over */ }
+  };
+
+  // Which string this is, and how far off *it* — not off the nearest note in
+  // the chromatic scale. See utils/tuning.ts: the two answers disagree exactly
+  // when a string is worst out, which is the moment a tuner has to be useful.
+  const onString = pitchData ? nearestString(pitchData.frequency, targets) : null;
+  const readCents = pitchData ? (onString ? onString.cents : pitchData.cents) : null;
+  const readNote = onString ? onString.target.name : pitchData?.note ?? null;
+
   const lastCentsRef = useRef<number>(0);
-  if (pitchData) lastCentsRef.current = pitchData.cents;
+  if (readCents !== null) lastCentsRef.current = readCents;
   // Held rather than recentred through a silent frame, so a gap in detection
   // does not swing the needle to "in tune" and back.
-  const springedCents = useSpringValue(pitchData ? pitchData.cents : lastCentsRef.current);
+  const springedCents = useSpringValue(readCents !== null ? readCents : lastCentsRef.current);
   const gaugeCents = Math.max(-50, Math.min(50, springedCents));
-  const gaugeInTune = Math.abs(gaugeCents) <= 5;
+  const gaugeInTune = Math.abs(gaugeCents) <= IN_TUNE_CENTS;
+
+  useEffect(() => {
+    if (!isMicrophoneActive) return;
+    // Judged on the raw estimate, not the sprung one: the needle is smoothed
+    // because a display should be, and a tick is a claim.
+    const here = pitchData ? nearestString(pitchData.frequency, targets) : null;
+    if (!here || Math.abs(here.cents) > IN_TUNE_CENTS) {
+      settling.current = null;
+      return;
+    }
+    const now = Date.now();
+    if (settling.current?.string !== here.target.number) {
+      settling.current = { string: here.target.number, since: now };
+      return;
+    }
+    if (now - settling.current.since >= HOLD_MS) {
+      setTuned(done => (done[here.target.number] ? done : { ...done, [here.target.number]: true }));
+    }
+  }, [pitchData, isMicrophoneActive, targets]);
+
+  // A fresh guitar each time the mic comes on: whatever was in tune last week
+  // is a claim about a different afternoon.
+  useEffect(() => {
+    if (!isMicrophoneActive) { setTuned({}); settling.current = null; }
+  }, [isMicrophoneActive]);
+
+  const tunedCount = targets.filter(target => tuned[target.number]).length;
 
   // Pitch matching game states
   const [gameMode, setGameMode] = useState<boolean>(false);
@@ -142,7 +203,7 @@ export const TunerLab: React.FC = () => {
   // (Mic teardown on unmount is handled inside useMicPitch)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="lab-narrow" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       
       {/* Header */}
       <div className="lab-header">
@@ -151,99 +212,50 @@ export const TunerLab: React.FC = () => {
 
       <div className="grid-2">
         
-        {/* Tuner Gauge Panel */}
-        <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', minHeight: '340px', justifyContent: 'center' }}>
-          
-          {!isMicrophoneActive ? (
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255, 176, 138, 0.05)', border: '1px solid var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-              </div>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '300px' }}>The tuner listens through your microphone.</p>
-              <button onClick={initMicrophone} className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
-                Allow microphone
-              </button>
-              {micError && (
-                <p style={{ color: 'var(--danger)', fontSize: '0.8rem', maxWidth: '300px' }}>{micError}</p>
-              )}
+        {/* The meter. Before permission it is here all the same, greyed and
+            inert: the ask used to arrive before anything had said what the
+            screen does, and "allow your microphone" is an easier yes when you
+            can see what it is for. */}
+        <section className={`glass-panel tunerface${isMicrophoneActive ? '' : ' is-off'}`}>
+          <div className="tunerface-meter" aria-hidden={!isMicrophoneActive}>
+            <div className="tuner-note">
+              <span className={`tuner-note-name readout${pitchData ? (gaugeInTune ? ' is-home' : ' is-live') : ''}`}>
+                {readNote ?? '—'}
+              </span>
+              <span className="tuner-note-hz readout">
+                {pitchData ? `${pitchData.frequency.toFixed(1)} Hz` : isMicrophoneActive ? 'silent' : 'not listening'}
+              </span>
             </div>
+
+            <TunerDial cents={pitchData ? gaugeCents : null} inTune={Boolean(pitchData) && gaugeInTune} />
+
+            <span className={`tuner-off readout${pitchData && gaugeInTune ? ' is-home' : ''}`}>
+              {pitchData
+                ? gaugeInTune
+                  ? onString ? `${onString.target.ordinal} string is there` : 'in tune'
+                  // The needle pins at the end of the dial; the words do not.
+                  // "+50" under a needle that is actually reading +64 is the
+                  // meter lying about its own limit.
+                  : `${springedCents > 0 ? '+' : ''}${Math.round(springedCents)} cents${onString ? ` off ${onString.target.name}` : ''}`
+                : 'play a string'}
+            </span>
+          </div>
+
+          {isMicrophoneActive ? (
+            <button onClick={stopMicrophone} className="btn tuner-stop">
+              <span className="tuner-stop-dot" aria-hidden="true" />
+              Stop listening
+            </button>
           ) : (
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-              
-              {/* Dynamic Note Display */}
-              <div style={{ textAlign: 'center' }}>
-                <div 
-                  className="readout"
-                  style={{
-                    fontSize: '4.2rem',
-                    fontWeight: 500,
-                    color: pitchData ? (gaugeInTune ? 'var(--success)' : 'var(--primary)') : 'var(--text-muted)',
-                    textShadow: pitchData && gaugeInTune ? '0 0 30px var(--success-glow)' : 'none',
-                    lineHeight: 1.1,
-                    transition: 'color 0.15s ease'
-                  }}
-                >
-                  {pitchData ? pitchData.note : '--'}
-                </div>
-                <div style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginTop: '0.5rem', fontFamily: 'var(--font-mono)' }}>
-                  {pitchData ? `${pitchData.frequency.toFixed(1)} Hz` : 'Silent'}
-                </div>
-              </div>
-
-              {/* Slider Scale Meter */}
-              <div style={{ width: '100%', maxWidth: '360px', position: 'relative', marginTop: '1rem' }}>
-                {/* Horizontal scale */}
-                <div style={{ height: '4px', background: 'var(--surface-3)', borderRadius: '2px', width: '100%' }}></div>
-                
-                {/* Center / In-Tune tick */}
-                <div style={{ position: 'absolute', left: '50%', top: '-8px', width: '2px', height: '20px', background: 'var(--success)', transform: 'translateX(-50%)' }} />
-                
-                {/* 50 cents left/right limits */}
-                <div style={{ position: 'absolute', left: '0', top: '-4px', width: '1px', height: '12px', background: 'var(--text-muted)' }} />
-                <div style={{ position: 'absolute', right: '0', top: '-4px', width: '1px', height: '12px', background: 'var(--text-muted)' }} />
-
-                {/* Floating Needle Indicator */}
-                {pitchData && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      // map cents (-50 to +50) to percentage (0% to 100%)
-                      left: `${((gaugeCents + 50) / 100) * 100}%`,
-                      top: '-14px',
-                      width: '4px',
-                      height: '32px',
-                      background: gaugeInTune ? 'var(--success)' : 'var(--primary)',
-                      boxShadow: gaugeInTune ? '0 0 10px var(--success-glow)' : '0 0 8px var(--primary-glow)',
-                      borderRadius: '2px',
-                      transform: 'translateX(-50%)',
-                      // No transition on `left`: the spring already owns the
-                      // motion, and a transition on top of it would only add lag.
-                      transition: 'background-color 0.1s ease, box-shadow 0.1s ease'
-                    }}
-                  />
-                )}
-
-                {/* Left/Right flat/sharp Labels */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '1.25rem' }}>
-                  <span>FLAT (-50c)</span>
-                  <span style={{ color: pitchData && gaugeInTune ? 'var(--success)' : 'var(--text-muted)', fontWeight: pitchData && gaugeInTune ? 'bold' : 'normal' }}>
-                    {pitchData
-                      ? (gaugeInTune ? 'IN TUNE' : `${gaugeCents > 0 ? '+' : ''}${Math.round(gaugeCents)} cents`)
-                      : '0.0 cents'}
-                  </span>
-                  <span>SHARP (+50c)</span>
-                </div>
-              </div>
-
-              {/* Stop capture button */}
-              <button onClick={stopMicrophone} className="btn" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                <span style={{ width: '8px', height: '8px', background: 'var(--danger)', borderRadius: '50%' }}></span>
-                Disconnect Microphone
-              </button>
-
+            <div className="micbar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><line x1="12" y1="19" x2="12" y2="22" />
+              </svg>
+              <span className="micbar-said">The needle moves once the tuner can hear you.</span>
+              <button onClick={initMicrophone} className="btn btn-primary">Turn on the mic</button>
             </div>
           )}
-
+          {micError && <p className="micbar-error">{micError}</p>}
         </section>
 
         {/* Intonation Game Console */}
@@ -269,36 +281,58 @@ export const TunerLab: React.FC = () => {
                 below holds better than one left slack.
               </p>
 
-              {/* Standard tuning, low to high. A reference you read while
-                  turning a peg, so it is a table and not a sentence. */}
-              <div>
-                <span className="field-label">Standard tuning</span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(72px, 1fr))', gap: '0.4rem' }}>
-                  {[
-                    ['6th', 'E2', '82.4'],
-                    ['5th', 'A2', '110.0'],
-                    ['4th', 'D3', '146.8'],
-                    ['3rd', 'G3', '196.0'],
-                    ['2nd', 'B3', '246.9'],
-                    ['1st', 'E4', '329.6']
-                  ].map(([string, note, hz]) => (
-                    <div
-                      key={note}
-                      style={{
-                        background: 'var(--surface-2)',
-                        borderRadius: '8px',
-                        padding: '0.5rem 0.4rem',
-                        textAlign: 'center'
-                      }}
-                    >
-                      <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{string}</div>
-                      <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>{note}</div>
-                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{hz} Hz</div>
-                    </div>
-                  ))}
+              {/* The reference you read while turning a peg — and, once the
+                  tuner can hear, the thing that ticks off. Every other counter
+                  in this app reports a level; tuning up is a job with an end,
+                  so this one reports how much of it is left. */}
+              <div className="strings">
+                <div className="surface-label">
+                  <span>{tuning.name}</span>
+                  <span className="readout">
+                    {isMicrophoneActive
+                      ? tunedCount === targets.length ? 'all six' : `${tunedCount} of ${targets.length}`
+                      : tuning.note}
+                  </span>
                 </div>
+                <div className="strings-row">
+                  {targets.map(target => {
+                    const here = isMicrophoneActive && onString?.target.number === target.number;
+                    const done = tuned[target.number];
+                    return (
+                      <button
+                        type="button"
+                        key={target.number}
+                        className={`stringcard${here ? ' is-here' : ''}${done ? ' is-done' : ''}`}
+                        title={`${target.ordinal} string · ${target.hz.toFixed(1)} Hz · press to hear it`}
+                        onClick={() => { audio.init(); audio.playMidi(target.midi, 2.5); }}
+                      >
+                        <span className="stringcard-ord">{target.ordinal}</span>
+                        <span className="stringcard-note">{target.name}</span>
+                        <span className="stringcard-hz readout">
+                          {here && pitchData
+                            ? `${onString.cents > 0 ? '+' : ''}${Math.round(onString.cents)}c`
+                            : `${target.hz.toFixed(1)} Hz`}
+                        </span>
+                        {done && <span className="stringcard-tick" aria-label="in tune"><IconCheck size={11} /></span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                {isMicrophoneActive && tunedCount > 0 && (
+                  <button type="button" className="strings-again" onClick={() => setTuned({})}>
+                    Start again
+                  </button>
+                )}
+                <p className="strings-hint">Press a string to hear it — the other way to tune, and the one that trains an ear.</p>
+                <Segmented<string>
+                  label="Tuning"
+                  value={tuningId}
+                  onChange={pickTuning}
+                  options={TUNINGS.map(t => ({ value: t.id, label: t.name, title: t.note }))}
+                  size="sm"
+                  full
+                />
               </div>
-
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '1rem', justifyContent: 'center' }}>
