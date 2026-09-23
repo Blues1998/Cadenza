@@ -158,7 +158,12 @@ export const PlayLab: React.FC = () => {
     };
   }, [mode, scaleRootPc, scaleIdx, chordSevenths, trickyIntervals]);
 
-  const startNewRound = useCallback(() => {
+  // `sound` is what separates a round you are about to play from one that is
+  // only on screen. The interval hunt opens by playing its reference note,
+  // which is right when you asked for a round and startling when the page has
+  // merely finished loading — so the preview built before the mic is on is
+  // built silently, and turning the mic on deals a fresh one that speaks.
+  const startNewRound = useCallback((sound = true) => {
     const r = makeRound();
     setRound(r);
     setProgressIdx(0);
@@ -179,7 +184,7 @@ export const PlayLab: React.FC = () => {
         : `First up: ${NOTE_NAMES[r.targets[0]]}. Let it ring clearly.`
     });
     // Interval mode: play the reference note so the hunt starts by ear
-    if (mode === 'interval') {
+    if (mode === 'interval' && sound) {
       muteUntilRef.current = performance.now() + 2800;
       window.setTimeout(() => {
         audio.init();
@@ -194,8 +199,11 @@ export const PlayLab: React.FC = () => {
     setStreak(0);
   }, [mode]);
 
+  // A round exists from the moment the page does. Before permission it is a
+  // worked example of what the screen wants from you; granting it deals a new
+  // one, out loud.
   useEffect(() => {
-    if (isActive) startNewRound();
+    startNewRound(isActive);
   }, [isActive, startNewRound]);
 
   // Persist best streak
@@ -363,41 +371,39 @@ export const PlayLab: React.FC = () => {
         <h2 className="lab-title"><LabIcon tab="play" />Play Challenges</h2>
       </div>
 
-      {!isActive ? (
-        <section className="glass-panel" style={{ padding: '2.5rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255, 106, 42, 0.05)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-          </div>
-          <h3 style={{ fontSize: '1.25rem' }}>Grab your instrument</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '420px' }}>
-            You answer these by playing, not clicking.
-          </p>
-          <button onClick={start} className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
-            Allow microphone
-          </button>
-          {micError && <p style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>{micError}</p>}
-        </section>
-      ) : (
-        <>
-          {/* Mode tabs + scoreboard */}
-          <section className="glass-panel" style={{ padding: '1rem 1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {([
-                ['scale', 'Scale Climb'],
-                ['interval', 'Interval Hunt'],
-                ['chord', 'Chord Builder']
-              ] as [Mode, string][]).map(([m, label]) => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className={`btn ${mode === m ? 'btn-primary' : ''}`}
-                  style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', fontSize: '0.9rem' }}>
+      {/* The screen before it can hear you.
+          This used to be a permission prompt and nothing else: a microphone
+          icon, one sentence, a button, and not a single clue what the app was
+          about to do with the answer. The tuner had the same problem and the
+          fix there works here too — show the thing, greyed where it depends on
+          a signal and live where it does not. A round is already dealt, the
+          reference note still plays, the fretboard still explains its colours,
+          and the ask sits in the row it will later hand back to the score. */}
+      {/* Mode tabs + scoreboard */}
+      <section className="glass-panel" style={{ padding: '1rem 1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {([
+            ['scale', 'Scale Climb'],
+            ['interval', 'Interval Hunt'],
+            ['chord', 'Chord Builder']
+          ] as [Mode, string][]).map(([m, label]) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`btn ${mode === m ? 'btn-primary' : ''}`}
+              style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {/* A score of nought and a streak of nought are not facts about you,
+            they are the absence of a game. Until one is running the only
+            figure worth showing is the one a previous session left behind,
+            and only when there is one. */}
+        <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', fontSize: '0.9rem' }}>
+          {isActive ? (
+            <>
               <span>Score: <strong style={{ color: 'var(--primary)' }}>{score}</strong></span>
               <span style={{ color: 'var(--warning)' }}>Streak <strong>{streak}</strong></span>
               <span style={{ color: 'var(--text-secondary)' }}>Best: <strong>{best[mode]}</strong></span>
@@ -405,155 +411,177 @@ export const PlayLab: React.FC = () => {
                 <span style={{ width: '8px', height: '8px', background: 'var(--danger)', borderRadius: '50%' }}></span>
                 Stop Mic
               </button>
+            </>
+          ) : (
+            best[mode] > 0 && (
+              <span className="play-best">Best so far · <strong>{best[mode]}</strong></span>
+            )
+          )}
+        </div>
+      </section>
+
+      <div className="grid-2">
+        {/* Challenge prompt */}
+        <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <h3 style={{ fontSize: '1.05rem', color: 'var(--secondary)' }}>{round?.promptTitle ?? '…'}</h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>{round?.promptDetail}</p>
+
+          {/* Step chips */}
+          {round && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+              {round.chipLabels.map((label, i) => {
+                const done = i < progressIdx || phase === 'complete';
+                const current = i === progressIdx && phase === 'playing';
+                return (
+                  <span
+                    key={`${label}-${i}`}
+                    style={{
+                      padding: '0.35rem 0.6rem',
+                      borderRadius: '8px',
+                      fontSize: '0.78rem',
+                      fontWeight: current ? 700 : 500,
+                      border: `1px solid ${done ? 'var(--success)' : current ? 'var(--warning)' : 'rgba(var(--surface-tint-rgb),0.1)'}`,
+                      background: done ? 'rgba(70, 192, 138, 0.12)' : current ? 'rgba(255, 106, 42, 0.12)' : 'var(--surface-2)',
+                      color: done ? 'var(--success)' : current ? 'var(--warning)' : 'var(--text-muted)',
+                      display: 'inline-flex', alignItems: 'center', gap: '0.3rem'
+                    }}
+                  >
+                    {done && <IconCheck size={11} />}{targetsHidden && !done ? '?' : label}
+                  </span>
+                );
+              })}
             </div>
-          </section>
+          )}
 
-          <div className="grid-2">
-            {/* Challenge prompt */}
-            <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <h3 style={{ fontSize: '1.05rem', color: 'var(--secondary)' }}>{round?.promptTitle ?? '…'}</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>{round?.promptDetail}</p>
-
-              {/* Step chips */}
-              {round && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                  {round.chipLabels.map((label, i) => {
-                    const done = i < progressIdx || phase === 'complete';
-                    const current = i === progressIdx && phase === 'playing';
-                    return (
-                      <span
-                        key={`${label}-${i}`}
-                        style={{
-                          padding: '0.35rem 0.6rem',
-                          borderRadius: '8px',
-                          fontSize: '0.78rem',
-                          fontWeight: current ? 700 : 500,
-                          border: `1px solid ${done ? 'var(--success)' : current ? 'var(--warning)' : 'rgba(var(--surface-tint-rgb),0.1)'}`,
-                          background: done ? 'rgba(70, 192, 138, 0.12)' : current ? 'rgba(255, 106, 42, 0.12)' : 'var(--surface-2)',
-                          color: done ? 'var(--success)' : current ? 'var(--warning)' : 'var(--text-muted)',
-                          display: 'inline-flex', alignItems: 'center', gap: '0.3rem'
-                        }}
-                      >
-                        {done && <IconCheck size={11} />}{targetsHidden && !done ? '?' : label}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: 'auto', paddingTop: '0.5rem' }}>
-                <button onClick={playReference} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem' }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                  {mode === 'interval' ? 'Replay Reference Note' : 'Hear It First'}
-                </button>
-                {mode === 'interval' && !revealed && (
-                  <button onClick={revealAnswer} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem' }}>
-                    Reveal Answer (resets streak)
-                  </button>
-                )}
-                <button onClick={startNewRound} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem' }}>
-                  Skip
-                </button>
-              </div>
-
-              {/* Mode-specific settings */}
-              <div style={{ paddingTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                {mode === 'scale' && (
-                  <>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      Root:
-                      <select
-                        value={String(scaleRootPc)}
-                        onChange={e => setScaleRootPc(e.target.value === 'random' ? 'random' : Number(e.target.value))}
-                        className="select-field"
-                        style={{ width: 'auto', padding: '0.3rem 1.7rem 0.3rem 0.5rem', fontSize: '0.78rem' }}
-                      >
-                        {NOTE_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}
-                        <option value="random">Surprise me</option>
-                      </select>
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      Scale:
-                      <select
-                        value={scaleIdx}
-                        onChange={e => setScaleIdx(Number(e.target.value))}
-                        className="select-field"
-                        style={{ width: 'auto', padding: '0.3rem 1.7rem 0.3rem 0.5rem', fontSize: '0.78rem' }}
-                      >
-                        {SCALE_FORMULAS.map((s, i) => (
-                          <option key={s.name} value={i}>{SCALE_FEELINGS[s.name]?.feeling ?? s.name} — {s.name}</option>
-                        ))}
-                      </select>
-                    </label>
-                  </>
-                )}
-                {mode === 'chord' && (
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={chordSevenths} onChange={e => setChordSevenths(e.target.checked)} />
-                    Include 7th chords (4 notes)
-                  </label>
-                )}
-                {mode === 'interval' && (
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={trickyIntervals} onChange={e => setTrickyIntervals(e.target.checked)} />
-                    Include tricky intervals (m2, tritone, 6ths, 7ths)
-                  </label>
-                )}
-              </div>
-            </section>
-
-            {/* Live listening panel */}
-            <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
-              <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Hearing</span>
-                <div style={{ fontSize: '3.2rem', fontWeight: 700, lineHeight: 1.1, color: pitch ? (currentTargetPc !== null && ((pitch.midi % 12) + 12) % 12 === currentTargetPc ? 'var(--success)' : 'var(--primary)') : 'var(--text-muted)' }}>
-                  {pitch ? pitch.note : '--'}
-                </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
-                  {pitch ? `${pitch.frequency.toFixed(1)} Hz · ${pitch.cents > 0 ? '+' : ''}${pitch.cents}c` : 'silent'}
-                </div>
-              </div>
-
-              {/* Hold-to-confirm progress */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-                  <span>Hold to confirm</span>
-                  <span>{holdPct}%</span>
-                </div>
-                <div style={{ height: '8px', background: 'var(--surface-3)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: `${holdPct}%`, height: '100%', background: 'var(--success)', boxShadow: '0 0 10px var(--success-glow)', transition: 'width 0.08s linear' }} />
-                </div>
-              </div>
-
-              <p style={{ textAlign: 'center', fontSize: '0.85rem', color: feedbackColor, minHeight: '2.4em', lineHeight: 1.4 }}>
-                {feedback.text}
-              </p>
-            </section>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: 'auto', paddingTop: '0.5rem' }}>
+            <button onClick={playReference} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              {mode === 'interval' ? 'Replay Reference Note' : 'Hear It First'}
+            </button>
+            {mode === 'interval' && !revealed && (
+              <button onClick={revealAnswer} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem' }}>
+                Reveal Answer (resets streak)
+              </button>
+            )}
+            <button onClick={() => startNewRound()} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem' }}>
+              Skip
+            </button>
           </div>
 
-          {/* Fretboard */}
-          <section className="glass-panel" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.15rem', marginBottom: '0.75rem', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <span>Guitar Fretboard Guide</span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                <input type="checkbox" checked={showTargets} onChange={e => setShowTargets(e.target.checked)} />
-                Show targets (turn off for a harder ear workout)
+          {/* Mode-specific settings */}
+          <div style={{ paddingTop: '0.75rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+            {mode === 'scale' && (
+              <>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  Root:
+                  <select
+                    value={String(scaleRootPc)}
+                    onChange={e => setScaleRootPc(e.target.value === 'random' ? 'random' : Number(e.target.value))}
+                    className="select-field"
+                    style={{ width: 'auto', padding: '0.3rem 1.7rem 0.3rem 0.5rem', fontSize: '0.78rem' }}
+                  >
+                    {NOTE_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}
+                    <option value="random">Surprise me</option>
+                  </select>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  Scale:
+                  <select
+                    value={scaleIdx}
+                    onChange={e => setScaleIdx(Number(e.target.value))}
+                    className="select-field"
+                    style={{ width: 'auto', padding: '0.3rem 1.7rem 0.3rem 0.5rem', fontSize: '0.78rem' }}
+                  >
+                    {SCALE_FORMULAS.map((s, i) => (
+                      <option key={s.name} value={i}>{SCALE_FEELINGS[s.name]?.feeling ?? s.name} — {s.name}</option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            )}
+            {mode === 'chord' && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={chordSevenths} onChange={e => setChordSevenths(e.target.checked)} />
+                Include 7th chords (4 notes)
               </label>
-            </h3>
-            <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-              <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--warning)', marginRight: '0.35rem', verticalAlign: 'middle' }} />Play this now</span>
-              <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--success)', marginRight: '0.35rem', verticalAlign: 'middle' }} />{mode === 'interval' ? 'Reference note' : 'All notes in this challenge'}</span>
-              <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)', marginRight: '0.35rem', verticalAlign: 'middle' }} />What we're hearing from you</span>
+            )}
+            {mode === 'interval' && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={trickyIntervals} onChange={e => setTrickyIntervals(e.target.checked)} />
+                Include tricky intervals (m2, tritone, 6ths, 7ths)
+              </label>
+            )}
+          </div>
+        </section>
+
+        {/* Live listening panel. The only part of this screen that is a lie
+            without a microphone, so it is the only part that goes grey. */}
+        <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
+          <div className={`playhear${isActive ? '' : ' is-off'}`} aria-hidden={!isActive}>
+            <div style={{ textAlign: 'center' }}>
+              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Hearing</span>
+              <div style={{ fontSize: '3.2rem', fontWeight: 700, lineHeight: 1.1, color: pitch ? (currentTargetPc !== null && ((pitch.midi % 12) + 12) % 12 === currentTargetPc ? 'var(--success)' : 'var(--primary)') : 'var(--text-muted)' }}>
+                {pitch ? pitch.note : '--'}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                {pitch ? `${pitch.frequency.toFixed(1)} Hz · ${pitch.cents > 0 ? '+' : ''}${pitch.cents}c` : isActive ? 'silent' : 'not listening'}
+              </div>
             </div>
-            <Fretboard
-              activeMidis={heardMidis}
-              highlightCorrectMidis={contextMidis}
-              rootMidis={rootMidis}
-              interactive={false}
-            />
-          </section>
-        </>
-      )}
+
+            {/* Hold-to-confirm progress */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                <span>Hold to confirm</span>
+                <span>{holdPct}%</span>
+              </div>
+              <div style={{ height: '8px', background: 'var(--surface-3)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: `${holdPct}%`, height: '100%', background: 'var(--success)', boxShadow: '0 0 10px var(--success-glow)', transition: 'width 0.08s linear' }} />
+              </div>
+            </div>
+          </div>
+
+          <p style={{ textAlign: 'center', fontSize: '0.85rem', color: isActive ? feedbackColor : 'var(--text-muted)', minHeight: '2.4em', lineHeight: 1.4 }}>
+            {isActive
+              ? feedback.text
+              : 'These are answered by playing. Nothing is recorded or sent anywhere — the pitch is read in the browser and thrown away frame by frame.'}
+          </p>
+
+          {!isActive && (
+            <div className="micbar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><line x1="12" y1="19" x2="12" y2="22" />
+              </svg>
+              <span className="micbar-said">Grading starts once the challenge can hear you.</span>
+              <button onClick={start} className="btn btn-primary">Turn on the mic</button>
+            </div>
+          )}
+          {micError && <p className="micbar-error">{micError}</p>}
+        </section>
+      </div>
+
+      {/* Fretboard */}
+      <section className="glass-panel" style={{ padding: '1.5rem' }}>
+        <h3 style={{ fontSize: '1.15rem', marginBottom: '0.75rem', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <span>Guitar Fretboard Guide</span>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={showTargets} onChange={e => setShowTargets(e.target.checked)} />
+            Show targets (turn off for a harder ear workout)
+          </label>
+        </h3>
+        <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+          <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--warning)', marginRight: '0.35rem', verticalAlign: 'middle' }} />Play this now</span>
+          <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--success)', marginRight: '0.35rem', verticalAlign: 'middle' }} />{mode === 'interval' ? 'Reference note' : 'All notes in this challenge'}</span>
+          {isActive && (
+            <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)', marginRight: '0.35rem', verticalAlign: 'middle' }} />What we're hearing from you</span>
+          )}
+        </div>
+        <Fretboard
+          activeMidis={heardMidis}
+          highlightCorrectMidis={contextMidis}
+          rootMidis={rootMidis}
+          interactive={false}
+        />
+      </section>
     </div>
   );
 };

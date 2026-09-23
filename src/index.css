@@ -5458,12 +5458,31 @@ button.dash-card:hover .pickup-go svg {
   transition: opacity 0.25s ease, filter 0.25s ease;
 }
 
-.tunerface.is-off .tunerface-meter {
-  /* Legibly present, legibly off. Grayscale as well as fade, so an idle
-     meter never shows the green that means "stop turning". */
+/* Legibly present, legibly off. Grayscale as well as fade, so an idle meter
+   never shows the green that means "stop turning" — and the same on the
+   challenge screen, where green means the note was right. Two screens that
+   ask for a microphone, one way of standing there without one. */
+.tunerface.is-off .tunerface-meter,
+.playhear.is-off {
   opacity: 0.42;
   filter: grayscale(1);
   pointer-events: none;
+}
+
+.playhear {
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+
+/* A best from a previous session is the one number worth carrying into a
+   screen that has not started yet. */
+.play-best {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.play-best strong {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
 }
 
 .tuner-note {
