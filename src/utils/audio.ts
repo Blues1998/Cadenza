@@ -333,7 +333,17 @@ class AudioEngine {
   }
 
   // Play a crisp metronome woodblock click (fully schedulable in advance)
-  public playClick(time: number, accented: boolean) {
+  /**
+   * One tick of a metronome.
+   *
+   * `subdivision` is the third thing a metronome says, and it has to be a
+   * different event rather than a quieter beat: the eighths between the
+   * quarters are a texture you feel underneath the pulse, and if they arrive
+   * at the same weight the pulse stops being findable. So they are higher,
+   * much shorter and far quieter — audible when you listen for them, out of
+   * the way when you are listening to the beat.
+   */
+  public playClick(time: number, accented: boolean, subdivision = false) {
     this.init();
     if (!this.ctx || !this.masterGain) return;
 
@@ -344,15 +354,18 @@ class AudioEngine {
     gainNode.connect(this.masterGain);
 
     // Woody block sounds are simulated by sine waves around 800 - 1200Hz
-    const freq = accented ? 1100 : 750;
+    const freq = subdivision ? 1560 : accented ? 1100 : 750;
     osc.frequency.setValueAtTime(freq, time);
 
+    const peak = subdivision ? 0.09 : accented ? 0.5 : 0.35;
+    const decay = subdivision ? 0.018 : 0.045;
+
     gainNode.gain.setValueAtTime(0, time);
-    gainNode.gain.linearRampToValueAtTime(accented ? 0.5 : 0.35, time + 0.001);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, time + 0.045); // short decay
+    gainNode.gain.linearRampToValueAtTime(peak, time + 0.001);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, time + decay); // short decay
 
     osc.start(time);
-    osc.stop(time + 0.05);
+    osc.stop(time + decay + 0.005);
   }
 
   // Adjust master volume (0.0 to 1.0)

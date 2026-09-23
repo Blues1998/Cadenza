@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Segmented } from '../components/Segmented';
 import { LabIcon } from '../components/LabIcon';
+import { Pendulum } from '../components/Pendulum';
 import { usePlayKey } from '../hooks/usePlayKey';
 import { audio } from '../utils/audio';
+import { clearTempoLog, getTempoLog, heldLabel, logTempo, whenHeld, type TempoRun } from '../utils/tempoLog';
 import { reportProgress } from '../utils/progress';
 
 interface TapHit {
@@ -182,6 +184,83 @@ const TimingGraph: React.FC<{
   );
 };
 
+const BPM_MIN = 40;
+const BPM_MAX = 220;
+
+/**
+ * How often the ladder takes a rung.
+ *
+ * Eight bars is about twenty seconds at a hundred — long enough to have
+ * actually settled into a tempo rather than survived it, short enough that a
+ * ten-minute practice climbs somewhere.
+ */
+const RAMP_BARS = 8;
+
+const SUBDIVISIONS: { value: number; label: string; title: string }[] = [
+  { value: 1, label: '1', title: 'Quarters — one click to the beat' },
+  { value: 2, label: '2', title: 'Eighths — the down-up of a strumming hand' },
+  { value: 3, label: '3', title: 'Triplets — three to the beat' },
+  { value: 4, label: '4', title: 'Sixteenths' }
+];
+
+const RAMPS: { value: number; label: string; title: string }[] = [
+  { value: 0, label: 'Off', title: 'Hold the tempo where it is' },
+  { value: 2, label: '+2', title: `Two beats a minute faster every ${RAMP_BARS} bars` },
+  { value: 5, label: '+5', title: `Five beats a minute faster every ${RAMP_BARS} bars` }
+];
+
+/**
+ * Where the click has been, as a shape rather than a list.
+ *
+ * Oldest on the left, because that is the direction time reads in. Each run
+ * is a column up to the tempo it finished at, and the part of it above where
+ * the run *started* is in the accent — so a session that climbed shows the
+ * climb, and a page full of flat grey columns is telling you something true
+ * about the week.
+ *
+ * The scale starts a little under the slowest run rather than at zero: the
+ * question is never "is 96 more than nothing", it is "is tonight faster than
+ * Tuesday", and a bar chart anchored at zero answers the wrong one.
+ */
+const TempoHistory: React.FC<{ runs: TempoRun[]; onPick: (run: TempoRun) => void }> = ({ runs, onPick }) => {
+  const all = runs.flatMap(run => [run.from, run.to]);
+  // Both ends of the plot are labelled, so both ends have to be numbers the
+  // plot actually reaches — a top label sitting above the tallest bar is a
+  // chart telling a small lie about itself.
+  const hi = Math.ceil(Math.max(...all) / 4) * 4;
+  const lo = Math.max(0, Math.floor((Math.min(...all) - 8) / 4) * 4);
+  const at = (bpm: number) => ((bpm - lo) / (hi - lo)) * 100;
+
+  return (
+    <div className="tempohist">
+      <div className="tempohist-scale readout" aria-hidden="true">
+        <span>{hi}</span>
+        <span>{lo}</span>
+      </div>
+      <div className="tempohist-plot">
+        {[...runs].reverse().map(run => {
+          const top = at(run.to);
+          const climb = Math.max(0, top - at(run.from));
+          return (
+            <button
+              key={run.at}
+              type="button"
+              className="tempohist-col"
+              onClick={() => onPick(run)}
+              title={`${run.from === run.to ? `${run.to} bpm` : `${run.from} up to ${run.to} bpm`} in ${run.beatsPerBar}/4 · ${heldLabel(run.seconds)} · ${whenHeld(run.at)} — press to go back to it`}
+            >
+              <span className="tempohist-bar" style={{ height: `${top}%` }}>
+                {climb > 0 && <span className="tempohist-climb" style={{ height: `${(climb / top) * 100}%` }} />}
+              </span>
+              <span className="tempohist-num readout">{run.to}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const getTempoLabel = (bpmVal: number): string => {
   if (bpmVal < 60) return 'Largo (Very Slow)';
   if (bpmVal < 76) return 'Adagio (Slow)';
@@ -195,7 +274,14 @@ export const RhythmLab: React.FC = () => {
   const [bpm, setBpm] = useState<number>(100);
   const [timeSignature, setTimeSignature] = useState<number>(4); // beats per bar
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [currentBeat, setCurrentBeat] = useState<number>(0);
+  // Clicks to a beat. The pulse is always the beat; this is the texture under
+  // it, which is what a strumming hand is actually counting.
+  const [subdivision, setSubdivision] = useState<number>(1);
+  // Beats per minute added every RAMP_BARS bars, or 0 to stay put.
+  const [ramp, setRamp] = useState<number>(0);
+  // Bars heard so far this run — not bars scheduled, which is up to 120ms ahead.
+  const [bars, setBars] = useState<number>(0);
+  const [tempoLog, setTempoLog] = useState<TempoRun[]>(() => getTempoLog());
   
   // Rhythm game states
   const [isGameMode, setIsGameMode] = useState<boolean>(false);
@@ -207,7 +293,13 @@ export const RhythmLab: React.FC = () => {
   const isPlayingRef = useRef<boolean>(false);
   const bpmRef = useRef<number>(100);
   const timeSignatureRef = useRef<number>(4);
+  const subdivisionRef = useRef<number>(1);
+  const rampRef = useRef<number>(0);
   const schedulerTimerId = useRef<number | null>(null);
+
+  // What the current run is, for the log it leaves behind when it stops.
+  const runFrom = useRef<number>(100);
+  const runStarted = useRef<number>(0);
   
   const nextBeatTime = useRef<number>(0.0);    // precise audio clock time of next beat
   const beatIndex = useRef<number>(0);         // current beat counter within the measure
@@ -230,21 +322,54 @@ export const RhythmLab: React.FC = () => {
     timeSignatureRef.current = timeSignature;
   }, [timeSignature]);
 
+  useEffect(() => {
+    subdivisionRef.current = subdivision;
+  }, [subdivision]);
+
+  useEffect(() => {
+    rampRef.current = ramp;
+  }, [ramp]);
+
   // Metronome scheduler tick (runs every 25ms in JS loop)
   const scheduleNextBeats = () => {
     if (!isPlayingRef.current) return;
 
     const ctxTime = audio.getCurrentTime();
     const scheduleAheadTime = 0.12; // schedule 120ms ahead
-    const secondsPerBeat = 60.0 / bpmRef.current;
     const outputLatency = audio.getOutputLatency();
 
     while (nextBeatTime.current < ctxTime + scheduleAheadTime) {
-      const beatNum = beatIndex.current % timeSignatureRef.current;
+      const beatsPerBar = timeSignatureRef.current;
+      const beatNum = beatIndex.current % beatsPerBar;
       const isAccented = beatNum === 0;
+
+      // The ladder takes its rung on the bar line, which is where a change of
+      // tempo belongs — arriving mid-bar it reads as the click slipping.
+      if (isAccented && beatIndex.current > 0 && rampRef.current > 0) {
+        const bar = beatIndex.current / beatsPerBar;
+        if (bar % RAMP_BARS === 0) {
+          const faster = Math.min(BPM_MAX, bpmRef.current + rampRef.current);
+          if (faster !== bpmRef.current) {
+            bpmRef.current = faster;
+            setBpm(faster);
+          }
+        }
+      }
+
+      // Read after the ramp, so the bar it changes on is already the new tempo.
+      const secondsPerBeat = 60.0 / bpmRef.current;
 
       // 1. Play synthesized woodblock tick at the exact audio time
       audio.playClick(nextBeatTime.current, isAccented);
+
+      // The ticks between this beat and the next. Audio only: they are a
+      // texture to play against, not events to be graded, and putting them in
+      // the candidate list would let a tap land halfway between two beats and
+      // be told it was perfect.
+      const sub = subdivisionRef.current;
+      for (let s = 1; s < sub; s++) {
+        audio.playClick(nextBeatTime.current + (s * secondsPerBeat) / sub, false, true);
+      }
 
       // 2. Keep record of the scheduled beat for the tapping match logic
       scheduledBeats.current.push({
@@ -259,17 +384,6 @@ export const RhythmLab: React.FC = () => {
         accented: isAccented
       });
 
-      // Sync active beat visualization with the UI
-      const currentScheduledTime = nextBeatTime.current;
-      const scheduleIndex = beatNum;
-      
-      const timeToVisual = (currentScheduledTime - ctxTime) * 1000;
-      setTimeout(() => {
-        if (isPlayingRef.current) {
-          setCurrentBeat(scheduleIndex);
-        }
-      }, Math.max(0, timeToVisual));
-
       // Advance clock
       nextBeatTime.current += secondsPerBeat;
       beatIndex.current++;
@@ -278,6 +392,27 @@ export const RhythmLab: React.FC = () => {
     // Prune beats older than 2 seconds — long past any grading window
     scheduledBeats.current = scheduledBeats.current.filter(b => b.audioTime > ctxTime - 2);
   };
+
+  /**
+   * Where the beat is now, continuously, in the time the click is heard.
+   *
+   * `nextBeatTime` is the first beat not yet scheduled and `beatIndex` is its
+   * number, so counting back from the pair gives a position that is exact at
+   * the instant of every tick and smooth in between. Latency is added because
+   * the drawing has to agree with the ear, not with the scheduler: the click
+   * written at T is heard at T plus the output latency, and a pendulum that
+   * hit its stop before you heard the tick would be the one thing on this page
+   * teaching the wrong lesson.
+   *
+   * Stable, so the drawing's animation frame is never torn down and rebuilt
+   * by a re-render of this screen.
+   */
+  const beatAt = useCallback((): number | null => {
+    if (!isPlayingRef.current) return null;
+    const secondsPerBeat = 60 / bpmRef.current;
+    const heardNext = nextBeatTime.current + audio.getOutputLatency();
+    return beatIndex.current - (heardNext - audio.getCurrentTime()) / secondsPerBeat;
+  }, []);
 
   const startMetronome = () => {
     audio.init();
@@ -289,7 +424,9 @@ export const RhythmLab: React.FC = () => {
     timelineTaps.current = [];
     nextBeatTime.current = audio.getCurrentTime() + 0.05;
     beatIndex.current = 0;
-    setCurrentBeat(0);
+    setBars(0);
+    runFrom.current = bpmRef.current;
+    runStarted.current = Date.now();
 
     // Run scheduler loop every 25 milliseconds
     schedulerTimerId.current = window.setInterval(scheduleNextBeats, 25);
@@ -297,11 +434,21 @@ export const RhythmLab: React.FC = () => {
 
   const stopMetronome = () => {
     setIsPlaying(false);
+    isPlayingRef.current = false;
     if (schedulerTimerId.current !== null) {
       clearInterval(schedulerTimerId.current);
       schedulerTimerId.current = null;
     }
-    setCurrentBeat(0);
+    if (runStarted.current > 0) {
+      setTempoLog(logTempo({
+        from: runFrom.current,
+        to: bpmRef.current,
+        beatsPerBar: timeSignatureRef.current,
+        seconds: (Date.now() - runStarted.current) / 1000
+      }));
+      runStarted.current = 0;
+    }
+    setBars(0);
   };
 
   // Toggle Metronome on click
@@ -417,11 +564,23 @@ export const RhythmLab: React.FC = () => {
   // tap with, which is still "what this screen does when you press Space".
   usePlayKey(() => { if (isGameMode) handleTap(); else handleTogglePlay(); });
 
-  // Clean up timers on unmount
+  // Clean up timers on unmount — and leave the log behind, because walking
+  // off to the chord page is a way of stopping the metronome too and a run
+  // that only counted when you pressed the button would quietly lose half of
+  // them.
   useEffect(() => {
     return () => {
       if (schedulerTimerId.current) {
         clearInterval(schedulerTimerId.current);
+      }
+      if (runStarted.current > 0) {
+        logTempo({
+          from: runFrom.current,
+          to: bpmRef.current,
+          beatsPerBar: timeSignatureRef.current,
+          seconds: (Date.now() - runStarted.current) / 1000
+        });
+        runStarted.current = 0;
       }
     };
   }, []);
@@ -447,7 +606,7 @@ export const RhythmLab: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <button 
-                onClick={() => setBpm(prev => Math.max(40, prev - 5))} 
+                onClick={() => setBpm(prev => Math.max(BPM_MIN, prev - 5))} 
                 className="btn" 
                 style={{ padding: '0.5rem 1rem' }}
               >
@@ -455,14 +614,14 @@ export const RhythmLab: React.FC = () => {
               </button>
               <input
                 type="range"
-                min="40"
-                max="220"
+                min={BPM_MIN}
+                max={BPM_MAX}
                 value={bpm}
                 onChange={(e) => setBpm(Number(e.target.value))}
                 style={{ flex: 1, accentColor: 'var(--primary)', cursor: 'pointer' }}
               />
               <button 
-                onClick={() => setBpm(prev => Math.min(220, prev + 5))} 
+                onClick={() => setBpm(prev => Math.min(BPM_MAX, prev + 5))} 
                 className="btn" 
                 style={{ padding: '0.5rem 1rem' }}
               >
@@ -487,56 +646,30 @@ export const RhythmLab: React.FC = () => {
               </select>
             </div>
 
-            <Segmented
-              label="Mode"
-              value={isGameMode}
-              onChange={(v) => { setIsGameMode(v); stopMetronome(); }}
-              tone={isGameMode ? 'secondary' : 'primary'}
-              options={[
-                { value: false, label: 'Solo' },
-                { value: true, label: 'Game' }
-              ]}
+            <Segmented<number>
+              label="Clicks per beat"
+              value={subdivision}
+              onChange={setSubdivision}
+              options={SUBDIVISIONS}
+              size="sm"
               full
             />
           </div>
 
-          {/* Visual Beat Indicator Dots */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', padding: '1rem 0' }}>
-            {Array.from({ length: timeSignature }).map((_, idx) => {
-              const isActive = currentBeat === idx && isPlaying;
-              const isFirstBeat = idx === 0;
+          <Segmented
+            label="Mode"
+            value={isGameMode}
+            onChange={(v) => { setIsGameMode(v); stopMetronome(); }}
+            tone={isGameMode ? 'secondary' : 'primary'}
+            options={[
+              { value: false, label: 'Solo' },
+              { value: true, label: 'Game' }
+            ]}
+            full
+          />
 
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    width: isFirstBeat ? '24px' : '20px',
-                    height: isFirstBeat ? '24px' : '20px',
-                    borderRadius: '50%',
-                    background: isActive 
-                      ? (isFirstBeat ? 'var(--success)' : 'var(--primary)') 
-                      : 'var(--surface-3)',
-                    border: '1px solid',
-                    borderColor: isActive
-                      ? (isFirstBeat ? 'var(--success)' : 'var(--primary)')
-                      : 'rgba(var(--surface-tint-rgb), 0.1)',
-                    boxShadow: isActive
-                      ? (isFirstBeat ? '0 0 15px var(--success-glow)' : '0 0 15px var(--primary-glow)')
-                      : 'none',
-                    transition: 'all 0.05s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold',
-                    color: isActive ? 'var(--text-on-primary)' : 'var(--text-muted)'
-                  }}
-                >
-                  {idx + 1}
-                </div>
-              );
-            })}
-          </div>
+          {/* The one thing on this page that knows the tempo. */}
+          <Pendulum beatsPerBar={timeSignature} subdivision={subdivision} at={beatAt} onBar={setBars} />
 
           <button
             onClick={handleTogglePlay}
@@ -564,24 +697,74 @@ export const RhythmLab: React.FC = () => {
           </h3>
 
           {!isGameMode ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.55 }}>
-              <p style={{ margin: 0 }}>
+            <div className="rhythm-practice">
+              <p className="rhythm-lead">
                 Play along until your note and the tick stop being two sounds.
               </p>
 
-              {[
-                'Start slower than feels necessary.',
-                'Clean twice in a row? Add 5 BPM.',
-                'Beat 1 is the higher click. Lost it — restart, don\u2019t catch up.',
-                'When it\u2019s easy, count two bars without the click.'
-              ].map(line => (
-                <div key={line} style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
-                  <span aria-hidden="true" style={{ flexShrink: 0, width: '5px', height: '5px', borderRadius: '50%', background: 'var(--primary)', marginTop: '0.5rem' }} />
-                  <span>{line}</span>
-                </div>
-              ))}
+              {/* "Clean twice in a row? Add 5 BPM" was one of the four notes
+                  under this heading, which made it the player's job to watch
+                  the bar count and remember. It is a thing a metronome can do. */}
+              <Segmented<number>
+                label={`Speed up · every ${RAMP_BARS} bars`}
+                value={ramp}
+                onChange={setRamp}
+                options={RAMPS}
+                size="sm"
+                full
+              />
 
-              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', paddingTop: '0.75rem' }}>
+              {/* Something that changes while it runs, on a page where nothing did. */}
+              {isPlaying ? (
+                <p className="rhythm-live readout">
+                  <span>bar {bars + 1}</span>
+                  <span className="rhythm-live-bpm">{bpm} bpm</span>
+                  {ramp > 0 && bpm > runFrom.current && (
+                    <span className="rhythm-live-climb">up {bpm - runFrom.current} from {runFrom.current}</span>
+                  )}
+                </p>
+              ) : (
+                <p className="rhythm-live is-off readout">not running</p>
+              )}
+
+              <div className="rhythm-tips">
+                {[
+                  'Start slower than feels necessary.',
+                  'Beat 1 is the higher click. Lost it \u2014 restart, don\u2019t catch up.',
+                  'When it\u2019s easy, count two bars without the click.'
+                ].map(line => (
+                  <div key={line} className="rhythm-tip">
+                    <span className="rhythm-dot" aria-hidden="true" />
+                    <span>{line}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Not a record and not a claim — this page has no ear. It is
+                  the answer to "what was I at last night?", which is the
+                  question you actually have when you sit down. */}
+              <div className="rhythm-been">
+                <div className="surface-label">
+                  <span>Where the click has been</span>
+                  {tempoLog.length > 0 && (
+                    <button type="button" className="rhythm-forget" onClick={() => setTempoLog(clearTempoLog())}>
+                      Forget
+                    </button>
+                  )}
+                </div>
+                {tempoLog.length === 0 ? (
+                  <p className="rhythm-none">
+                    Run it for a quarter of a minute and it starts remembering where you were.
+                  </p>
+                ) : (
+                  <TempoHistory
+                    runs={tempoLog}
+                    onPick={run => { setBpm(run.to); setTimeSignature(run.beatsPerBar); }}
+                  />
+                )}
+              </div>
+
+              <p className="rhythm-key">
                 <kbd className="key-hint">Space</kbd> starts and stops.
               </p>
             </div>
@@ -601,7 +784,7 @@ export const RhythmLab: React.FC = () => {
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Game Pace:</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <button 
-                    onClick={() => setBpm(prev => Math.max(40, prev - 10))} 
+                    onClick={() => setBpm(prev => Math.max(BPM_MIN, prev - 10))} 
                     className="btn" 
                     style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
                     title="Slower (-10 BPM)"
@@ -612,7 +795,7 @@ export const RhythmLab: React.FC = () => {
                     {bpm} BPM ({getTempoLabel(bpm)})
                   </strong>
                   <button 
-                    onClick={() => setBpm(prev => Math.min(220, prev + 10))} 
+                    onClick={() => setBpm(prev => Math.min(BPM_MAX, prev + 10))} 
                     className="btn" 
                     style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
                     title="Faster (+10 BPM)"
