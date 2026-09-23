@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Theme } from '../hooks/useTheme';
 import type { ActiveTab } from './navGroups';
-import { IconSun, IconMoon } from './Icons';
+import { IconJump, IconSun, IconMoon } from './Icons';
 import { GROUPS } from './navGroups';
 import { preloadLab } from '../labs/chunks';
 
@@ -13,6 +13,8 @@ interface SidebarProps {
   setActiveTab: (tab: ActiveTab) => void;
   theme: Theme;
   toggleTheme: () => void;
+  /** Open the jump panel. ⌘K is only a door if you own a keyboard. */
+  onJump: () => void;
 }
 
 const COLLAPSED_KEY = 'sidebar-collapsed';
@@ -24,7 +26,7 @@ const COLLAPSED_KEY = 'sidebar-collapsed';
 // would dock whatever else was still moving.
 const FLASH_CLOCK = 'channelIconFlash';
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme, toggleTheme }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme, toggleTheme, onJump }) => {
   // Collapsed = icon-only rail; the preference persists across sessions
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try {
@@ -150,6 +152,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
           </svg>
         </button>
         {!collapsed && <h1 className="console-wordmark">CADENZA</h1>}
+        {/* The rail lists twelve destinations and the panel behind this also
+            holds every song and every drill. On a phone there is no ⌘K, so
+            without a handle the whole panel was unreachable. */}
+        <button
+          type="button"
+          className="console-jump navmark"
+          onClick={onJump}
+          aria-label="Jump to"
+          title="Jump to — ⌘K"
+        >
+          <IconJump size={15} aria-hidden="true" />
+        </button>
       </div>
 
       {/* Channels. Only the live one is marked — a single orange bar down its

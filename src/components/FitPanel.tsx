@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CapoBar } from './CapoBar';
+import { IconSection } from './Icons';
 import { ChordCard } from './ChordCard';
 import { fitSong, scoreLine, spokenFor, type FitOption } from '../utils/fit';
 import { updateSong } from '../utils/library';
@@ -47,7 +48,7 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
     return (
       <section className="song-panel fit">
         <div className="surface-label">
-          <span>Fit</span>
+          <IconSection kind="fit" /><span>Fit</span>
           <span className="readout">{now.capo === 0 ? 'no capo' : `capo ${now.capo}`}</span>
         </div>
         <CapoBar verdict={verdict} onApply={apply} />
@@ -82,7 +83,7 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
   return (
     <section className="song-panel fit">
       <div className="surface-label">
-        <span>Fit</span>
+        <IconSection kind="fit" /><span>Fit</span>
         <span className="readout">{now.capo === 0 ? 'no capo' : `capo ${now.capo}`}</span>
       </div>
 

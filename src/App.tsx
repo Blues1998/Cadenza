@@ -166,7 +166,9 @@ function App() {
   return (
     <div className={`app-container${running ? ' has-run' : ''}`}>
       {/* Sidebar Navigation */}
-      <Sidebar activeTab={activeTab} setActiveTab={navigate} theme={theme} toggleTheme={toggleTheme} />
+      <Sidebar activeTab={activeTab} setActiveTab={navigate} theme={theme} toggleTheme={toggleTheme}
+            onJump={() => setOverlay(o => (o === 'jump' ? null : 'jump'))}
+          />
 
       {/* Main Panel Content Area */}
       {/* key on the tab so each lab mounts fresh and plays the entrance

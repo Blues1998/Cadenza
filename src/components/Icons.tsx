@@ -191,3 +191,98 @@ export const IconBeats: React.FC<IconProps> = ({ size = 14, ...props }) => (
     <line x1="20" y1="5.5" x2="20" y2="18.5" />
   </svg>
 );
+
+/**
+ * The one door to everywhere.
+ *
+ * Twelve destinations, nine template levels and every song need a way in that
+ * is not a list, and ⌘K is only a door if you own a keyboard — on a phone the
+ * panel had no handle at all.
+ */
+export const IconJump: React.FC<IconProps> = ({ size = 16, ...props }) => (
+  <svg {...base(size)} strokeWidth={2.1} {...props}>
+    <circle className="jumpmark-ring" cx="10.5" cy="10.5" r="6.5" />
+    <line x1="15.4" y1="15.4" x2="20.5" y2="20.5" />
+  </svg>
+);
+
+/**
+ * Your library, leaving or arriving.
+ *
+ * One drawing for the pair, because they are one idea in two directions:
+ * the arrow drops out of the tray to write a file and rises into it to read
+ * one. Two unrelated glyphs beside each other would make them look like two
+ * unrelated jobs.
+ */
+export const IconTray: React.FC<IconProps & { dir: 'out' | 'in' }> = ({ size = 15, dir, ...props }) => (
+  <svg {...base(size)} strokeWidth={2} className={`tray is-${dir}`} {...props}>
+    <path d="M4 15.5v2.8a1.7 1.7 0 0 0 1.7 1.7h12.6a1.7 1.7 0 0 0 1.7-1.7v-2.8" />
+    <g className="tray-arrow">
+      {dir === 'out'
+        ? <><line x1="12" y1="3.6" x2="12" y2="14.4" /><polyline points="7.6 10 12 14.4 16.4 10" /></>
+        : <><line x1="12" y1="14.4" x2="12" y2="3.6" /><polyline points="7.6 8 12 3.6 16.4 8" /></>}
+    </g>
+  </svg>
+);
+
+/**
+ * The only thing in this app that takes something away for good.
+ *
+ * It was the plainest element on the song page — a bare text link under the
+ * notes. A destructive action should not be the quietest mark on a screen,
+ * and it should not be the loudest either: muted until you reach for it, and
+ * then unmistakable.
+ */
+export const IconTrash: React.FC<IconProps> = ({ size = 14, ...props }) => (
+  <svg {...base(size)} strokeWidth={2} className="trash" {...props}>
+    <g className="trash-lid">
+      <line x1="3.8" y1="6.2" x2="20.2" y2="6.2" />
+      <path d="M9.4 6.2V4.6a1.4 1.4 0 0 1 1.4-1.4h2.4a1.4 1.4 0 0 1 1.4 1.4v1.6" />
+    </g>
+    <path d="M6.2 6.2h11.6l-.9 13a1.6 1.6 0 0 1-1.6 1.5H8.7a1.6 1.6 0 0 1-1.6-1.5z" />
+  </svg>
+);
+
+/**
+ * The marks on a song page's section headings.
+ *
+ * A song page is a tall stack of identical uppercase labels, so finding
+ * "Chart" meant reading rather than glancing. One 14px glyph per heading makes
+ * the page scannable by shape.
+ *
+ * Deliberately still — eight animated marks on one page is a fairground, and
+ * these are wayfinding rather than events. One component rather than nine
+ * exports because they are one idea: the shapes a song is made of.
+ */
+export type SectionKind =
+  | 'next' | 'chords' | 'fit' | 'strumming' | 'confidence'
+  | 'practice' | 'chart' | 'session' | 'notes';
+
+const SECTION: Record<SectionKind, React.ReactNode> = {
+  // The carry from last time: something pointing forward.
+  next: <><line x1="4" y1="12" x2="18" y2="12" /><polyline points="12.5 6.5 19 12 12.5 17.5" /></>,
+  // A chord box: strings, frets and a finger on one of them.
+  chords: <><line x1="6" y1="4" x2="6" y2="20" /><line x1="12" y1="4" x2="12" y2="20" /><line x1="18" y1="4" x2="18" y2="20" /><line x1="4" y1="8" x2="20" y2="8" /><circle cx="12" cy="13.5" r="2" fill="currentColor" stroke="none" /></>,
+  // A capo clamped across the strings. Drawn the other way up from the chord
+  // box above it on purpose: at 14px two marks made of the same lines in the
+  // same orientation are one mark, and the whole point is scanning by shape.
+  fit: <><line x1="3" y1="7" x2="21" y2="7" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="17" x2="21" y2="17" /><rect x="7" y="3.2" width="4.6" height="17.6" rx="2.3" fill="currentColor" stroke="none" /></>,
+  // The arm, down and up.
+  strumming: <><line x1="8.5" y1="4" x2="8.5" y2="19" /><polyline points="4.5 14.5 8.5 19 12.5 14.5" /><line x1="15.5" y1="20" x2="15.5" y2="5" /><polyline points="11.5 9.5 15.5 5 19.5 9.5" /></>,
+  // A dial, because that is what a nought-to-ten is.
+  confidence: <><path d="M4 17a8 8 0 1 1 16 0" /><line x1="12" y1="17" x2="16.5" y2="10.5" /></>,
+  // Minutes.
+  practice: <><circle cx="12" cy="12" r="8.5" /><polyline points="12 6.8 12 12 15.8 14" /></>,
+  // The words, with the changes landing over them.
+  chart: <><line x1="4" y1="6" x2="11" y2="6" /><line x1="15" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="14" y2="18" /></>,
+  // A stopwatch: the thing the timer on this page is.
+  session: <><circle cx="12" cy="13.5" r="7.5" /><line x1="9.5" y1="2.8" x2="14.5" y2="2.8" /><line x1="12" y1="2.8" x2="12" y2="6" /><polyline points="12 9.5 12 13.5 15 15.5" /></>,
+  // What you wrote down.
+  notes: <><path d="M4 20l1-4.2L15.6 5.2a2 2 0 0 1 2.8 0l1.4 1.4a2 2 0 0 1 0 2.8L9.2 20z" /><line x1="14.2" y1="6.6" x2="18.4" y2="10.8" /></>
+};
+
+export const IconSection: React.FC<IconProps & { kind: SectionKind }> = ({ size = 14, kind, ...props }) => (
+  <svg {...base(size)} strokeWidth={1.9} className="section-mark" aria-hidden="true" {...props}>
+    {SECTION[kind]}
+  </svg>
+);

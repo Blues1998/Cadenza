@@ -3,7 +3,7 @@ import { ChordDiagram } from './ChordDiagram';
 import { audio } from '../utils/audio';
 import { Segmented } from './Segmented';
 import { StrumGrid } from './StrumGrid';
-import { IconPause, IconPlay, IconStop } from './Icons';
+import { IconPause, IconPlay, IconSection, IconStop } from './Icons';
 import { COMFORT_LABEL, comfortOf, preferredVoicing } from '../utils/chordbook';
 import { fitSong } from '../utils/fit';
 import { songChords, updateSong } from '../utils/library';
@@ -160,7 +160,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   return (
     <section className="song-panel chart-panel">
       <div className="surface-label">
-        <span>Chart</span>
+        <IconSection kind="chart" /><span>Chart</span>
         {lines.length > 0 && (
           <span className="readout">
             {chart.lines.length} lines · {chart.chords.length} chords · {chartDuration(chart.totalBeats, settings.tempo)}

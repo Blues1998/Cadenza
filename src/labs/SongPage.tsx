@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordCard } from '../components/ChordCard';
 import { FitPanel } from '../components/FitPanel';
-import { IconBest, IconPlay } from '../components/Icons';
+import { IconBest, IconPlay, IconSection, IconTrash } from '../components/Icons';
 import { StrumChip } from '../components/StrumChip';
 import { Segmented } from '../components/Segmented';
 import { SongChartPanel } from '../components/SongChartPanel';
@@ -234,7 +234,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
 
       {lastAction && (
         <p className="song-carry">
-          <span className="surface-label">Next action</span>
+          <span className="surface-label"><IconSection kind="next" />Next action</span>
           {lastAction}
         </p>
       )}
@@ -242,7 +242,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
       <div className="song-body">
         <section className="song-panel song-chords">
           <div className="surface-label">
-            <span>Chords</span>
+            <IconSection kind="chords" /><span>Chords</span>
             <span className="readout">
               {chords.length > 0
                 ? `${chordStanding.solid + chordStanding.shaky} of ${chords.length} in your hands`
@@ -295,7 +295,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
 
           {progressions.length > 0 && (
             <>
-              <div className="surface-label song-subhead"><span>Progressions</span></div>
+              <div className="surface-label song-subhead"><IconSection kind="chart" /><span>Progressions</span></div>
               <ol className="progression-list">
                 {progressions.map((prog, i) => (
                   <li key={i}>
@@ -340,7 +340,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
         <div className="song-side">
           <FitPanel song={song} />
           <section className="song-panel">
-            <div className="surface-label"><span>Strumming</span></div>
+            <div className="surface-label"><IconSection kind="strumming" /><span>Strumming</span></div>
             {song.strumming ? (
               <>
                 <p className="strumming-pattern readout">{song.strumming}</p>
@@ -371,7 +371,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
 
           <section className="song-panel">
             <div className="surface-label">
-              <span>Confidence</span>
+              <IconSection kind="confidence" /><span>Confidence</span>
               <span className="readout">{song.confidence}/10</span>
             </div>
             <input
@@ -390,7 +390,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
           </section>
 
           <section className="song-panel song-minutes">
-            <div className="surface-label"><span>Practice</span></div>
+            <div className="surface-label"><IconSection kind="practice" /><span>Practice</span></div>
             <dl className="minute-pair">
               <div><dt>Today</dt><dd className="readout">{todayMinutes} min</dd></div>
               <div><dt>Total</dt><dd className="readout">{total} min</dd></div>
@@ -403,7 +403,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
 
       <section className="song-panel practice-panel">
         <div className="surface-label">
-          <span>Practice session</span>
+          <IconSection kind="session" /><span>Practice session</span>
           {sessions.length > 0 && <span className="readout">{sessions.length} logged</span>}
         </div>
 
@@ -471,7 +471,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
       </section>
 
       <section className="song-panel">
-        <div className="surface-label"><span>Notes</span></div>
+        <div className="surface-label"><IconSection kind="notes" /><span>Notes</span></div>
         <textarea
           className="text-field song-notes"
           rows={3}
@@ -494,7 +494,14 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
             <button type="button" className="btn" onClick={() => setConfirmDelete(false)}>Keep it</button>
           </>
         ) : (
-          <button type="button" className="song-delete-link" onClick={() => setConfirmDelete(true)}>
+          <button
+            type="button"
+            className="song-delete-link"
+            onClick={() => setConfirmDelete(true)}
+            aria-label="Delete this song"
+            title="Delete this song and its practice log"
+          >
+            <IconTrash size={15} />
             Delete song
           </button>
         )}

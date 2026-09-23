@@ -3,6 +3,7 @@ import { DayGrid } from '../components/DayGrid';
 import { LabIcon } from '../components/LabIcon';
 import { Segmented } from '../components/Segmented';
 import { SongPage } from './SongPage';
+import { IconTray } from '../components/Icons';
 import { useLibrary } from '../hooks/useLibrary';
 import {
   challengeProgress,
@@ -185,8 +186,14 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
           <button type="button" className="btn btn-primary" onClick={() => setDraft(blankDraft(progress.currentDay))}>
             Add song
           </button>
-          <button type="button" className="btn" onClick={doExport}>Export</button>
-          <button type="button" className="btn" onClick={() => fileInput.current?.click()}>Import</button>
+          {/* Add song keeps its words — it is what this page is for. These two
+              are the pair either side of it, and a pair reads as a pair. */}
+          <button type="button" className="btn btn-tray" onClick={doExport} aria-label="Export your library" title="Export your library to a file">
+            <IconTray dir="out" aria-hidden="true" />
+          </button>
+          <button type="button" className="btn btn-tray" onClick={() => fileInput.current?.click()} aria-label="Import a library file" title="Import a library file">
+            <IconTray dir="in" aria-hidden="true" />
+          </button>
           <input
             ref={fileInput}
             type="file"
