@@ -4035,9 +4035,52 @@ button.dash-card:hover .pickup-go svg {
   color: var(--text-muted);
 }
 
+/* This row is operated mid-practice, at arm's length, often with a guitar in
+   the way. Words were the wrong instrument for it — so the tap target, the
+   beats-per-bar mark and the metronome carry what four labels used to, and
+   Tempo keeps its word because the number beside it is the point. */
 .chart-tap {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.8rem;
+  position: relative;
+  padding: 0.42rem;
+  overflow: visible;
+}
+
+/* The receipt for a press. Until the second tap the number does not move, so
+   without this a tap that registered and one that did not look identical. */
+.chart-tap-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 var(--primary-glow);
+  animation: tapRing 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes tapRing {
+  from { box-shadow: 0 0 0 0 var(--primary); opacity: 0.55; }
+  to { box-shadow: 0 0 0 11px var(--primary); opacity: 0; }
+}
+
+.chart-click {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.chart-click:hover {
+  background: var(--surface-3);
+  color: var(--text-secondary);
+}
+
+.chart-click.is-on {
+  color: var(--primary);
 }
 
 .chart-signature {
@@ -4047,6 +4090,8 @@ button.dash-card:hover .pickup-go svg {
 }
 
 .chart-signature .field-label {
+  display: inline-flex;
+  align-items: center;
   margin-bottom: 0;
   font-size: 0.72rem;
   color: var(--text-muted);
@@ -5112,6 +5157,88 @@ button.dash-card:hover .pickup-go svg {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--primary);
+}
+
+/* ---------------------------------------------------------------------------
+   One mark for "you are about to hear something"
+   ---------------------------------------------------------------------------
+   It had four words across four screens — Hear it, Sound on, Listen — plus a
+   play triangle that also meant "start the exercise" two buttons along. The
+   waves live while the audio does, so the mark reports the state and the
+   label never has to. */
+
+.sounding-wave {
+  opacity: 0.45;
+  transform-origin: 12px 12px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Collapsed into the cone when nothing is sounding. */
+.sounding:not(.is-live) .sounding-wave {
+  opacity: 0;
+  transform: scaleX(0.4);
+}
+
+.sounding.is-live .sounding-wave.is-near {
+  animation: soundNear 1.1s ease-in-out infinite;
+}
+
+.sounding.is-live .sounding-wave.is-far {
+  animation: soundFar 1.1s ease-in-out infinite 0.18s;
+}
+
+@keyframes soundNear {
+  0%, 100% { opacity: 0.35; transform: scaleX(0.82); }
+  45% { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes soundFar {
+  0%, 100% { opacity: 0.12; transform: scaleX(0.7); }
+  45% { opacity: 0.85; transform: scaleX(1); }
+}
+
+/* A preset in the alphabet the grid below it speaks. */
+.strumchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
+.strumchip-face {
+  color: var(--text-secondary);
+}
+
+/* A rest is part of the shape of the bar and has to hold its column so the
+   strokes stay on their beats — but it is not a stroke, and at full weight a
+   chip of mostly rests reads as a busy pattern rather than a sparse one. */
+.strumchip-face.is-rest {
+  color: var(--text-muted);
+  opacity: 0.32;
+  font-size: 0.64em;
+  width: 0.62em;
+  text-align: center;
+}
+
+.strumchip-face.is-x {
+  color: var(--text-muted);
+}
+
+/* The downbeats, so the shape of the bar reads as well as its strokes. */
+.strumchip-face.is-beat {
+  color: var(--text-primary);
+}
+
+.chip-btn:hover .strumchip-face,
+.chip-btn.is-on .strumchip-face {
+  color: var(--primary);
+}
+
+/* Being considered, not taken. */
+.strumgrid.is-ghost {
+  opacity: 0.55;
 }
 
 /* A lab with no more to say. Some screens are a small tool and will not fill a

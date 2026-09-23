@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
-import { IconPause, IconPlay, IconStop, IconX } from './Icons';
+import { IconBeats, IconMetronome, IconPause, IconPlay, IconStop, IconTap, IconX } from './Icons';
+import { StrumChip } from './StrumChip';
 import { LoopShelf, type LoopSetup } from './LoopShelf';
 import { LoopResult, type RunResult } from './LoopResult';
 import { LoopStage } from './LoopStage';
@@ -78,6 +79,12 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
     [slots, beatsPerBar]
   );
   const pattern = useMemo(() => parseStrum(patternText, beatsPerBar), [patternText, beatsPerBar]);
+  // A preset being considered rather than taken. Nothing is written until the
+  // chip is actually pressed.
+  const [ghost, setGhost] = useState<string | null>(null);
+  const ghosted = useMemo(() => (ghost ? parseStrum(ghost, beatsPerBar) : null), [ghost, beatsPerBar]);
+  const ghosting = ghosted !== null && ghost !== patternText;
+  const shown = ghosting ? ghosted : pattern;
   // Shapes the loop insists on — a drill saying which grip it is about. Empty
   // for anything built by hand, which is nearly everything that comes through
   // here, and then every chord is sounded with the one you play it with.
@@ -341,7 +348,13 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
   };
 
   const taps = useRef<number[]>([]);
+  // A press has to leave a mark of its own. Setting a tempo by tapping is the
+  // one control here whose whole job is the instant you touched it, and
+  // without a receipt a tap that did not register looks the same as one that
+  // did — the number only moves from the second tap onwards.
+  const [tapPulse, setTapPulse] = useState(0);
   const tapTempo = () => {
+    setTapPulse(n => n + 1);
     const now = performance.now();
     const kept = [...taps.current, now].filter(t => now - t < 3000).slice(-5);
     taps.current = kept;
@@ -560,19 +573,51 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           />
         </label>
         <span className="chart-bpm readout">{tempo}<span> bpm</span></span>
-        <button type="button" className="btn chart-tap" onClick={tapTempo}>Tap</button>
+        <button
+          type="button"
+          className="btn chart-tap"
+          onClick={tapTempo}
+          aria-label="Tap a tempo"
+          title="Tap a tempo — press it on four beats"
+        >
+          <IconTap size={15} aria-hidden="true" />
+          {tapPulse > 0 && <span key={tapPulse} className="chart-tap-ring" aria-hidden="true" />}
+        </button>
 
         <label className="chart-signature">
-          <span className="field-label">Beats/bar</span>
-          <select className="select-field" value={beatsPerBar} disabled={running} onChange={e => setBeatsPerBar(Number(e.target.value))}>
+          <span className="field-label" title="Beats in a bar">
+            <IconBeats size={14} aria-hidden="true" />
+            <span className="sr-only">Beats per bar</span>
+          </span>
+          <select
+            className="select-field"
+            value={beatsPerBar}
+            disabled={running}
+            aria-label="Beats per bar"
+            title="Beats in a bar"
+            onChange={e => setBeatsPerBar(Number(e.target.value))}
+          >
             {BEATS_PER_BAR.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
         </label>
 
-        <label className="chart-toggle">
-          <input type="checkbox" checked={click} onChange={e => setClick(e.target.checked)} />
-          Click
-        </label>
+        {/* The arm keeps the time this row is setting: it is handed the beat,
+            and it sits upright when the click is off. */}
+        <button
+          type="button"
+          className={`chart-click${click ? ' is-on' : ''}`}
+          onClick={() => setClick(on => !on)}
+          aria-pressed={click}
+          aria-label="Click"
+          title={click ? 'Click on — press to silence it' : 'Click off — press to hear it'}
+        >
+          <IconMetronome
+            size={17}
+            lean={click && moving ? (beat % 2 === 0 ? -1 : 1) : 0}
+            swingMs={Math.round(60000 / tempo)}
+            aria-hidden="true"
+          />
+        </button>
 
         {/* Keep and discard, side by side, because they are the two things
             you can do with a finished loop and putting them anywhere else
@@ -646,20 +691,36 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
             <button
               key={idea}
               type="button"
-              className={`chip-btn readout${idea === patternText ? ' is-on' : ''}`}
+              className={`chip-btn${idea === patternText ? ' is-on' : ''}`}
+              title={idea}
+              aria-label={idea}
               onClick={() => setPatternText(idea)}
+              onMouseEnter={() => setGhost(idea)}
+              onFocus={() => setGhost(idea)}
+              onMouseLeave={() => setGhost(null)}
+              onBlur={() => setGhost(null)}
             >
-              {idea}
+              <StrumChip text={idea} beatsPerBar={beatsPerBar} />
             </button>
           ))}
         </div>
-        {pattern ? (
+        {shown ? (
           <>
-            <StrumGrid pattern={pattern} live={slot} onChange={setPatternText} />
+            {/* Ghosted while a chip is only being considered: the grid is
+                where you read a pattern, so the question "what would that one
+                do" is answered in the place the answer already lives. */}
+            <StrumGrid
+              pattern={shown}
+              live={ghosting ? -1 : slot}
+              onChange={ghosting ? undefined : setPatternText}
+              ghost={ghosting}
+            />
             <p className="quickplay-strumnote readout">
-              {strokeCount(pattern) === 0
-                ? 'nothing lands — the chords will not sound'
-                : `${strokeCount(pattern)} stroke${strokeCount(pattern) === 1 ? '' : 's'} over ${pattern.bars} bar${pattern.bars === 1 ? '' : 's'} · press a cell to change it${pattern.bars > 1 ? ' · × drops a bar' : ''}`}
+              {ghosting
+                ? `${ghost} — press the chip to take it`
+                : strokeCount(shown) === 0
+                  ? 'nothing lands — the chords will not sound'
+                  : `${strokeCount(shown)} stroke${strokeCount(shown) === 1 ? '' : 's'} over ${shown.bars} bar${shown.bars === 1 ? '' : 's'} · press a cell to change it${shown.bars > 1 ? ' · × drops a bar' : ''}`}
             </p>
           </>
         ) : (

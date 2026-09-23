@@ -25,7 +25,7 @@ import type {
 import { useTabIntervalSource } from '../hooks/useTabIntervalSource';
 import type { TabIntervalCandidate } from '../utils/tabIntervalSource';
 import { CHORD_FEELINGS } from '../utils/glossary';
-import { IconSpeaker } from '../components/Icons';
+import { IconSounding } from '../components/Icons';
 
 // Two of the longer 7th-chord names get an abbreviated parenthetical
 // (everything else is short enough to show in full) — the feeling word
@@ -583,7 +583,7 @@ export const EarTrainingLab: React.FC = () => {
                 <h3 style={{ fontSize: '1.1rem' }}>Listen & Identify</h3>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button onClick={playSound} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    <IconSounding />
                     Replay
                   </button>
                   {quizMode === 'intervals' && (
@@ -684,7 +684,7 @@ export const EarTrainingLab: React.FC = () => {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                     <span>Melody Clue Reference</span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>Click <IconSpeaker size={12} /> to hear reference</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>Click <IconSounding size={12} /> to hear reference</span>
                   </div>
                   {getPossibleIntervals().map((interval) => (
                     <div 
@@ -707,7 +707,7 @@ export const EarTrainingLab: React.FC = () => {
                         style={{ padding: '2px 6px', fontSize: '0.7rem' }}
                         title="Hear reference interval"
                       >
-                        <IconSpeaker />
+                        <IconSounding />
                       </button>
                     </div>
                   ))}

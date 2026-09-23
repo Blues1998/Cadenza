@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordCard } from '../components/ChordCard';
 import { FitPanel } from '../components/FitPanel';
 import { IconBest, IconPlay } from '../components/Icons';
+import { StrumChip } from '../components/StrumChip';
 import { Segmented } from '../components/Segmented';
 import { SongChartPanel } from '../components/SongChartPanel';
 import { StrumGrid } from '../components/StrumGrid';
@@ -355,10 +356,12 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
                     <button
                       key={p}
                       type="button"
-                      className="chip-btn readout"
+                      className="chip-btn"
+                      title={p}
+                      aria-label={p}
                       onClick={() => void updateSong(song.id, { strumming: p })}
                     >
-                      {p}
+                      <StrumChip text={p} beatsPerBar={song.chart?.beatsPerBar ?? 4} />
                     </button>
                   ))}
                 </div>

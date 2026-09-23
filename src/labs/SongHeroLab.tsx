@@ -10,7 +10,7 @@ import { useSongChart } from '../hooks/useSongChart';
 import type { JudgedEvent } from '../hooks/useSongChart';
 import { useComputerKeyboardInstrument, SEMITONE_TO_KEY } from '../hooks/useComputerKeyboardInstrument';
 import { useGuitarChordKeyboard } from '../hooks/useGuitarChordKeyboard';
-import { IconPlay, IconStop } from '../components/Icons';
+import { IconPlay, IconSounding, IconStop } from '../components/Icons';
 
 export const SongHeroLab: React.FC = () => {
   const [selectedId, setSelectedId] = useState(SONG_CHARTS[0].id);
@@ -102,7 +102,7 @@ export const SongHeroLab: React.FC = () => {
 
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <button className="btn" onClick={() => handleStart('listen')} disabled={isSessionActive} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-            <IconPlay /> Listen
+            <IconSounding live={listeningNow} /> Listen
           </button>
           <button className="btn btn-primary" onClick={() => handleStart('play')} disabled={isSessionActive} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
             <IconPlay /> Play

@@ -40,6 +40,10 @@
 /** Down, up, a muted chuck, or a pass with no contact. */
 export type Stroke = 'D' | 'U' | 'X' | '-';
 
+/** An arrow says which way the arm went; a letter would have to be learned. */
+export const STROKE_FACE: Record<Stroke, string> = { D: '↓', U: '↑', X: '✕', '-': '·' };
+export const STROKE_NAME: Record<Stroke, string> = { D: 'Down', U: 'Up', X: 'Muted', '-': 'No contact' };
+
 /**
  * What pressing a cell steps through, which depends on where the cell is.
  *

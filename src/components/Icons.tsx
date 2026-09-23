@@ -110,3 +110,84 @@ export const IconBest: React.FC<IconProps> = ({ size = 14, ...props }) => (
     <polyline points="16 6.5 21 6.5 21 11.5" />
   </svg>
 );
+
+/**
+ * The click, as the thing that makes it.
+ *
+ * `lean` is which side the arm is on — the caller hands it the beat, and the
+ * arm alternates, so the mark on the control keeps the time the control is
+ * setting. Nought is upright, which is where a metronome sits when it is off.
+ * `swingMs` is one beat, so the travel takes exactly as long as a beat does
+ * and the swing reads as tempo rather than as decoration.
+ */
+export const IconMetronome: React.FC<IconProps & { lean?: -1 | 0 | 1; swingMs?: number }> = ({
+  size = 15,
+  lean = 0,
+  swingMs = 400,
+  ...props
+}) => (
+  <svg {...base(size)} strokeWidth={1.9} {...props}>
+    <path d="M9.2 3.5h5.6l4.2 17H5z" />
+    <line x1="5.8" y1="15.5" x2="18.2" y2="15.5" />
+    <line
+      className="metro-arm"
+      x1="12"
+      y1="19"
+      x2="12"
+      y2="6"
+      style={{
+        transform: `rotate(${lean * 19}deg)`,
+        transformOrigin: '12px 19px',
+        transition: `transform ${swingMs}ms cubic-bezier(0.37, 0, 0.63, 1)`
+      }}
+    />
+  </svg>
+);
+
+/**
+ * Where to press to set a tempo by hand.
+ *
+ * Rings rather than a hand or a drum: what the control does is take the
+ * moment of a press, and a target is the only mark that means "the instant
+ * you touch here" without borrowing an idea from somewhere else.
+ */
+export const IconTap: React.FC<IconProps> = ({ size = 14, ...props }) => (
+  <svg {...base(size)} strokeWidth={1.9} {...props}>
+    <circle cx="12" cy="12" r="9.2" />
+    <circle cx="12" cy="12" r="4.6" />
+    <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+/**
+ * One mark for every "you are about to hear something" in the app.
+ *
+ * It had four words — Hear it, Sound on, Listen, and a bare play triangle that
+ * also meant "start the exercise" two buttons along. A cone with waves means
+ * one thing, and `live` is whether the waves are moving, so the mark reports
+ * the state instead of the label having to change.
+ */
+export const IconSounding: React.FC<IconProps & { live?: boolean }> = ({ size = 15, live = false, ...props }) => (
+  <svg {...base(size)} strokeWidth={1.9} className={`sounding${live ? ' is-live' : ''}`} {...props}>
+    <path d="M4 9.5h3.2L12 5.2v13.6L7.2 14.5H4z" />
+    <path className="sounding-wave is-near" d="M15.4 9.6a4 4 0 0 1 0 4.8" />
+    <path className="sounding-wave is-far" d="M18.1 7.2a7.8 7.8 0 0 1 0 9.6" />
+  </svg>
+);
+
+/**
+ * How many beats there are in a bar.
+ *
+ * Deliberately still. This row already has a swinging arm and a rippling
+ * target on it, and a third moving thing would make the one control you read
+ * mid-bar the hardest to read.
+ */
+export const IconBeats: React.FC<IconProps> = ({ size = 14, ...props }) => (
+  <svg {...base(size)} strokeWidth={1.9} {...props}>
+    <line x1="4" y1="5.5" x2="20" y2="5.5" />
+    <line x1="4" y1="5.5" x2="4" y2="18.5" />
+    <line x1="9.3" y1="5.5" x2="9.3" y2="18.5" />
+    <line x1="14.7" y1="5.5" x2="14.7" y2="18.5" />
+    <line x1="20" y1="5.5" x2="20" y2="18.5" />
+  </svg>
+);

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { audio } from '../utils/audio';
 import { NOTE_NAMES } from '../utils/musicTheory';
 import { reportProgress } from '../utils/progress';
-import { IconPlay, IconStop } from '../components/Icons';
+import { IconSounding } from '../components/Icons';
 import { LabIcon } from '../components/LabIcon';
 
 // ---- Shared drawing helpers ----
@@ -118,9 +118,18 @@ const HarmonicExplorer: React.FC = () => {
     ctx.shadowBlur = 0;
   }, [amps]);
 
+  // Lit for exactly as long as the tone lasts, so the mark on the button is
+  // reporting the sound rather than the press.
+  const [ringing, setRinging] = useState(false);
+  const ringTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (ringTimer.current) clearTimeout(ringTimer.current); }, []);
+
   const play = () => {
     const bus = audio.getMasterBus();
     if (!bus) return;
+    setRinging(true);
+    if (ringTimer.current) clearTimeout(ringTimer.current);
+    ringTimer.current = window.setTimeout(() => setRinging(false), 1900);
     const { ctx, input } = bus;
     // Build the exact waveform shown on the canvas via a PeriodicWave
     const real = new Float32Array(amps.length + 1);
@@ -173,7 +182,7 @@ const HarmonicExplorer: React.FC = () => {
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={play} className="btn btn-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-          <IconPlay /> Hear it
+          <IconSounding live={ringing} /> Hear it
         </button>
         {HARMONIC_PRESETS.map(p => (
           <button key={p.name} onClick={() => setAmps(p.amps)} className="btn" style={{ padding: '0.4rem 0.7rem', fontSize: '0.75rem' }}>
@@ -335,7 +344,8 @@ const RatioExplorer: React.FC = () => {
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={sounding ? stopDuo : startDuo} className={`btn ${sounding ? 'btn-secondary' : 'btn-primary'}`} style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-          {sounding ? <><IconStop /> Stop Sound</> : <><IconPlay /> Sound on</>}
+          <IconSounding live={sounding} />
+          {sounding ? 'Stop sound' : 'Sound on'}
         </button>
         <span style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)', color: locked ? 'var(--success)' : 'var(--text-secondary)' }}>
           {BASE_HZ} Hz + {f2.toFixed(1)} Hz · ratio {ratio.toFixed(3)} ·

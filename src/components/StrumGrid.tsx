@@ -1,18 +1,15 @@
 import React from 'react';
 import {
+  STROKE_FACE as FACE,
+  STROKE_NAME as NAME,
   countLabel,
   nextStroke,
   onBeat,
   perBar,
   withStroke,
   withoutBar,
-  type Stroke,
   type StrumPattern
 } from '../utils/strum';
-
-/** An arrow says which way the arm went; a letter would have to be learned. */
-const FACE: Record<Stroke, string> = { D: '↓', U: '↑', X: '✕', '-': '·' };
-const NAME: Record<Stroke, string> = { D: 'Down', U: 'Up', X: 'Muted', '-': 'No contact' };
 
 interface StrumGridProps {
   pattern: StrumPattern;
@@ -20,6 +17,8 @@ interface StrumGridProps {
   live?: number;
   /** Given the whole pattern rewritten, when a cell or a bar is pressed. */
   onChange?: (text: string) => void;
+  /** A pattern being considered rather than the one in force. */
+  ghost?: boolean;
 }
 
 /**
@@ -39,12 +38,12 @@ interface StrumGridProps {
  * The count runs above it — 1 & 2 & — because that is the part people already
  * have, and against it the pattern reads without being explained.
  */
-export const StrumGrid: React.FC<StrumGridProps> = ({ pattern, live = -1, onChange }) => {
+export const StrumGrid: React.FC<StrumGridProps> = ({ pattern, live = -1, onChange, ghost = false }) => {
   const slots = perBar(pattern);
   const sounding = live >= 0 ? live % pattern.steps.length : -1;
 
   return (
-    <div className="strumgrid" role={onChange ? 'group' : 'img'}
+    <div className={`strumgrid${ghost ? ' is-ghost' : ''}`} role={onChange ? 'group' : 'img'}
       aria-label={onChange ? 'Strumming pattern' : `Strumming pattern: ${pattern.steps.join(' ')}`}>
       {Array.from({ length: pattern.bars }, (_, bar) => (
         <div className="strumbar" key={bar} style={{ ['--slots' as string]: slots }}>
