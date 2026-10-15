@@ -203,7 +203,6 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
 
       <header className="song-head">
         <div>
-          {song.day && <span className="song-day readout">Day {String(song.day).padStart(2, '0')}</span>}
           <h2 className="lab-title">{song.title}</h2>
           <p className="song-artist">{song.artist || 'Unknown artist'}</p>
           <p className="song-meta readout">

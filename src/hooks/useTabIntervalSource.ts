@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { AlphaTabApi } from '@coderline/alphatab';
-import { GUITAR_SOUNDFONT_URL, DEFAULT_GUITAR_TONE, setScoreInstrument } from '../utils/guitarTones';
+import type { AlphaTabApi } from '@coderline/alphatab';
 import { assetUrl } from '../utils/assetUrl';
 import { extractIntervalCandidates } from '../utils/tabIntervalSource';
 import type { TabIntervalCandidate } from '../utils/tabIntervalSource';
@@ -56,7 +55,12 @@ export function useTabIntervalSource(): TabIntervalSource {
     };
   }, []);
 
-  const ensureApi = useCallback((): AlphaTabApi => {
+  const ensureApi = useCallback(async (): Promise<AlphaTabApi> => {
+    if (apiRef.current) return apiRef.current;
+
+    const [{ AlphaTabApi }, { GUITAR_SOUNDFONT_URL, DEFAULT_GUITAR_TONE, setScoreInstrument }] =
+      await Promise.all([import('@coderline/alphatab'), import('../utils/guitarTones')]);
+
     if (apiRef.current) return apiRef.current;
 
     // Off-screen but not display:none/zero-size — alphaTab warns and waits
@@ -120,17 +124,19 @@ export function useTabIntervalSource(): TabIntervalSource {
     setCandidates([]);
     setSelectedTab(entry);
     midiReadyRef.current = false;
-    const api = ensureApi();
-    loadTabBlob(entry.id)
-      .then((data) => {
-        if (!data) {
-          setError('Could not load this tab for practice.');
-          setIsLoading(false);
-          return;
-        }
-        api.load(new Uint8Array(data));
+    ensureApi()
+      .then((api) => {
+        return loadTabBlob(entry.id).then((data) => {
+          if (!data) {
+            setError('Could not load this tab for practice.');
+            setIsLoading(false);
+            return;
+          }
+          api.load(new Uint8Array(data));
+        });
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('Ear Training tab source error', err);
         setError('Could not load this tab for practice.');
         setIsLoading(false);
       });

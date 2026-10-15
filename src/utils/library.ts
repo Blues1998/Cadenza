@@ -36,7 +36,7 @@ import {
 import { exportRecords, importRecords, loadRecords, type LoopRecord } from './records';
 import { parseProgressions, uniqueChords } from './songText';
 import { linesFromText, type ChartLineRecord } from './chart';
-import { SEED_CHALLENGE, SEED_SONGS } from '../data/septemberSeed';
+import { INITIAL_SONGS } from '../data/septemberSeed';
 
 export type SongStatus = 'learning' | 'playable' | 'solid' | 'complete';
 
@@ -195,7 +195,7 @@ export function initLibrary(): Promise<void> {
   if (readyPromise) return readyPromise;
   readyPromise = (async () => {
     kind = await storageKind();
-    const [loadedSongs, loadedSessions, loadedChallenges, settings] = await Promise.all([
+    const [loadedSongs, loadedSessions, _loadedChallenges, settings] = await Promise.all([
       readAll<Song>('songs'),
       readAll<PracticeSession>('sessions'),
       readAll<Challenge>('challenges'),
@@ -207,21 +207,18 @@ export function initLibrary(): Promise<void> {
     ]);
     songs = loadedSongs.map(song => ({ ...song, chart: migrateChart(song.chart) }));
     sessions = loadedSessions;
-    challenge = loadedChallenges[0] ?? null;
+    challenge = null;
 
-    // First run on this machine: bring in the September tracker, so the app
-    // opens on the real month rather than on an empty shell that has to be
-    // typed back in. Flagged in settings, so clearing the library on purpose
-    // does not silently refill it.
-    const seeded = settings.find(s => s.id === SEEDED_SETTING);
-    if (!seeded && songs.length === 0 && !challenge) {
-      songs = SEED_SONGS.map(s => ({ ...s }));
-      challenge = { ...SEED_CHALLENGE };
-      await Promise.all([
-        putRecords('songs', songs),
-        putRecords('challenges', [challenge]),
-        putRecords('settings', [{ id: SEEDED_SETTING, value: true }])
-      ]);
+    // Bring in all 36 songs from the Excel workbook and retire the 30-day challenge
+    const EXCEL_MIGRATION_SETTING = 'seeded-excel-songs-v1';
+    const excelMigrated = settings.find(s => s.id === EXCEL_MIGRATION_SETTING);
+    if (!excelMigrated) {
+      await clearStore('challenges');
+      challenge = null;
+      songs = INITIAL_SONGS.map(song => ({ ...song, chart: migrateChart(song.chart) }));
+      await clearStore('songs');
+      await putRecords('songs', songs);
+      await putRecords('settings', [{ id: EXCEL_MIGRATION_SETTING, value: true }]);
     }
     ready = true;
     announce();

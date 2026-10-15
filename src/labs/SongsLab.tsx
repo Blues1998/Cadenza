@@ -1,12 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { DayGrid } from '../components/DayGrid';
 import { LabIcon } from '../components/LabIcon';
 import { Segmented } from '../components/Segmented';
 import { SongPage } from './SongPage';
 import { IconTray } from '../components/Icons';
 import { useLibrary } from '../hooks/useLibrary';
 import {
-  challengeProgress,
   createSong,
   exportLibrary,
   getSong,
@@ -20,7 +18,7 @@ import {
   storageLabel,
   totalMinutes
 } from '../utils/library';
-import type { Song, SongStatus } from '../utils/library';
+import type { SongStatus } from '../utils/library';
 import { capoLabel, parseCapo } from '../utils/songText';
 
 interface SongsLabProps {
@@ -28,9 +26,9 @@ interface SongsLabProps {
   /** Open a song, or (null) go back to the list. `replace` for a correction
    *  rather than a move — see the dead-link effect below. */
   onOpenSong: (id: string | null, replace?: boolean) => void;
-  /** Set when Home sent you here to write today's song down. 0 = no day. */
-  draftDay: number | null;
-  onDraftOpened: () => void;
+  /** Set when Home sent you here to write a new song down. */
+  openDraft?: boolean;
+  onDraftOpened?: () => void;
 }
 
 type Filter = 'all' | SongStatus | 'revisit';
@@ -41,8 +39,7 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: 'revisit', label: 'Revisit' }
 ];
 
-const blankDraft = (day: number | null) => ({
-  day: day ? String(day) : '',
+const blankDraft = () => ({
   title: '',
   artist: '',
   key: '',
@@ -53,7 +50,7 @@ const blankDraft = (day: number | null) => ({
   confidence: '0'
 });
 
-export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, draftDay, onDraftOpened }) => {
+export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, openDraft, onDraftOpened }) => {
   const ready = useLibrary();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -61,7 +58,6 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
   const [notice, setNotice] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const progress = challengeProgress();
   const stats = practiceStats();
   const songs = getSongs();
 
@@ -73,14 +69,13 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [focusSongId]);
 
-  // Arriving from Home's empty state: open the form already on today's day,
-  // then hand the intent back so a later re-render does not reopen it over
-  // something you have since typed.
+  // Arriving from Home's empty state: open the form, then hand the intent back
+  // so a later re-render does not reopen it over something you have since typed.
   useEffect(() => {
-    if (draftDay === null) return;
-    setDraft(blankDraft(draftDay > 0 ? draftDay : null));
-    onDraftOpened();
-  }, [draftDay, onDraftOpened]);
+    if (!openDraft) return;
+    setDraft(blankDraft());
+    onDraftOpened?.();
+  }, [openDraft, onDraftOpened]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -93,13 +88,12 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
         return [song.title, song.artist, song.key, song.chordsRaw, songChords(song).join(' ')]
           .some(field => field.toLowerCase().includes(q));
       })
-      // Challenge days first and in order; anything off the calendar follows,
-      // newest first, so an added song does not vanish into the middle.
+      // Sequence in original workbook order, with any newer songs naturally placed
       .sort((a, b) => {
         if (a.day && b.day) return a.day - b.day;
         if (a.day) return -1;
         if (b.day) return 1;
-        return b.createdAt - a.createdAt;
+        return a.title.localeCompare(b.title);
       });
   }, [songs, query, filter]);
 
@@ -114,20 +108,12 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
     if (ready && focusSongId && !focused) onOpenSong(null, true);
   }, [ready, focusSongId, focused, onOpenSong]);
 
-  // A challenge day holds one song. Two on the same day meant one of them was
-  // unreachable from the calendar, so the form says so rather than silently
-  // taking the entry.
-  const draftDayNumber = draft?.day ? Number(draft.day) : null;
-  const dayClash = draftDayNumber ? songs.find(s => s.day === draftDayNumber) : undefined;
-
   const submitDraft = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!draft || !draft.title.trim() || dayClash) return;
-    const day = draft.day ? Number(draft.day) : null;
+    if (!draft || !draft.title.trim()) return;
     const song = await createSong({
       title: draft.title,
       artist: draft.artist,
-      day: day && day >= 1 && day <= progress.dayCount ? day : null,
       key: draft.key,
       capo: parseCapo(draft.capo),
       chordsRaw: draft.chordsRaw,
@@ -165,25 +151,20 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
     return <div className="songs-loading readout">Opening your library…</div>;
   }
 
-  const pickDay = (day: number, song: Song | null) => {
-    if (song) onOpenSong(song.id);
-    else setDraft(blankDraft(day));
-  };
-
   return (
     <div className="songs">
       <header className="songs-head">
         <div>
-          <h2 className="lab-title"><LabIcon tab="library" />{progress.challenge?.name ?? 'Songs'}</h2>
+          <h2 className="lab-title"><LabIcon tab="library" />Repertoire</h2>
           <p className="songs-count readout">
-            <strong>{String(progress.entered).padStart(2, '0')}</strong> / {progress.dayCount || songs.length}
+            <strong>{songs.length}</strong> {songs.length === 1 ? 'song' : 'songs'}
             <span className="songs-count-sub">
-              {progress.complete} complete · {stats.totalMinutes} min logged
+              {stats.songsComplete} complete · {stats.totalMinutes} min logged
             </span>
           </p>
         </div>
         <div className="songs-actions">
-          <button type="button" className="btn btn-primary" onClick={() => setDraft(blankDraft(progress.currentDay))}>
+          <button type="button" className="btn btn-primary" onClick={() => setDraft(blankDraft())}>
             Add song
           </button>
           {/* Add song keeps its words — it is what this page is for. These two
@@ -208,12 +189,6 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
         </div>
       </header>
 
-      {progress.dayCount > 0 && (
-        <section className="songs-calendar">
-          <DayGrid byDay={progress.byDay} currentDay={progress.currentDay} onPick={pickDay} size="md" />
-        </section>
-      )}
-
       {notice && (
         <p className="songs-notice" role="status">
           {notice}
@@ -226,11 +201,6 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
         <form className="song-draft" onSubmit={e => void submitDraft(e)}>
           <div className="surface-label"><span>New song</span></div>
           <div className="draft-grid">
-            <label className="song-field draft-day">
-              <span className="field-label">Day</span>
-              <input className="text-field readout" inputMode="numeric" value={draft.day}
-                onChange={e => setDraft(d => d && { ...d, day: e.target.value.replace(/\D/g, '') })} />
-            </label>
             <label className="song-field draft-title">
               <span className="field-label">Title</span>
               {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
@@ -264,13 +234,8 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
             </label>
           </div>
           <div className="draft-actions">
-            <button type="submit" className="btn btn-primary" disabled={!draft.title.trim() || !!dayClash}>Add song</button>
+            <button type="submit" className="btn btn-primary" disabled={!draft.title.trim()}>Add song</button>
             <button type="button" className="btn" onClick={() => setDraft(null)}>Cancel</button>
-            {dayClash && (
-              <span className="draft-clash">
-                Day {draftDayNumber} already has “{dayClash.title}”. Clear the day to keep this one in the library.
-              </span>
-            )}
           </div>
         </form>
       )}
@@ -300,12 +265,12 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
       {visible.length === 0 ? (
         <p className="songs-empty">
           {songs.length === 0
-            ? 'No songs yet. Add the first one and the month starts.'
+            ? 'No songs in repertoire yet. Add your first song to begin.'
             : 'Nothing matches that.'}
         </p>
       ) : (
         <ul className="songlist">
-          {visible.map(song => {
+          {visible.map((song, index) => {
             const chords = songChords(song);
             return (
               <li key={song.id}>
@@ -315,20 +280,13 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, dra
                   onClick={() => onOpenSong(song.id)}
                   title={`${song.title} — ${STATUS_LABEL[song.status]}`}
                 >
-                  {/* How far along, as the row's own edge. Eight rows of the
-                      same two shouted words was the loudest thing on a quiet
-                      page, and said it in the column furthest from the title
-                      it was about. */}
                   <span className={`songrow-state is-${song.status}`} aria-hidden="true" />
                   <span className="songrow-day readout">
-                    {song.day ? String(song.day).padStart(2, '0') : '—'}
+                    #{String(index + 1).padStart(2, '0')}
                   </span>
                   <span className="songrow-name">
                     <span className="songrow-titleline">
                       <span className="songrow-title">{song.title}</span>
-                      {/* Marked here, toggled on the song's own page — a second
-                          control inside a row that is itself a button is a
-                          click you have to aim at. */}
                       {song.revisit && <span className="revisit-flag readout">revisit</span>}
                     </span>
                     <span className="songrow-artist">{song.artist}</span>

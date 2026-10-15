@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import type { ActiveTab } from '../components/Sidebar';
-import { DayGrid } from '../components/DayGrid';
 import { WeekPanel } from '../components/WeekPanel';
 import { assetUrl } from '../utils/assetUrl';
 import { ALL_LEVELS, isLevelComplete } from '../utils/journey';
 import { subscribeProgress } from '../utils/progress';
 import { useLibrary } from '../hooks/useLibrary';
 import {
-  challengeProgress,
+  getSongs,
   lastPractised,
   minutesOn,
   practiceStats,
+  STATUS_LABEL,
   today,
   totalMinutes
 } from '../utils/library';
@@ -23,7 +23,7 @@ import { weekLine, weekRecap } from '../utils/weekly';
 interface DashboardLandingProps {
   setActiveTab: (tab: ActiveTab) => void;
   onOpenSong: (id: string) => void;
-  onAddSongForDay: (day: number | null) => void;
+  onAddSong: () => void;
 }
 
 const fmtWhen = (iso: string): string => {
@@ -39,12 +39,11 @@ const fmtWhen = (iso: string): string => {
  *
  * It is not a launcher any more — the rail on the left already is one, and a
  * grid of the same ten destinations was the rail said twice. What is here
- * instead is the state of the month: the song that is today's, the shape of
- * the thirty days, what has actually been played, and the one thing left
- * unfinished. Everything on the page is either a fact from the library or a
- * way into it.
+ * instead is the state of your repertoire: the song currently in practice,
+ * the shape of your library, what has actually been played, and the one thing
+ * left unfinished.
  */
-export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab, onOpenSong, onAddSongForDay }) => {
+export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab, onOpenSong, onAddSong }) => {
   const [, setTick] = useState(0);
   useEffect(() => subscribeProgress(() => setTick(t => t + 1)), []);
   const ready = useLibrary();
@@ -53,18 +52,24 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
   const total = ALL_LEVELS.length;
   const pct = Math.round((done / total) * 100);
 
-  const progress = challengeProgress();
   const stats = practiceStats();
   const recap = weekRecap();
-  const todaySong = progress.todaySong;
+  const songs = getSongs();
   const prompt = promptForDate();
 
-  // The song you were last at, skipping the one already filling the top of the
-  // page — repeating it would waste the only other card that can carry an
-  // unfinished thing. Skipping rather than blanking: when today's song was also
-  // the last one played, this card used to say nothing had been played at all,
-  // directly under a card counting the minutes.
-  const pickUp: { song: Song; date: string } | null = lastPractised(todaySong?.id ?? null);
+  // Find the most relevant active song:
+  // 1. Most recently practiced song, or
+  // 2. First song currently in 'learning' status, or
+  // 3. First song in repertoire
+  const lastPlayed = lastPractised(null);
+  const learningSong = songs.find(s => s.status === 'learning');
+  const activeSong: Song | null = lastPlayed?.song ?? learningSong ?? songs[0] ?? null;
+
+  // The secondary card: a different recently played song, or another song from the library
+  const pickUp: { song: Song; date: string } | null = lastPractised(activeSong?.id ?? null);
+  const alternativeSong: Song | null = !pickUp ? (songs.find(s => s.id !== activeSong?.id) ?? null) : null;
+
+  const learningCount = songs.filter(s => s.status === 'learning').length;
 
   return (
     <div className="dash">
@@ -80,31 +85,34 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         </div>
       </header>
 
-      {/* Today. The one card that is allowed to be big. */}
+      {/* Active practice card */}
       {ready && (
-        todaySong ? (
+        activeSong ? (
           <section className="today">
             <div className="today-mark">
-              <span className="surface-label">Today · Song a day</span>
-              <span className="today-day readout">Day {String(todaySong.day ?? progress.currentDay ?? 0).padStart(2, '0')}</span>
+              <span className="surface-label">
+                {lastPlayed?.song?.id === activeSong.id ? 'Active Practice · Pick Up' : 'Active Practice · In Repertoire'}
+              </span>
+              <span className="today-day readout">{STATUS_LABEL[activeSong.status]}</span>
             </div>
-            <h3 className="today-title">{todaySong.title}</h3>
-            <p className="today-artist">{todaySong.artist}</p>
+            <h3 className="today-title">{activeSong.title}</h3>
+            <p className="today-artist">{activeSong.artist || 'Unknown artist'}</p>
             <p className="today-meta readout">
-              {todaySong.key}{todaySong.key && ' · '}{capoLabel(todaySong.capo)}
+              {activeSong.key}{activeSong.key && ' · '}{capoLabel(activeSong.capo)}
+              {activeSong.chordsRaw && <span className="today-chords"> · {activeSong.chordsRaw}</span>}
             </p>
             <div className="today-stats">
               <span className="today-stat">
-                <span className="readout">{todaySong.confidence}/10</span> confidence
+                <span className="readout">{activeSong.confidence}/10</span> confidence
               </span>
               <span className="today-stat">
-                <span className="readout">{minutesOn(todaySong.id, today())} min</span> today
+                <span className="readout">{minutesOn(activeSong.id, today())} min</span> today
               </span>
               <span className="today-stat">
-                <span className="readout">{totalMinutes(todaySong)} min</span> in total
+                <span className="readout">{totalMinutes(activeSong)} min</span> in total
               </span>
             </div>
-            <button type="button" className="btn btn-primary today-go" onClick={() => onOpenSong(todaySong.id)}>
+            <button type="button" className="btn btn-primary today-go" onClick={() => onOpenSong(activeSong.id)}>
               Continue practice
               <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
@@ -114,29 +122,18 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         ) : (
           <section className="today is-empty">
             <div className="today-mark">
-              <span className="surface-label">Today · Song a day</span>
-              {progress.currentDay && (
-                <span className="today-day readout">Day {String(progress.currentDay).padStart(2, '0')}</span>
-              )}
+              <span className="surface-label">Song Repertoire</span>
             </div>
-            <h3 className="today-title">
-              {progress.currentDay ? 'No song yet for today'
-                : progress.challenge ? 'Today is outside this challenge'
-                : 'No challenge running'}
-            </h3>
+            <h3 className="today-title">No songs in library yet</h3>
             <p className="today-artist">
-              {progress.currentDay
-                ? 'Pick one, write down its key and chords, and the day starts.'
-                : progress.challenge
-                  ? `${progress.challenge.name} ran ${progress.challenge.startDate} to ${progress.challenge.endDate}. The library is still open.`
-                  : 'Your songs are still here, with no month around them.'}
+              Add songs to your repertoire to log practice, manage chord charts, and track your progress.
             </p>
             <button
               type="button"
               className="btn btn-primary today-go"
-              onClick={() => onAddSongForDay(progress.currentDay)}
+              onClick={() => onAddSong()}
             >
-              {progress.currentDay ? "Add today's song" : 'Open the library'}
+              Add first song
               <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
               </svg>
@@ -145,11 +142,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         )
       )}
 
-      {/* One press instead of a decision.
-          Deciding what to practise is itself work, and it falls due at the
-          exact moment somebody has picked up a guitar and would rather be
-          playing. This answers it: tune, two things actually in your way,
-          then the song you are on. */}
+      {/* One press instead of a decision */}
       {ready && !getRun() && (
         <button type="button" className="dash-run" onClick={() => startRun()}>
           <span className="dash-run-said">
@@ -167,23 +160,47 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       )}
 
       <div className="dash-row">
-        {/* The month, as a shape. */}
-        <button type="button" className="dash-card challenge-card" onClick={() => setActiveTab('library')}>
+        {/* Repertoire overview card */}
+        <button type="button" className="dash-card repertoire-card" onClick={() => setActiveTab('library')}>
           <div className="card-head">
-            <span className="surface-label">{progress.challenge?.name ?? 'Songs'}</span>
-            {progress.dayCount > 0 && (
-              <span className="card-count readout">
-                <strong>{String(progress.entered).padStart(2, '0')}</strong>/{progress.dayCount}
+            <span className="surface-label">Repertoire</span>
+            <span className="card-count readout">
+              <strong>{stats.songsEntered}</strong> {stats.songsEntered === 1 ? 'song' : 'songs'}
+            </span>
+          </div>
+
+          <div className="repertoire-summary">
+            <div className="repertoire-stat-row">
+              <span className="rep-stat-item">
+                <span className="rep-dot is-learning" />
+                <span className="readout">{learningCount}</span> learning
               </span>
+              <span className="rep-stat-item">
+                <span className="rep-dot is-complete" />
+                <span className="readout">{stats.songsComplete}</span> complete
+              </span>
+              <span className="rep-stat-item">
+                <span className="rep-dot is-revisit" />
+                <span className="readout">{stats.revisitCount}</span> revisit
+              </span>
+            </div>
+
+            {stats.songsEntered > 0 && (
+              <div className="repertoire-meter" aria-hidden="true">
+                <span
+                  className="meter-complete"
+                  style={{ width: `${(stats.songsComplete / stats.songsEntered) * 100}%` }}
+                />
+                <span
+                  className="meter-learning"
+                  style={{ width: `${(learningCount / stats.songsEntered) * 100}%` }}
+                />
+              </div>
             )}
           </div>
-          {progress.dayCount > 0 && (
-            <DayGrid byDay={progress.byDay} currentDay={progress.currentDay} size="sm" />
-          )}
+
           <span className="card-foot">
-            {progress.dayCount > 0
-              ? `${progress.complete} complete · ${progress.dayCount - progress.entered} days still open`
-              : `${stats.songsEntered} in the library`}
+            {stats.totalMinutes} min practice logged · View all {stats.songsEntered} songs →
           </span>
         </button>
 
@@ -193,12 +210,27 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       <div className="dash-row">
         {pickUp ? (
           <button type="button" className="dash-card pickup" onClick={() => onOpenSong(pickUp.song.id)}>
-            <span className="surface-label">Pick up where you left off</span>
+            <span className="surface-label">Recently practiced</span>
             <span className="pickup-title">{pickUp.song.title}</span>
             <span className="pickup-meta readout">
               {pickUp.song.key}{pickUp.song.key && ' · '}{capoLabel(pickUp.song.capo)}
             </span>
             <span className="pickup-when">Last played {fmtWhen(pickUp.date)}</span>
+            <span className="pickup-go">
+              Practice
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </span>
+          </button>
+        ) : alternativeSong ? (
+          <button type="button" className="dash-card pickup" onClick={() => onOpenSong(alternativeSong.id)}>
+            <span className="surface-label">From your repertoire</span>
+            <span className="pickup-title">{alternativeSong.title}</span>
+            <span className="pickup-meta readout">
+              {alternativeSong.key}{alternativeSong.key && ' · '}{capoLabel(alternativeSong.capo)}
+            </span>
+            <span className="pickup-when">{STATUS_LABEL[alternativeSong.status]}</span>
             <span className="pickup-go">
               Practice
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -232,8 +264,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         </button>
       </div>
 
-      {/* The curriculum, kept to one line. It is a different thing from the
-          month's songs and should not compete with them for the page. */}
+      {/* The curriculum, kept to one line */}
       <button type="button" className="dash-progress" onClick={() => setActiveTab('journey')}>
         <span className="dash-progress-label">Journey</span>
         <span className="dash-progress-bar"><span style={{ width: `${pct}%` }} /></span>

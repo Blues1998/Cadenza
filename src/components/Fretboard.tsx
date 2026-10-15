@@ -55,7 +55,17 @@ interface Strike {
   fret: number;
 }
 
-export const Fretboard: React.FC<FretboardProps> = ({
+function arraysEqual(a?: number[], b?: number[]): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+const FretboardComponent: React.FC<FretboardProps> = ({
   activeMidis = [],
   highlightCorrectMidis = [],
   rootMidis = [],
@@ -281,4 +291,16 @@ export const Fretboard: React.FC<FretboardProps> = ({
     </div>
   );
 };
+
+export const Fretboard: React.FC<FretboardProps> = React.memo(
+  FretboardComponent,
+  (prev, next) =>
+    prev.interactive === next.interactive &&
+    prev.showAllNoteNames === next.showAllNoteNames &&
+    prev.onPlayNote === next.onPlayNote &&
+    arraysEqual(prev.activeMidis, next.activeMidis) &&
+    arraysEqual(prev.highlightCorrectMidis, next.highlightCorrectMidis) &&
+    arraysEqual(prev.rootMidis, next.rootMidis)
+);
+
 export default Fretboard;

@@ -29,6 +29,19 @@ function frequencyToResult(frequency: number): PitchResult {
   };
 }
 
+// Scratch buffers for YIN difference and CMND calculations. Reused across
+// calls to eliminate 120-240 Float32Array allocations per second in RAF loops.
+let diffScratch = new Float32Array(2048);
+let cmndScratch = new Float32Array(2048);
+
+function ensureScratchCapacity(len: number) {
+  if (diffScratch.length < len) {
+    const nextSize = Math.max(len, diffScratch.length * 2);
+    diffScratch = new Float32Array(nextSize);
+    cmndScratch = new Float32Array(nextSize);
+  }
+}
+
 export function detectPitch(buffer: Float32Array, sampleRate: number): PitchResult | null {
   // 1. Noise gate: skip frames that are too quiet to contain a real note
   let rmsSum = 0;
@@ -54,8 +67,10 @@ export function detectPitch(buffer: Float32Array, sampleRate: number): PitchResu
   const maxTau = Math.min(halfLen - 2, Math.ceil(sampleRate / MIN_FREQUENCY));
   const computeLen = maxTau + 2; // +1 for the inclusive bound, +1 for gamma's lookahead in step 5
 
+  ensureScratchCapacity(computeLen);
+  const diff = diffScratch;
+
   // 2. YIN difference function: d[tau] = sum of squared differences at lag tau
-  const diff = new Float32Array(computeLen);
   for (let tau = 1; tau < computeLen; tau++) {
     let sum = 0;
     for (let i = 0; i < halfLen; i++) {
@@ -66,7 +81,7 @@ export function detectPitch(buffer: Float32Array, sampleRate: number): PitchResu
   }
 
   // 3. Cumulative mean normalized difference — dips toward 0 at the true period
-  const cmnd = new Float32Array(computeLen);
+  const cmnd = cmndScratch;
   cmnd[0] = 1;
   let runningSum = 0;
   for (let tau = 1; tau < computeLen; tau++) {

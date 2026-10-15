@@ -33,6 +33,25 @@ class AudioEngine {
   // note it just asked a lab to play without the id being threaded back
   // through the lab's own callback.
   private latestByMidi = new Map<number, number>();
+  // Pre-allocated white noise buffer to avoid creating AudioBuffers and
+  // running Math.random() thousands of times during playback and chords.
+  private noiseBuffer: AudioBuffer | null = null;
+
+  private getNoiseBuffer(): AudioBuffer | null {
+    if (!this.ctx) return null;
+    if (this.noiseBuffer && this.noiseBuffer.sampleRate === this.ctx.sampleRate) {
+      return this.noiseBuffer;
+    }
+    const sampleRate = this.ctx.sampleRate;
+    const len = Math.ceil(sampleRate * 0.2); // 200ms covers both pick transients and muted clicks
+    const buffer = this.ctx.createBuffer(1, len, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    this.noiseBuffer = buffer;
+    return buffer;
+  }
 
   constructor() {
     // Context is initialized on first user interaction to comply with browser autoplay policies
@@ -197,9 +216,8 @@ class AudioEngine {
     const at = time !== undefined ? time : this.ctx.currentTime;
 
     const seconds = 0.09;
-    const buffer = this.ctx.createBuffer(1, Math.ceil(this.ctx.sampleRate * seconds), this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const buffer = this.getNoiseBuffer();
+    if (!buffer) return;
 
     const source = this.ctx.createBufferSource();
     source.buffer = buffer;
@@ -298,35 +316,27 @@ class AudioEngine {
 
     // Pick attack simulation: brief wooden tap/pick noise using high-pass filtered white noise
     try {
-      const sampleRate = this.ctx.sampleRate;
-      const noiseDuration = 0.015; // 15ms
-      const bufferSize = sampleRate * noiseDuration;
-      const buffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
-      const data = buffer.getChannelData(0);
-      
-      // Populate random white noise values
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
+      const buffer = this.getNoiseBuffer();
+      if (buffer) {
+        const noiseNode = this.ctx.createBufferSource();
+        noiseNode.buffer = buffer;
+
+        const noiseFilter = this.ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.value = 1200; // woody sound center
+        noiseFilter.Q.value = 1.5;
+
+        const noiseGain = this.ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.25, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.012);
+
+        noiseNode.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(pluckGain);
+
+        noiseNode.start(now);
+        noiseNode.stop(now + 0.02);
       }
-
-      const noiseNode = this.ctx.createBufferSource();
-      noiseNode.buffer = buffer;
-
-      const noiseFilter = this.ctx.createBiquadFilter();
-      noiseFilter.type = 'bandpass';
-      noiseFilter.frequency.value = 1200; // woody sound center
-      noiseFilter.Q.value = 1.5;
-
-      const noiseGain = this.ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.25, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.012);
-
-      noiseNode.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-      noiseGain.connect(pluckGain);
-
-      noiseNode.start(now);
-      noiseNode.stop(now + 0.02);
     } catch (e) {
       console.warn('Could not generate acoustic pick transient noise:', e);
     }

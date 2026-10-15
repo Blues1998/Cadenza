@@ -187,7 +187,7 @@ export const TabPlayerLab: React.FC = () => {
   const [looping, setLooping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ current: 0, end: 0 });
+  const timeReadoutRef = useRef<HTMLDivElement | null>(null);
   const [guitarTone, setGuitarTone] = useState(DEFAULT_GUITAR_TONE);
   const [guitarSoundfontMissing, setGuitarSoundfontMissing] = useState(false);
   const [sectionRange, setSectionRange] = useState<{ startBar: number; endBar: number } | null>(null);
@@ -674,6 +674,7 @@ export const TabPlayerLab: React.FC = () => {
       setSectionRange(null);
       setHoverInfo(null);
       highlightEl.style.opacity = '0';
+      if (timeReadoutRef.current) timeReadoutRef.current.textContent = '0:00 / 0:00';
 
       // A new score invalidates any in-flight grading window and starts a
       // fresh scoreboard — stats from a previous piece shouldn't bleed in.
@@ -769,7 +770,9 @@ export const TabPlayerLab: React.FC = () => {
       }
     });
     api.playerPositionChanged.on((args) => {
-      setPosition({ current: args.currentTime, end: args.endTime });
+      if (timeReadoutRef.current) {
+        timeReadoutRef.current.textContent = `${formatTime(args.currentTime)} / ${formatTime(args.endTime)}`;
+      }
       if (pendingRestoreSeekRef.current !== null) {
         restoreSeekWarmupCountRef.current++;
         if (restoreSeekWarmupCountRef.current >= 2) {
@@ -978,8 +981,8 @@ export const TabPlayerLab: React.FC = () => {
                 {scoreArtist ? `${scoreArtist} · ` : ''}{trackNames.join(', ')}
               </div>
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              {formatTime(position.current)} / {formatTime(position.end)}
+            <div ref={timeReadoutRef} style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              0:00 / 0:00
             </div>
           </div>
 

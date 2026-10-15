@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 :root {
   /* Three faces, three jobs. Space Grotesk has enough character to carry a
      title and too much to read a paragraph in; Geist is the neutral that
@@ -2428,6 +2426,87 @@ button.dash-card:active {
   color: var(--text-muted);
 }
 
+/* ===== Repertoire overview ===== */
+.repertoire-card {
+  min-height: 140px;
+}
+
+.repertoire-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0.35rem 0;
+}
+
+.repertoire-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.rep-stat-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.rep-stat-item .readout {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rep-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rep-dot.is-learning {
+  background: var(--primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--primary) 50%, transparent);
+}
+
+.rep-dot.is-complete {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.rep-dot.is-revisit {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+.repertoire-meter {
+  display: flex;
+  height: 6px;
+  width: 100%;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.meter-complete {
+  background: #22c55e;
+  height: 100%;
+  border-radius: 999px 0 0 999px;
+  transition: width 0.3s ease;
+}
+
+.meter-learning {
+  background: var(--primary);
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.today-chords {
+  color: var(--text-secondary);
+}
+
 /* ===== The month, as thirty marks ===== */
 /* Small on purpose. The nodes are capped rather than stretched to fill the
    card: thirty marks spread across a whole column stop being a run and become
@@ -2906,7 +2985,8 @@ button.dash-card:hover .pickup-go svg {
   box-shadow: var(--elevation-low);
 }
 
-.songrow-day {
+.songrow-day,
+.songrow-index {
   font-size: 0.8rem;
   color: var(--text-muted);
 }

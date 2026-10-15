@@ -42,10 +42,9 @@ function App() {
   const { tab: activeTab, songId } = useRoute();
   const { theme, toggleTheme } = useTheme();
 
-  // Opening the form on a given day is an intention, not a place: it is spent
-  // the moment the form appears, and an address you could return to would keep
-  // reopening a blank form over whatever you had since typed.
-  const [draftDay, setDraftDay] = useState<number | null>(null);
+  // Opening the form to add a song is an intention, not a place: it is spent
+  // the moment the form appears.
+  const [openDraft, setOpenDraft] = useState(false);
 
   // Whatever was typed, tidied to the address that was actually shown — a bare
   // URL, a stale slug, the wrong case. Replaced rather than pushed: the
@@ -68,8 +67,8 @@ function App() {
     []
   );
 
-  const addSongForDay = (day: number | null) => {
-    setDraftDay(day ?? 0);   // 0 = open the form with no day filled in
+  const addSong = () => {
+    setOpenDraft(true);
     go({ tab: 'library', songId: null });
   };
 
@@ -80,7 +79,7 @@ function App() {
   // list and Back is how you get out of a song.
   const navigate = (tab: ActiveTab) => go({ tab, songId: null });
 
-  const clearDraft = useCallback(() => setDraftDay(null), []);
+  const clearDraft = useCallback(() => setOpenDraft(false), []);
 
   // On a phone, a horizontal swipe steps through the current sidebar group
   useLabSwipe(activeTab, navigate);
@@ -124,7 +123,7 @@ function App() {
   const renderActiveContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardLanding setActiveTab={navigate} onOpenSong={openSong} onAddSongForDay={addSongForDay} />;
+        return <DashboardLanding setActiveTab={navigate} onOpenSong={openSong} onAddSong={addSong} />;
       case 'journey':
         return <JourneyLab setActiveTab={navigate} />;
       case 'ear-training':
@@ -150,12 +149,12 @@ function App() {
           <SongsLab
             focusSongId={songId}
             onOpenSong={showSong}
-            draftDay={draftDay}
+            openDraft={openDraft}
             onDraftOpened={clearDraft}
           />
         );
       default:
-        return <DashboardLanding setActiveTab={navigate} onOpenSong={openSong} onAddSongForDay={addSongForDay} />;
+        return <DashboardLanding setActiveTab={navigate} onOpenSong={openSong} onAddSong={addSong} />;
     }
   };
 
