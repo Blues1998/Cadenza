@@ -1,0 +1,1 @@
+import{O as e,g as t,h as n}from"./fit-CXdZxUHs.js";import{F as r,I as i}from"./index-DPXpBzzO.js";var a=i(r(),1);function o(){let[,r]=(0,a.useState)(0),[i,o]=(0,a.useState)(t);return(0,a.useEffect)(()=>{let i=e(()=>{r(e=>e+1),o(t())});return n().then(()=>o(!0)),i},[]),i}export{o as t};
