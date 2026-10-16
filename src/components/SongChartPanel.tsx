@@ -7,7 +7,7 @@ import { fitSong } from '../utils/fit';
 import { songChords, songProgressions, updateSong } from '../utils/library';
 import type { Song } from '../utils/library';
 import { useChartTransport } from '../hooks/useChartTransport';
-import { parseStrum } from '../utils/strum';
+import { getPresetsForMeter, getTempoMarking, parseStrum } from '../utils/strum';
 import { LiveGuitarNeck } from './LiveGuitarNeck';
 import {
   chartDuration,
@@ -35,7 +35,12 @@ interface SongChartPanelProps {
 
 type Mode = 'play' | 'edit' | 'import';
 
-const BEATS_PER_BAR = [3, 4, 6];
+const TIME_SIGNATURE_OPTIONS = [
+  { value: 4, label: '4/4', desc: 'Common' },
+  { value: 3, label: '3/4', desc: 'Waltz' },
+  { value: 2, label: '2/4', desc: 'March' },
+  { value: 6, label: '6/8', desc: 'Compound' }
+];
 
 /** The shape for a chord symbol, or null when we cannot place it on a neck. */
 const useVoicing = (symbol: string | null) =>
@@ -126,8 +131,11 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   }, [running, currentLine]);
 
   // Tap tempo
+  const [tapPulsing, setTapPulsing] = useState(false);
   const taps = useRef<number[]>([]);
   const tapTempo = () => {
+    setTapPulsing(true);
+    setTimeout(() => setTapPulsing(false), 180);
     const now = performance.now();
     const kept = [...taps.current, now].filter(t => now - t < 3000).slice(-5);
     taps.current = kept;
@@ -136,6 +144,12 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
     const bpm = Math.round(60000 / mean);
     if (bpm >= TEMPO_MIN && bpm <= TEMPO_MAX) patch({ tempo: bpm });
+  };
+
+  const appendStroke = (stroke: string) => {
+    const current = (song.strumming || '').trim();
+    const next = current ? `${current} ${stroke}` : stroke;
+    void updateSong(song.id, { strumming: next });
   };
 
   const modes: { value: Mode; label: string }[] = [
@@ -205,7 +219,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
 
           {/* Transport Controls Bar */}
           <div className="chart-transport">
-            <div className="transport">
+            <div className="transport-play-group">
               <button
                 type="button"
                 className={`transport-btn is-main${moving ? ' is-moving' : ''}${phase === 'paused' ? ' is-held' : ''}`}
@@ -231,51 +245,117 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
               </button>
             </div>
 
-            <label className="chart-tempo">
-              <span className="field-label">Tempo</span>
-              <input
-                type="range"
-                min={TEMPO_MIN}
-                max={TEMPO_MAX}
-                step={1}
-                value={settings.tempo}
-                disabled={running}
-                onChange={e => patch({ tempo: Number(e.target.value) })}
-                aria-label="Tempo in beats per minute"
-              />
-            </label>
-            <span className="chart-bpm readout">{settings.tempo}<span> bpm</span></span>
-            <button type="button" className="btn chart-tap" onClick={tapTempo} disabled={running}>Tap</button>
+            {/* Intuitive Tempo Studio */}
+            <div className="chart-tempo-studio">
+              <div className="tempo-top-line">
+                <span className="field-label">Tempo</span>
+                <span className="tempo-italian-badge readout">
+                  {getTempoMarking(settings.tempo)}
+                </span>
+              </div>
+              <div className="tempo-controls-row">
+                <button
+                  type="button"
+                  className="btn tempo-nudge-btn"
+                  onClick={() => patch({ tempo: Math.max(TEMPO_MIN, settings.tempo - 1) })}
+                  title="Slow down 1 BPM"
+                  aria-label="Decrease tempo 1 BPM"
+                >
+                  −
+                </button>
+                <span className="chart-bpm readout">
+                  <strong>{settings.tempo}</strong>
+                  <span className="bpm-unit">BPM</span>
+                </span>
+                <button
+                  type="button"
+                  className="btn tempo-nudge-btn"
+                  onClick={() => patch({ tempo: Math.min(TEMPO_MAX, settings.tempo + 1) })}
+                  title="Speed up 1 BPM"
+                  aria-label="Increase tempo 1 BPM"
+                >
+                  +
+                </button>
 
-            <label className="chart-signature">
-              <span className="field-label">Metre</span>
-              <select
-                className="select-field"
-                value={settings.beatsPerBar}
-                disabled={running}
-                onChange={e => patch({ beatsPerBar: Number(e.target.value) })}
+                <input
+                  type="range"
+                  className="chart-tempo-range"
+                  min={TEMPO_MIN}
+                  max={TEMPO_MAX}
+                  step={1}
+                  value={settings.tempo}
+                  onChange={e => patch({ tempo: Number(e.target.value) })}
+                  aria-label="Tempo slider"
+                />
+
+                <div className="tempo-jump-group">
+                  <button
+                    type="button"
+                    className="btn tempo-jump-btn"
+                    onClick={() => patch({ tempo: Math.max(TEMPO_MIN, settings.tempo - 5) })}
+                    title="Slow down 5 BPM"
+                  >
+                    −5
+                  </button>
+                  <button
+                    type="button"
+                    className="btn tempo-jump-btn"
+                    onClick={() => patch({ tempo: Math.min(TEMPO_MAX, settings.tempo + 5) })}
+                    title="Speed up 5 BPM"
+                  >
+                    +5
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn chart-tap${tapPulsing ? ' is-tapped' : ''}`}
+                    onClick={tapTempo}
+                    title="Tap beat to set BPM"
+                  >
+                    Tap
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Time Signature / Meter Selector (e.g. 4/4, 3/4, 2/4, 6/8) */}
+            <div className="chart-time-signature-studio">
+              <span className="field-label">Time Signature</span>
+              <div className="signature-chips-row">
+                {TIME_SIGNATURE_OPTIONS.map(sig => (
+                  <button
+                    key={sig.value}
+                    type="button"
+                    className={`sig-chip-btn${settings.beatsPerBar === sig.value ? ' is-active' : ''}`}
+                    onClick={() => patch({ beatsPerBar: sig.value })}
+                    title={`${sig.label} (${sig.desc})`}
+                  >
+                    <span className="sig-num readout">{sig.label}</span>
+                    <span className="sig-name">{sig.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Audio Quick Toggles */}
+            <div className="chart-audio-toggles">
+              <button
+                type="button"
+                className={`btn chart-sound-toggle${playChords ? ' is-active' : ''}`}
+                onClick={() => setPlayChords(p => !p)}
+                title={playChords ? 'Mute guitar playback' : 'Play guitar with strumming pattern'}
               >
-                {BEATS_PER_BAR.map(n => <option key={n} value={n}>{n}/4</option>)}
-              </select>
-            </label>
+                🎸 {playChords ? 'Guitar ON' : 'Guitar Muted'}
+              </button>
 
-            <button
-              type="button"
-              className={`btn chart-sound-toggle${playChords ? ' is-active' : ''}`}
-              onClick={() => setPlayChords(p => !p)}
-              title={playChords ? 'Mute guitar playback' : 'Play guitar with strumming pattern'}
-            >
-              🎸 {playChords ? 'Guitar ON' : 'Guitar Muted'}
-            </button>
-
-            <button
-              type="button"
-              className={`btn chart-click-toggle${metronome ? ' is-active' : ''}`}
-              onClick={() => setMetronome(m => !m)}
-              title={metronome ? 'Mute metronome click' : 'Enable metronome click'}
-            >
-              ⏱ {metronome ? 'Click ON' : 'Click OFF'}
-            </button>
+              <button
+                type="button"
+                className={`btn chart-click-toggle${metronome ? ' is-active' : ''}`}
+                onClick={() => setMetronome(m => !m)}
+                title={metronome ? 'Mute metronome click' : 'Enable metronome click'}
+              >
+                ⏱ {metronome ? 'Click ON' : 'Click OFF'}
+              </button>
+            </div>
           </div>
 
           {/* Interactive Live Guitar Neck with Fingering and Strumming Animation */}
@@ -292,17 +372,114 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
             beatsPerBar={settings.beatsPerBar}
           />
 
-          {/* Strumming pattern editor/customizer */}
-          {playChords && pattern && (
-            <div className="chart-strum">
-              <StrumGrid
-                pattern={pattern}
-                live={slot}
-                onChange={text => void updateSong(song.id, { strumming: text })}
-              />
-              <span className="readout chart-strumnote">
-                Strumming pattern · Click a cell to customize strokes
-              </span>
+          {/* Strumming Pattern Studio */}
+          {playChords && (
+            <div className="chart-strum-studio">
+              <div className="strum-studio-header">
+                <div>
+                  <span className="surface-label">Strumming Pattern Studio</span>
+                  <p className="strum-studio-sub">
+                    Click any cell to cycle: <strong>↓ Down</strong> → <strong>↑ Up</strong> → <strong>✕ Chuck</strong> → <strong>· Rest</strong>
+                  </p>
+                </div>
+                {pattern && (
+                  <span className="readout strum-summary-chip">
+                    {pattern.bars} bar{pattern.bars > 1 ? 's' : ''} · {pattern.steps.length} slots ({settings.beatsPerBar}/4)
+                  </span>
+                )}
+              </div>
+
+              {pattern ? (
+                <StrumGrid
+                  pattern={pattern}
+                  live={slot}
+                  onChange={text => void updateSong(song.id, { strumming: text })}
+                />
+              ) : (
+                <p className="song-empty">No strumming pattern set yet. Pick a preset below or type one in:</p>
+              )}
+
+              {/* Direct Quick-Add Buttons */}
+              <div className="strum-quick-palette">
+                <span className="field-label">Quick Add:</span>
+                <div className="palette-buttons">
+                  <button
+                    type="button"
+                    className="btn palette-stroke-btn is-d"
+                    onClick={() => appendStroke('D')}
+                    title="Append Downstroke (↓)"
+                  >
+                    ↓ Down
+                  </button>
+                  <button
+                    type="button"
+                    className="btn palette-stroke-btn is-u"
+                    onClick={() => appendStroke('U')}
+                    title="Append Upstroke (↑)"
+                  >
+                    ↑ Up
+                  </button>
+                  <button
+                    type="button"
+                    className="btn palette-stroke-btn is-x"
+                    onClick={() => appendStroke('X')}
+                    title="Append Chuck / Mute (✕)"
+                  >
+                    ✕ Mute
+                  </button>
+                  <button
+                    type="button"
+                    className="btn palette-stroke-btn is-rest"
+                    onClick={() => appendStroke('-')}
+                    title="Append Rest / Miss (·)"
+                  >
+                    · Rest
+                  </button>
+                  {song.strumming && (
+                    <button
+                      type="button"
+                      className="btn palette-stroke-btn is-clear"
+                      onClick={() => void updateSong(song.id, { strumming: '' })}
+                      title="Clear pattern"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Shorthand Text Field + Meter-Specific Presets */}
+              <div className="strum-text-edit-cluster">
+                <label className="strum-input-field">
+                  <span className="field-label">Pattern Text:</span>
+                  <input
+                    type="text"
+                    className="text-field strum-text-input readout"
+                    value={song.strumming || ''}
+                    placeholder="e.g. D D U U D U"
+                    onChange={e => void updateSong(song.id, { strumming: e.target.value })}
+                    aria-label="Strumming pattern shorthand"
+                  />
+                </label>
+
+                <div className="strum-presets-group">
+                  <span className="field-label">Presets for {settings.beatsPerBar}/4:</span>
+                  <div className="strum-preset-chips">
+                    {getPresetsForMeter(settings.beatsPerBar).map(preset => (
+                      <button
+                        key={preset.pattern}
+                        type="button"
+                        className="chip-btn strum-preset-chip"
+                        onClick={() => void updateSong(song.id, { strumming: preset.pattern })}
+                        title={preset.pattern}
+                      >
+                        <span className="preset-name">{preset.name}</span>
+                        <span className="preset-pat readout">{preset.pattern}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

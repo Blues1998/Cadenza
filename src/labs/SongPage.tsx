@@ -206,7 +206,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
           <h2 className="lab-title">{song.title}</h2>
           <p className="song-artist">{song.artist || 'Unknown artist'}</p>
           <p className="song-meta readout">
-            {song.key || 'Key not set'} · {capoLabel(song.capo)}
+            {song.key || 'Key not set'} · {capoLabel(song.capo)} · {song.chart?.tempo ?? 92} BPM · {song.chart?.beatsPerBar ?? 4}/4
           </p>
         </div>
         <div className="song-head-actions">
@@ -360,7 +360,12 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
                 <p className="strumming-pattern readout">{song.strumming}</p>
                 {/* What it comes to when a hand plays it — the same grid the
                     play-along runs, so the sheet and the sound agree. */}
-                {strumPattern && <StrumGrid pattern={strumPattern} />}
+                {strumPattern && (
+                  <StrumGrid
+                    pattern={strumPattern}
+                    onChange={text => void updateSong(song.id, { strumming: text })}
+                  />
+                )}
               </>
             ) : (
               <div className="strumming-pick">

@@ -9279,3 +9279,372 @@ button.strumcell:hover { background: var(--surface-3); }
   text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
 }
 
+/* ==========================================================================
+   TEMPO STUDIO & TIME SIGNATURE METER CONTROLS
+   ========================================================================== */
+
+.chart-transport {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem 1.2rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1.1rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--panel-border);
+}
+
+.transport-play-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Tempo Studio */
+.chart-tempo-studio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1 1 20rem;
+  min-width: 260px;
+  background: var(--surface-1);
+  padding: 0.55rem 0.85rem;
+  border-radius: 9px;
+  border: 1px solid var(--panel-border);
+}
+
+.tempo-top-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tempo-italian-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #38bdf8;
+}
+
+.tempo-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.tempo-nudge-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 6px;
+  background: var(--surface-3);
+  color: var(--text-primary);
+  border: 1px solid var(--panel-border);
+  cursor: pointer;
+}
+
+.tempo-nudge-btn:hover {
+  background: var(--surface-tint);
+  border-color: var(--primary);
+}
+
+.chart-bpm {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  min-width: 4.8rem;
+  text-align: center;
+}
+
+.bpm-unit {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
+
+.chart-tempo-range {
+  flex: 1 1 5rem;
+  min-width: 70px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.tempo-jump-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tempo-jump-btn {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--panel-border);
+  cursor: pointer;
+}
+
+.tempo-jump-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--primary);
+}
+
+.chart-tap.is-tapped {
+  background: var(--primary);
+  color: #ffffff;
+  transform: scale(1.08);
+  box-shadow: 0 0 12px var(--primary);
+}
+
+/* Time Signature / Meter Studio */
+.chart-time-signature-studio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.signature-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.sig-chip-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--surface-1);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sig-chip-btn:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.sig-chip-btn.is-active {
+  border-color: var(--primary);
+  background: var(--surface-3);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+.sig-chip-btn .sig-num {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.sig-chip-btn.is-active .sig-num {
+  color: var(--primary);
+}
+
+.sig-chip-btn .sig-name {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.chart-audio-toggles {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   STRUMMING PATTERN STUDIO
+   ========================================================================== */
+
+.chart-strum-studio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.8rem;
+  padding: 1rem 1.15rem;
+  border-radius: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--panel-border);
+}
+
+.strum-studio-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.strum-studio-sub {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin: 0.2rem 0 0;
+}
+
+.strum-summary-chip {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(59, 130, 246, 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+/* Quick Stroke Buttons */
+.strum-quick-palette {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.palette-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.palette-stroke-btn {
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.3rem 0.75rem;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.palette-stroke-btn.is-d {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10b981;
+}
+
+.palette-stroke-btn.is-d:hover {
+  background: rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+.palette-stroke-btn.is-u {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #3b82f6;
+}
+
+.palette-stroke-btn.is-u:hover {
+  background: rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+}
+
+.palette-stroke-btn.is-x {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.palette-stroke-btn.is-x:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+.palette-stroke-btn.is-rest {
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  color: #94a3b8;
+}
+
+.palette-stroke-btn.is-rest:hover {
+  background: rgba(148, 163, 184, 0.3);
+  transform: translateY(-1px);
+}
+
+.palette-stroke-btn.is-clear {
+  background: var(--surface-2);
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+}
+
+.palette-stroke-btn.is-clear:hover {
+  color: var(--text-primary);
+  border-color: var(--panel-border-hover);
+}
+
+/* Strum Text Input & Presets */
+.strum-text-edit-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.strum-input-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 16rem;
+}
+
+.strum-text-input {
+  max-width: 18rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.strum-presets-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.strum-preset-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.strum-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.strum-preset-chip:hover {
+  transform: translateY(-1px);
+}
+
+.strum-preset-chip .preset-name {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.strum-preset-chip .preset-pat {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+

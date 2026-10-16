@@ -65,9 +65,7 @@ export const StrumGrid: React.FC<StrumGridProps> = ({ pattern, live = -1, onChan
                 </span>
               );
             }
-            // Down slots offer down, muted, pass; up slots offer up, muted,
-            // pass. Which way the arm is going at this point in the bar is not
-            // a choice anybody has, so it is not offered as one.
+            // Pressing cycles: Down (↓), Up (↑), Chuck (✕), and Rest (·).
             const next = nextStroke(index, stroke);
             return (
               <button
@@ -75,8 +73,8 @@ export const StrumGrid: React.FC<StrumGridProps> = ({ pattern, live = -1, onChan
                 type="button"
                 className={className}
                 onClick={() => onChange(withStroke(pattern, index, next))}
-                title={`${label} — press for ${NAME[next].toLowerCase()}`}
-                aria-label={label}
+                title={`${label} — Click to switch to ${NAME[next]} (${FACE[next]})`}
+                aria-label={`${label} — Click to switch to ${NAME[next]}`}
               >
                 <span className="strumcell-count">{countLabel(pattern, index)}</span>
                 <span className="strumcell-face" aria-hidden="true">{FACE[stroke]}</span>

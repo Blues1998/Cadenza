@@ -53,8 +53,15 @@ export const STROKE_NAME: Record<Stroke, string> = { D: 'Down', U: 'Up', X: 'Mut
  * honest thing to do with one of those is shove the rest of the pattern along
  * to make room — which is a strange thing for pressing a cell to do.
  */
-const DOWN_CYCLE: Stroke[] = ['D', 'X', '-'];
-const UP_CYCLE: Stroke[] = ['U', 'X', '-'];
+export const ALL_STROKES: Stroke[] = ['D', 'U', 'X', '-'];
+
+/**
+ * What pressing a cell steps through.
+ * Every cell cycles through Downstroke (D), Upstroke (U), Chuck/Mute (X), and Rest (-),
+ * with natural default direction first depending on beat position.
+ */
+const DOWN_CYCLE: Stroke[] = ['D', 'U', 'X', '-'];
+const UP_CYCLE: Stroke[] = ['U', 'D', 'X', '-'];
 
 /** The strokes this slot can hold, in the order pressing offers them. */
 export const strokesAt = (index: number): Stroke[] => (index % 2 === 0 ? DOWN_CYCLE : UP_CYCLE);
@@ -246,3 +253,52 @@ export function withoutBar(pattern: StrumPattern, bar: number): string {
   const steps = [...pattern.steps.slice(0, bar * slots), ...pattern.steps.slice((bar + 1) * slots)];
   return formatStrum({ ...pattern, steps, bars: pattern.bars - 1 });
 }
+
+export function getTempoMarking(bpm: number): string {
+  if (bpm < 60) return 'Largo (Broad & slow)';
+  if (bpm < 76) return 'Adagio (Slow & stately)';
+  if (bpm < 108) return 'Andante (Walking pace)';
+  if (bpm < 120) return 'Moderato (Moderate)';
+  if (bpm < 156) return 'Allegro (Fast & bright)';
+  if (bpm < 176) return 'Vivace (Lively & brisk)';
+  return 'Presto (Very fast)';
+}
+
+export interface MeterPreset {
+  name: string;
+  pattern: string;
+}
+
+export function getPresetsForMeter(beatsPerBar: number): MeterPreset[] {
+  if (beatsPerBar === 3) {
+    return [
+      { name: 'Waltz', pattern: 'D - D D' },
+      { name: 'Folk Waltz', pattern: 'D D U D U' },
+      { name: 'Steady 3/4', pattern: 'D - D - D -' },
+      { name: 'Flowing', pattern: 'D - D U D U' }
+    ];
+  }
+  if (beatsPerBar === 2) {
+    return [
+      { name: 'March / Cut', pattern: 'D - D -' },
+      { name: 'Country 2/4', pattern: 'D U D U' },
+      { name: 'Upbeat 2/4', pattern: 'D - D U' }
+    ];
+  }
+  if (beatsPerBar === 6) {
+    return [
+      { name: 'Slow 6/8', pattern: 'D - - D - -' },
+      { name: 'Flowing 6/8', pattern: 'D - U D - U' },
+      { name: 'Driving 6/8', pattern: 'D U D U D U' }
+    ];
+  }
+  // Default 4/4
+  return [
+    { name: 'Calypso / Pop', pattern: 'D D U U D U' },
+    { name: 'Steady Downs', pattern: 'D D D D' },
+    { name: 'Rock Groove', pattern: 'D - D U - U D U' },
+    { name: 'All 8ths', pattern: 'D U D U D U D U' },
+    { name: 'Chucked Groove', pattern: 'D - X U - U X U' }
+  ];
+}
+

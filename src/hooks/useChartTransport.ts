@@ -294,6 +294,10 @@ export function useChartTransport(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tempo]);
 
+  useEffect(() => {
+    plan.current = { ...plan.current, bpb: beatsPerBar };
+  }, [beatsPerBar]);
+
   // Finishing leaves the position at the end rather than snapping to the top,
   // so the last line is still on screen when the click stops.
   useEffect(() => {
