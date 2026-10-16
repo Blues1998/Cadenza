@@ -4,6 +4,7 @@ import type { StrumPattern } from '../utils/strum';
 
 interface LiveGuitarNeckProps {
   voicing: ChordVoicing | null;
+  nextVoicing?: ChordVoicing | null;
   chordSymbol: string | null;
   nextChordSymbol?: string | null;
   capo: number | null;
@@ -30,6 +31,7 @@ const getNoteName = (midi: number): string => NOTE_NAMES[midi % 12];
 
 export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
   voicing,
+  nextVoicing,
   chordSymbol,
   nextChordSymbol,
   capo,
@@ -40,6 +42,20 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
   beat,
   beatsPerBar
 }) => {
+  // Identify Anchor / Pivot fingers between current and next chord
+  const anchorStrings = useMemo(() => {
+    if (!voicing || !nextVoicing) return new Set<number>();
+    const anchors = new Set<number>();
+    STRING_ROWS.forEach(row => {
+      const fCur = voicing.frets[row.voicingIndex];
+      const fNext = nextVoicing.frets[row.voicingIndex];
+      if (typeof fCur === 'number' && fCur > 0 && fCur === fNext) {
+        anchors.add(row.voicingIndex);
+      }
+    });
+    return anchors;
+  }, [voicing, nextVoicing]);
+
   // Determine fret span to display: 5 frets starting from base fret
   const frettedVals = useMemo(() => {
     return voicing?.frets.filter((f): f is number => typeof f === 'number' && f > 0) ?? [];
@@ -69,6 +85,11 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
           {nextChordSymbol && (
             <span className="guitar-next-chip readout" title="Next chord coming up">
               Next: <strong>{nextChordSymbol}</strong>
+            </span>
+          )}
+          {anchorStrings.size > 0 && (
+            <span className="guitar-capo-chip guitar-anchor-chip readout" title="Anchor finger stays planted during this change!">
+              ⚓ Anchor: plant finger
             </span>
           )}
           {isPlaying && (
@@ -217,18 +238,22 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
                   />
 
                   {/* Fretted Dot */}
-                  {isFretted && fretVal >= baseFret && fretVal < baseFret + numFrets && (
-                    <div
-                      className={`fret-finger-dot${isStringActive ? ' is-struck' : ''}`}
-                      style={{
-                        left: `${((fretVal - baseFret + 0.5) / numFrets) * 100}%`
-                      }}
-                      title={`Fret ${fretVal} (${noteName}) - Finger ${fingerVal ?? ''}`}
-                    >
-                      <span className="finger-num">{fingerVal ?? ''}</span>
-                      <span className="finger-note">{noteName}</span>
-                    </div>
-                  )}
+                  {isFretted && fretVal >= baseFret && fretVal < baseFret + numFrets && (() => {
+                    const isAnchor = anchorStrings.has(row.voicingIndex);
+                    return (
+                      <div
+                        className={`fret-finger-dot${isStringActive ? ' is-struck' : ''}${isAnchor ? ' is-anchor-pivot' : ''}`}
+                        style={{
+                          left: `${((fretVal - baseFret + 0.5) / numFrets) * 100}%`
+                        }}
+                        title={`Fret ${fretVal} (${noteName}) - Finger ${fingerVal ?? ''}${isAnchor ? ' · ⚓ ANCHOR FINGER (keep planted!)' : ''}`}
+                      >
+                        {isAnchor && <span className="anchor-glow-halo" aria-hidden="true" />}
+                        <span className="finger-num">{fingerVal ?? ''}</span>
+                        <span className="finger-note">{noteName}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}

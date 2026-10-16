@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Segmented } from '../components/Segmented';
 import { LabIcon } from '../components/LabIcon';
 import { Pendulum } from '../components/Pendulum';
+import { PulseGrooveStage } from '../components/PulseGrooveStage';
 import { usePlayKey } from '../hooks/usePlayKey';
 import { audio } from '../utils/audio';
 import { clearTempoLog, getTempoLog, heldLabel, logTempo, whenHeld, type TempoRun } from '../utils/tempoLog';
@@ -277,6 +278,10 @@ export const RhythmLab: React.FC = () => {
   // Clicks to a beat. The pulse is always the beat; this is the texture under
   // it, which is what a strumming hand is actually counting.
   const [subdivision, setSubdivision] = useState<number>(1);
+  // Metronome visual style: Groove pulse waves vs traditional precision pendulum
+  const [metronomeVisual, setMetronomeVisual] = useState<'groove' | 'precision'>('groove');
+  // Swing feel ratio (0 = straight, 0.67 = triplet shuffle)
+  const [swing, setSwing] = useState<number>(0);
   // Beats per minute added every RAMP_BARS bars, or 0 to stay put.
   const [ramp, setRamp] = useState<number>(0);
   // Bars heard so far this run — not bars scheduled, which is up to 120ms ahead.
@@ -294,6 +299,7 @@ export const RhythmLab: React.FC = () => {
   const bpmRef = useRef<number>(100);
   const timeSignatureRef = useRef<number>(4);
   const subdivisionRef = useRef<number>(1);
+  const swingRef = useRef<number>(0);
   const rampRef = useRef<number>(0);
   const schedulerTimerId = useRef<number | null>(null);
 
@@ -325,6 +331,10 @@ export const RhythmLab: React.FC = () => {
   useEffect(() => {
     subdivisionRef.current = subdivision;
   }, [subdivision]);
+
+  useEffect(() => {
+    swingRef.current = swing;
+  }, [swing]);
 
   useEffect(() => {
     rampRef.current = ramp;
@@ -367,8 +377,14 @@ export const RhythmLab: React.FC = () => {
       // the candidate list would let a tap land halfway between two beats and
       // be told it was perfect.
       const sub = subdivisionRef.current;
+      const sw = swingRef.current;
       for (let s = 1; s < sub; s++) {
-        audio.playClick(nextBeatTime.current + (s * secondsPerBeat) / sub, false, true);
+        let ratio = s / sub;
+        if (sub === 2 && s === 1 && sw > 0) {
+          // Swing pushes the offbeat 8th note towards the triplet pocket (0.5 -> ~0.667)
+          ratio = 0.5 + sw * (2 / 3 - 0.5);
+        }
+        audio.playClick(nextBeatTime.current + ratio * secondsPerBeat, false, true);
       }
 
       // 2. Keep record of the scheduled beat for the tapping match logic
@@ -668,8 +684,32 @@ export const RhythmLab: React.FC = () => {
             full
           />
 
-          {/* The one thing on this page that knows the tempo. */}
-          <Pendulum beatsPerBar={timeSignature} subdivision={subdivision} at={beatAt} onBar={setBars} />
+          {/* Visualizer Style Toggle */}
+          <Segmented<'groove' | 'precision'>
+            label="Visual Style"
+            value={metronomeVisual}
+            onChange={setMetronomeVisual}
+            options={[
+              { value: 'groove', label: 'Groove & Pulse', title: 'Concentric shockwaves, swing feel, and bouncing subdivision ball' },
+              { value: 'precision', label: 'Precision Pendulum', title: 'Traditional mechanical pendulum with timing' }
+            ]}
+            size="sm"
+            full
+          />
+
+          {metronomeVisual === 'groove' ? (
+            <PulseGrooveStage
+              beatsPerBar={timeSignature}
+              subdivision={subdivision}
+              bpm={bpm}
+              swing={swing}
+              onSwingChange={setSwing}
+              at={beatAt}
+              isPlaying={isPlaying}
+            />
+          ) : (
+            <Pendulum beatsPerBar={timeSignature} subdivision={subdivision} at={beatAt} onBar={setBars} />
+          )}
 
           <button
             onClick={handleTogglePlay}

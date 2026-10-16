@@ -24,6 +24,7 @@ import { SCALE_FEELINGS, CHORD_FEELINGS } from '../utils/glossary';
 import { reportProgress } from '../utils/progress';
 import { useComputerKeyboardInstrument } from '../hooks/useComputerKeyboardInstrument';
 import { useGuitarChordKeyboard } from '../hooks/useGuitarChordKeyboard';
+import { SonicConcepts } from '../components/SonicConcepts';
 
 const INTRO_DISMISSED_KEY = 'theory-intro-dismissed';
 const INSTRUMENT_KEY = 'theory-instrument-view';
@@ -47,6 +48,127 @@ const HighlightLegend: React.FC<{ mode: 'scale' | 'chord' }> = ({ mode }) => {
       <span><span style={dot('var(--note-root)')} />Root — the home note</span>
       <span><span style={dot('var(--note-scale)')} />Notes in this {mode}</span>
       <span><span style={dot('var(--note-active)')} />Playing right now</span>
+    </div>
+  );
+};
+
+// Instant Sun (Major) vs Moon (Minor) Mood Contrast Switcher
+const MoodSwitch: React.FC<{
+  rootName: string;
+  octave: number;
+  scale: ScaleFormula;
+  onScaleChange: (scale: ScaleFormula) => void;
+}> = ({ rootName, octave, scale, onScaleChange }) => {
+  const isMinor = /Minor|Blues/.test(scale.name);
+
+  const toggleMood = (target: 'major' | 'minor') => {
+    audio.init();
+    const rootMidi = noteNameToMidi(rootName, octave);
+    if (target === 'major') {
+      const majScale = SCALE_FORMULAS.find(s => s.name.startsWith('Major')) ?? SCALE_FORMULAS[0];
+      onScaleChange(majScale);
+      audio.playStrum([rootMidi, rootMidi + 4, rootMidi + 7, rootMidi + 12], 2.4, 0.05);
+    } else {
+      const minScale = SCALE_FORMULAS.find(s => s.name.startsWith('Natural Minor')) ?? SCALE_FORMULAS[1];
+      onScaleChange(minScale);
+      audio.playStrum([rootMidi, rootMidi + 3, rootMidi + 7, rootMidi + 12], 2.4, 0.05);
+    }
+  };
+
+  return (
+    <div className="mood-switch-strip">
+      <div className="mood-switch-info">
+        <span className="mood-switch-title">Sensory Mood Switch</span>
+        <span className="mood-switch-desc">
+          Shift between bright sunlight (Major 3rd) and moonlit introspection (Minor 3rd)
+        </span>
+      </div>
+      <div className="mood-switch-pills">
+        <button
+          type="button"
+          className={`mood-toggle-pill is-sun${!isMinor ? ' is-active' : ''}`}
+          onClick={() => toggleMood('major')}
+          title="Major Scale: Sunny, bright, resolved"
+        >
+          <span className="mood-pill-icon">☀️</span>
+          <span className="mood-pill-text">Major (Sun)</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mood-toggle-pill is-moon${isMinor ? ' is-active' : ''}`}
+          onClick={() => toggleMood('minor')}
+          title="Minor Scale: Moonlit, introspective, melancholic"
+        >
+          <span className="mood-pill-icon">🌙</span>
+          <span className="mood-pill-text">Minor (Moon)</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Interactive Whole vs Half Step Tone Ladder
+const ScaleStepLadder: React.FC<{
+  rootName: string;
+  octave: number;
+  scale: ScaleFormula;
+  onPlayNote: (midi: number) => void;
+  activeMidis: number[];
+}> = ({ rootName, octave, scale, onPlayNote, activeMidis }) => {
+  const rootMidi = noteNameToMidi(rootName, octave);
+  const steps = scale.steps;
+  const rootIndex = NOTE_NAMES.indexOf(rootName);
+
+  return (
+    <div className="scale-step-ladder">
+      <div className="step-ladder-header">
+        <span className="step-ladder-title">
+          Step Formula: <strong>{scale.name}</strong>
+        </span>
+        <span className="step-ladder-hint">
+          Click any note to hear the distance · <strong>W</strong> (2 frets) vs <strong>H</strong> (1 fret)
+        </span>
+      </div>
+
+      <div className="step-ladder-track">
+        {steps.map((step, idx) => {
+          const noteMidi = rootMidi + step;
+          const noteName = NOTE_NAMES[(rootIndex + step) % 12];
+          const isActive = activeMidis.includes(noteMidi);
+          const isRoot = step === 0 || step === 12;
+          const nextStep = steps[idx + 1];
+          const intervalToNext = nextStep !== undefined ? nextStep - step : null;
+
+          return (
+            <React.Fragment key={idx}>
+              <button
+                type="button"
+                className={`ladder-rung${isRoot ? ' is-root' : ''}${isActive ? ' is-active' : ''}`}
+                onClick={() => onPlayNote(noteMidi)}
+                title={`Degree ${idx + 1}: ${noteName} (${isRoot ? 'Root / Home Note' : `+${step} semitones`})`}
+              >
+                <span className="rung-degree">{idx === steps.length - 1 ? '8' : idx + 1}</span>
+                <span className="rung-note">{noteName}</span>
+              </button>
+
+              {intervalToNext !== null && (
+                <div
+                  className={`ladder-link${intervalToNext === 1 ? ' is-half' : intervalToNext === 2 ? ' is-whole' : ' is-leap'}`}
+                  title={intervalToNext === 1 ? 'Half step: 1 fret / 1 semitone' : intervalToNext === 2 ? 'Whole step: 2 frets / 2 semitones' : `${intervalToNext} semitones`}
+                >
+                  <span className="link-type">
+                    {intervalToNext === 1 ? 'H' : intervalToNext === 2 ? 'W' : `+${intervalToNext}`}
+                  </span>
+                  <span className="link-frets">
+                    {intervalToNext === 1 ? '1 fret' : intervalToNext === 2 ? '2 frets' : `${intervalToNext}fr`}
+                  </span>
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -465,6 +587,26 @@ export const TheoryLab: React.FC = () => {
       )}
       </div>
 
+      {/* Sensory Mood Flip & Step Ladder */}
+      {selectedChordQuality === -1 && (
+        <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <MoodSwitch
+            rootName={selectedRoot}
+            octave={selectedOctave}
+            scale={selectedScale}
+            onScaleChange={setSelectedScale}
+          />
+
+          <ScaleStepLadder
+            rootName={selectedRoot}
+            octave={selectedOctave}
+            scale={selectedScale}
+            onPlayNote={handlePlayNote}
+            activeMidis={activeMidis}
+          />
+        </section>
+      )}
+
       {/* Every chord this scale contains, with playable fingerings */}
       <ScaleChords
         rootName={selectedRoot}
@@ -556,6 +698,9 @@ export const TheoryLab: React.FC = () => {
         </div>
         )}
       </section>
+
+      {/* Sound-First Interactive Physical & Musical Micro-Explorations */}
+      <SonicConcepts />
 
       {/* Instruments — one panel with tabs. Two full-height panels plus a
           separate "which one listens to the keyboard" bar was over a screen

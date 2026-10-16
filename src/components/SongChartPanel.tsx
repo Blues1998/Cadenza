@@ -88,10 +88,14 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     [lines, settings.beatsPerBar, transpose]
   );
 
+  const [isLooping, setIsLooping] = useState(false);
+  const [speedRamp, setSpeedRamp] = useState<number>(0); // 0 = off, 1 = +1 BPM/lap, 2 = +2 BPM/lap
+  const lastLapRef = useRef(0);
+
   const { phase, beat, slot, start, stop, pause, resume, countInBeats } = useChartTransport(
     chart,
     settings,
-    { playChords, metronome, strum: true, pattern: playChords ? pattern : null }
+    { playChords, metronome, strum: true, pattern: playChords ? pattern : null, loop: isLooping }
   );
 
   const moving = phase === 'countin' || phase === 'playing';
@@ -107,11 +111,29 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   const fit = useMemo(() => fitSong(song), [song]);
 
   const currentVoicing = useVoicing(current?.symbol ?? (chart.chords[0] ?? null));
+  const nextVoicing = useVoicing(next?.symbol ?? null);
 
   const activeStroke = useMemo(() => {
     if (!pattern || slot < 0 || !moving) return null;
     return pattern.steps[slot % pattern.steps.length] ?? null;
   }, [pattern, slot, moving]);
+
+  // Automatically ramp tempo upon completing each full loop lap
+  useEffect(() => {
+    if (!isLooping || speedRamp === 0 || chart.totalBeats <= 0) {
+      lastLapRef.current = 0;
+      return;
+    }
+    if (beat < 0) {
+      lastLapRef.current = 0;
+      return;
+    }
+    const currentLap = Math.floor(beat / chart.totalBeats);
+    if (currentLap > lastLapRef.current) {
+      lastLapRef.current = currentLap;
+      patch({ tempo: Math.min(TEMPO_MAX, settings.tempo + speedRamp) });
+    }
+  }, [beat, isLooping, speedRamp, chart.totalBeats, settings.tempo]);
 
   const patch = (next: Partial<NonNullable<Song['chart']>>) =>
     void updateSong(song.id, { chart: { lines, ...settings, transpose, ...next } });
@@ -336,7 +358,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
               </div>
             </div>
 
-            {/* Audio Quick Toggles */}
+            {/* Audio Quick Toggles & Practice Looper */}
             <div className="chart-audio-toggles">
               <button
                 type="button"
@@ -355,12 +377,49 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
               >
                 ⏱ {metronome ? 'Click ON' : 'Click OFF'}
               </button>
+
+              <button
+                type="button"
+                className={`btn chart-loop-toggle${isLooping ? ' is-active' : ''}`}
+                onClick={() => setIsLooping(l => !l)}
+                title={isLooping ? 'Disable practice looping' : 'Loop song continuously for practice'}
+              >
+                🔁 {isLooping ? 'Looping ON' : 'Loop OFF'}
+              </button>
+
+              {isLooping && (
+                <div className="chart-ramp-select" title="Speed up automatically upon completing each loop">
+                  <span className="ramp-label">Ramp:</span>
+                  <button
+                    type="button"
+                    className={`btn ramp-btn${speedRamp === 0 ? ' is-active' : ''}`}
+                    onClick={() => setSpeedRamp(0)}
+                  >
+                    Hold
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ramp-btn${speedRamp === 1 ? ' is-active' : ''}`}
+                    onClick={() => setSpeedRamp(1)}
+                  >
+                    +1 BPM
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ramp-btn${speedRamp === 2 ? ' is-active' : ''}`}
+                    onClick={() => setSpeedRamp(2)}
+                  >
+                    +2 BPM
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Interactive Live Guitar Neck with Fingering and Strumming Animation */}
           <LiveGuitarNeck
             voicing={currentVoicing}
+            nextVoicing={nextVoicing}
             chordSymbol={current?.symbol ?? (chart.chords[0] ?? null)}
             nextChordSymbol={next?.symbol ?? null}
             capo={song.capo}
