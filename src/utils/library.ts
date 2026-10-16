@@ -186,9 +186,10 @@ const newId = (): string => {
  */
 function migrateChart(chart: SongChartRecord | null | undefined): SongChartRecord | null {
   if (!chart) return null;
-  if (Array.isArray(chart.lines)) return chart;
+  if (Array.isArray(chart.lines) && chart.lines.length > 0) return chart;
   const { source, ...rest } = chart;
-  return { ...rest, lines: linesFromText(source ?? '', chart.beatsPerBar ?? 4) };
+  if (!source) return chart;
+  return { ...rest, lines: linesFromText(source, chart.beatsPerBar ?? 4) };
 }
 
 export function initLibrary(): Promise<void> {
@@ -209,8 +210,8 @@ export function initLibrary(): Promise<void> {
     sessions = loadedSessions;
     challenge = null;
 
-    // Bring in all 36 songs from the Excel workbook and retire the 30-day challenge
-    const EXCEL_MIGRATION_SETTING = 'seeded-excel-songs-v1';
+    // Bring in all 36 songs from the Excel workbook with full chord chart lines
+    const EXCEL_MIGRATION_SETTING = 'seeded-excel-songs-v2';
     const excelMigrated = settings.find(s => s.id === EXCEL_MIGRATION_SETTING);
     if (!excelMigrated) {
       await clearStore('challenges');

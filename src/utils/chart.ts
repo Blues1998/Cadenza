@@ -1,3 +1,5 @@
+import { normalizeChordSymbol } from './songText';
+
 // A song's chart: the words, the chords, and where in the bar each change
 // lands.
 //
@@ -206,12 +208,29 @@ export function chartDuration(totalBeats: number, tempo: number): string {
 const CHORD_TOKEN_STRICT =
   /^[A-G][#b]?(?:maj7|maj9|maj|M7|min7|min|m7b5|m7|m9|m6|m|sus2|sus4|sus|add9|dim7|dim|aug|11|13|7|9|6|5)?(?:\/[A-G][#b]?)?$/;
 
-export const isChordSymbol = (token: string): boolean => CHORD_TOKEN_STRICT.test(token.trim());
+export const isChordSymbol = (token: string): boolean => {
+  const t = token.trim();
+  if (!t) return false;
+  const norm = normalizeChordSymbol(t);
+  return CHORD_TOKEN_STRICT.test(t) || (norm !== '' && CHORD_TOKEN_STRICT.test(norm));
+};
+
+/** Converts (Chord) parenthesized markers into [Chord] bracketed markers. */
+export function normalizeInlineChords(text: string): string {
+  return text.replace(/\(([A-Ga-g][^)]*)\)/g, (match, inner) => {
+    const trimmed = inner.trim();
+    const norm = normalizeChordSymbol(trimmed);
+    if (isChordSymbol(norm) || isChordSymbol(trimmed)) {
+      return `[${norm || trimmed}]`;
+    }
+    return match;
+  });
+}
 
 const isChordLine = (line: string): boolean => {
   const tokens = line.trim().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return false;
-  return tokens.every(t => CHORD_TOKEN_STRICT.test(t));
+  return tokens.every(t => isChordSymbol(t));
 };
 
 /** Does this look like chords stacked over words rather than written into them? */
@@ -302,6 +321,7 @@ const isSectionBracket = (line: string): boolean => {
 
 /** One line of inline text into words, with each chord attached to the word it starts. */
 function wordsFromLine(text: string): ChartWord[] {
+  const normalized = normalizeInlineChords(text);
   const pending: string[] = [];
   const words: ChartWord[] = [];
   let cursor = 0;
@@ -316,12 +336,14 @@ function wordsFromLine(text: string): ChartWord[] {
   };
 
   CHORD_TOKEN.lastIndex = 0;
-  for (let m = CHORD_TOKEN.exec(text); m; m = CHORD_TOKEN.exec(text)) {
-    pushWords(text.slice(cursor, m.index));
-    pending.push(m[1].trim());
+  for (let m = CHORD_TOKEN.exec(normalized); m; m = CHORD_TOKEN.exec(normalized)) {
+    pushWords(normalized.slice(cursor, m.index));
+    const raw = m[1].trim();
+    const norm = normalizeChordSymbol(raw);
+    pending.push(norm || raw);
     cursor = m.index + m[0].length;
   }
-  pushWords(text.slice(cursor));
+  pushWords(normalized.slice(cursor));
 
   // Chords with no word left to sit on — a change at the end of a line. They get
   // an empty word so they still have somewhere to live and something to click.
@@ -337,8 +359,9 @@ function wordsFromLine(text: string): ChartWord[] {
  */
 export function linesFromText(text: string, beatsPerBar = 4): ChartLineRecord[] {
   const out: ChartLineRecord[] = [];
+  const normalized = normalizeInlineChords(text);
 
-  for (const raw of text.replace(/\r/g, '').split('\n')) {
+  for (const raw of normalized.replace(/\r/g, '').split('\n')) {
     const line = raw.trim();
     if (!line) continue;
 
@@ -473,4 +496,73 @@ export function transposeSymbol(symbol: string, semitones: number): string {
   if (!m || PITCH[m[1]] === undefined) return symbol;
   const rest = m[2].replace(/^\/([A-G][#b]?)/, (_, bass: string) => `/${shiftNote(bass, semitones)}`);
   return shiftNote(m[1], semitones) + rest;
+}
+
+/**
+ * Synthesizes a structured chart from a song's chord progressions and optional lyrics/notes text.
+ * Ensures every song in the repertoire is immediately playable with real guitar and moving rhythm.
+ */
+export function synthesizeChart(
+  progressions: string[][],
+  lyricsText = '',
+  beatsPerBar = 4
+): ChartLineRecord[] {
+  const cleanLyrics = lyricsText
+    ? lyricsText
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 0 && !/^guitar\s*tabs?|pluck|drop|tuning|capo|fret/i.test(l))
+    : [];
+
+  const out: ChartLineRecord[] = [];
+  const progs = progressions.length > 0 ? progressions : [['C', 'G', 'Am', 'F']];
+
+  if (cleanLyrics.length > 0) {
+    const flatChords = progs.flat();
+    let chordIdx = 0;
+
+    out.push({ id: newLineId(), kind: 'section', label: 'Verse' });
+    cleanLyrics.forEach(lineText => {
+      if (/^\[?([A-Za-z0-9 ]+)\]?:$/.test(lineText)) {
+        out.push({ id: newLineId(), kind: 'section', label: lineText.replace(/[[\]:]/g, '').trim() });
+        return;
+      }
+      const words = lineText.split(/\s+/).filter(Boolean);
+      if (words.length === 0) return;
+      const chartWords: ChartWord[] = words.map((w, i) => {
+        const attachChord = i === 0 || (i === Math.floor(words.length / 2) && words.length > 3);
+        const chord = attachChord ? flatChords[chordIdx++ % flatChords.length] : undefined;
+        return { text: w, chord };
+      });
+      out.push({
+        id: newLineId(),
+        kind: 'lyric',
+        words: chartWords,
+        bars: defaultBars(chartWords)
+      });
+    });
+    return out;
+  }
+
+  progs.forEach((prog, pIdx) => {
+    const label = pIdx === 0 ? 'Verse / Progression' : pIdx === 1 ? 'Chorus' : `Part ${pIdx + 1}`;
+    out.push({ id: newLineId(), kind: 'section', label });
+
+    for (let c = 0; c < prog.length; c += 4) {
+      const chunk = prog.slice(c, c + 4);
+      const words: ChartWord[] = chunk.map((chord, i) => ({
+        text: chord,
+        chord: normalizeChordSymbol(chord),
+        beat: i * beatsPerBar
+      }));
+      out.push({
+        id: newLineId(),
+        kind: 'lyric',
+        words,
+        bars: chunk.length
+      });
+    }
+  });
+
+  return out;
 }

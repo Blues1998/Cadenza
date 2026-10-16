@@ -210,6 +210,21 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
           </p>
         </div>
         <div className="song-head-actions">
+          <button
+            type="button"
+            className="song-play-hero-btn"
+            onClick={() => {
+              const el = document.getElementById('song-player-panel');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+                const mainBtn = el.querySelector<HTMLButtonElement>('.transport-btn.is-main');
+                if (mainBtn) mainBtn.focus();
+              }
+            }}
+          >
+            <IconPlay size={14} />
+            Play Song &amp; Guitar
+          </button>
           <Segmented<SongStatus>
             value={song.status}
             onChange={status => void updateSong(song.id, { status })}

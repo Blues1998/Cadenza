@@ -8764,3 +8764,518 @@ button.strumcell:hover { background: var(--surface-3); }
     margin-left: auto;
   }
 }
+
+/* ==========================================================================
+   LIVE GUITAR NECK & SYNCHRONIZED KARAOKE LYRICS ENGINE
+   ========================================================================== */
+
+/* Hero Play Action Button on Song Page Header */
+.song-play-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.song-play-hero-btn:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+}
+
+/* Sound & Click Quick Toggles */
+.chart-sound-toggle,
+.chart-click-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 7px;
+  border: 1px solid var(--panel-border);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chart-sound-toggle.is-active,
+.chart-click-toggle.is-active {
+  background: var(--surface-3);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 10px rgba(var(--surface-tint-rgb), 0.08);
+}
+
+/* Live Guitar Stage Container */
+.live-guitar-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 0.9rem 0 1.2rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #181a1e 0%, #111215 100%);
+  border: 1px solid #2a2d33;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  user-select: none;
+}
+
+.guitar-head-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.guitar-chord-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.guitar-chord-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #7a828e;
+}
+
+.guitar-chord-name {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+  min-width: 3.2rem;
+}
+
+.guitar-chord-voicing {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.guitar-capo-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #f59e0b;
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Dynamic Strum Stroke Banner */
+.guitar-action-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.strum-stroke-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  transition: all 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.strum-stroke-indicator.is-d {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #34d399;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px) scale(1.03);
+}
+
+.strum-stroke-indicator.is-u {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #60a5fa;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px) scale(1.03);
+}
+
+.strum-stroke-indicator.is-x {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #f87171;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+  transform: translateY(-1px) scale(1.03);
+}
+
+.stroke-arrow {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+/* Strum Tape Grid */
+.live-strum-tape {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.4rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tape-cell {
+  width: 1.4rem;
+  height: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.04);
+  transition: all 0.1s ease;
+}
+
+.tape-cell.is-rest {
+  opacity: 0.45;
+}
+
+.tape-cell.is-active {
+  background: var(--primary);
+  color: #ffffff;
+  transform: scale(1.15);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+}
+
+/* Guitar Fretboard & Neck */
+.guitar-neck-box {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+}
+
+.guitar-neck {
+  position: relative;
+  display: flex;
+  min-width: 580px;
+  height: 165px;
+  background: linear-gradient(180deg, #241c17 0%, #18120e 45%, #1f1712 100%);
+  border-radius: 8px;
+  border-top: 2px solid #3d2f26;
+  border-bottom: 2px solid #3d2f26;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Nut */
+.neck-nut {
+  width: 2.2rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, #e2dcd2 0%, #cfc8be 60%, #b8b1a5 100%);
+  border-right: 3px solid #1a1613;
+  border-radius: 6px 0 0 6px;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.5);
+}
+
+.nut-cap {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #5c554e;
+  transform: rotate(-90deg);
+}
+
+.neck-nut.is-fret {
+  background: #241c17;
+  border-right: 3px solid #8c929a;
+}
+
+.base-fret-number {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+/* Capo Clamp Bar */
+.neck-capo-bar {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 14px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #d97706 0%, #92400e 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 4px;
+  z-index: 20;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5), inset 0 0 3px #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.capo-bar-label {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 800;
+  color: #ffffff;
+  transform: rotate(-90deg);
+  white-space: nowrap;
+}
+
+/* Fret Wire Columns */
+.neck-frets {
+  position: absolute;
+  inset: 0;
+  left: 2.2rem;
+  display: flex;
+  pointer-events: none;
+}
+
+.neck-fret-col {
+  flex: 1;
+  position: relative;
+  border-right: 3px solid #94a3b8;
+  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 0.35rem;
+}
+
+.fret-num-sub {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #64748b;
+  opacity: 0.8;
+}
+
+/* Position Inlay Markers */
+.neck-inlay-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f1f5f9 0%, #cbd5e1 70%, #94a3b8 100%);
+  opacity: 0.65;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.neck-inlay-double {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+/* 6 Strings Layer */
+.neck-strings {
+  position: absolute;
+  inset: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 0.4rem 0;
+  z-index: 10;
+}
+
+.neck-string-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+
+/* String Tuning Name & Nut Open/Muted indicator */
+.string-nut-indicator {
+  width: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.4rem;
+  z-index: 12;
+}
+
+.string-name {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.nut-marker {
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.nut-marker.is-muted {
+  color: #dc2626;
+  opacity: 0.9;
+}
+
+.nut-marker.is-open {
+  color: #10b981;
+  opacity: 0.95;
+  transition: transform 0.1s ease;
+}
+
+.nut-marker.is-open.is-pulsing {
+  transform: scale(1.3);
+  text-shadow: 0 0 8px #10b981;
+}
+
+/* String Metal Wire */
+.string-wire {
+  position: absolute;
+  left: 2.2rem;
+  right: 0;
+  background: linear-gradient(180deg, #f8fafc 0%, #94a3b8 60%, #475569 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+.string-wire.is-vibrating {
+  animation: stringVibrate 0.14s ease-in-out infinite alternate;
+  background: linear-gradient(180deg, #ffffff 0%, #38bdf8 60%, #0284c7 100%);
+  box-shadow: 0 0 6px #38bdf8;
+}
+
+@keyframes stringVibrate {
+  0% { transform: translateY(-1.2px); }
+  100% { transform: translateY(1.2px); }
+}
+
+/* Fretted Finger Dots */
+.fret-finger-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  cursor: default;
+  transition: transform 0.12s ease;
+}
+
+.fret-finger-dot.is-struck {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  transform: translate(-50%, -50%) scale(1.18);
+  box-shadow: 0 0 16px #10b981, 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.finger-num {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.finger-note {
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+/* Synchronized Karaoke / Moving Lyrics Stage */
+.chart-lyrics-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.6rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--surface-1);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+}
+
+.chart-lyrics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.chart-position {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.chart-progress-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+.chart-progress-bottom span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, #10b981 100%);
+  transition: width 0.15s linear;
+}
+
+/* Active Moving Karaoke Word Highlight */
+.chart-seg.is-active-word .chart-seg-text {
+  font-weight: 700;
+  color: #38bdf8;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+  transform: scale(1.05);
+  display: inline-block;
+  transition: all 0.1s ease;
+}
+
+.chart-seg.is-active-word .chart-seg-chord {
+  opacity: 1;
+  color: #38bdf8;
+  transform: translateY(-2px);
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+}
+

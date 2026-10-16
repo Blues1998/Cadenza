@@ -1,15 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChordDiagram } from './ChordDiagram';
-import { audio } from '../utils/audio';
 import { Segmented } from './Segmented';
 import { StrumGrid } from './StrumGrid';
 import { IconPause, IconPlay, IconSection, IconStop } from './Icons';
 import { COMFORT_LABEL, comfortOf, preferredVoicing } from '../utils/chordbook';
 import { fitSong } from '../utils/fit';
-import { songChords, updateSong } from '../utils/library';
+import { songChords, songProgressions, updateSong } from '../utils/library';
 import type { Song } from '../utils/library';
 import { useChartTransport } from '../hooks/useChartTransport';
 import { parseStrum } from '../utils/strum';
+import { LiveGuitarNeck } from './LiveGuitarNeck';
 import {
   chartDuration,
   chordsAtBeat,
@@ -22,6 +21,7 @@ import {
   looksLikeAboveLine,
   newLineId,
   stripHeaders,
+  synthesizeChart,
   timeChart,
   TEMPO_MAX,
   TEMPO_MIN,
@@ -38,21 +38,13 @@ type Mode = 'play' | 'edit' | 'import';
 const BEATS_PER_BAR = [3, 4, 6];
 
 /** The shape for a chord symbol, or null when we cannot place it on a neck. */
-// The shape you chose for this chord, not whichever one is easiest. A play-along
-// showing a grip you do not use is a play-along you look away from.
 const useVoicing = (symbol: string | null) =>
   useMemo(() => (symbol ? preferredVoicing(symbol) : null), [symbol]);
 
 /**
  * The words and the chord changes, in time.
- *
- * Three things one panel has to do, so three modes rather than one crowded one:
- * take a sheet in from wherever it was found, let every chord and every word be
- * changed by pressing it, and play the result against a click.
- *
- * The editing surface is the sheet itself. An earlier version of this was a
- * textarea of bracket notation — a fine storage format and a miserable thing to
- * fix one chord in.
+ * Includes interactive real-time guitar fretboard neck, pick stroke animations,
+ * and synchronized scrolling lyrics.
  */
 export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   const stored = song.chart;
@@ -61,18 +53,26 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     beatsPerBar: stored?.beatsPerBar ?? DEFAULT_CHART.beatsPerBar,
     countInBars: stored?.countInBars ?? DEFAULT_CHART.countInBars
   };
-  const lines = useMemo(() => stored?.lines ?? [], [stored]);
+
   const transpose = stored?.transpose ?? 0;
-  // Minus the capo is the shift that turns a sheet written at sounding pitch
-  // into the shapes the hands are making.
   const capoShift = song.capo ? -song.capo : 0;
 
-  const [mode, setMode] = useState<Mode>(lines.length === 0 ? 'import' : 'play');
-  const [playChords, setPlayChords] = useState(false);
+  // Auto-synthesize chart from progressions and lyrics/notes if none is explicitly saved
+  const lines = useMemo(() => {
+    if (stored?.lines && stored.lines.length > 0) return stored.lines;
+    if (stored?.source) {
+      const parsed = linesFromText(stored.source, settings.beatsPerBar);
+      if (parsed.length > 0) return parsed;
+    }
+    const progs = songProgressions(song);
+    return synthesizeChart(progs, song.notes, settings.beatsPerBar);
+  }, [stored, song, settings.beatsPerBar]);
 
-  // The song's own strumming, if it has any recorded. A sheet with a pattern
-  // written on it should play with that pattern — otherwise the play-along is
-  // telling you one thing and playing you another.
+  const [mode, setMode] = useState<Mode>('play');
+  const [playChords, setPlayChords] = useState(true);
+  const [metronome, setMetronome] = useState(true);
+
+  // The song's own strumming, if it has any recorded
   const pattern = useMemo(
     () => parseStrum(song.strumming ?? '', settings.beatsPerBar),
     [song.strumming, settings.beatsPerBar]
@@ -86,45 +86,35 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   const { phase, beat, slot, start, stop, pause, resume, countInBeats } = useChartTransport(
     chart,
     settings,
-    { playChords, pattern: playChords ? pattern : null }
+    { playChords, metronome, strum: true, pattern: playChords ? pattern : null }
   );
-  // Three readings of one phase. `moving` is the clock actually running;
-  // `running` is a run in progress, paused or not, and is what locks the tempo
-  // and metre; `holding` is a position worth showing, which a pause keeps.
+
   const moving = phase === 'countin' || phase === 'playing';
   const running = moving || phase === 'paused';
   const holding = phase === 'playing' || phase === 'paused';
-  // Pausing during the count-in should hold the count, not blank it.
   const counting = phase === 'countin' || (phase === 'paused' && beat < 0);
 
   const currentLine = holding ? lineAtBeat(chart, beat) : null;
   const { current, next } = holding
     ? chordsAtBeat(chart, beat)
     : { current: null, next: chart.lines[0]?.chords[0] ?? null };
-  // Only while playing along — this is the one place the question "can I even
-  // play this?" is worth interrupting for, and only when there is an answer.
+
   const fit = useMemo(() => fitSong(song), [song]);
 
-  const currentVoicing = useVoicing(current?.symbol ?? null);
-  const nextVoicing = useVoicing(next?.symbol ?? null);
+  const currentVoicing = useVoicing(current?.symbol ?? (chart.chords[0] ?? null));
+
+  const activeStroke = useMemo(() => {
+    if (!pattern || slot < 0 || !moving) return null;
+    return pattern.steps[slot % pattern.steps.length] ?? null;
+  }, [pattern, slot, moving]);
 
   const patch = (next: Partial<NonNullable<Song['chart']>>) =>
     void updateSong(song.id, { chart: { lines, ...settings, transpose, ...next } });
 
-  // Everything the editor shows is in the key on screen, so a chord typed while
-  // the capo lens is on is stored shifted back. Editing what you can see is the
-  // whole point of the lens; storing what was typed would silently disagree.
   const toDisplay = (symbol: string) => transposeSymbol(symbol, transpose);
   const toStored = (symbol: string) => transposeSymbol(symbol, -transpose);
 
-  // Keep the line being sung in the middle of the panel's own scroller rather
-  // than moving the page under you.
-  //
-  // Measured between the two rectangles, not from offsetTop. offsetTop is the
-  // distance to the nearest *positioned* ancestor, and a scroller is not one
-  // unless it says so — so it was reporting the panel's distance down the page,
-  // several times the scroller's own height, and the first line of every song
-  // scrolled the sheet straight to the bottom.
+  // Auto-scroll lyrics smoothly keeping current line centered
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!running || !currentLine) return;
@@ -132,13 +122,10 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     const el = box?.querySelector<HTMLElement>(`[data-line="${currentLine.index}"]`);
     if (!el || !box) return;
     const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
-    // Negative for the opening lines, which scrollTo clamps to 0: nothing to
-    // centre onto until the song is deep enough to have something above it.
     box.scrollTo({ top: top - box.clientHeight / 2 + el.offsetHeight / 2, behavior: 'smooth' });
   }, [running, currentLine]);
 
-  // Tap tempo: the interval between the last few taps, which is how you find a
-  // song's tempo when all you have is the song.
+  // Tap tempo
   const taps = useRef<number[]>([]);
   const tapTempo = () => {
     const now = performance.now();
@@ -152,15 +139,15 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   };
 
   const modes: { value: Mode; label: string }[] = [
-    { value: 'play', label: 'Play' },
+    { value: 'play', label: 'Play Along' },
     { value: 'edit', label: 'Edit' },
     { value: 'import', label: 'Import' }
   ];
 
   return (
-    <section className="song-panel chart-panel">
+    <section className="song-panel chart-panel" id="song-player-panel">
       <div className="surface-label">
-        <IconSection kind="chart" /><span>Chart</span>
+        <IconSection kind="chart" /><span>Live Guitar &amp; Lyrics</span>
         {lines.length > 0 && (
           <span className="readout">
             {chart.lines.length} lines · {chart.chords.length} chords · {chartDuration(chart.totalBeats, settings.tempo)}
@@ -194,11 +181,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
         />
       )}
 
-      {mode !== 'import' && lines.length === 0 && (
-        <p className="song-empty">Nothing here yet. Import a sheet, or add lines by hand in Edit.</p>
-      )}
-
-      {mode === 'play' && lines.length > 0 && (
+      {mode === 'play' && (
         <>
           {fit?.improves && (
             <div className="chart-fit">
@@ -220,6 +203,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
             </div>
           )}
 
+          {/* Transport Controls Bar */}
           <div className="chart-transport">
             <div className="transport">
               <button
@@ -229,13 +213,10 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                 aria-label={moving ? 'Pause' : phase === 'paused' ? 'Resume' : phase === 'done' ? 'Play again' : 'Play along'}
                 title={moving ? 'Pause' : phase === 'paused' ? 'Resume' : phase === 'done' ? 'Play again' : 'Play along'}
               >
-                {/* Both icons live in the button and trade places, so the
-                    change is a movement rather than a swap. */}
                 <span className="transport-icons" aria-hidden="true">
                   <IconPlay size={18} className="transport-play" fill="currentColor" strokeWidth={1.5} />
                   <IconPause size={18} className="transport-pause" fill="currentColor" strokeWidth={1} />
                 </span>
-                {/* One ring per beat, keyed so it starts again on each. */}
                 {moving && <span key={beat} className="transport-beat" aria-hidden="true" />}
               </button>
               <button
@@ -267,97 +248,94 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
             <button type="button" className="btn chart-tap" onClick={tapTempo} disabled={running}>Tap</button>
 
             <label className="chart-signature">
-              <span className="field-label">Beats/bar</span>
+              <span className="field-label">Metre</span>
               <select
                 className="select-field"
                 value={settings.beatsPerBar}
                 disabled={running}
                 onChange={e => patch({ beatsPerBar: Number(e.target.value) })}
               >
-                {BEATS_PER_BAR.map(n => <option key={n} value={n}>{n}</option>)}
+                {BEATS_PER_BAR.map(n => <option key={n} value={n}>{n}/4</option>)}
               </select>
             </label>
 
-            <label className="chart-toggle">
-              <input type="checkbox" checked={playChords} onChange={e => setPlayChords(e.target.checked)} />
-              Sound the chords
-            </label>
+            <button
+              type="button"
+              className={`btn chart-sound-toggle${playChords ? ' is-active' : ''}`}
+              onClick={() => setPlayChords(p => !p)}
+              title={playChords ? 'Mute guitar playback' : 'Play guitar with strumming pattern'}
+            >
+              🎸 {playChords ? 'Guitar ON' : 'Guitar Muted'}
+            </button>
+
+            <button
+              type="button"
+              className={`btn chart-click-toggle${metronome ? ' is-active' : ''}`}
+              onClick={() => setMetronome(m => !m)}
+              title={metronome ? 'Mute metronome click' : 'Enable metronome click'}
+            >
+              ⏱ {metronome ? 'Click ON' : 'Click OFF'}
+            </button>
           </div>
 
-          {playChords && (
+          {/* Interactive Live Guitar Neck with Fingering and Strumming Animation */}
+          <LiveGuitarNeck
+            voicing={currentVoicing}
+            chordSymbol={current?.symbol ?? (chart.chords[0] ?? null)}
+            nextChordSymbol={next?.symbol ?? null}
+            capo={song.capo}
+            activeSlot={slot}
+            pattern={pattern}
+            isPlaying={moving}
+            stroke={activeStroke}
+            beat={beat}
+            beatsPerBar={settings.beatsPerBar}
+          />
+
+          {/* Strumming pattern editor/customizer */}
+          {playChords && pattern && (
             <div className="chart-strum">
-              {pattern ? (
-                <>
-                  <StrumGrid
-                    pattern={pattern}
-                    live={slot}
-                    onChange={text => void updateSong(song.id, { strumming: text })}
-                  />
-                  <span className="readout chart-strumnote">
-                    this song's strumming · press a cell to change it
-                  </span>
-                </>
-              ) : (
-                <span className="readout chart-strumnote">
-                  No strumming pattern recorded, so the chords land on the changes. Write one beside the sheet and it plays that instead.
-                </span>
-              )}
+              <StrumGrid
+                pattern={pattern}
+                live={slot}
+                onChange={text => void updateSong(song.id, { strumming: text })}
+              />
+              <span className="readout chart-strumnote">
+                Strumming pattern · Click a cell to customize strokes
+              </span>
             </div>
           )}
 
-          <div className="chart-now">
-            <div className={`chart-chord-now${holding ? ' is-live' : ''}`}>
-              <span className="surface-label">{counting ? 'Count in' : 'Now'}</span>
-              {counting ? (
-                <span className="chart-countin readout">{countInBeats + beat + 1}</span>
-              ) : (
-                <>
-                  <span className="chart-chord-name">{current?.symbol ?? '—'}</span>
-                  {currentVoicing && (
-                    <button
-                      type="button"
-                      className="chordcard-play"
-                      onClick={() => audio.playStrum(currentVoicing.midis)}
-                      aria-label={`Hear ${current?.symbol ?? 'this chord'} strummed`}
-                      title={`Hear it — ${currentVoicing.label}`}
-                    >
-                      <ChordDiagram frets={currentVoicing.frets} fingers={currentVoicing.fingers} scale={0.58} />
-                    </button>
-                  )}
-                </>
-              )}
+          {/* Moving Lyrics (Karaoke / Teleprompter Display) */}
+          <div className="chart-lyrics-stage">
+            <div className="chart-lyrics-header">
+              <span className="surface-label">Moving Lyrics with Tempo</span>
+              <span className="chart-position readout">
+                {counting
+                  ? `Count in: ${countInBeats + beat + 1}`
+                  : moving
+                  ? `Bar ${Math.max(1, Math.floor(beat / settings.beatsPerBar) + 1)} · Beat ${((beat % settings.beatsPerBar) + settings.beatsPerBar) % settings.beatsPerBar + 1}`
+                  : `${chart.totalBeats / settings.beatsPerBar} bars total`}
+              </span>
             </div>
-            <div className="chart-chord-next">
-              <span className="surface-label">Next</span>
-              <span className="chart-chord-name">{next?.symbol ?? '—'}</span>
-              {nextVoicing && (
-                <button
-                  type="button"
-                  className="chordcard-play"
-                  onClick={() => audio.playStrum(nextVoicing.midis)}
-                  aria-label={`Hear ${next?.symbol ?? 'the next chord'} strummed`}
-                  title={`Hear it — ${nextVoicing.label}`}
-                >
-                  <ChordDiagram frets={nextVoicing.frets} fingers={nextVoicing.fingers} scale={0.5} />
-                </button>
-              )}
+
+            <div className="chart-lines" ref={scroller}>
+              {chart.lines.map(line => (
+                <SheetLine
+                  key={line.id}
+                  line={line}
+                  chart={chart}
+                  isNow={currentLine?.index === line.index}
+                  beat={beat}
+                  live={holding ? current : null}
+                  beatsPerBar={settings.beatsPerBar}
+                />
+              ))}
             </div>
-            <div className="chart-progress" aria-hidden="true">
+
+            <div className="chart-progress-bottom" aria-hidden="true">
               <span style={{ width: `${Math.max(0, Math.min(1, beat / Math.max(1, chart.totalBeats))) * 100}%` }} />
             </div>
-          </div>
-
-          <div className="chart-lines" ref={scroller}>
-            {chart.lines.map(line => (
-              <SheetLine
-                key={line.id}
-                line={line}
-                chart={chart}
-                isNow={currentLine?.index === line.index}
-                live={holding ? current : null}
-                beatsPerBar={settings.beatsPerBar}
-              />
-            ))}
           </div>
         </>
       )}
@@ -382,18 +360,22 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
 };
 
 // ---------------------------------------------------------------------------
-// One line of the sheet, read-only
+// One line of the sheet, with real-time moving beat and chord highlights
 // ---------------------------------------------------------------------------
 
 const SheetLine: React.FC<{
   line: ChartLine;
   chart: ParsedChart;
   isNow: boolean;
+  beat: number;
   live: { beat: number } | null;
   beatsPerBar: number;
-}> = ({ line, chart, isNow, live, beatsPerBar }) => {
+}> = ({ line, chart, isNow, beat, live, beatsPerBar }) => {
   const showSection = line.section && (line.index === 0 || chart.lines[line.index - 1].section !== line.section);
   let cursor = 0;
+  const beatInLine = isNow ? beat - line.startBeat : -1;
+  const totalSegs = line.segments.length;
+
   return (
     <>
       {showSection && <p className="chart-section">{line.section}</p>}
@@ -401,11 +383,12 @@ const SheetLine: React.FC<{
         <span className="chart-bar-count readout">{line.beats / beatsPerBar}</span>
         {line.segments.map((seg, i) => {
           const chord = seg.chord ? line.chords[cursor++] : null;
-          const isLive = live && chord && Math.abs(chord.beat - live.beat) < 1e-6;
+          const isLiveChord = live && chord && Math.abs(chord.beat - live.beat) < 1e-6;
+          const isLiveWord = isNow && beatInLine >= 0 && Math.floor((beatInLine / Math.max(1, line.beats)) * totalSegs) === i;
           return (
-            <span key={i} className="chart-seg">
+            <span key={i} className={`chart-seg${isLiveWord ? ' is-active-word' : ''}`}>
               <span
-                className={`chart-seg-chord readout${isLive ? ' is-live' : ''}${seg.chord ? ` is-${comfortOf(seg.chord)}` : ''}`}
+                className={`chart-seg-chord readout${isLiveChord ? ' is-live' : ''}${seg.chord ? ` is-${comfortOf(seg.chord)}` : ''}`}
                 title={seg.chord ? `${seg.chord} · ${COMFORT_LABEL[comfortOf(seg.chord)]}` : undefined}
               >{seg.chord ?? ''}</span>
               <span className="chart-seg-text">{seg.text || (seg.chord ? ' ' : '')}</span>

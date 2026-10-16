@@ -90,9 +90,9 @@ export function useChartTransport(
     tempo,
     beatsPerBar,
     countInBeats,
-    playChords: options.playChords ?? false,
+    playChords: options.playChords ?? true,
     loop: options.loop ?? false,
-    strum: options.strum ?? false,
+    strum: options.strum ?? true,
     metronome: options.metronome ?? true,
     pattern: options.pattern ?? null,
     shapes: options.shapes ?? EMPTY_SHAPES
