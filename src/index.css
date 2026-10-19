@@ -9574,6 +9574,28 @@ button.strumcell:hover { background: var(--surface-3); }
   transform: translateY(-1px);
 }
 
+.palette-stroke-btn.is-shift {
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: #c084fc;
+}
+
+.palette-stroke-btn.is-shift:hover {
+  background: rgba(168, 85, 247, 0.3);
+  transform: translateY(-1px);
+}
+
+.palette-stroke-btn.is-pop {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+
+.palette-stroke-btn.is-pop:hover {
+  background: rgba(245, 158, 11, 0.3);
+  transform: translateY(-1px);
+}
+
 .palette-stroke-btn.is-clear {
   background: var(--surface-2);
   border: 1px solid var(--panel-border);

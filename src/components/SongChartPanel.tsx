@@ -7,7 +7,7 @@ import { fitSong } from '../utils/fit';
 import { songChords, songProgressions, updateSong } from '../utils/library';
 import type { Song } from '../utils/library';
 import { useChartTransport } from '../hooks/useChartTransport';
-import { getPresetsForMeter, getTempoMarking, parseStrum } from '../utils/strum';
+import { formatStrum, getPresetsForMeter, getTempoMarking, parseStrum, tokenize } from '../utils/strum';
 import { LiveGuitarNeck } from './LiveGuitarNeck';
 import {
   chartDuration,
@@ -172,6 +172,30 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     const current = (song.strumming || '').trim();
     const next = current ? `${current} ${stroke}` : stroke;
     void updateSong(song.id, { strumming: next });
+  };
+
+  const popStroke = () => {
+    if (!song.strumming) return;
+    const tokens = tokenize(song.strumming);
+    if (tokens.length <= 1) {
+      void updateSong(song.id, { strumming: '' });
+      return;
+    }
+    tokens.pop();
+    void updateSong(song.id, { strumming: tokens.join(' ') });
+  };
+
+  const shiftStrum = (direction: -1 | 1) => {
+    if (!pattern || pattern.steps.length === 0) return;
+    const steps = [...pattern.steps];
+    if (direction === 1) {
+      const last = steps.pop()!;
+      steps.unshift(last);
+    } else {
+      const first = steps.shift()!;
+      steps.push(first);
+    }
+    void updateSong(song.id, { strumming: formatStrum({ ...pattern, steps }) });
   };
 
   const modes: { value: Mode; label: string }[] = [
@@ -494,15 +518,48 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                   >
                     · Rest
                   </button>
+                  {pattern && pattern.steps.length > 0 && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn palette-stroke-btn is-shift"
+                        onClick={() => shiftStrum(-1)}
+                        title="Nudge / Shift pattern left by 1 subdivision (←)"
+                        aria-label="Shift left"
+                      >
+                        ← Shift
+                      </button>
+                      <button
+                        type="button"
+                        className="btn palette-stroke-btn is-shift"
+                        onClick={() => shiftStrum(1)}
+                        title="Nudge / Shift pattern right by 1 subdivision (→)"
+                        aria-label="Shift right"
+                      >
+                        Shift →
+                      </button>
+                    </>
+                  )}
                   {song.strumming && (
-                    <button
-                      type="button"
-                      className="btn palette-stroke-btn is-clear"
-                      onClick={() => void updateSong(song.id, { strumming: '' })}
-                      title="Clear pattern"
-                    >
-                      Clear
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="btn palette-stroke-btn is-pop"
+                        onClick={popStroke}
+                        title="Delete last stroke (⌫)"
+                        aria-label="Delete last stroke"
+                      >
+                        ⌫ Undo
+                      </button>
+                      <button
+                        type="button"
+                        className="btn palette-stroke-btn is-clear"
+                        onClick={() => void updateSong(song.id, { strumming: '' })}
+                        title="Clear entire pattern"
+                      >
+                        Clear
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

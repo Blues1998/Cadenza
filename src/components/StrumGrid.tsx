@@ -73,7 +73,12 @@ export const StrumGrid: React.FC<StrumGridProps> = ({ pattern, live = -1, onChan
                 type="button"
                 className={className}
                 onClick={() => onChange(withStroke(pattern, index, next))}
-                title={`${label} — Click to switch to ${NAME[next]} (${FACE[next]})`}
+                onContextMenu={e => {
+                  e.preventDefault();
+                  const toggled = stroke === '-' ? (onBeat(pattern, index) ? 'D' : 'U') : '-';
+                  onChange(withStroke(pattern, index, toggled));
+                }}
+                title={`${label} — Click to switch to ${NAME[next]} (${FACE[next]}) · Right-click to toggle rest (·)`}
                 aria-label={`${label} — Click to switch to ${NAME[next]}`}
               >
                 <span className="strumcell-count">{countLabel(pattern, index)}</span>

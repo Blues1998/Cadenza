@@ -107,7 +107,7 @@ const BAR_LINE = /\|/;
  * counting people write above a pattern ("1 & 2 &") all fall out, so a pattern
  * copied off a lesson sheet with its counting attached still reads.
  */
-const tokenize = (text: string): Stroke[] => {
+export const tokenize = (text: string): Stroke[] => {
   const out: Stroke[] = [];
   for (const ch of text.toLowerCase()) {
     const stroke = STROKE_OF[ch];
@@ -126,24 +126,63 @@ const wants = (stroke: Stroke): 'down' | 'up' | 'either' =>
   stroke === 'D' ? 'down' : stroke === 'U' ? 'up' : 'either';
 
 /**
- * One bar's worth of written strokes, placed where the arm could play them.
+ * One bar's worth of written strokes, placed where the arm plays them.
  *
- * Every bar starts with the arm coming down, so placement starts from slot 0
- * each time and a bar line is a real reset rather than a hint.
+ * If explicit rests ('-') are present or if the number of tokens exactly matches
+ * the bar's subdivisions (e.g. 8 eighth-notes like "DD UUD DDU" in 4/4), strokes are placed
+ * 1-to-1 without forcing skips.
+ *
+ * Shorthand patterns (like "D D U U D U" or "D D D D") expand onto downbeats/upbeats,
+ * falling back to sequential placement if alternating skips would spill over the bar.
  */
-function place(tokens: Stroke[]): Stroke[] {
+function place(tokens: Stroke[], slots: number, beatsPerBar: number): Stroke[] {
+  // 1. Explicit rests present: preserve exact grid positions
+  if (tokens.some(t => t === '-')) {
+    const placed = [...tokens];
+    while (placed.length < slots) placed.push('-');
+    return placed;
+  }
+
+  // 2. Exact match with slots (e.g. 8 tokens in 4/4 like "DD UUD DDU" or 16 in sixteenths)
+  if (tokens.length === slots) {
+    return [...tokens];
+  }
+
+  // 3. Exact on-beat match (e.g. 4 quarter notes "D D D D" in 4/4)
+  if (tokens.length === beatsPerBar) {
+    const perBeat = slots / beatsPerBar;
+    const placed: Stroke[] = [];
+    for (const token of tokens) {
+      placed.push(token);
+      for (let p = 1; p < perBeat; p++) placed.push('-');
+    }
+    return placed;
+  }
+
+  // 4. Standard alternating rhythmic placement for shorthand patterns
   const placed: Stroke[] = [];
   let slot = 0;
   for (const token of tokens) {
     const want = wants(token);
-    // The arm moves at whatever the grid is: it is down on every other slot,
-    // up on the ones between. Sixteenth strumming is the same motion twice as
-    // fast, not eighth motion with extra cells.
     if (want !== 'either' && (want === 'down') !== (slot % 2 === 0)) slot += 1;
     while (placed.length < slot) placed.push('-');
     placed.push(token);
     slot = placed.length;
   }
+
+  // If shorthand placement fit cleanly inside the bar:
+  if (placed.length <= slots) {
+    while (placed.length < slots) placed.push('-');
+    return placed;
+  }
+
+  // If shorthand forced an overflow even though tokens could fit in the bar, fall back to sequential placement:
+  if (tokens.length <= slots) {
+    const sequential = [...tokens];
+    while (sequential.length < slots) sequential.push('-');
+    return sequential;
+  }
+
   return placed;
 }
 
@@ -168,7 +207,7 @@ export function parseStrum(text: string, beatsPerBar = 4): StrumPattern | null {
   const steps: Stroke[] = [];
   let bars = 0;
   for (const tokens of written) {
-    const placed = place(tokens);
+    const placed = place(tokens, slots, beatsPerBar);
     // Out to the end of the bar it finishes in: a bar is a length of time, and
     // the rest of that time is part of it. A bar written with more in it than
     // a hand can fit still runs over rather than being squeezed.
@@ -294,6 +333,7 @@ export function getPresetsForMeter(beatsPerBar: number): MeterPreset[] {
   }
   // Default 4/4
   return [
+    { name: 'Bollywood / Folk (DD UUD DDU)', pattern: 'DD UUD DDU' },
     { name: 'Calypso / Pop', pattern: 'D D U U D U' },
     { name: 'Steady Downs', pattern: 'D D D D' },
     { name: 'Rock Groove', pattern: 'D - D U - U D U' },
