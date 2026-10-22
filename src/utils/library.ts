@@ -37,6 +37,7 @@ import { exportRecords, importRecords, loadRecords, type LoopRecord } from './re
 import { parseProgressions, uniqueChords } from './songText';
 import { linesFromText, type ChartLineRecord } from './chart';
 import { INITIAL_SONGS } from '../data/septemberSeed';
+import { syncUpsertSong, syncDeleteSong } from './cloudSync';
 
 export type SongStatus = 'learning' | 'playable' | 'solid' | 'complete';
 
@@ -461,6 +462,7 @@ export async function createSong(input: SongInput): Promise<Song> {
   songs = [...songs, song];
   await putRecords('songs', [song]);
   announce();
+  void syncUpsertSong(song);
   return song;
 }
 
@@ -472,6 +474,7 @@ export async function updateSong(id: string, patch: Partial<SongInput>): Promise
   songs = songs.map(s => (s.id === id ? next : s));
   await putRecords('songs', [next]);
   announce();
+  void syncUpsertSong(next);
   return next;
 }
 
@@ -483,6 +486,7 @@ export async function deleteSong(id: string): Promise<void> {
   // A session with no song is a row nothing can ever show or explain.
   await Promise.all(doomed.map(s => deleteRecord('sessions', s.id)));
   announce();
+  void syncDeleteSong(id);
 }
 
 export interface SessionInput {

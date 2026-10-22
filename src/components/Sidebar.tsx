@@ -4,6 +4,7 @@ import type { ActiveTab } from './navGroups';
 import { IconJump, IconSun, IconMoon } from './Icons';
 import { GROUPS } from './navGroups';
 import { preloadLab } from '../labs/chunks';
+import { AccountButton } from './AccountButton';
 
 export type { ActiveTab } from './navGroups';
 
@@ -206,14 +207,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
         ))}
       </nav>
 
-      <button
-        onClick={toggleTheme}
-        className="theme-toggle"
-        title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-        style={{ alignSelf: collapsed ? 'center' : 'flex-start' }}
-      >
-        {theme === 'dark' ? <IconSun size={17} /> : <IconMoon size={17} />}
-      </button>
+      <div className="sidebar-footer" style={{ alignSelf: collapsed ? 'center' : 'stretch' }}>
+        <AccountButton collapsed={collapsed} />
+        <button
+          onClick={toggleTheme}
+          className="theme-toggle"
+          title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          style={{ alignSelf: collapsed ? 'center' : 'flex-start' }}
+        >
+          {theme === 'dark' ? <IconSun size={17} /> : <IconMoon size={17} />}
+        </button>
+      </div>
     </aside>
   );
 };
