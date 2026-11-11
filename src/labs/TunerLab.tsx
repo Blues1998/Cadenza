@@ -7,10 +7,27 @@ import { useMicPitch } from '../hooks/useMicPitch';
 import { useSpringValue } from '../hooks/useSpringValue';
 import { audio } from '../utils/audio';
 import { noteNameToMidi } from '../utils/musicTheory';
-import { HOLD_MS, IN_TUNE_CENTS, TUNINGS, nearestString, stringsOf } from '../utils/tuning';
+import { HOLD_MS, INSTRUMENTS, IN_TUNE_CENTS, TUNINGS, nearestString, stringsOf, tuningsFor, type Instrument } from '../utils/tuning';
 import { reportProgress } from '../utils/progress';
 
 const TUNING_KEY = 'cadenza-tuning';
+const INSTRUMENT_KEY = 'cadenza-instrument';
+// Guitar keeps the original key so a saved guitar tuning survives the upgrade.
+const tuningKeyFor = (instrument: Instrument) => instrument === 'guitar' ? TUNING_KEY : `${TUNING_KEY}-${instrument}`;
+const readStored = (key: string): string | null => {
+  try { return localStorage.getItem(key); } catch { return null; }
+};
+const storedTuningFor = (instrument: Instrument): string => {
+  const options = tuningsFor(instrument);
+  const saved = readStored(tuningKeyFor(instrument));
+  return options.some(t => t.id === saved) ? saved! : options[0].id;
+};
+
+// Pitch-matching targets, kept to notes the instrument can actually play.
+const GAME_NOTES: Record<Instrument, string[]> = {
+  guitar: ['E2', 'G2', 'A2', 'C3', 'E3', 'G3', 'A3', 'C4', 'E4', 'G4', 'A4'],
+  ukulele: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5']
+};
 
 export const TunerLab: React.FC = () => {
   // Shared microphone + YIN pitch detection pipeline
@@ -30,7 +47,7 @@ export const TunerLab: React.FC = () => {
   // Only the gauge is smoothed. The matching game below still judges the raw
   // estimate, so what it accepts is not softened by a display decision.
   // ---- tuning up, as a thing with a finish line -------------------------
-  // Six strings, ticked off as each one is held in tune. The app's own
+  // Every string, ticked off as each one is held in tune. The app's own
   // counters all report a level; this one reports a job you can finish, which
   // is the only shape "tune up" has ever had.
   const [tuned, setTuned] = useState<Record<number, boolean>>({});
@@ -39,16 +56,27 @@ export const TunerLab: React.FC = () => {
   // Which tuning the guitar is in. Kept across visits, because somebody who
   // plays in DADGAD plays in DADGAD, and re-picking it every time you sit
   // down is the app forgetting something it was told.
-  const [tuningId, setTuningId] = useState<string>(() => {
-    try { return localStorage.getItem(TUNING_KEY) ?? TUNINGS[0].id; } catch { return TUNINGS[0].id; }
-  });
-  const tuning = TUNINGS.find(t => t.id === tuningId) ?? TUNINGS[0];
+  // Guitar or ukulele, remembered the same way; each keeps its own tuning so
+  // flipping between them does not lose either.
+  const [instrument, setInstrument] = useState<Instrument>(() =>
+    readStored(INSTRUMENT_KEY) === 'ukulele' ? 'ukulele' : 'guitar'
+  );
+  const [tuningId, setTuningId] = useState<string>(() => storedTuningFor(instrument));
+  const tuning = TUNINGS.find(t => t.id === tuningId) ?? tuningsFor(instrument)[0];
   const targets = useMemo(() => stringsOf(tuning), [tuning]);
   const pickTuning = (id: string) => {
     setTuningId(id);
     setTuned({});
     settling.current = null;
-    try { localStorage.setItem(TUNING_KEY, id); } catch { /* a blocked store is not worth failing over */ }
+    try { localStorage.setItem(tuningKeyFor(instrument), id); } catch { /* a blocked store is not worth failing over */ }
+  };
+  const pickInstrument = (next: Instrument) => {
+    if (next === instrument) return;
+    setInstrument(next);
+    setTuningId(storedTuningFor(next));
+    setTuned({});
+    settling.current = null;
+    try { localStorage.setItem(INSTRUMENT_KEY, next); } catch { /* as above */ }
   };
 
   // Which string this is, and how far off *it* — not off the nearest note in
@@ -112,8 +140,7 @@ export const TunerLab: React.FC = () => {
     }
   }, [pitchData]);
 
-  // Possible target notes for the matching game (Standard range)
-  const targetNotesList = ['E2', 'G2', 'A2', 'C3', 'E3', 'G3', 'A3', 'C4', 'E4', 'G4', 'A4'];
+  const targetNotesList = GAME_NOTES[instrument];
 
   const selectRandomTargetNote = () => {
     const remaining = targetNotesList.filter(n => n !== targetNote);
@@ -199,6 +226,12 @@ export const TunerLab: React.FC = () => {
       holdMsRef.current = 0;
     }
   }, [gameMode]);
+
+  // A guitar note is no target for a ukulele, and the other way round.
+  useEffect(() => {
+    if (gameMode && !GAME_NOTES[instrument].includes(targetNote)) selectRandomTargetNote();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instrument]);
 
   // (Mic teardown on unmount is handled inside useMicPitch)
 
@@ -290,11 +323,11 @@ export const TunerLab: React.FC = () => {
                   <span>{tuning.name}</span>
                   <span className="readout">
                     {isMicrophoneActive
-                      ? tunedCount === targets.length ? 'all six' : `${tunedCount} of ${targets.length}`
+                      ? tunedCount === targets.length ? `all ${targets.length === 4 ? 'four' : 'six'}` : `${tunedCount} of ${targets.length}`
                       : tuning.note}
                   </span>
                 </div>
-                <div className="strings-row">
+                <div className={`strings-row${targets.length === 4 ? ' is-four' : ''}`}>
                   {targets.map(target => {
                     const here = isMicrophoneActive && onString?.target.number === target.number;
                     const done = tuned[target.number];
@@ -324,11 +357,19 @@ export const TunerLab: React.FC = () => {
                   </button>
                 )}
                 <p className="strings-hint">Press a string to hear it — the other way to tune, and the one that trains an ear.</p>
+                <Segmented<Instrument>
+                  label="Instrument"
+                  value={instrument}
+                  onChange={pickInstrument}
+                  options={INSTRUMENTS.map(i => ({ value: i.id, label: i.name }))}
+                  size="sm"
+                  full
+                />
                 <Segmented<string>
                   label="Tuning"
                   value={tuningId}
                   onChange={pickTuning}
-                  options={TUNINGS.map(t => ({ value: t.id, label: t.name, title: t.note }))}
+                  options={tuningsFor(instrument).map(t => ({ value: t.id, label: t.name, title: t.note }))}
                   size="sm"
                   full
                 />

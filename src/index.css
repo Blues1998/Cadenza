@@ -5715,8 +5715,13 @@ button.dash-card:hover .pickup-go svg {
   gap: 0.35rem;
 }
 
+/* Four ukulele strings sit in one row, at any width. */
+.strings-row.is-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 @media (max-width: 720px) {
-  .strings-row {
+  .strings-row:not(.is-four) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

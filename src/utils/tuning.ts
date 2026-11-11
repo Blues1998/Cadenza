@@ -18,14 +18,16 @@ import { midiToFreq, midiToNoteName } from './musicTheory';
 /**
  * How far from an open string a note can be and still be that string.
  *
- * The closest two strings in standard tuning are four semitones apart, so at
- * 150 cents there is no ambiguity at all and there is still room for a string
- * a tone and a half flat — which is what a fresh one off the packet is.
+ * The closest two strings in standard guitar tuning are four semitones apart,
+ * so at 150 cents there is no ambiguity at all and there is still room for a
+ * string a tone and a half flat — which is what a fresh one off the packet is.
+ * A re-entrant ukulele has G and A only a tone apart; there the nearest string
+ * wins, which is still the right peg until a string is a semitone out.
  */
 export const STRING_WINDOW = 150;
 
 export interface StringTarget {
-  /** 1 = high E, 6 = low E, the way a guitarist counts them. */
+  /** 1 = the string nearest the floor, counting up toward the chin — the way players count them. */
   number: number;
   /** "1st", "6th" — the label on the peg. */
   ordinal: string;
@@ -35,16 +37,25 @@ export interface StringTarget {
   hz: number;
 }
 
-// The sixth string is the lowest one whatever it is tuned to, so the ordinal
-// follows the peg and never the pitch.
-const ORDINALS = ['6th', '5th', '4th', '3rd', '2nd', '1st'];
+// The ordinal follows the peg and never the pitch: a guitar's sixth string is
+// the lowest whatever it is tuned to, and a ukulele's fourth is the G nearest
+// the chin even though, re-entrant, it sits above the C and the E.
+const ORDINAL = ['', '1st', '2nd', '3rd', '4th', '5th', '6th'];
+
+export type Instrument = 'guitar' | 'ukulele';
+
+export const INSTRUMENTS: { id: Instrument; name: string }[] = [
+  { id: 'guitar', name: 'Guitar' },
+  { id: 'ukulele', name: 'Ukulele' }
+];
 
 export interface Tuning {
   id: string;
+  instrument: Instrument;
   name: string;
   /** What it is for, in the few words a hint has room for. */
   note: string;
-  /** Six midi numbers, sixth string first. */
+  /** Midi numbers, top string (highest-numbered) first — the order you tune in. */
   midis: number[];
 }
 
@@ -58,20 +69,29 @@ export interface Tuning {
  * can turn the pegs themselves.
  */
 export const TUNINGS: Tuning[] = [
-  { id: 'standard', name: 'Standard', note: 'E A D G B E', midis: [40, 45, 50, 55, 59, 64] },
-  { id: 'dropd', name: 'Drop D', note: 'D A D G B E — the sixth down a tone', midis: [38, 45, 50, 55, 59, 64] },
-  { id: 'eflat', name: 'Half step down', note: 'E♭ A♭ D♭ G♭ B♭ E♭ — easier on the voice', midis: [39, 44, 49, 54, 58, 63] },
-  { id: 'dadgad', name: 'DADGAD', note: 'D A D G A D — modal, and it rings', midis: [38, 45, 50, 55, 57, 62] },
-  { id: 'openg', name: 'Open G', note: 'D G D G B D — strum it and it is a G', midis: [38, 43, 50, 55, 59, 62] }
+  { id: 'standard', instrument: 'guitar', name: 'Standard', note: 'E A D G B E', midis: [40, 45, 50, 55, 59, 64] },
+  { id: 'dropd', instrument: 'guitar', name: 'Drop D', note: 'D A D G B E — the sixth down a tone', midis: [38, 45, 50, 55, 59, 64] },
+  { id: 'eflat', instrument: 'guitar', name: 'Half step down', note: 'E♭ A♭ D♭ G♭ B♭ E♭ — easier on the voice', midis: [39, 44, 49, 54, 58, 63] },
+  { id: 'dadgad', instrument: 'guitar', name: 'DADGAD', note: 'D A D G A D — modal, and it rings', midis: [38, 45, 50, 55, 57, 62] },
+  { id: 'openg', instrument: 'guitar', name: 'Open G', note: 'D G D G B D — strum it and it is a G', midis: [38, 43, 50, 55, 59, 62] },
+  // Ukulele. Standard is re-entrant: the fourth string is a high G, so the
+  // strings run G4 C4 E4 A4 and the "lowest" peg is not the lowest note.
+  { id: 'uke-standard', instrument: 'ukulele', name: 'Standard', note: 'G C E A — high G, the classic sound', midis: [67, 60, 64, 69] },
+  { id: 'uke-lowg', instrument: 'ukulele', name: 'Low G', note: 'G C E A — low G, a fuller bottom end', midis: [55, 60, 64, 69] },
+  { id: 'uke-d', instrument: 'ukulele', name: 'D tuning', note: 'A D F♯ B — a tone up, the old bright sound', midis: [69, 62, 66, 71] },
+  { id: 'uke-baritone', instrument: 'ukulele', name: 'Baritone', note: 'D G B E — the top four of a guitar', midis: [50, 55, 59, 64] }
 ];
 
-/** The six pegs of a tuning, sixth string first — the order you tune in. */
+export const tuningsFor = (instrument: Instrument): Tuning[] => TUNINGS.filter(t => t.instrument === instrument);
+
+/** The pegs of a tuning, top string first — the order you tune in. */
 export function stringsOf(tuning: Tuning): StringTarget[] {
+  const count = tuning.midis.length;
   return tuning.midis.map((midi, i) => {
     const named = midiToNoteName(midi);
     return {
-      number: 6 - i,
-      ordinal: ORDINALS[i],
+      number: count - i,
+      ordinal: ORDINAL[count - i],
       name: `${named.name}${named.octave}`,
       midi,
       hz: midiToFreq(midi)
