@@ -12,12 +12,12 @@ interface SpringOptions {
 // audio frame. A CSS transition is the wrong tool there: each new value
 // restarts the transition, so a stream of them produces lag rather than
 // smoothing, and the jitter still comes through. A spring is a low-pass filter
-// with a physical feel — noise averages out on the way, and the needle settles
+// with a physical feel, noise averages out on the way, and the needle settles
 // the way a sprung meter does.
 //
 // Critically damped by default, so it never overshoots: a needle that swings
 // past the note you just landed invites you to chase it back. The stiffness is
-// tuned against three things measured together — it settles a 30-cent jump in
+// tuned against three things measured together, it settles a 30-cent jump in
 // about 400ms, suppresses ~70% of the detector's frame-to-frame jitter, and
 // trails a peg being turned at 20 cents/second by under 2 cents. Softer springs
 // filter better but were sluggish enough to feel broken.

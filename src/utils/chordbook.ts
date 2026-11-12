@@ -13,7 +13,7 @@
 // same three run everywhere the app asks: solid, shaky, not yet.
 //
 // The chosen fingering lives here too, next to the comfort, because they are
-// the same fact. "I can play B" is not true of B in general — it is true of
+// the same fact. "I can play B" is not true of B in general, it is true of
 // one shape. Everything that draws or sounds a chord asks here first.
 
 import { STORE_CHANGE_EVENT, putRecords, readAll, clearStore, deleteRecord } from './db';
@@ -39,7 +39,7 @@ export const COMFORT_HINT: Record<ChordComfort, string> = {
 };
 
 export interface ChordSkill {
-  /** The canonical symbol — "Am", "F", "A#m7". This is the key. */
+  /** The canonical symbol, "Am", "F", "A#m7". This is the key. */
   id: string;
   /**
    * How it was written when it was first marked.
@@ -86,7 +86,7 @@ export async function loadChordBook(): Promise<void> {
  *
  * By pitch class, not by spelling. B flat and A sharp are the same grip and
  * the same six strings, and filing them apart would let you mark one solid
- * while the other still says you cannot play it — which is exactly what would
+ * while the other still says you cannot play it, which is exactly what would
  * happen the first time a sheet written in flats met a catalogue written in
  * sharps. Anything we cannot place on a neck keeps the spelling it came with,
  * since we have no grounds for changing it.
@@ -105,7 +105,7 @@ export const skillFor = (symbol: string): ChordSkill | undefined => skills.get(c
 /** A chord nobody has said anything about is one you cannot play. */
 export const comfortOf = (symbol: string): ChordComfort => skillFor(symbol)?.comfort ?? 'none';
 
-/** Solid or shaky — everything you have some claim on. */
+/** Solid or shaky, everything you have some claim on. */
 export const isKnown = (symbol: string): boolean => comfortOf(symbol) !== 'none';
 
 export const knownChords = (): string[] =>
@@ -130,7 +130,7 @@ export function voicingsFor(symbol: string): ChordVoicing[] {
  * The shape to draw and to sound: the one that was chosen, or the easiest.
  *
  * A stored id that no longer matches anything falls back rather than showing
- * nothing — the shape tables can change under a saved preference.
+ * nothing, the shape tables can change under a saved preference.
  */
 export function preferredVoicing(symbol: string): ChordVoicing | null {
   const list = voicingsFor(symbol);
@@ -140,7 +140,7 @@ export function preferredVoicing(symbol: string): ChordVoicing | null {
 }
 
 /**
- * A shape asked for by name — "E-shape barre", "Open C".
+ * A shape asked for by name, "E-shape barre", "Open C".
  *
  * Every other lookup here answers "what do you play this with", which is a
  * fact about the person. This one answers "which of these is that one", which
@@ -185,7 +185,7 @@ export async function setPreferredVoicing(symbol: string, voicingId: string | nu
   });
 }
 
-/** Removes a chord from the book entirely — not the same as marking it "not yet". */
+/** Removes a chord from the book entirely, not the same as marking it "not yet". */
 export async function forgetChord(symbol: string): Promise<void> {
   const id = chordKey(symbol);
   if (!skills.has(id)) return;

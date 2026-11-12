@@ -65,7 +65,7 @@ export const TunerDial: React.FC<TunerDialProps> = ({ cents, inTune }) => {
         return <line key={cent} className={`dial-tick${cent === 0 ? ' is-home' : ''}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />;
       })}
 
-      {/* Flat and sharp, in the notation rather than in words — this is read
+      {/* Flat and sharp, in the notation rather than in words, this is read
           from a metre away with a guitar in the way. */}
       <text className="dial-side" x={point(-SWEEP, DIAL + 20).x} y={point(-SWEEP, DIAL + 20).y} textAnchor="middle">♭</text>
       <text className="dial-side" x={point(SWEEP, DIAL + 20).x} y={point(SWEEP, DIAL + 20).y} textAnchor="middle">♯</text>

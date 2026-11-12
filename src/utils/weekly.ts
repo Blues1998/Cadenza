@@ -7,7 +7,7 @@
 // have spent entirely reasonably.
 //
 // What replaces them is an account of the last seven days assembled from the
-// three stores that now hold something worth reading back — the practice
+// three stores that now hold something worth reading back, the practice
 // ledger, the chord book, and the tempo log. The rule it follows is the one
 // the Fit panel had to learn: say only what the data supports. A quiet week is
 // reported as a quiet week. Nothing here invents encouragement, and nothing
@@ -15,7 +15,7 @@
 //
 // One claim in particular is deliberately weaker than it could be. The chord
 // book stamps `updatedAt` whenever a card is touched, including a change of
-// preferred voicing, and keeps no history — so it can say a chord was rated
+// preferred voicing, and keeps no history, so it can say a chord was rated
 // this week and what it says now, and it cannot say the chord was *promoted*.
 // "3 rated, 2 of them solid" is true. "2 chords promoted" would not be.
 
@@ -40,7 +40,7 @@ export interface WeekTempo {
    * The best in the log from before this week, when this week beat it.
    *
    * The log keeps its last eight runs, so this is "better than anything still
-   * on record" and never "your best ever" — which is why nothing built on it
+   * on record" and never "your best ever", which is why nothing built on it
    * is allowed to use the word.
    */
   previous: number | null;
@@ -71,7 +71,7 @@ export interface WeekRecap {
   avgConfidence: number | null;
 }
 
-/** Midnight at the start of the seventh day back — the same window the ledger uses. */
+/** Midnight at the start of the seventh day back, the same window the ledger uses. */
 function weekStart(): number {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -148,7 +148,7 @@ const plural = (n: number, one: string, many = `${one}s`): string => `${n} ${n =
  *
  * Ordered by what someone would actually want confirmed first: that they
  * played, then what they worked on. A week with nothing in it says so and
- * stops — there is no third clause encouraging anybody.
+ * stops, there is no third clause encouraging anybody.
  */
 export function weekLine(recap: WeekRecap): string {
   if (recap.quiet) return 'Nothing logged this week';

@@ -8,7 +8,7 @@
 // thought so and gave it a name.
 //
 // So the two have opposite lifecycles on purpose. A recent loop is deduped by
-// what it is — the same progression played twice is one entry — and expires. A
+// what it is, the same progression played twice is one entry, and expires. A
 // saved loop is identified by its name, never expires, and two of them may
 // hold the same chords, because "Monday warm-up" and "barre drill, slow" can
 // reasonably be the same four chords at two tempos.
@@ -26,12 +26,12 @@ const MAX_LOOPS = 12;
 
 export interface PlayedLoop {
   id: string;
-  /** [chord, bars] — the same shape a template carries, so one card draws both. */
+  /** [chord, bars], the same shape a template carries, so one card draws both. */
   chords: [string, number][];
   tempo: number;
   beatsPerBar: number;
   /**
-   * Shapes the loop pinned, by chord — only ever set by a drill that is about
+   * Shapes the loop pinned, by chord, only ever set by a drill that is about
    * a grip. Without it, replaying a barre exercise off this shelf would hand
    * back whatever you normally play those chords with, which for most of them
    * is a three-string triad, and the exercise would quietly stop being one.
@@ -77,7 +77,7 @@ export const loopSignature = (chords: [string, number][], beatsPerBar: number): 
 export const slotChords = (slots: Slot[]): [string, number][] =>
   slots.map(slot => [slot.symbol, slot.bars] as [string, number]);
 
-/** The shapes a loop pinned, by chord — undefined when it pinned none. */
+/** The shapes a loop pinned, by chord, undefined when it pinned none. */
 export function slotShapeNames(slots: Slot[]): Record<string, string> | undefined {
   const out: Record<string, string> = {};
   for (const slot of slots) if (slot.shape) out[slot.symbol] = slot.shape;
@@ -95,7 +95,7 @@ export function slotShapeNames(slots: Slot[]): Record<string, string> | undefine
 export const loopPattern = (loop: PlayedLoop): string =>
   loop.pattern ?? (loop.strum === 'beat' ? PLAIN_PATTERN : 'D');
 
-/** Fresh slots from a saved loop — new ids, so React sees new rows. */
+/** Fresh slots from a saved loop, new ids, so React sees new rows. */
 export const loopSlots = (loop: PlayedLoop): Slot[] =>
   loop.chords.map(([symbol, bars]) => makeSlot(symbol, bars, loop.shapes?.[symbol]));
 
@@ -118,7 +118,7 @@ export async function rememberLoop(input: RememberInput): Promise<void> {
     tempo: input.tempo,
     beatsPerBar: input.beatsPerBar,
     // Not part of the signature: the same progression barred and open is the
-    // same progression, and the run you kept last is the one it remembers —
+    // same progression, and the run you kept last is the one it remembers,
     // as with the tempo, and for the same reason.
     ...(input.shapes && Object.keys(input.shapes).length > 0 ? { shapes: input.shapes } : {}),
     pattern: input.pattern,
@@ -146,7 +146,7 @@ export async function clearLoopBook(): Promise<void> {
   announce();
 }
 
-/** "just now", "20m ago", "yesterday" — precise enough to find one by. */
+/** "just now", "20m ago", "yesterday", precise enough to find one by. */
 export function whenLabel(at: number): string {
   const mins = Math.floor((Date.now() - at) / 60000);
   if (mins < 1) return 'just now';
@@ -167,7 +167,7 @@ export interface SavedLoop {
   id: string;
   /** What you called it. The name is the identity here, not the chords. */
   name: string;
-  /** [chord, bars] — the same shape a template and a recent loop carry. */
+  /** [chord, bars], the same shape a template and a recent loop carry. */
   chords: [string, number][];
   /** Shapes the loop pins, by chord. See PlayedLoop for why these travel. */
   shapes?: Record<string, string>;
@@ -182,7 +182,7 @@ let keeps: SavedLoop[] = [];
 let keepsLoaded = false;
 
 // By name, because that is what you will be looking for. A saved list is read
-// the way a shelf is read — you know what you called it — where the recent
+// the way a shelf is read, you know what you called it, where the recent
 // list is read the way a diary is, newest first.
 const byName = (a: SavedLoop, b: SavedLoop) =>
   a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
@@ -197,7 +197,7 @@ export async function loadSavedLoops(): Promise<void> {
 
 export const getSavedLoops = (): SavedLoop[] => keeps;
 
-/** Fresh slots from a saved loop — new ids, so React sees new rows. */
+/** Fresh slots from a saved loop, new ids, so React sees new rows. */
 export const savedSlots = (loop: SavedLoop): Slot[] =>
   loop.chords.map(([symbol, bars]) => makeSlot(symbol, bars, loop.shapes?.[symbol]));
 
@@ -216,7 +216,7 @@ export interface SaveInput {
  * Keeps a loop under a name, or replaces the one already using that name.
  *
  * Saving over a name rather than making a second entry with it, because "save
- * as my warm-up" twice means one warm-up — and without this there would be no
+ * as my warm-up" twice means one warm-up, and without this there would be no
  * way to correct a saved loop at all except to delete it and retype the name.
  * Case and surrounding space are ignored for the match and the name is stored
  * as it was typed, so fixing the capitalisation of a name is an edit rather
@@ -246,7 +246,7 @@ export async function saveLoop(input: SaveInput): Promise<void> {
   announce();
 }
 
-/** Whether this name is already in use — what tells the button to say Replace. */
+/** Whether this name is already in use, what tells the button to say Replace. */
 export const savedNamed = (name: string): SavedLoop | undefined => {
   const key = name.trim().toLocaleLowerCase();
   return key === '' ? undefined : keeps.find(l => l.name.trim().toLocaleLowerCase() === key);

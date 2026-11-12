@@ -11,17 +11,17 @@ export interface TabIntervalCandidate {
   barNumber: number; // 1-based, for display
 }
 
-// Only single-note-per-beat melodic motion counts as a candidate — a beat
+// Only single-note-per-beat melodic motion counts as a candidate, a beat
 // that's a rest or a chord breaks the chain, so we don't end up quizzing on
 // a "jump" between two notes of an arpeggiated chord or across a silence.
 //
-// beat.absolutePlaybackStart is a *structural* tick position — it ignores
+// beat.absolutePlaybackStart is a *structural* tick position, it ignores
 // repeat signs entirely, since a MasterBar only exists once in the score
 // regardless of how many times it's actually played. The synth's real
 // playback ticks (what api.playbackRange/tickPosition operate on) come from
 // the repeat-EXPANDED MIDI timeline instead, so for any piece with a repeat
 // before a candidate, the structural tick and the real playback tick point
-// at different places in the song — using the structural one here made
+// at different places in the song, using the structural one here made
 // api.play() play whatever those tick numbers actually landed on elsewhere
 // in the piece, not the analyzed note pair. tickCache (built from the
 // generated MIDI, so it must be read after loadMidiForScore() resolves)

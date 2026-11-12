@@ -1,14 +1,14 @@
 // A practice session, as a thread through the app.
 //
 // The app has twelve destinations and is about to have more, and the honest
-// problem with that is not that any one of them is hard to find — it is that
+// problem with that is not that any one of them is hard to find, it is that
 // deciding what to do is itself work, done at the exact moment somebody has
 // picked up a guitar and would rather be playing. A run answers it once: tune,
 // two things that are actually in your way, and the song you are on.
 //
 // Deliberately not a new screen. Every step happens on the page that already
 // does it best, and the run is a bar across the top that knows where you are
-// up to — so this adds a thread, not a twelfth copy of the tuner.
+// up to, so this adds a thread, not a twelfth copy of the tuner.
 //
 // Held in localStorage rather than the library, because it is not a record of
 // anything: it is where you are up to this evening. It expires, because a run
@@ -35,7 +35,7 @@ export interface RunStep {
   kind: StepKind;
   /** The screen this step happens on. */
   tab: ActiveTab;
-  /** Two or three words — what the bar calls it. */
+  /** Two or three words, what the bar calls it. */
   title: string;
   /** Why it is in the run. */
   note: string;
@@ -118,13 +118,13 @@ const snapshot = () => ({
  * What tonight is.
  *
  * Tune first, because everything after it is wasted against a flat B. Then
- * what is actually in the way — the chord book already ranks those by how many
+ * what is actually in the way, the chord book already ranks those by how many
  * of your own songs they finish, which is a better answer than anything a run
  * could invent. Then the song, because that is what the drills were for.
  */
 export function planRun(): RunStep[] {
   const steps: RunStep[] = [
-    { kind: 'tune', tab: 'tuner', title: 'Tune up', note: 'One string at a time — everything after this is wasted against a flat B' }
+    { kind: 'tune', tab: 'tuner', title: 'Tune up', note: 'One string at a time' }
   ];
 
   for (const chord of nextChords(DRILLS)) {
@@ -161,7 +161,7 @@ export function planRun(): RunStep[] {
     }
   }
 
-  // Today's song, or the last one you touched — a run with nothing to play at
+  // Today's song, or the last one you touched, a run with nothing to play at
   // the end of it is a warm-up, and warm-ups are for something.
   const song = challengeProgress().todaySong ?? lastPractised(null)?.song ?? null;
   if (song) {
@@ -191,7 +191,7 @@ export function startRun(): PracticeRun {
  *
  * A new object rather than a bumped index. The bar has an effect that steers
  * the browser when the step changes, and an object mutated in place is the
- * same object as far as React is concerned — so the run would advance on
+ * same object as far as React is concerned, so the run would advance on
  * screen while leaving you standing on the tuner.
  */
 export function advance(skip = false): void {
@@ -211,7 +211,7 @@ export function step(to: number): void {
   announce();
 }
 
-/** The run is over — either walked to the end, or stopped early. */
+/** The run is over, either walked to the end, or stopped early. */
 export function finish(): void {
   const held = run;
   if (!held) { announce(); return; }
@@ -242,7 +242,7 @@ export function finish(): void {
   announce();
 }
 
-/** Throw the run away without a report — the × on the bar. */
+/** Throw the run away without a report, the × on the bar. */
 export function abandon(): void {
   run = null;
   report = null;

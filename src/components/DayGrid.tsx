@@ -15,15 +15,15 @@ interface DayGridProps {
 // a song is marked complete on its own page, so by the time a grid is in front
 // of you again the component has been unmounted and remounted. A per-component
 // memory would treat every arrival as a first paint and the animation would
-// never once have fired for a real person. Held for the session only — a
+// never once have fired for a real person. Held for the session only, a
 // reload is a fresh start and nothing pops.
 let seenComplete: Set<number> | null = null;
 
 // Thirty days as thirty marks.
 //
 // A month of practice is a shape before it is a number: where the run is, where
-// it broke, how far in you are. Four states and nothing else — done, started,
-// today, not yet — because a legend with six entries is a legend nobody reads.
+// it broke, how far in you are. Four states and nothing else, done, started,
+// today, not yet, because a legend with six entries is a legend nobody reads.
 // The count beside it carries the precision.
 export const DayGrid: React.FC<DayGridProps> = ({ byDay, currentDay, onPick, size = 'sm' }) => {
   const [justDone, setJustDone] = useState<ReadonlySet<number>>(new Set());
@@ -49,7 +49,7 @@ export const DayGrid: React.FC<DayGridProps> = ({ byDay, currentDay, onPick, siz
 
   // The node takes its own class off when the animation says it is finished,
   // rather than on a timer. A timer has to be cancelled somewhere, and every
-  // place there is to cancel it is also a place a re-render passes through —
+  // place there is to cancel it is also a place a re-render passes through,
   // which is how the pop ended up frozen on the node it had just played on.
   const endPop = (day: number) => setJustDone(prev => {
     if (!prev.has(day)) return prev;

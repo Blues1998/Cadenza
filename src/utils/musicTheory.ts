@@ -136,7 +136,7 @@ export const GUITAR_CHORD_SHAPES: GuitarChordShape[] = [
   { id: 'Dm', label: 'D minor', root: 'D', frets: [1, 3, 2, 0, null, null] },
 ];
 
-// MIDI notes sounded by a chord shape (skipping muted strings) — shared by
+// MIDI notes sounded by a chord shape (skipping muted strings), shared by
 // useGuitarChordKeyboard (live play) and useSongChart (Listen-mode playback).
 export function chordShapeMidis(chordId: string): number[] {
   const shape = GUITAR_CHORD_SHAPES.find(s => s.id === chordId);

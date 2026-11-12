@@ -52,10 +52,10 @@ export const JOURNEY: JourneyChapter[] = [
       {
         id: 'first-match',
         title: 'Match your first pitch',
-        idea: 'In tune means within a few cents of the target — and you can watch yourself land it.',
-        task: 'Match one target note in Practice Game.',
+        idea: 'In tune means within a few cents of the target.',
+        task: 'In Tuner → Voice → Hold a note, sing one target note and hold it.',
         tab: 'tuner',
-        buttonText: 'Pitch Game',
+        buttonText: 'Tuner',
         requirements: [{ event: 'tuner-note-matched', count: 1 }]
       }
     ]
@@ -66,7 +66,7 @@ export const JOURNEY: JourneyChapter[] = [
       {
         id: 'happy-vs-sad',
         title: 'Hear happy vs sad',
-        idea: 'A scale is a family of notes. Major is happy, minor is sad — same recipe, three notes lowered.',
+        idea: 'A scale is a family of notes. Minor is major with three notes lowered.',
         task: 'Play Major, then Natural Minor. Hear the mood flip.',
         tab: 'theory',
         buttonText: 'Theory & Scales',
@@ -78,7 +78,7 @@ export const JOURNEY: JourneyChapter[] = [
       {
         id: 'first-climb',
         title: 'Climb a scale on your instrument',
-        idea: 'Theory sticks when your hands do it. The app confirms each note by ear.',
+        idea: 'Play the scale. The app checks each note.',
         task: 'Finish one Scale Climb round.',
         tab: 'play',
         buttonText: 'Scale Climb',
@@ -87,7 +87,7 @@ export const JOURNEY: JourneyChapter[] = [
       {
         id: 'pentatonic',
         title: 'The five-note shortcut',
-        idea: 'Drop two notes and you get the pentatonic — what rock and blues solos are built on.',
+        idea: 'Drop two notes and you get the pentatonic, the scale behind most rock and blues solos.',
         task: 'Climb a pentatonic scale.',
         tab: 'play',
         buttonText: 'Scale Climb',
@@ -101,7 +101,7 @@ export const JOURNEY: JourneyChapter[] = [
       {
         id: 'interval-songs',
         title: 'Every interval has a song',
-        idea: 'An interval is the gap between two notes. Famous songs are the cheat codes for spotting them.',
+        idea: 'An interval is the gap between two notes.',
         task: 'Name 3 intervals. Use the song clues.',
         tab: 'ear-training',
         buttonText: 'Ear Training',
@@ -110,7 +110,7 @@ export const JOURNEY: JourneyChapter[] = [
       {
         id: 'interval-hunt',
         title: 'Find intervals by hand',
-        idea: 'One fret is one semitone. A fifth is seven frets — intervals are distances you can see.',
+        idea: 'One fret is one semitone. A fifth is seven frets.',
         task: 'Play 2 intervals correctly.',
         tab: 'play',
         buttonText: 'Interval Hunt',
@@ -133,7 +133,7 @@ export const JOURNEY: JourneyChapter[] = [
       {
         id: 'build-chords',
         title: 'Build chords note by note',
-        idea: 'Every triad is root, third, fifth. Build a couple and the formula stops being abstract.',
+        idea: 'Every triad is a root, a third and a fifth.',
         task: 'Build 2 chords on your instrument.',
         tab: 'play',
         buttonText: 'Chord Builder',
@@ -142,7 +142,7 @@ export const JOURNEY: JourneyChapter[] = [
       {
         id: 'why-chords-work',
         title: 'See why chords sound good',
-        idea: 'Consonance is physics: simple ratios make waves that line up. Beating is out-of-tune, drawn.',
+        idea: 'Simple frequency ratios sound smooth. Out-of-tune notes beat.',
         task: 'Drag the two-tone slider until you lock onto a simple ratio.',
         tab: 'physics',
         buttonText: 'Sound Physics',
@@ -188,8 +188,8 @@ export const JOURNEY: JourneyChapter[] = [
       {
         id: 'steady-hands',
         title: 'Lock into the beat',
-        idea: 'Rhythm is the right moment, not just the right note. Timing is measured in milliseconds.',
-        task: 'Land 5 perfect taps — within 45 ms of the beat.',
+        idea: 'Timing matters as much as the notes.',
+        task: 'Land 5 taps within 45 ms of the beat.',
         tab: 'rhythm',
         buttonText: 'Rhythm Lab',
         requirements: [{ event: 'rhythm-perfect-tap', count: 5 }]

@@ -1,10 +1,10 @@
 // Diatonic chord generation + guitar voicing lookup.
 //
 // Two halves:
-//   1. `getScaleChords` — stacks thirds on any SCALE_FORMULAS entry to derive
+//   1. `getScaleChords`, stacks thirds on any SCALE_FORMULAS entry to derive
 //      the chords that belong to that scale, spelled with proper letter names
 //      (key of F gives Bb, not A#).
-//   2. `getVoicings` — finds every way to finger a chord on the neck, sorted
+//   2. `getVoicings`, finds every way to finger a chord on the neck, sorted
 //      easiest first, so a beginner always has a way in.
 //
 // Related but deliberately separate: GUITAR_CHORD_SHAPES in musicTheory.ts is a
@@ -42,7 +42,7 @@ function spellOn(letter: string, pc: number): string | null {
   return letter + (diff > 0 ? '#'.repeat(diff) : 'b'.repeat(-diff));
 }
 
-// Spell a 7-note scale so each degree takes the next letter of the alphabet —
+// Spell a 7-note scale so each degree takes the next letter of the alphabet,
 // the rule that makes a key signature readable. Null if this root spelling
 // forces an unwritable accidental (e.g. a triple sharp).
 function spellScale(rootSpelling: string, steps: number[]): string[] | null {
@@ -58,7 +58,7 @@ function spellScale(rootSpelling: string, steps: number[]): string[] | null {
 }
 
 // Of the enharmonic spellings of this root, keep whichever writes the scale
-// with the fewest accidentals — so A# major is presented as Bb major.
+// with the fewest accidentals, so A# major is presented as Bb major.
 function bestSpelledScale(rootPc: number, steps: number[]): { root: string; notes: string[] } {
   let best: { root: string; notes: string[]; cost: number } | null = null;
   for (const candidate of SPELLING_CANDIDATES[rootPc]) {
@@ -68,7 +68,7 @@ function bestSpelledScale(rootPc: number, steps: number[]): { root: string; note
     if (!best || cost < best.cost) best = { root: candidate, notes, cost };
   }
   if (best) return { root: best.root, notes: best.notes };
-  // Unspellable (shouldn't happen for the scales we ship) — fall back to sharps.
+  // Unspellable (shouldn't happen for the scales we ship), fall back to sharps.
   return {
     root: NOTE_NAMES[rootPc],
     notes: steps.slice(0, 7).map(s => NOTE_NAMES[(rootPc + s) % 12])
@@ -142,7 +142,7 @@ export interface ScaleChordSet {
   borrowedFrom?: string;
 }
 
-// Scales with fewer than 7 notes can't be harmonised in thirds on their own —
+// Scales with fewer than 7 notes can't be harmonised in thirds on their own,
 // stacking degrees of a pentatonic gives sonorities nobody calls chords. Real
 // players reach for the parent scale's chords instead, so that's what we show.
 const PARENT_SCALE: Record<string, string> = {
@@ -213,7 +213,7 @@ export function getScaleChords(
 
 const MAX_FRET = 15;
 
-// Forms and open chords below are written low-to-high (E A D G B e) — the order
+// Forms and open chords below are written low-to-high (E A D G B e), the order
 // guitarists read chord charts in. GUITAR_STRINGS runs the other way, so
 // everything is reversed once on the way out.
 const toAppOrder = <T,>(lowToHigh: T[]): T[] => [...lowToHigh].reverse();
@@ -338,11 +338,11 @@ export interface ChordVoicing {
   frets: (number | null)[];    // GUITAR_STRINGS order (0 = high e), null = muted
   fingers: (number | null)[];  // same order; 0 = open string
   midis: number[];
-  difficulty: number;   // purely how hard it is to fret — drives the badge
+  difficulty: number;   // purely how hard it is to fret, drives the badge
   sortKey: number;      // difficulty, nudged toward fuller-sounding shapes
   tier: DifficultyTier;
   // Set when this shape is a simplification of the requested chord rather than
-  // the chord itself — e.g. playing G instead of Gmaj7.
+  // the chord itself, e.g. playing G instead of Gmaj7.
   substituteFor?: string;
 }
 
@@ -423,7 +423,7 @@ function finish(
 // Slide a movable form up the neck until its root lands on `rootPc` and every
 // fret fits on the instrument. Lowest workable position wins.
 //
-// A barre form never starts at fret 0, because a bar at fret 0 is not a bar —
+// A barre form never starts at fret 0, because a bar at fret 0 is not a bar,
 // the nut is already holding those strings down, and what you get is the open
 // chord the form was named after. Placed there it was dropped anyway, as a
 // duplicate of that open chord, which quietly meant E, A, Em and Am had no
@@ -452,7 +452,7 @@ function placeForm(form: MovableForm, rootPc: number, type: ChordType): ChordVoi
  * Every way to play this chord, easiest first.
  *
  * For seventh chords the list also carries the plain triad underneath it,
- * marked as a substitute — dropping the 7th is what a beginner actually does
+ * marked as a substitute, dropping the 7th is what a beginner actually does
  * when the full shape is out of reach.
  */
 export function getVoicings(rootPc: number, typeId: ChordTypeId, rootName?: string): ChordVoicing[] {
@@ -510,8 +510,8 @@ export function barreWidth(fingers: (number | null)[]): number {
  * The finger numbers alone do not settle it. An Am-shape barre is written
  * with finger 1 at each end of the grip and three fingers over the middle:
  * two entries in the table, one bar under the hand, and exactly the thing an
- * F asks for. So the name is what is read — the shape tables call every
- * movable form what it is — with the finger count as a backstop for anything
+ * F asks for. So the name is what is read, the shape tables call every
+ * movable form what it is, with the finger count as a backstop for anything
  * added later that does not say so in its label.
  */
 export const isBarre = (v: ChordVoicing): boolean =>
@@ -524,7 +524,7 @@ export function voicingBaseFret(frets: (number | null)[]): number {
   const min = Math.min(...fretted);
   const max = Math.max(...fretted);
   // Keep the nut in view for anything playable in first position, and for any
-  // shape using an open string — its "o" marker only means anything at the nut.
+  // shape using an open string, its "o" marker only means anything at the nut.
   const hasOpen = frets.some(f => f === 0);
   if (max <= 4 || (hasOpen && max <= 5)) return 1;
   return min;

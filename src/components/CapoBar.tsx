@@ -8,7 +8,7 @@ import { MAX_CAPO, scoreLine, type FitOption, type FitVerdict } from '../utils/f
  * Fit's whole argument is that the same song under a different clamp is a
  * different set of shapes, and that argument was being made in a paragraph.
  * Here the neck is drawn, the bar sits where the song has it, and running
- * along the frets re-letters the chords underneath — so the trade is read the
+ * along the frets re-letters the chords underneath, so the trade is read the
  * way it is actually made, by looking at what comes out. Pressing a fret is
  * what commits it; hovering only ever previews.
  *
@@ -29,7 +29,7 @@ import { MAX_CAPO, scoreLine, type FitOption, type FitVerdict } from '../utils/f
 const SPAN = 1 - Math.pow(2, -MAX_CAPO / 12);
 const along = (n: number): number => (1 - Math.pow(2, -n / 12)) / SPAN;
 
-/** Room left of the nut for "no capo" — the position a guitar is already in. */
+/** Room left of the nut for "no capo", the position a guitar is already in. */
 const NUT = 10;
 
 const x = (n: number): number => NUT + along(n) * (100 - NUT);
@@ -92,7 +92,7 @@ export const CapoBar: React.FC<CapoBarProps> = ({ verdict, onApply }) => {
               className={`capobar-slot${n === now.capo ? ' is-on' : ''}${improves && n === best.capo ? ' is-best' : ''}`}
               style={{ width: `${n === 0 ? NUT : x(n) - x(n - 1)}%` }}
               aria-pressed={n === now.capo}
-              title={option ? `${capoWord(n)} — ${scoreLine(option)}` : capoWord(n)}
+              title={option ? `${capoWord(n)}: ${scoreLine(option)}` : capoWord(n)}
               onMouseEnter={() => setPreview(n)}
               onFocus={() => setPreview(n)}
               onMouseLeave={() => setPreview(null)}
@@ -105,7 +105,7 @@ export const CapoBar: React.FC<CapoBarProps> = ({ verdict, onApply }) => {
         })}
       </div>
 
-      {/* Keyed on the position so the letters redraw as the bar lands — the
+      {/* Keyed on the position so the letters redraw as the bar lands, the
           change is the point, and a row that quietly swapped its own text
           would let it pass unnoticed. */}
       <div className="capobar-shapes" key={shown.capo}>
@@ -122,7 +122,7 @@ export const CapoBar: React.FC<CapoBarProps> = ({ verdict, onApply }) => {
 
       <p className="capobar-said readout">
         {`${capoWord(shown.capo)} · ${scoreLine(shown)}`}
-        {moved && <span className="capobar-press"> — press to move it</span>}
+        {moved && <span className="capobar-press"> Press to move it</span>}
       </p>
     </div>
   );

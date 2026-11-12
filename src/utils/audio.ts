@@ -9,7 +9,7 @@ interface Voice {
   sustained: boolean;
 }
 
-// A plucked string cannot really be sustained — it decays, that is what a
+// A plucked string cannot really be sustained, it decays, that is what a
 // pluck is. Holding a note therefore does not extend the pluck so much as
 // bow it: the envelope stops falling and settles at a fraction of its peak,
 // weighted so the fundamental survives and the bright upper partials do not.
@@ -207,7 +207,7 @@ class AudioEngine {
    * The chuck: strings crossed with the fretting hand laid across them.
    *
    * Pitchless on purpose. Filtered noise rather than a damped chord, because a
-   * damped chord still has a chord in it and this does not — it is the sound
+   * damped chord still has a chord in it and this does not, it is the sound
    * of the pick, and it is what makes a pattern feel like it has a backbeat.
    */
   public playMuted(time?: number) {
@@ -350,7 +350,7 @@ class AudioEngine {
    * different event rather than a quieter beat: the eighths between the
    * quarters are a texture you feel underneath the pulse, and if they arrive
    * at the same weight the pulse stops being findable. So they are higher,
-   * much shorter and far quieter — audible when you listen for them, out of
+   * much shorter and far quieter, audible when you listen for them, out of
    * the way when you are listening to the beat.
    */
   public playClick(time: number, accented: boolean, subdivision = false) {

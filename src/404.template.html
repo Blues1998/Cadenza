@@ -70,8 +70,8 @@
 
     <style>
       /* The app's tokens, only the ones this page uses. It cannot share the
-         built stylesheet — that name is content-hashed and this file is
-         written before it exists — so the values are repeated here and
+         built stylesheet, that name is content-hashed and this file is
+         written before it exists, so the values are repeated here and
          nowhere else. */
       :root[data-theme='dark'] {
         color-scheme: dark;
@@ -219,7 +219,7 @@
       }
       .meant strong { color: var(--primary); font-weight: 600; }
       /* The suggestion is display:inline-block, which outranks the browser's
-         own rule for [hidden] — without this it shows as an empty pill on
+         own rule for [hidden], without this it shows as an empty pill on
          every address that resembles nothing. */
       .meant[hidden] { display: none; }
       .meant:hover { border-color: var(--primary); }
@@ -348,7 +348,7 @@
           p.appendChild(document.createTextNode('.'));
         }
 
-        // How many single-character edits apart two words are, capped — a
+        // How many single-character edits apart two words are, capped, a
         // near miss is worth offering, a different word is not.
         var distance = function (a, b) {
           var row = [];

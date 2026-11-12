@@ -28,20 +28,20 @@ interface LoopStageProps {
  * Everything else in the panel is for building a loop, and building is done by
  * the time anybody presses play. From then on the screen is a metre away, both
  * hands are busy, and it gets looked at for about as long as it takes to fall
- * through the strings — so what it shows has to be readable at that distance
+ * through the strings, so what it shows has to be readable at that distance
  * in that time, and there has to be almost nothing of it.
  *
  * Three things, left to right, which is also the order they happen in. The
  * chord under your left hand, big enough to check a finger against. The bar
- * itself — the strumming pattern, with the stroke you are on lit, because the
+ * itself, the strumming pattern, with the stroke you are on lit, because the
  * right hand is half of what is being practised and reading it off a grid at
  * the bottom of the panel meant reading it off a different part of the room.
  * And the chord coming next with how long you have got, which is the one this
  * was really built for: changing is the hard part, and a barre you find out
  * about on the beat it lands is a barre you have already missed.
  *
- * The pattern is shown, not edited. Everything that edits — the bars, the
- * ordering, the shelf, the pattern field — belongs to the stopped state, and
+ * The pattern is shown, not edited. Everything that edits, the bars, the
+ * ordering, the shelf, the pattern field, belongs to the stopped state, and
  * one rule applied everywhere is worth more than four controls kept within
  * reach of a hand that is holding a plectrum.
  */
@@ -76,7 +76,7 @@ export const LoopStage: React.FC<LoopStageProps> = ({
 
       <div className="stage-mid">
         {/* The arm, and where in the bar it has got to. With no pattern there
-            is no arm — the chords stay silent under the click — and then the
+            is no arm, the chords stay silent under the click, and then the
             bar is just four lamps, which is all there is to say. */}
         {pattern ? (
           <div className="stage-strum">

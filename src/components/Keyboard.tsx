@@ -5,7 +5,7 @@ import { useNotePress } from '../hooks/useNotePress';
 interface KeyboardProps {
   activeMidis?: number[];
   highlightCorrectMidis?: number[];
-  rootMidis?: number[]; // the scale/chord root — drawn in its own color
+  rootMidis?: number[]; // the scale/chord root, drawn in its own color
   interactive?: boolean;
   onPlayNote?: (midi: number) => void;
 }

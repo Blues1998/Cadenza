@@ -5,7 +5,7 @@ import { useNotePress } from '../hooks/useNotePress';
 interface FretboardProps {
   activeMidis?: number[];
   highlightCorrectMidis?: number[];
-  rootMidis?: number[]; // the scale/chord root — drawn in its own color
+  rootMidis?: number[]; // the scale/chord root, drawn in its own color
   interactive?: boolean;
   onPlayNote?: (midi: number) => void;
   showAllNoteNames?: boolean; // Highlight all notes on the neck
@@ -15,7 +15,7 @@ const FRETS_COUNT = 12; // 0 (open) to 12
 
 // Real frets follow the 12th-root-of-two rule: the distance from the nut to
 // fret n, as a fraction of scale length, is 1 - 2^(-n/12). That's what makes
-// a fretboard taper — each fret is narrower than the last moving up the neck.
+// a fretboard taper, each fret is narrower than the last moving up the neck.
 const fretPosition = (n: number): number => 1 - Math.pow(2, -n / 12);
 const NECK_SPAN = fretPosition(FRETS_COUNT);
 
@@ -25,7 +25,7 @@ const FRET_WIDTH_PCT = Array.from({ length: FRETS_COUNT }, (_, i) => {
   return ((fretPosition(fret) - fretPosition(fret - 1)) / NECK_SPAN) * 100;
 });
 
-// Center point of a fret cell as a % of the fretted area — used to place inlays
+// Center point of a fret cell as a % of the fretted area, used to place inlays
 const fretCenterPct = (fret: number): number =>
   (((fretPosition(fret - 1) + fretPosition(fret)) / 2) / NECK_SPAN) * 100;
 
@@ -44,7 +44,7 @@ const getFretDots = (fret: number): 'single' | 'double' | null => {
 
 // How long each string's ring-out is drawn for, indexed like GUITAR_STRINGS:
 // high E first, down to low E. Heavier strings ring longer, which is also what
-// the audio engine does — it stretches a note's decay for lower pitches. These
+// the audio engine does, it stretches a note's decay for lower pitches. These
 // have to stay in step with the --ring-dur values on .ring-1 … .ring-6, or the
 // element is unmounted part-way through its own animation.
 const RING_MS = [850, 950, 1050, 1200, 1350, 1500];

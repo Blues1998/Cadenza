@@ -11,7 +11,7 @@ interface JourneyProps {
 // Levels tick themselves off when the labs report the work done, so the line
 // is also the progress bar: lit behind you, unlit ahead.
 //
-// The nodes carry the state — hollow, ringed, or filled with a tick — which
+// The nodes carry the state, hollow, ringed, or filled with a tick, which
 // is why no row needs a word like "Done" or "Up next" beside it.
 export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
   // Re-render whenever any lab reports progress (covers other tabs too)

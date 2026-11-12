@@ -1,7 +1,7 @@
 // A song, turned into something to practise.
 //
 // The song page already knows which chords are in the way. It says so, in
-// words, at the top of the chord panel — "2 of 5 in your hands" — and then
+// words, at the top of the chord panel, "2 of 5 in your hands", and then
 // offers nothing to do about it. Quick Play, the shelf and the shape picker
 // are all one press away and none of them are linked to the sentence that
 // describes exactly what they are for. This is the loop that sentence is
@@ -24,7 +24,7 @@ import type { Song } from './library';
  * The most changes one loop should ask you to hold.
  *
  * Longer than this and it stops being a drill and becomes a section of a song
- * played badly — the thing you were already doing before you came here.
+ * played badly, the thing you were already doing before you came here.
  */
 const WINDOW = 4;
 
@@ -63,13 +63,13 @@ export interface SongDrill {
  *
  * Every drill comes out four bars whatever it holds, so the loop turns over in
  * the same stretch of time and the ear learns where the top of it is. Two
- * chords get two bars each — the change is the exercise, and you need to see
+ * chords get two bars each, the change is the exercise, and you need to see
  * it coming before you have to make it. Three or four get a bar apiece, with
  * the first of three held double so the loop still lands square.
  */
 const barsAt = (i: number, n: number): number => (n <= 2 ? 2 : n === 3 && i === 0 ? 2 : 1);
 
-/** How much of this run is not yet solid — walls counting double a wobble. */
+/** How much of this run is not yet solid, walls counting double a wobble. */
 const troubleScore = (chords: string[]): number =>
   chords.reduce((n, chord) => n + RANK[comfortOf(chord)], 0);
 
@@ -111,7 +111,7 @@ function hardestWindow(chords: string[]): string[] {
  * Where to start it.
  *
  * A tempo you have already held on this exact loop is not a guess, so it wins
- * — offering 60 to someone who kept this progression at 104 last week is the
+ *offering 60 to someone who kept this progression at 104 last week is the
  * app forgetting. Otherwise slow, and how slow is set by the worst chord in
  * it: a shape you cannot make yet needs the bar to arrive late enough that
  * you can build it. Never faster than the song itself, because a drill that
@@ -134,7 +134,7 @@ function tempoFor(chords: string[], song: Song, signature: string): { tempo: num
 
 /** A loop out of these chords, in this order, or null if none of them can be played. */
 export function drillFrom(song: Song, chords: string[]): SongDrill | null {
-  // A song can ask for something the shape tables cannot draw — a chord with a
+  // A song can ask for something the shape tables cannot draw, a chord with a
   // performance note stuck to it, a symbol nobody parsed. A slot like that is
   // silent when the loop comes round to it, which is a worse drill than one
   // chord shorter.
@@ -164,7 +164,7 @@ export function drillFrom(song: Song, chords: string[]): SongDrill | null {
  *
  * The progression carrying the most trouble, because that is the one the song
  * is stuck on; ties go to the one written first, which is nearly always the
- * verse. With nothing written down, the chords the song leans on hardest —
+ * verse. With nothing written down, the chords the song leans on hardest,
  * taken by weight rather than in chart order, since a chart's order is a
  * section of a song and this is meant to come round.
  */
@@ -186,7 +186,7 @@ export function songDrill(song: Song): SongDrill | null {
  * The sentence under the button: why this loop and not another.
  *
  * Names the chords when there are one or two of them, because "F" is a reason
- * and "2 chords" is a statistic. Everything solid is not nothing to say — it
+ * and "2 chords" is a statistic. Everything solid is not nothing to say, it
  * is the case where the work left is the changing rather than the shapes.
  */
 export function drillReason(drill: SongDrill): string {
@@ -195,10 +195,10 @@ export function drillReason(drill: SongDrill): string {
   if (drill.trouble.length === 2) return `${first} and ${second} are what keep breaking.`;
   if (drill.trouble.length > 2) return `${drill.trouble.length} of these still want work.`;
   // Nothing marked not-solid. Either they are all solid, in which case the
-  // work left is the changing, or nobody has said — and a loop is a perfectly
+  // work left is the changing, or nobody has said, and a loop is a perfectly
   // good way to find out which.
   if (drill.unrated.length === drill.chords.length) {
-    return 'Nothing marked here yet — run it and find out which change breaks.';
+    return 'Nothing marked yet. Play it to find the hard change.';
   }
   if (drill.unrated.length > 0) return 'The ones you have marked are solid. Run the rest and see.';
   return 'Every shape here is one you have. The work left is the changing.';

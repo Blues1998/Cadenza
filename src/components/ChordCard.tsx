@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChordDiagram } from './ChordDiagram';
-import { IconComfort } from './Icons';
+import { IconComfort, IconTrash } from './Icons';
 import { audio } from '../utils/audio';
 import type { ChordVoicing } from '../utils/chords';
 import {
@@ -24,7 +24,7 @@ import {
  *
  * Three fills of one ring, and no word unless you ask for it. A catalogue page
  * carries fourteen of these and a song page five, and the answer was printed
- * next to every one of them — the same three words over and over, saying what
+ * next to every one of them, the same three words over and over, saying what
  * the mark beside them already said. The ring reads at a glance because empty,
  * half and full are the same object at three settings; the word comes back on
  * hover, on keyboard focus, and in the tooltip, where a word is worth having.
@@ -46,7 +46,7 @@ export const ComfortMark: React.FC<{
           type="button"
           className={`comfort-btn is-${value}${comfort === value ? ' is-on' : ''}${justSet === value ? ' is-set' : ''}`}
           aria-pressed={comfort === value}
-          title={`${COMFORT_LABEL[value]} — ${COMFORT_HINT[value]}`}
+          title={`${COMFORT_LABEL[value]}: ${COMFORT_HINT[value]}`}
           onClick={() => {
             setJustSet(value);
             void setComfort(symbol, value);
@@ -73,23 +73,25 @@ interface ChordCardProps {
   markable?: boolean;
   /** Let the fingering be chosen from every shape we know. */
   shapes?: boolean;
-  /** An action for this chord, under everything else — used by "Learn next". */
+  /** An action for this chord, under everything else, used by "Learn next". */
   footer?: React.ReactNode;
-  /** Anything the caller wants under the name — "in 4 songs", a count. */
+  /** Anything the caller wants under the name, "in 4 songs", a count. */
   meta?: React.ReactNode;
-  /** What the footnote is short for — the songs behind "7 songs", on hover. */
+  /** What the footnote is short for, the songs behind "7 songs", on hover. */
   metaTitle?: string;
   scale?: number;
   /**
    * Whether this chord is in the bucket, when the page is collecting.
    *
-   * Pressing the shape always did one thing — sound it — and it still does.
+   * Pressing the shape always did one thing, sound it, and it still does.
    * Collecting is a tick, because a tick says it is a set you are building and
    * shows you what is in it without you having to remember what you pressed.
    */
   picked?: boolean;
   /** Put it in the bucket or take it out. Undefined means nobody is collecting. */
   onToggle?: (symbol: string) => void;
+  /** Shows a remove button; what removing means is up to the page. */
+  onRemove?: () => void;
 }
 
 /**
@@ -97,17 +99,17 @@ interface ChordCardProps {
  * in your hands, and every other way it could be played.
  *
  * The shape matters as much as the comfort and is usually left out of apps
- * like this. "I can play B" is never true of B — it is true of one grip, and
+ * like this. "I can play B" is never true of B, it is true of one grip, and
  * which grip is the difference between a chord you have and a chord you do
  * not. So the choice is stored, and everything that draws or sounds this
  * chord, the play-along included, uses it.
  */
 export const ChordCard: React.FC<ChordCardProps> = ({
-  symbol, markable = false, shapes = false, meta, metaTitle, footer, scale = 0.62, picked = false, onToggle
+  symbol, markable = false, shapes = false, meta, metaTitle, footer, scale = 0.62, picked = false, onToggle, onRemove
 }) => {
   const [open, setOpen] = useState(false);
   // Counts strikes rather than holding a boolean, so a second press while the
-  // first is still ringing starts a new flash instead of doing nothing — the
+  // first is still ringing starts a new flash instead of doing nothing, the
   // ring is a fresh element each time, keyed on the count.
   const [strikes, setStrikes] = useState(0);
   const voicing = preferredVoicing(symbol);
@@ -139,6 +141,11 @@ export const ChordCard: React.FC<ChordCardProps> = ({
           />
         </label>
       )}
+      {onRemove && (
+        <button type="button" className="chordcard-remove" onClick={onRemove} aria-label={`Remove ${symbol}`} title={`Remove ${symbol}`}>
+          <IconTrash size={12} />
+        </button>
+      )}
       <div className="chordcard-head">
         <span className="chordcard-name">{symbol}</span>
         {meta && (
@@ -151,7 +158,7 @@ export const ChordCard: React.FC<ChordCardProps> = ({
           type="button"
           className="chordcard-play"
           onClick={() => strum(voicing)}
-          title={`Hear ${symbol} — ${voicing.label}`}
+          title={`Hear ${symbol} (${voicing.label})`}
           aria-label={`Hear ${symbol} strummed`}
         >
           <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={scale} />
@@ -198,7 +205,7 @@ export const ChordCard: React.FC<ChordCardProps> = ({
               aria-checked={v.id === chosenId}
               className={`shapepick-item${v.id === chosenId ? ' is-on' : ''}`}
               onClick={() => { strum(v); void setPreferredVoicing(symbol, v.id); }}
-              title={`${v.substituteFor ? `${v.label} — played instead of ${v.substituteFor}` : v.label} · press to hear it and keep it`}
+              title={`${v.substituteFor ? `${v.label} (instead of ${v.substituteFor})` : v.label}. Press to use it`}
             >
               <ChordDiagram frets={v.frets} fingers={v.fingers} scale={0.44} />
               <span className="shapepick-label readout">{v.label}</span>

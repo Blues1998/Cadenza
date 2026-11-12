@@ -1,6 +1,6 @@
 // A strumming pattern, and what a hand can actually do with it.
 //
-// Patterns are written the way they are taught — "D D U U D U" — which is a
+// Patterns are written the way they are taught, "D D U U D U", which is a
 // shorthand, not a grid. It names the strokes that land, and leaves out the
 // ones the hand makes on the way back. Read literally it says six strums in a
 // row; read the way it is meant it says the classic eight-slot pattern with
@@ -22,7 +22,7 @@
 // It also refuses to lie: "D D" at eighth spacing is not playable, so a
 // pattern written that way comes back longer than a bar rather than pretending
 // the arm can be in two places. The grid it resolves to is put on screen for
-// exactly this reason — the reading is never a secret, and any cell can be
+// exactly this reason, the reading is never a secret, and any cell can be
 // changed by hand.
 //
 // Bars can be written out with a bar line, and everything this module writes
@@ -32,7 +32,7 @@
 //
 // A bar line is not decoration. Without one the metre has to be guessed from
 // how many strokes were written, and that guess is wrong the moment a pattern
-// runs past one bar — sixteen eighth-note slots and one bar of sixteenths are
+// runs past one bar, sixteen eighth-note slots and one bar of sixteenths are
 // the same sixteen tokens. With one, each bar says how long it is, the hand
 // starts every bar on a down, and a grid written out and read back gives the
 // same grid.
@@ -51,7 +51,7 @@ export const STROKE_NAME: Record<Stroke, string> = { D: 'Down', U: 'Up', X: 'Mut
  * only one of the two directions is available at any one place: offering both
  * would mean offering a stroke that cannot be played there, and the only
  * honest thing to do with one of those is shove the rest of the pattern along
- * to make room — which is a strange thing for pressing a cell to do.
+ * to make room, which is a strange thing for pressing a cell to do.
  */
 export const ALL_STROKES: Stroke[] = ['D', 'U', 'X', '-'];
 
@@ -69,8 +69,8 @@ export const strokesAt = (index: number): Stroke[] => (index % 2 === 0 ? DOWN_CY
 /** What one more press on this cell gives. */
 export function nextStroke(index: number, current: Stroke): Stroke {
   const cycle = strokesAt(index);
-  // A stroke that does not belong here at all — from a hand-typed pattern the
-  // grid never wrote — steps to the one that does.
+  // A stroke that does not belong here at all, from a hand-typed pattern the
+  // grid never wrote, steps to the one that does.
   const at = cycle.indexOf(current);
   return at === -1 ? cycle[0] : cycle[(at + 1) % cycle.length];
 }
@@ -78,7 +78,7 @@ export function nextStroke(index: number, current: Stroke): Stroke {
 export interface StrumPattern {
   /** One stroke per subdivision, in time order. Always a whole number of bars. */
   steps: Stroke[];
-  /** Subdivisions in one beat — 2 is eighths, 4 is sixteenths. */
+  /** Subdivisions in one beat, 2 is eighths, 4 is sixteenths. */
   perBeat: number;
   /** How many bars the pattern runs before it comes round again. */
   bars: number;
@@ -93,7 +93,7 @@ export const PLAIN_PATTERN = 'D D D D';
 const STROKE_OF: Record<string, Stroke> = {
   d: 'D', '\u2193': 'D',    // D, or the arrow lesson sheets draw instead
   u: 'U', '\u2191': 'U',
-  x: 'X', m: 'X',          // muted, chucked, slapped — one sound
+  x: 'X', m: 'X',          // muted, chucked, slapped, one sound
   '-': '-', '.': '-', '_': '-'
 };
 
@@ -119,7 +119,7 @@ export const tokenize = (text: string): Stroke[] => {
 /**
  * Where a stroke can land: downs on beats, ups between them.
  *
- * A chuck goes wherever it is next — it is played both ways round — and so
+ * A chuck goes wherever it is next, it is played both ways round, and so
  * does a written rest, which is a pass the writer wanted counted.
  */
 const wants = (stroke: Stroke): 'down' | 'up' | 'either' =>
@@ -198,7 +198,7 @@ export function parseStrum(text: string, beatsPerBar = 4): StrumPattern | null {
 
   // Sixteenths only when eighths plainly cannot hold what was written, judged
   // one bar at a time. Most patterns are eighths, and reading an eighth
-  // pattern as sixteenths would halve its tempo without saying so — which is
+  // pattern as sixteenths would halve its tempo without saying so, which is
   // exactly what judging by the total does to anything past one bar.
   const widest = Math.max(...written.map(bar => bar.length));
   const perBeat = widest > beatsPerBar * 2 ? 4 : 2;
@@ -221,7 +221,7 @@ export function parseStrum(text: string, beatsPerBar = 4): StrumPattern | null {
 }
 
 /**
- * The grid, written back out — what the pattern actually resolved to.
+ * The grid, written back out, what the pattern actually resolved to.
  *
  * With its bar lines, so reading this back gives the same grid. Everything
  * that edits a pattern goes through here for that reason: an edit that came
@@ -283,7 +283,7 @@ export function withStroke(pattern: StrumPattern, index: number, stroke: Stroke)
  * A pattern with one bar taken out, written back as text.
  *
  * Empty for the last bar: a pattern with no bars in it is not a pattern, and
- * an empty field already means something here — the click keeps time and the
+ * an empty field already means something here, the click keeps time and the
  * strumming is yours.
  */
 export function withoutBar(pattern: StrumPattern, bar: number): string {

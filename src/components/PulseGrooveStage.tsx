@@ -135,7 +135,7 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
       ctx.font = "bold 18px 'JetBrains Mono', monospace";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(isPlaying ? String(currentBeatDisplay) : '—', cx, cy + 1);
+      ctx.fillText(isPlaying ? String(currentBeatDisplay) : '-', cx, cy + 1);
       ctx.restore();
 
       // Draw Track along bottom for bouncing ball
@@ -214,7 +214,7 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
             Beat
           </span>
           <span className={`beat-number${isAccent && isPlaying ? ' is-accent' : ''}`}>
-            {isPlaying ? currentBeatDisplay : '—'}
+            {isPlaying ? currentBeatDisplay : '-'}
           </span>
           <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
             / {beatsPerBar}
@@ -222,7 +222,7 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
         </div>
 
         <span className={`pulse-groove-accent-chip${isAccent && isPlaying ? ' is-active' : ''}`}>
-          {isAccent && isPlaying ? '★ DOWNBEAT' : isPlaying ? `BEAT ${currentBeatDisplay}` : 'STANDBY'}
+          {isAccent && isPlaying ? 'DOWNBEAT' : isPlaying ? `BEAT ${currentBeatDisplay}` : 'STANDBY'}
         </span>
       </div>
 

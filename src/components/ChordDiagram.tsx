@@ -54,7 +54,7 @@ export const ChordDiagram: React.FC<ChordDiagramProps> = ({ frets, fingers, onCl
     barres.push({ finger, fret, from: Math.min(...idxs), to: Math.max(...idxs) });
   }
   // Strings the bar itself already covers. Membership is by finger and fret,
-  // not by lying between the bar's ends — the other fingers of a barre chord
+  // not by lying between the bar's ends, the other fingers of a barre chord
   // sit on strings inside that span and still need their own dots.
   const barred = new Set(
     barres.flatMap(b => frets.map((_, i) => i).filter(i => fingers[i] === b.finger && frets[i] === b.fret))
@@ -135,14 +135,14 @@ export const ChordDiagram: React.FC<ChordDiagramProps> = ({ frets, fingers, onCl
         />
       ))}
 
-      {/* Finger dots — the ones under a barre are already covered by the bar */}
+      {/* Finger dots, the ones under a barre are already covered by the bar */}
       {frets.map((f, i) =>
         f !== null && f > 0 && !barred.has(i) ? (
           <circle key={`d${i}`} cx={stringX(i)} cy={rowY(f)} r="8" fill={dot} />
         ) : null
       )}
 
-      {/* Finger numbers — once per barre, once per free finger */}
+      {/* Finger numbers, once per barre, once per free finger */}
       {barres.map((b, i) => (
         <text
           key={`bn${i}`}

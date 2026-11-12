@@ -45,7 +45,7 @@ const HighlightLegend: React.FC<{ mode: 'scale' | 'chord' }> = ({ mode }) => {
   });
   return (
     <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-      <span><span style={dot('var(--note-root)')} />Root — the home note</span>
+      <span><span style={dot('var(--note-root)')} />Root (home note)</span>
       <span><span style={dot('var(--note-scale)')} />Notes in this {mode}</span>
       <span><span style={dot('var(--note-active)')} />Playing right now</span>
     </div>
@@ -78,9 +78,9 @@ const MoodSwitch: React.FC<{
   return (
     <div className="mood-switch-strip">
       <div className="mood-switch-info">
-        <span className="mood-switch-title">Sensory Mood Switch</span>
+        <span className="mood-switch-title">Major or minor</span>
         <span className="mood-switch-desc">
-          Shift between bright sunlight (Major 3rd) and moonlit introspection (Minor 3rd)
+          The 3rd decides it: major sounds bright, minor sounds dark.
         </span>
       </div>
       <div className="mood-switch-pills">
@@ -90,7 +90,6 @@ const MoodSwitch: React.FC<{
           onClick={() => toggleMood('major')}
           title="Major Scale: Sunny, bright, resolved"
         >
-          <span className="mood-pill-icon">☀️</span>
           <span className="mood-pill-text">Major (Sun)</span>
         </button>
 
@@ -100,7 +99,6 @@ const MoodSwitch: React.FC<{
           onClick={() => toggleMood('minor')}
           title="Minor Scale: Moonlit, introspective, melancholic"
         >
-          <span className="mood-pill-icon">🌙</span>
           <span className="mood-pill-text">Minor (Moon)</span>
         </button>
       </div>
@@ -183,7 +181,7 @@ export const TheoryLab: React.FC = () => {
   const [highlightedMidis, setHighlightedMidis] = useState<number[]>([]);
   const [rootMidis, setRootMidis] = useState<number[]>([]);
 
-  // "Start here" intro card — shown until the user dismisses it once
+  // "Start here" intro card, shown until the user dismisses it once
   const [showIntro, setShowIntro] = useState<boolean>(() => {
     try {
       return localStorage.getItem(INTRO_DISMISSED_KEY) !== '1';
@@ -195,10 +193,10 @@ export const TheoryLab: React.FC = () => {
     setShowIntro(false);
     try {
       localStorage.setItem(INTRO_DISMISSED_KEY, '1');
-    } catch { /* private browsing — just hide for this session */ }
+    } catch { /* private browsing, just hide for this session */ }
   };
 
-  // Circle of Fifths — reference material folded away by default on a page
+  // Circle of Fifths, reference material folded away by default on a page
   // this tall, but the preference sticks once you open it.
   const [showCircle, setShowCircle] = useState<boolean>(() => {
     try {
@@ -211,14 +209,14 @@ export const TheoryLab: React.FC = () => {
     setShowCircle(prev => {
       try {
         localStorage.setItem(CIRCLE_OPEN_KEY, prev ? '0' : '1');
-      } catch { /* private browsing — this session only */ }
+      } catch { /* private browsing, this session only */ }
       return !prev;
     });
   };
 
   // The circle reflects the toolbar rather than remembering its own key.
   // It used to hold separate state, so picking F# Natural Minor up top left
-  // the circle still highlighting C major and listing C major's chords —
+  // the circle still highlighting C major and listing C major's chords,
   // two answers on screen to the question "what key am I in?".
   const inMinorKey = /Minor|Blues/.test(selectedScale.name);
   const activeCircleKey = useMemo(() => {
@@ -302,14 +300,14 @@ export const TheoryLab: React.FC = () => {
     try {
       const saved = localStorage.getItem(INSTRUMENT_KEY);
       if (saved === 'piano' || saved === 'guitar' || saved === 'both') return saved;
-    } catch { /* private browsing — fall through to the default */ }
+    } catch { /* private browsing, fall through to the default */ }
     return 'both';
   });
   const chooseInstrument = (view: InstrumentView) => {
     setInstrument(view);
     try {
       localStorage.setItem(INSTRUMENT_KEY, view);
-    } catch { /* private browsing — this session only */ }
+    } catch { /* private browsing, this session only */ }
   };
   const guitarMode = instrument === 'guitar';
   const showPiano = instrument !== 'guitar';
@@ -370,7 +368,7 @@ export const TheoryLab: React.FC = () => {
     }, 400);
   };
 
-  // The toolbar's single Play button — whichever mode is active
+  // The toolbar's single Play button, whichever mode is active
   const playSelection = () => {
     if (selectedChordQuality !== -1) playCurrentChord();
     else playScaleSweep();
@@ -378,7 +376,7 @@ export const TheoryLab: React.FC = () => {
 
   // Click on a key segment in the Circle of Fifths. `isMinorClick`
   // distinguishes the inner (relative minor) ring from the outer (major)
-  // ring — they represent different home notes over the same note set.
+  // ring, they represent different home notes over the same note set.
   const handleCircleKeyClick = (keyInfo: CircleKeyInfo, isMinorClick: boolean = false) => {
     reportProgress('theory-circle-key-clicked');
     setSelectedChordQuality(-1); // Switch to scale mode for key
@@ -388,7 +386,7 @@ export const TheoryLab: React.FC = () => {
     setSelectedOctave(3);
 
     // Clicking the inner ring means "the minor key", so the scale follows the
-    // ring. An already-minor choice is left alone — someone exploring
+    // ring. An already-minor choice is left alone, someone exploring
     // harmonic minor shouldn't be dropped back to natural minor for clicking
     // a different key.
     if (isMinorClick && !inMinorKey) setSelectedScale(SCALE_FORMULAS[1]);
@@ -479,7 +477,7 @@ export const TheoryLab: React.FC = () => {
 
       const isSelected = activeCircleKey.name === keyInfo.name;
 
-      // Major and minor sectors are independently clickable — they
+      // Major and minor sectors are independently clickable, they
       // represent different home notes (relative major/minor) over the
       // same note set, so each needs its own handler rather than both
       // falling back to a single click on their shared <g>.
@@ -540,7 +538,7 @@ export const TheoryLab: React.FC = () => {
             {[
               ['1', 'Pick a feeling. "Happy & Bright" is the major scale.'],
               ['2', 'Press Play and listen.'],
-              ['3', 'Orange is home — the note it all settles back to.']
+              ['3', 'Orange is the home note.']
             ].map(([num, text]) => (
               <div key={num} style={{ display: 'flex', gap: '0.6rem', alignItems: 'baseline', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                 <span style={{ flexShrink: 0, width: '20px', height: '20px', borderRadius: '50%', background: 'var(--surface-3)', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, alignSelf: 'center' }}>{num}</span>
@@ -554,7 +552,7 @@ export const TheoryLab: React.FC = () => {
         </section>
       )}
 
-      {/* Pinned controls — the whole page below reacts to these */}
+      {/* Pinned controls, the whole page below reacts to these */}
       <ScaleControlBar
         root={selectedRoot}
         onRootChange={setSelectedRoot}
@@ -574,7 +572,7 @@ export const TheoryLab: React.FC = () => {
           <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</strong>
           {' · '}
           <strong className="readout" style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>
-          {' — sounds '}
+          {': sounds '}
           <strong style={{ color: 'var(--secondary)' }}>{(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}</strong>.
         </>
       ) : (
@@ -582,7 +580,7 @@ export const TheoryLab: React.FC = () => {
           <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {selectedScale.name}</strong>
           {' · '}
           <strong className="readout" style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>
-          {' — listen for '}{SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}
+          {'. Listen for '}{SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}
         </>
       )}
       </div>
@@ -614,7 +612,7 @@ export const TheoryLab: React.FC = () => {
         onStrum={handleStrumVoicing}
       />
 
-      {/* Circle of Fifths — background reference, so it sits after the things
+      {/* Circle of Fifths, background reference, so it sits after the things
           the toolbar actually drives rather than between them */}
       <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
         <div style={{ width: '100%', borderBottom: showCircle ? '1px solid rgba(var(--surface-tint-rgb),0.08)' : 'none', paddingBottom: showCircle ? '0.5rem' : 0, display: 'flex', gap: '1rem', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
@@ -622,7 +620,7 @@ export const TheoryLab: React.FC = () => {
             <h3 style={{ fontSize: '1.15rem' }}>
               <Term k="circleOfFifths">Circle of Fifths</Term>
               <span style={{ fontWeight: 400, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                {' '}— currently <strong style={{ color: inMinorKey ? 'var(--secondary)' : 'var(--primary)' }}>
+                {': '}<strong style={{ color: inMinorKey ? 'var(--secondary)' : 'var(--primary)' }}>
                   {inMinorKey ? activeCircleKey.relativeMinor : `${activeCircleKey.name} major`}
                 </strong>
               </span>
@@ -702,7 +700,7 @@ export const TheoryLab: React.FC = () => {
       {/* Sound-First Interactive Physical & Musical Micro-Explorations */}
       <SonicConcepts />
 
-      {/* Instruments — one panel with tabs. Two full-height panels plus a
+      {/* Instruments, one panel with tabs. Two full-height panels plus a
           separate "which one listens to the keyboard" bar was over a screen
           and a half of chrome for what is really a single choice. */}
       <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -764,7 +762,7 @@ export const TheoryLab: React.FC = () => {
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
                   Pick a string (low → high):
                   <kbd className="key-hint">Z</kbd><kbd className="key-hint">X</kbd><kbd className="key-hint">C</kbd><kbd className="key-hint">V</kbd><kbd className="key-hint">B</kbd><kbd className="key-hint">N</kbd>
-                  <span>— no shape held = strings ring open</span>
+                  <span>(no shape held: open strings)</span>
                 </div>
               </>
             ) : (
@@ -781,7 +779,7 @@ export const TheoryLab: React.FC = () => {
           </div>
         )}
 
-        {/* One legend for the whole section — it was identical in both panels */}
+        {/* One legend for the whole section, it was identical in both panels */}
         <HighlightLegend mode={selectedChordQuality !== -1 ? 'chord' : 'scale'} />
 
         {showPiano && (

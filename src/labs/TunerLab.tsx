@@ -2,11 +2,11 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Segmented } from '../components/Segmented';
 import { LabIcon } from '../components/LabIcon';
 import { TunerDial } from '../components/TunerDial';
+import { VoiceTuner } from '../components/VoiceTuner';
 import { IconCheck } from '../components/Icons';
 import { useMicPitch } from '../hooks/useMicPitch';
 import { useSpringValue } from '../hooks/useSpringValue';
 import { audio } from '../utils/audio';
-import { noteNameToMidi } from '../utils/musicTheory';
 import { HOLD_MS, INSTRUMENTS, IN_TUNE_CENTS, TUNINGS, nearestString, stringsOf, tuningsFor, type Instrument } from '../utils/tuning';
 import { reportProgress } from '../utils/progress';
 
@@ -23,13 +23,73 @@ const storedTuningFor = (instrument: Instrument): string => {
   return options.some(t => t.id === saved) ? saved! : options[0].id;
 };
 
-// Pitch-matching targets, kept to notes the instrument can actually play.
-const GAME_NOTES: Record<Instrument, string[]> = {
-  guitar: ['E2', 'G2', 'A2', 'C3', 'E3', 'G3', 'A3', 'C4', 'E4', 'G4', 'A4'],
-  ukulele: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5']
+const MODE_KEY = 'cadenza-tuner-mode';
+
+/**
+ * Size an element to exactly the screen that is left below its top edge, so
+ * the tuner is one page with nothing to scroll: the space between the top bar
+ * and the tab bar on a phone, or down to the window's edge on a desktop.
+ * Measured live rather than guessed in CSS, because what sits above it varies
+ * (a practice run puts its bar there) and the shell's bottom padding is what
+ * keeps content clear of the phone's tab bar.
+ */
+function useFitViewport<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const main = el.closest('.main-content') as HTMLElement | null;
+    const fit = () => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const below = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
+      // Below this the controls stop fitting; a short landscape phone scrolls instead.
+      el.style.height = `${Math.max(460, window.innerHeight - top - below)}px`;
+    };
+    fit();
+    // Once more after the page's entrance animation, which measures 6px low.
+    const settle = window.setTimeout(fit, 300);
+    window.scrollTo(0, 0);
+    const observer = new ResizeObserver(fit);
+    if (main) observer.observe(main);
+    window.addEventListener('resize', fit);
+    return () => { window.clearTimeout(settle); observer.disconnect(); window.removeEventListener('resize', fit); };
+  }, []);
+  return ref;
+}
+type TunerMode = 'instrument' | 'voice';
+
+/**
+ * Two tuners behind one switch: strings, read by a needle, and a voice, read
+ * by a trace. The pitch-matching game that used to sit beside the strings is
+ * now Voice → Hold a note, where it can draw what the voice is doing.
+ */
+export const TunerLab: React.FC = () => {
+  const [mode, setMode] = useState<TunerMode>(() => (readStored(MODE_KEY) === 'voice' ? 'voice' : 'instrument'));
+  const pick = (next: TunerMode) => {
+    setMode(next);
+    try { localStorage.setItem(MODE_KEY, next); } catch { /* not worth failing over */ }
+  };
+
+  const pageRef = useFitViewport<HTMLDivElement>();
+
+  return (
+    <div className="lab-narrow tunerpage" ref={pageRef}>
+      <div className="lab-header">
+        <h2 className="lab-title"><LabIcon tab="tuner" />Pitch &amp; Tuner</h2>
+      </div>
+      <Segmented<TunerMode>
+        value={mode}
+        onChange={pick}
+        options={[{ value: 'instrument', label: 'Instrument' }, { value: 'voice', label: 'Voice' }]}
+        full
+      />
+      {/* Keyed so switching tears one mic pipeline down before the other starts. */}
+      {mode === 'instrument' ? <InstrumentTuner key="instrument" /> : <VoiceTuner key="voice" />}
+    </div>
+  );
 };
 
-export const TunerLab: React.FC = () => {
+const InstrumentTuner: React.FC = () => {
   // Shared microphone + YIN pitch detection pipeline
   const {
     pitch: pitchData,
@@ -79,7 +139,7 @@ export const TunerLab: React.FC = () => {
     try { localStorage.setItem(INSTRUMENT_KEY, next); } catch { /* as above */ }
   };
 
-  // Which string this is, and how far off *it* — not off the nearest note in
+  // Which string this is, and how far off *it*, not off the nearest note in
   // the chromatic scale. See utils/tuning.ts: the two answers disagree exactly
   // when a string is worst out, which is the moment a tuner has to be useful.
   const onString = pitchData ? nearestString(pitchData.frequency, targets) : null;
@@ -121,15 +181,6 @@ export const TunerLab: React.FC = () => {
 
   const tunedCount = targets.filter(target => tuned[target.number]).length;
 
-  // Pitch matching game states
-  const [gameMode, setGameMode] = useState<boolean>(false);
-  const [targetNote, setTargetNote] = useState<string>('A4');
-  const [matchScore, setMatchScore] = useState<number>(0);
-  const [matchStreak, setMatchStreak] = useState<number>(0);
-  const [holdProgress, setHoldProgress] = useState<number>(0); // 0 to 100%
-
-  const holdMsRef = useRef<number>(0); // milliseconds the target note has been held
-  const lastTickRef = useRef<number>(0); // timestamp of the previous game tick
   const reportedPitchRef = useRef<boolean>(false); // journey event fired this session
 
   // Journey: the first time the tuner successfully hears a pitch
@@ -140,293 +191,111 @@ export const TunerLab: React.FC = () => {
     }
   }, [pitchData]);
 
-  const targetNotesList = GAME_NOTES[instrument];
-
-  const selectRandomTargetNote = () => {
-    const remaining = targetNotesList.filter(n => n !== targetNote);
-    const randomNote = remaining[Math.floor(Math.random() * remaining.length)];
-    setTargetNote(randomNote);
-    setHoldProgress(0);
-    holdMsRef.current = 0;
-  };
-
-  // Parse a note name like "C4" or "F#3" into its MIDI number
-  const parseNoteToMidi = (name: string): number | null => {
-    const match = name.match(/^([A-G]#?)([0-9])$/);
-    if (!match) return null;
-    return noteNameToMidi(match[1], Number(match[2]));
-  };
-
-  // Play reference sound for target note
-  const playTargetReference = () => {
-    audio.init();
-    const midi = parseNoteToMidi(targetNote);
-    if (midi === null) return;
-    audio.playMidi(midi, 2.5);
-  };
-
-  // Game loop: check pitch matching logic
-  useEffect(() => {
-    if (!gameMode || !isMicrophoneActive) {
-      setHoldProgress(0);
-      holdMsRef.current = 0;
-      lastTickRef.current = 0;
-      return;
-    }
-
-    // Time-based hold, so progress speed doesn't depend on frame rate
-    const now = performance.now();
-    const elapsed = lastTickRef.current === 0 ? 16 : Math.min(100, now - lastTickRef.current);
-    lastTickRef.current = now;
-
-    const REQUIRED_HOLD_MS = 1200;
-    const CENTS_TOLERANCE = 30; // realistic for fretted guitar notes and singing
-
-    // Compare MIDI numbers (robust) instead of exact note-name strings
-    const targetMidi = parseNoteToMidi(targetNote);
-    const isMatch =
-      pitchData !== null &&
-      targetMidi !== null &&
-      pitchData.midi === targetMidi &&
-      Math.abs(pitchData.cents) <= CENTS_TOLERANCE;
-
-    if (isMatch) {
-      holdMsRef.current += elapsed;
-      const percentage = Math.min(100, Math.round((holdMsRef.current / REQUIRED_HOLD_MS) * 100));
-      setHoldProgress(percentage);
-
-      if (holdMsRef.current >= REQUIRED_HOLD_MS) {
-        // Match Successful!
-        setMatchScore(prev => prev + 1);
-        setMatchStreak(prev => prev + 1);
-        reportProgress('tuner-note-matched');
-
-        // Play success tone
-        audio.init();
-        audio.playMidi(72, 0.4); // C5 quick ping
-        setTimeout(() => audio.playMidi(76, 0.6), 150); // E5
-
-        // Advance to next target note
-        selectRandomTargetNote();
-      }
-    } else {
-      // Decay progress gently if they drift off key or go silent
-      holdMsRef.current = Math.max(0, holdMsRef.current - elapsed);
-      setHoldProgress(Math.round((holdMsRef.current / REQUIRED_HOLD_MS) * 100));
-    }
-  }, [pitchData, gameMode, targetNote, isMicrophoneActive]);
-
-  useEffect(() => {
-    if (gameMode) {
-      selectRandomTargetNote();
-      setMatchScore(0);
-      setMatchStreak(0);
-    } else {
-      setHoldProgress(0);
-      holdMsRef.current = 0;
-    }
-  }, [gameMode]);
-
-  // A guitar note is no target for a ukulele, and the other way round.
-  useEffect(() => {
-    if (gameMode && !GAME_NOTES[instrument].includes(targetNote)) selectRandomTargetNote();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [instrument]);
-
   // (Mic teardown on unmount is handled inside useMicPitch)
 
   return (
-    <div className="lab-narrow" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      
-      {/* Header */}
-      <div className="lab-header">
-        <h2 className="lab-title"><LabIcon tab="tuner" />Pitch &amp; Tuner</h2>
-      </div>
-
-      <div className="grid-2">
-        
-        {/* The meter. Before permission it is here all the same, greyed and
-            inert: the ask used to arrive before anything had said what the
-            screen does, and "allow your microphone" is an easier yes when you
-            can see what it is for. */}
-        <section className={`glass-panel tunerface${isMicrophoneActive ? '' : ' is-off'}`}>
-          <div className="tunerface-meter" aria-hidden={!isMicrophoneActive}>
-            <div className="tuner-note">
-              <span className={`tuner-note-name readout${pitchData ? (gaugeInTune ? ' is-home' : ' is-live') : ''}`}>
-                {readNote ?? '—'}
-              </span>
-              <span className="tuner-note-hz readout">
-                {pitchData ? `${pitchData.frequency.toFixed(1)} Hz` : isMicrophoneActive ? 'silent' : 'not listening'}
-              </span>
-            </div>
-
-            <TunerDial cents={pitchData ? gaugeCents : null} inTune={Boolean(pitchData) && gaugeInTune} />
-
-            <span className={`tuner-off readout${pitchData && gaugeInTune ? ' is-home' : ''}`}>
-              {pitchData
-                ? gaugeInTune
-                  ? onString ? `${onString.target.ordinal} string is there` : 'in tune'
-                  // The needle pins at the end of the dial; the words do not.
-                  // "+50" under a needle that is actually reading +64 is the
-                  // meter lying about its own limit.
-                  : `${springedCents > 0 ? '+' : ''}${Math.round(springedCents)} cents${onString ? ` off ${onString.target.name}` : ''}`
-                : 'play a string'}
+    <div className="tunerstack">
+      {/* The meter fills whatever the screen has left. Before permission it is
+          here all the same, greyed and inert: "allow your microphone" is an
+          easier yes when you can see what it is for. */}
+      <section className={`glass-panel tunerface${isMicrophoneActive ? '' : ' is-off'}`}>
+        <div className="tunerface-meter" aria-hidden={!isMicrophoneActive}>
+          <div className="tuner-note">
+            <span className={`tuner-note-name readout${pitchData ? (gaugeInTune ? ' is-home' : ' is-live') : ''}`}>
+              {readNote ?? '-'}
+            </span>
+            <span className="tuner-note-hz readout">
+              {pitchData ? `${pitchData.frequency.toFixed(1)} Hz` : isMicrophoneActive ? 'silent' : 'not listening'}
             </span>
           </div>
 
-          {isMicrophoneActive ? (
-            <button onClick={stopMicrophone} className="btn tuner-stop">
-              <span className="tuner-stop-dot" aria-hidden="true" />
-              Stop listening
-            </button>
-          ) : (
-            <div className="micbar">
-              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><line x1="12" y1="19" x2="12" y2="22" />
-              </svg>
-              <span className="micbar-said">The needle moves once the tuner can hear you.</span>
-              <button onClick={initMicrophone} className="btn btn-primary">Turn on the mic</button>
-            </div>
+          <TunerDial cents={pitchData ? gaugeCents : null} inTune={Boolean(pitchData) && gaugeInTune} />
+
+          <span className={`tuner-off readout${pitchData && gaugeInTune ? ' is-home' : ''}`}>
+            {pitchData
+              ? gaugeInTune
+                ? onString ? `${onString.target.ordinal} string is there` : 'in tune'
+                // The needle pins at the end of the dial; the words do not.
+                : `${springedCents > 0 ? '+' : ''}${Math.round(springedCents)} cents${onString ? ` off ${onString.target.name}` : ''}`
+              : isMicrophoneActive ? 'Play a string' : ''}
+          </span>
+        </div>
+
+        {isMicrophoneActive ? (
+          <button onClick={stopMicrophone} className="btn tuner-stop">
+            <span className="tuner-stop-dot" aria-hidden="true" />
+            Stop listening
+          </button>
+        ) : (
+          <button onClick={initMicrophone} className="btn btn-primary tuner-start">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><line x1="12" y1="19" x2="12" y2="22" />
+            </svg>
+            Turn on the mic
+          </button>
+        )}
+        {micError && <p className="micbar-error">{micError}</p>}
+      </section>
+
+      {/* The strings: the reference you read while turning a peg, and once the
+          tuner can hear, the thing that ticks off. Tuning up is a job with an
+          end, so the label reports how much of it is left. */}
+      <section className="glass-panel strings tunerdock">
+        <div className="surface-label">
+          <span>{tuning.name}</span>
+          <span className="readout">
+            {isMicrophoneActive
+              ? tunedCount === targets.length ? `all ${targets.length === 4 ? 'four' : 'six'} in tune` : `${tunedCount} of ${targets.length} in tune`
+              : 'tap a string to hear it'}
+          </span>
+          {isMicrophoneActive && tunedCount > 0 && (
+            <button type="button" className="strings-again" onClick={() => setTuned({})}>Start again</button>
           )}
-          {micError && <p className="micbar-error">{micError}</p>}
-        </section>
-
-        {/* Intonation Game Console */}
-        <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', minHeight: '340px' }}>
-          <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-            <span>{gameMode ? 'Pitch Matching' : 'Tuning'}</span>
-            <Segmented
-              value={gameMode}
-              onChange={setGameMode}
-              tone={gameMode ? 'secondary' : 'primary'}
-              size="sm"
-              options={[
-                { value: false, label: 'Tuner' },
-                { value: true, label: 'Practice Game' }
-              ]}
-            />
-          </h3>
-
-          {!gameMode ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.55 }}>
-              <p style={{ margin: 0 }}>
-                One string at a time. Tune <em>up</em> to the note — a string arriving from
-                below holds better than one left slack.
-              </p>
-
-              {/* The reference you read while turning a peg — and, once the
-                  tuner can hear, the thing that ticks off. Every other counter
-                  in this app reports a level; tuning up is a job with an end,
-                  so this one reports how much of it is left. */}
-              <div className="strings">
-                <div className="surface-label">
-                  <span>{tuning.name}</span>
-                  <span className="readout">
-                    {isMicrophoneActive
-                      ? tunedCount === targets.length ? `all ${targets.length === 4 ? 'four' : 'six'}` : `${tunedCount} of ${targets.length}`
-                      : tuning.note}
-                  </span>
-                </div>
-                <div className={`strings-row${targets.length === 4 ? ' is-four' : ''}`}>
-                  {targets.map(target => {
-                    const here = isMicrophoneActive && onString?.target.number === target.number;
-                    const done = tuned[target.number];
-                    return (
-                      <button
-                        type="button"
-                        key={target.number}
-                        className={`stringcard${here ? ' is-here' : ''}${done ? ' is-done' : ''}`}
-                        title={`${target.ordinal} string · ${target.hz.toFixed(1)} Hz · press to hear it`}
-                        onClick={() => { audio.init(); audio.playMidi(target.midi, 2.5); }}
-                      >
-                        <span className="stringcard-ord">{target.ordinal}</span>
-                        <span className="stringcard-note">{target.name}</span>
-                        <span className="stringcard-hz readout">
-                          {here && pitchData
-                            ? `${onString.cents > 0 ? '+' : ''}${Math.round(onString.cents)}c`
-                            : `${target.hz.toFixed(1)} Hz`}
-                        </span>
-                        {done && <span className="stringcard-tick" aria-label="in tune"><IconCheck size={11} /></span>}
-                      </button>
-                    );
-                  })}
-                </div>
-                {isMicrophoneActive && tunedCount > 0 && (
-                  <button type="button" className="strings-again" onClick={() => setTuned({})}>
-                    Start again
-                  </button>
-                )}
-                <p className="strings-hint">Press a string to hear it — the other way to tune, and the one that trains an ear.</p>
-                <Segmented<Instrument>
-                  label="Instrument"
-                  value={instrument}
-                  onChange={pickInstrument}
-                  options={INSTRUMENTS.map(i => ({ value: i.id, label: i.name }))}
-                  size="sm"
-                  full
-                />
-                <Segmented<string>
-                  label="Tuning"
-                  value={tuningId}
-                  onChange={pickTuning}
-                  options={tuningsFor(instrument).map(t => ({ value: t.id, label: t.name, title: t.note }))}
-                  size="sm"
-                  full
-                />
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '1rem', justifyContent: 'center' }}>
-              
-              {/* Target Note Display Box */}
-              <div style={{ textAlign: 'center', padding: '1.25rem', background: 'var(--surface-2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TARGET NOTE</span>
-                <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--secondary)' }}>{targetNote}</span>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-                  <button onClick={playTargetReference} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    Play Reference Pitch
-                  </button>
-                  <button onClick={selectRandomTargetNote} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>
-                    Skip Note
-                  </button>
-                </div>
-              </div>
-
-              {/* Hold Progress Bar */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  <span>Pitch Intonation Accuracy:</span>
-                  <span style={{ fontWeight: 'bold' }}>{holdProgress}%</span>
-                </div>
-                <div style={{ height: '10px', background: 'var(--surface-3)', borderRadius: '5px', overflow: 'hidden' }}>
-                  <div 
-                    style={{ 
-                      width: `${holdProgress}%`, 
-                      height: '100%', 
-                      background: 'var(--success)', 
-                      boxShadow: '0 0 10px var(--success-glow)', 
-                      transition: 'width 0.1s ease' 
-                    }}
-                  />
-                </div>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                  Sing or play {targetNote} (within ±30 cents) for 1.2 seconds to progress
+        </div>
+        <div className={`strings-row${targets.length === 4 ? ' is-four' : ''}`}>
+          {targets.map(target => {
+            const here = isMicrophoneActive && onString?.target.number === target.number;
+            const done = tuned[target.number];
+            return (
+              <button
+                type="button"
+                key={target.number}
+                className={`stringcard${here ? ' is-here' : ''}${done ? ' is-done' : ''}`}
+                title={`${target.ordinal} string · ${target.hz.toFixed(1)} Hz · press to hear it`}
+                onClick={() => { audio.init(); audio.playMidi(target.midi, 2.5); }}
+              >
+                <span className="stringcard-ord">{target.ordinal}</span>
+                <span className="stringcard-note">{target.name}</span>
+                <span className="stringcard-hz readout">
+                  {here && pitchData
+                    ? `${onString.cents > 0 ? '+' : ''}${Math.round(onString.cents)}c`
+                    : `${target.hz.toFixed(1)} Hz`}
                 </span>
-              </div>
-
-              {/* Accuracy Stats */}
-              <div style={{ display: 'flex', justifyItems: 'space-between', gap: '1rem', paddingTop: '0.75rem', fontSize: '0.85rem', justifyContent: 'space-between' }}>
-                <span>Matched Notes: <strong style={{ color: 'var(--primary)' }}>{matchScore}</strong></span>
-                <span style={{ color: 'var(--warning)' }}>Streak <strong>{matchStreak}</strong></span>
-              </div>
-
-            </div>
-          )}
-        </section>
-
-      </div>
+                {done && <span className="stringcard-tick" aria-label="in tune"><IconCheck size={11} /></span>}
+              </button>
+            );
+          })}
+        </div>
+        <div className="tunerdock-pickers">
+          <Segmented<Instrument>
+            value={instrument}
+            onChange={pickInstrument}
+            options={INSTRUMENTS.map(i => ({ value: i.id, label: i.name }))}
+            size="sm"
+          />
+          <select
+            className="select-field"
+            value={tuningId}
+            onChange={e => pickTuning(e.target.value)}
+            aria-label="Tuning"
+            title={tuning.note}
+          >
+            {tuningsFor(instrument).map(t => <option key={t.id} value={t.id}>{t.name} · {t.strings}</option>)}
+          </select>
+        </div>
+      </section>
     </div>
   );
 };
+
 export default TunerLab;

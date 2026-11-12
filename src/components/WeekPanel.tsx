@@ -5,14 +5,14 @@ import { heldLabel } from '../utils/tempoLog';
 /**
  * The last seven days, as a shape and then as sentences.
  *
- * This card replaced four metrics that had no relationship to one another —
+ * This card replaced four metrics that had no relationship to one another,
  * minutes, a streak, an average confidence and a completion count, four
  * different spans of time stacked in a two-by-two grid. Read together they
  * did not describe anything. Read separately the streak was the only one with
  * any pull, and it spent most of its life reading zero.
  *
  * So: one span, stated once at the top, and everything above the footer
- * belongs to it. Only facts with something to say are rendered — a week with
+ * belongs to it. Only facts with something to say are rendered, a week with
  * no tempo record simply has no tempo line, rather than a line saying there
  * is none. The two all-time figures worth keeping sit in the footer under
  * their own label, because the failure this card is fixing was mostly a
@@ -50,7 +50,7 @@ export const WeekPanel: React.FC<{ recap: WeekRecap }> = ({ recap }) => {
             <span
               key={day.date}
               className={`weekbar${day.open ? ' is-today' : ''}${day.minutes > 0 ? ' is-on' : ''}`}
-              title={`${when.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })} — ${day.minutes > 0 ? `${day.minutes} min` : 'nothing logged'}`}
+              title={`${when.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}: ${day.minutes > 0 ? `${day.minutes} min` : 'nothing logged'}`}
             >
               <span className="weekbar-track">
                 <span className="weekbar-fill" style={{ height: `${(share * 100).toFixed(1)}%` }} />
@@ -63,8 +63,7 @@ export const WeekPanel: React.FC<{ recap: WeekRecap }> = ({ recap }) => {
 
       {recap.quiet ? (
         <p className="week-quiet">
-          Nothing logged in the last seven days. The strip fills in as you play, and every
-          figure on this card comes from what you actually did.
+          Nothing logged in the last 7 days.
         </p>
       ) : (
         <ul className="weekfacts">

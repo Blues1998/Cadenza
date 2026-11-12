@@ -1,6 +1,6 @@
 // The app is served under a base path (/Cadenza/ on GitHub Pages), so an
 // asset written as an absolute path from the server root resolves to the
-// wrong URL everywhere except a root deployment — /font/Bravura.woff2 is a
+// wrong URL everywhere except a root deployment, /font/Bravura.woff2 is a
 // 404 when the app actually lives at /Cadenza/font/Bravura.woff2, and
 // alphaTab reports that as "rendering cannot start".
 //

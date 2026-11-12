@@ -11,7 +11,7 @@ import { COMFORT_LABEL, skillFor } from '../utils/chordbook';
  * Where this song sits under your hands, and what a capo would do about it.
  *
  * Not a button that rewrites the song. A capo position is a real decision with
- * a sound and a feel attached, and the app knows one thing about it — which
+ * a sound and a feel attached, and the app knows one thing about it, which
  * shapes come out. So it draws the neck, shows what each position costs in
  * chords you do not have, and leaves the choice with the person whose hands
  * they are. Running along the frets only previews; the recommendation is a
@@ -53,9 +53,7 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
         </div>
         <CapoBar verdict={verdict} onApply={apply} />
         <p className="fit-note">
-          Mark the chords above as solid, shaky or not yet, and Fit will pick the position out of
-          these for you — the one that puts this song inside what your hands already do, at the
-          same pitch, so it still plays along with the record.
+          Rate the chords above and Fit picks the capo that suits your hands, at the same pitch.
         </p>
       </section>
     );
@@ -64,8 +62,8 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
   // What this panel is allowed to say out loud.
   //
   // fit.ts files a chord nobody has rated under "not in your hands", which is
-  // the right call for ordering positions — an unknown may well turn out to be
-  // a wall — and the wrong thing to read back. Left as it was, rating a single
+  // the right call for ordering positions, an unknown may well turn out to be
+  // a wall, and the wrong thing to read back. Left as it was, rating a single
   // chord lifted the guard above and the panel began handing out homework for
   // every chord that had simply never been asked about. So the ordering keeps
   // the cautious count and everything with words on it uses this one.
@@ -75,7 +73,7 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
   const headline = here.missing > 0
     ? `${here.missing} chord${here.missing === 1 ? '' : 's'} ${here.all ? 'in this song' : 'you have rated here'} ${here.missing === 1 ? 'is' : 'are'} not in your hands yet.`
     : here.shaky > 0
-      ? `You have every chord ${here.all ? 'here' : 'you have rated here'} — ${here.shaky} of them shaky.`
+      ? `You have every chord ${here.all ? 'here' : 'you have rated here'}. ${here.shaky} shaky.`
       : here.all
         ? 'Every chord in this song is one you play solidly.'
         : `Every chord you have rated here is one you play solidly.`;
@@ -104,7 +102,7 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
           <span className="fit-suggest-text">
             {best.playable
               ? <>Capo <strong>{best.capo}</strong> puts every chord inside what you already know{best.shaky > 0 ? `, ${best.shaky} of them shaky` : ''}.</>
-              : <>Capo <strong>{best.capo}</strong> is the closest fit — {best.missing} still to learn.</>}
+              : <>Capo <strong>{best.capo}</strong> is the closest fit. {best.missing} to learn.</>}
             <span className="fit-suggest-note"> Same pitch, different grip.</span>
           </span>
           <button type="button" className="btn btn-primary" onClick={() => apply(best)}>
@@ -115,7 +113,7 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
 
       {!improves && here.missing > 0 && (
         <p className="fit-note">
-          No capo position gets round this one — these shapes are the work.
+          No capo helps here. These shapes are the work.
         </p>
       )}
 

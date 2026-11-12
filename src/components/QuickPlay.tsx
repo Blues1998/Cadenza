@@ -21,14 +21,14 @@ import { bankRun, bestFor } from '../utils/records';
 const BEATS_PER_BAR = [3, 4, 6];
 
 // The handful worth a press. Everything else is typed, or built by pressing
-// cells in the grid — which is how most patterns here will actually be made.
+// cells in the grid, which is how most patterns here will actually be made.
 const PATTERN_IDEAS = ['D', 'D D D D', 'D D U U D U', 'D U D U', 'D - D U - U D U', 'D U X U D U'];
 
 /**
  * A start or a stop asked for from somewhere else on the page.
  *
  * Carries an id rather than being a bare verb, because the answer to "has
- * this already been acted on" cannot be read off 'start' — pressing play,
+ * this already been acted on" cannot be read off 'start', pressing play,
  * stopping, and pressing play again is two identical orders that both have
  * to land.
  */
@@ -46,7 +46,7 @@ interface QuickPlayProps {
   /** Where the transport has got to, for anything outside drawing a button. */
   onPhase?: (phase: ChartPhase) => void;
   /**
-   * A loop handed in from outside — the palette, or today's run.
+   * A loop handed in from outside, the palette, or today's run.
    *
    * The chords arrive through `slots` like any others; this carries the rest
    * of what a loop is, which is its tempo, its metre and what it was called.
@@ -59,7 +59,7 @@ interface QuickPlayProps {
  *
  * Chords arrive three ways and the panel owns none of them outright: ticked
  * off the page it sits on, taken from the shelf below, or built in the key
- * picker there. What the panel is for is everything after that — the order,
+ * picker there. What the panel is for is everything after that, the order,
  * how long each chord is held, the tempo, and the strumming hand.
  */
 export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, order, onPhase, preset }) => {
@@ -85,7 +85,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
   const ghosted = useMemo(() => (ghost ? parseStrum(ghost, beatsPerBar) : null), [ghost, beatsPerBar]);
   const ghosting = ghosted !== null && ghost !== patternText;
   const shown = ghosting ? ghosted : pattern;
-  // Shapes the loop insists on — a drill saying which grip it is about. Empty
+  // Shapes the loop insists on, a drill saying which grip it is about. Empty
   // for anything built by hand, which is nearly everything that comes through
   // here, and then every chord is sounded with the one you play it with.
   const shapes = useMemo(() => slotShapes(slots), [slots]);
@@ -95,19 +95,19 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
     settings,
     // The pattern is the strumming hand. With the field empty there is no
     // hand, and the loop becomes a click and a set of chord names to strum
-    // against yourself — which is the other half of what this is for.
+    // against yourself, which is the other half of what this is for.
     { playChords: pattern !== null, loop: true, strum: true, metronome: click, pattern, shapes }
   );
   const moving = phase === 'countin' || phase === 'playing';
   const running = moving || phase === 'paused';
 
-  // The page has a play button of its own — the one on the bucket, which is
+  // The page has a play button of its own, the one on the bucket, which is
   // in reach while the panel itself is several screens up.
   //
   // The order is the whole dependency, and it is a fresh object per press, so
   // this runs once for each press and not once per render. Deliberately not
   // guarded by a "have I already done this id" flag: in development React
-  // mounts, tears down and remounts, and the teardown stops the transport —
+  // mounts, tears down and remounts, and the teardown stops the transport,
   // so an effect that refused to repeat itself would leave the loop stopped
   // by the very cleanup that was meant to be undone. Start is idempotent; it
   // halts whatever is running before it begins.
@@ -161,7 +161,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
    * The run in progress.
    *
    * A ref rather than state, because it is written on every beat and nothing
-   * looks at it until it is over — and because stop() clears the beat in the
+   * looks at it until it is over, and because stop() clears the beat in the
    * same breath as the phase, so the count has to have been kept somewhere
    * that does not get torn down with the render that reported it.
    *
@@ -236,7 +236,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
   };
 
   // start() reads the tempo off the render it was called in, and setTempo does
-  // not land until the next one — so a ramp has to wait a beat before it plays
+  // not land until the next one, so a ramp has to wait a beat before it plays
   // or it would run the new rung at the old tempo.
   const startAt = useRef<number | null>(null);
   useEffect(() => {
@@ -245,7 +245,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
     start();
   }, [tempo, start]);
 
-  // A loop from the shelf arrives whole — chords, tempo and metre — because
+  // A loop from the shelf arrives whole, chords, tempo and metre, because
   // the tempo a progression was written for is part of what it is. Stopped
   // first: the metre cannot change under a running clock.
   const applyLoop = (next: Slot[], setup: LoopSetup) => {
@@ -272,7 +272,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
   // which the page above owns; everything else about it lands here.
   //
   // Keyed on the handover's id rather than on the object, so the same drill
-  // sent twice in a row lands twice — and so that editing the loop afterwards
+  // sent twice in a row lands twice, and so that editing the loop afterwards
   // does not snap the tempo back to what it arrived with.
   const handed = useRef(0);
   useEffect(() => {
@@ -351,7 +351,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
   // A press has to leave a mark of its own. Setting a tempo by tapping is the
   // one control here whose whole job is the instant you touched it, and
   // without a receipt a tap that did not register looks the same as one that
-  // did — the number only moves from the second tap onwards.
+  // did, the number only moves from the second tap onwards.
   const [tapPulse, setTapPulse] = useState(0);
   const tapTempo = () => {
     setTapPulse(n => n + 1);
@@ -388,7 +388,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
   }, [picking]);
 
   /**
-   * Play this chord that way from now on — in this loop, and only in it.
+   * Play this chord that way from now on, in this loop, and only in it.
    *
    * Choosing your own shape back clears the pin rather than storing it, so the
    * loop stops overruling the chord book the moment it has nothing to say.
@@ -442,7 +442,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
               <span className="qslot-name">{slot.symbol}</span>
               {/* The shape itself, not the name of it. What is about to be
                   played is a picture of where the fingers go, and it is also
-                  the way to change it — a chord with one shape is not a
+                  the way to change it, a chord with one shape is not a
                   button, because there is nothing on the other side of it. */}
               {voicing && all.length > 1 ? (
                 <button
@@ -450,14 +450,14 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
                   className="qslot-shape"
                   onClick={() => setPicking(p => (p === slot.symbol ? null : slot.symbol))}
                   aria-expanded={picking === slot.symbol}
-                  aria-label={`${slot.symbol} is ${label} — choose another shape`}
-                  title={`${slot.symbol} — ${label} · press to change the shape`}
+                  aria-label={`${slot.symbol} is ${label}. Choose another shape`}
+                  title={`${slot.symbol}: ${label}. Press to change the shape`}
                 >
                   <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={0.56} />
                   <span className="qslot-shapename readout">{label}</span>
                 </button>
               ) : voicing ? (
-                <span className="qslot-shape is-only" title={`${slot.symbol} — ${label}`}>
+                <span className="qslot-shape is-only" title={`${slot.symbol}: ${label}`}>
                   <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={0.56} />
                   <span className="qslot-shapename readout">{label}</span>
                 </span>
@@ -521,7 +521,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
                 aria-checked={on}
                 className={`shapepick-item${on ? ' is-on' : ''}`}
                 onClick={() => choose(picking, v)}
-                title={v.substituteFor ? `${v.label} — played instead of ${v.substituteFor}` : v.label}
+                title={v.substituteFor ? `${v.label} (instead of ${v.substituteFor})` : v.label}
               >
                 <ChordDiagram frets={v.frets} fingers={v.fingers} scale={0.5} />
                 <span className="shapepick-label readout">{v.label}</span>
@@ -578,7 +578,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           className="btn chart-tap"
           onClick={tapTempo}
           aria-label="Tap a tempo"
-          title="Tap a tempo — press it on four beats"
+          title="Tap tempo: press on four beats"
         >
           <IconTap size={15} aria-hidden="true" />
           {tapPulse > 0 && <span key={tapPulse} className="chart-tap-ring" aria-hidden="true" />}
@@ -609,7 +609,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
           onClick={() => setClick(on => !on)}
           aria-pressed={click}
           aria-label="Click"
-          title={click ? 'Click on — press to silence it' : 'Click off — press to hear it'}
+          title={click ? 'Click on' : 'Click off'}
         >
           <IconMetronome
             size={17}
@@ -671,7 +671,7 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
 
       {/* Where the pattern is written. While the loop runs it is on the stage
           instead, at a size you can read from where a guitar is actually
-          played — and writing one is setup, which stops when playing starts
+          played, and writing one is setup, which stops when playing starts
           for the same reason the shelf and the slot tools do. */}
       {!running && (
       <div className="quickplay-strum">
@@ -717,15 +717,15 @@ export const QuickPlay: React.FC<QuickPlayProps> = ({ slots, onChange, onClose, 
             />
             <p className="quickplay-strumnote readout">
               {ghosting
-                ? `${ghost} — press the chip to take it`
+                ? `${ghost}. Press the chip to use it`
                 : strokeCount(shown) === 0
-                  ? 'nothing lands — the chords will not sound'
+                  ? 'No strums, so the chords are silent'
                   : `${strokeCount(shown)} stroke${strokeCount(shown) === 1 ? '' : 's'} over ${shown.bars} bar${shown.bars === 1 ? '' : 's'} · press a cell to change it${shown.bars > 1 ? ' · × drops a bar' : ''}`}
             </p>
           </>
         ) : (
           <p className="quickplay-strumnote readout">
-            No pattern — the chords stay silent under the click. Write D and U, or take one above.
+            No pattern. Type D and U, or pick one above.
           </p>
         )}
       </div>

@@ -79,7 +79,7 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
       <div className="guitar-head-status">
         <div className="guitar-chord-badge">
           <span className="guitar-chord-label">Holding</span>
-          <span className="guitar-chord-name readout">{chordSymbol ?? '—'}</span>
+          <span className="guitar-chord-name readout">{chordSymbol ?? '-'}</span>
           {voicing && <span className="guitar-chord-voicing">{voicing.label}</span>}
           {capo && capo > 0 && <span className="guitar-capo-chip readout">Capo {capo}</span>}
           {nextChordSymbol && (
@@ -89,7 +89,7 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
           )}
           {anchorStrings.size > 0 && (
             <span className="guitar-capo-chip guitar-anchor-chip readout" title="Anchor finger stays planted during this change!">
-              ⚓ Anchor: plant finger
+              Anchor finger
             </span>
           )}
           {isPlaying && (
@@ -246,7 +246,7 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
                         style={{
                           left: `${((fretVal - baseFret + 0.5) / numFrets) * 100}%`
                         }}
-                        title={`Fret ${fretVal} (${noteName}) - Finger ${fingerVal ?? ''}${isAnchor ? ' · ⚓ ANCHOR FINGER (keep planted!)' : ''}`}
+                        title={`Fret ${fretVal} (${noteName}) - Finger ${fingerVal ?? ''}${isAnchor ? ' · anchor finger, keep it down' : ''}`}
                       >
                         {isAnchor && <span className="anchor-glow-halo" aria-hidden="true" />}
                         <span className="finger-num">{fingerVal ?? ''}</span>

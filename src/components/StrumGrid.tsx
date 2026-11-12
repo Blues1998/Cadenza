@@ -32,10 +32,10 @@ interface StrumGridProps {
  * Pressing a cell changes that cell and nothing else. The placement rule that
  * decides where a written stroke lands has already run by the time this is
  * drawn, and re-running it on an edit would let one press shunt the whole
- * pattern sideways — so a cell only ever offers the strokes its own slot can
+ * pattern sideways, so a cell only ever offers the strokes its own slot can
  * hold, and the edit is written back with its bar lines intact.
  *
- * The count runs above it — 1 & 2 & — because that is the part people already
+ * The count runs above it, 1 & 2 &, because that is the part people already
  * have, and against it the pattern reads without being explained.
  */
 export const StrumGrid: React.FC<StrumGridProps> = ({ pattern, live = -1, onChange, ghost = false }) => {
@@ -78,16 +78,16 @@ export const StrumGrid: React.FC<StrumGridProps> = ({ pattern, live = -1, onChan
                   const toggled = stroke === '-' ? (onBeat(pattern, index) ? 'D' : 'U') : '-';
                   onChange(withStroke(pattern, index, toggled));
                 }}
-                title={`${label} — Click to switch to ${NAME[next]} (${FACE[next]}) · Right-click to toggle rest (·)`}
-                aria-label={`${label} — Click to switch to ${NAME[next]}`}
+                title={`${label}. Click to switch to ${NAME[next]} (${FACE[next]}) · Right-click to toggle rest (·)`}
+                aria-label={`${label}. Click to switch to ${NAME[next]}`}
               >
                 <span className="strumcell-count">{countLabel(pattern, index)}</span>
                 <span className="strumcell-face" aria-hidden="true">{FACE[stroke]}</span>
               </button>
             );
           })}
-          {/* A bar is easy to gain — writing one stroke too many for the metre
-              adds one — so it has to be as easy to lose. Not on a one-bar
+          {/* A bar is easy to gain, writing one stroke too many for the metre
+              adds one, so it has to be as easy to lose. Not on a one-bar
               pattern: the field is where you get rid of that. */}
           {onChange && pattern.bars > 1 && (
             <button

@@ -7,7 +7,7 @@ type Press = () => void;
  *
  * A stack rather than a slot. Quick play opens on top of a page that may
  * already own the bar, and closing it has to hand the bar back to whatever had
- * it before rather than leave nobody holding it — so the newest registration
+ * it before rather than leave nobody holding it, so the newest registration
  * wins and unregistering restores the one underneath.
  */
 const owners: Press[] = [];
@@ -20,7 +20,7 @@ const owners: Press[] = [];
  * with something to start can hold it; only one holds it at a time.
  *
  * The handler is mirrored on every render so a screen can register once and
- * still press the current closure — otherwise the bar would go on calling
+ * still press the current closure, otherwise the bar would go on calling
  * whichever `start` existed when the screen mounted.
  */
 export function usePlayKey(toggle: Press, enabled = true): void {

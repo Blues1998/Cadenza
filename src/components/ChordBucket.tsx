@@ -15,11 +15,11 @@ interface ChordBucketProps {
 }
 
 /**
- * What you have ticked, kept where you can see it — and playable from there.
+ * What you have ticked, kept where you can see it, and playable from there.
  *
  * The page is a few hundred chords long, so a selection you cannot see is a
  * selection you stop trusting after the third tick. This rides the bottom of
- * the window and says, in order, what the loop will be — so the answer to
+ * the window and says, in order, what the loop will be, so the answer to
  * "what have I got so far" never costs a scroll back up.
  *
  * The chips are the control as well as the readout: pressing one takes that
@@ -28,7 +28,7 @@ interface ChordBucketProps {
  *
  * And the button plays. It is the only play button in reach while you are
  * down among the chords, so it has to be the real one rather than a way of
- * going to find the real one — a triangle that only scrolls is a triangle
+ * going to find the real one, a triangle that only scrolls is a triangle
  * that lied.
  */
 export const ChordBucket: React.FC<ChordBucketProps> = ({ slots, running, onRemove, onClear, onPlay, onStop }) => (

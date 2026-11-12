@@ -19,7 +19,7 @@ import {
  * Two snapshots, one subscription.
  *
  * useSyncExternalStore wants a value it can compare, and both of these are
- * objects rebuilt on every change — so the comparison is done on a version
+ * objects rebuilt on every change, so the comparison is done on a version
  * counter and the objects are read afterwards. Bumping it on every announce is
  * what makes "the run changed" and "the report arrived" the same event.
  */
@@ -65,8 +65,8 @@ export const RunBar: React.FC = () => {
         <p className="runbar-said">
           {nothing
             ? report.skipped > 0
-              ? `${report.skipped} skipped. Nothing moved — which happens, and the next one is easier for it.`
-              : 'Nothing moved on paper. The hands still did the work.'
+              ? `${report.skipped} skipped.`
+              : 'Session done.'
             : [
                 ...report.records.map(r => `${r.chords} at ${r.to}${r.from === null ? '' : `, up from ${r.from}`}`),
                 ...report.promoted.map(p => `${p.symbol} is ${COMFORT_LABEL[p.to].toLocaleLowerCase()} now`)
@@ -87,7 +87,7 @@ export const RunBar: React.FC = () => {
     <div className="runbar" role="region" aria-label="Today's run">
       <span className="runbar-label readout">today</span>
 
-      {/* The steps, as steps. Pressable, because a run is a suggestion — if
+      {/* The steps, as steps. Pressable, because a run is a suggestion, if
           the tuner is the only part you wanted, you should be able to say so
           without walking through the rest. */}
       <ol className="runbar-pips">

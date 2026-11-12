@@ -3,7 +3,7 @@
 // Not a record and never a claim about anybody's playing: a metronome has no
 // ear, so the only honest thing this page can say is which tempos you ran it
 // at and for how long. That turns out to be the question you have when you
-// sit down with the guitar — "what was I at last night?" — and it is one the
+// sit down with the guitar, "what was I at last night?", and it is one the
 // app could already answer and did not.
 //
 // Kept in localStorage rather than in the library. It is a convenience, it is
@@ -16,7 +16,7 @@ const KEEP = 8;
 /**
  * Under this it was a slider being dragged, not a tempo being practised.
  *
- * Fifteen seconds is about six bars at a hundred — long enough that you meant
+ * Fifteen seconds is about six bars at a hundred, long enough that you meant
  * it, short enough that a genuine "that is too fast, back it off" still gets
  * recorded, because knowing where you gave up is worth as much as knowing
  * where you stayed.
@@ -29,7 +29,7 @@ const SAME_SITTING_MS = 30 * 60 * 1000;
 export interface TempoRun {
   /** Where the run began. */
   from: number;
-  /** Where it ended — the same number unless the ramp was on. */
+  /** Where it ended, the same number unless the ramp was on. */
   to: number;
   beatsPerBar: number;
   /** When it finished. */
@@ -98,7 +98,7 @@ export function clearTempoLog(): TempoRun[] {
 }
 
 /**
- * "4 min", "40 sec" — the shape a practice log is read in.
+ * "4 min", "40 sec", the shape a practice log is read in.
  *
  * Rounded down once it reaches minutes, and not reaching them until two are
  * genuinely there. Rounding to the nearest minute reported a minute and a half

@@ -4,10 +4,10 @@
 // arrangements here are the four questions people arrive with, and each one is
 // a different page of the same book:
 //
-//   Root        "what else can I play in A?"        — twelve groups
-//   Quality     "show me the minor sevenths"        — one group per shape family
-//   Difficulty  "what can I learn this week?"       — three groups, easiest first
-//   Key         "what chords are in A minor?"       — the seven that belong together
+//   Root        "what else can I play in A?"       , twelve groups
+//   Quality     "show me the minor sevenths"       , one group per shape family
+//   Difficulty  "what can I learn this week?"      , three groups, easiest first
+//   Key         "what chords are in A minor?"      , the seven that belong together
 //
 // The last one is the one that matters for playing songs, and it is the reason
 // this list is not just a reference: a key is a set of chords that turn up in
@@ -36,7 +36,7 @@ export const GROUP_LABEL: Record<GroupBy, string> = {
   key: 'Key'
 };
 
-/** Sharp spelling above, flat below — the same fret, written two ways. */
+/** Sharp spelling above, flat below, the same fret, written two ways. */
 export const FLAT_NAMES: Record<string, string> = {
   'C#': 'D♭', 'D#': 'E♭', 'F#': 'G♭', 'G#': 'A♭', 'A#': 'B♭'
 };
@@ -95,7 +95,7 @@ const describe = (rootPc: number, typeId: ChordTypeId, numeral?: string): Catalo
 
 let cache: CatalogueChord[] | null = null;
 
-/** Every root against every type. Built once — placing shapes is not free. */
+/** Every root against every type. Built once, placing shapes is not free. */
 export function allChords(): CatalogueChord[] {
   if (cache) return cache;
   const out: CatalogueChord[] = [];
@@ -156,7 +156,7 @@ export function groupChords(chords: CatalogueChord[], by: GroupBy): ChordGroup[]
  *
  * A shut group shows its chords as chips, and in a group of C chords eleven
  * chips all starting with C say nothing: the row is already titled C. So each
- * arrangement previews the thing it arranges by — the quality in a root group,
+ * arrangement previews the thing it arranges by, the quality in a root group,
  * the root in a quality group, the whole symbol where neither is fixed.
  */
 export function chipLabel(chord: CatalogueChord, by: GroupBy): string {
@@ -175,7 +175,7 @@ export interface KeyChoice {
  * The chords that belong to one key, in scale order with their numerals.
  *
  * Built on the same harmoniser the theory screens use, so a key here means
- * exactly what it means everywhere else in the app — including the part where
+ * exactly what it means everywhere else in the app, including the part where
  * a pentatonic borrows its parent scale's chords, since stacking thirds on
  * five notes gives sonorities nobody calls chords.
  */

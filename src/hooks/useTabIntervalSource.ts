@@ -18,7 +18,7 @@ export interface TabIntervalSource {
 }
 
 // Drives a hidden alphaTab instance purely to parse a tab's real note data
-// and play it back with an authentic guitar tone — never rendered on screen,
+// and play it back with an authentic guitar tone, never rendered on screen,
 // since Ear Training is about listening and identifying, not reading
 // notation. Reuses the same tab library (IndexedDB) the Tab Player lab
 // saves into, so any previously imported piece is available here too.
@@ -63,7 +63,7 @@ export function useTabIntervalSource(): TabIntervalSource {
 
     if (apiRef.current) return apiRef.current;
 
-    // Off-screen but not display:none/zero-size — alphaTab warns and waits
+    // Off-screen but not display:none/zero-size, alphaTab warns and waits
     // ("container was invisible while autosizing") for a truly invisible
     // element, so this stays a real, positioned, non-zero box, just parked
     // far outside the viewport where nobody will ever see it.
@@ -103,7 +103,7 @@ export function useTabIntervalSource(): TabIntervalSource {
       midiReadyRef.current = true;
       // Candidates need tickCache (built from the generated MIDI, which
       // accounts for repeats) for their tick ranges to actually correspond
-      // to the analyzed notes during real playback — see the comment in
+      // to the analyzed notes during real playback, see the comment in
       // extractIntervalCandidates for why the structural ticks alone aren't
       // enough.
       if (api.score) setCandidates(extractIntervalCandidates(api.score, api.tickCache));

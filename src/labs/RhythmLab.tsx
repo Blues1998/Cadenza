@@ -30,7 +30,7 @@ interface TimelineTap {
 
 // Scrolling oscilloscope-style strip: metronome clicks (as heard) and taps
 // drift right-to-left; the horizontal gap between paired spikes IS the timing
-// error. Draws from refs via requestAnimationFrame — no React state per frame.
+// error. Draws from refs via requestAnimationFrame, no React state per frame.
 const TimingGraph: React.FC<{
   beatsRef: React.MutableRefObject<TimelineBeat[]>;
   tapsRef: React.MutableRefObject<TimelineTap[]>;
@@ -43,7 +43,7 @@ const TimingGraph: React.FC<{
     const g = canvas.getContext('2d');
     if (!g) return;
 
-    // Fixed palette, independent of the app theme — this canvas is a
+    // Fixed palette, independent of the app theme, this canvas is a
     // "stage" surface (like the Sound Physics waveforms) that stays dark
     // regardless of light/dark mode, so its colors can't be sourced from
     // the live --primary/--warning/etc theme tokens (those shift to darker,
@@ -147,7 +147,7 @@ const TimingGraph: React.FC<{
       g.fillText(`output latency: ${Math.round(audio.getOutputLatency() * 1000)}ms`, 6, h - 4);
       g.textAlign = 'right';
       g.fillText('now', w - 12, 12);
-      // Small drawn triangle marking the "now" line — sharper at any zoom
+      // Small drawn triangle marking the "now" line, sharper at any zoom
       // level than relying on the ▶ glyph in a 9px monospace font.
       g.beginPath();
       g.moveTo(w - 8, 8);
@@ -191,16 +191,16 @@ const BPM_MAX = 220;
 /**
  * How often the ladder takes a rung.
  *
- * Eight bars is about twenty seconds at a hundred — long enough to have
+ * Eight bars is about twenty seconds at a hundred, long enough to have
  * actually settled into a tempo rather than survived it, short enough that a
  * ten-minute practice climbs somewhere.
  */
 const RAMP_BARS = 8;
 
 const SUBDIVISIONS: { value: number; label: string; title: string }[] = [
-  { value: 1, label: '1', title: 'Quarters — one click to the beat' },
-  { value: 2, label: '2', title: 'Eighths — the down-up of a strumming hand' },
-  { value: 3, label: '3', title: 'Triplets — three to the beat' },
+  { value: 1, label: '1', title: 'Quarter notes: one click per beat' },
+  { value: 2, label: '2', title: 'Eighth notes: down-up strumming' },
+  { value: 3, label: '3', title: 'Triplets: three per beat' },
   { value: 4, label: '4', title: 'Sixteenths' }
 ];
 
@@ -215,7 +215,7 @@ const RAMPS: { value: number; label: string; title: string }[] = [
  *
  * Oldest on the left, because that is the direction time reads in. Each run
  * is a column up to the tempo it finished at, and the part of it above where
- * the run *started* is in the accent — so a session that climbed shows the
+ * the run *started* is in the accent, so a session that climbed shows the
  * climb, and a page full of flat grey columns is telling you something true
  * about the week.
  *
@@ -226,7 +226,7 @@ const RAMPS: { value: number; label: string; title: string }[] = [
 const TempoHistory: React.FC<{ runs: TempoRun[]; onPick: (run: TempoRun) => void }> = ({ runs, onPick }) => {
   const all = runs.flatMap(run => [run.from, run.to]);
   // Both ends of the plot are labelled, so both ends have to be numbers the
-  // plot actually reaches — a top label sitting above the tallest bar is a
+  // plot actually reaches, a top label sitting above the tallest bar is a
   // chart telling a small lie about itself.
   const hi = Math.ceil(Math.max(...all) / 4) * 4;
   const lo = Math.max(0, Math.floor((Math.min(...all) - 8) / 4) * 4);
@@ -248,7 +248,7 @@ const TempoHistory: React.FC<{ runs: TempoRun[]; onPick: (run: TempoRun) => void
               type="button"
               className="tempohist-col"
               onClick={() => onPick(run)}
-              title={`${run.from === run.to ? `${run.to} bpm` : `${run.from} up to ${run.to} bpm`} in ${run.beatsPerBar}/4 · ${heldLabel(run.seconds)} · ${whenHeld(run.at)} — press to go back to it`}
+              title={`${run.from === run.to ? `${run.to} bpm` : `${run.from} up to ${run.to} bpm`} in ${run.beatsPerBar}/4 · ${heldLabel(run.seconds)} · ${whenHeld(run.at)}. Press to go back to it`}
             >
               <span className="tempohist-bar" style={{ height: `${top}%` }}>
                 {climb > 0 && <span className="tempohist-climb" style={{ height: `${(climb / top) * 100}%` }} />}
@@ -284,7 +284,7 @@ export const RhythmLab: React.FC = () => {
   const [swing, setSwing] = useState<number>(0);
   // Beats per minute added every RAMP_BARS bars, or 0 to stay put.
   const [ramp, setRamp] = useState<number>(0);
-  // Bars heard so far this run — not bars scheduled, which is up to 120ms ahead.
+  // Bars heard so far this run, not bars scheduled, which is up to 120ms ahead.
   const [bars, setBars] = useState<number>(0);
   const [tempoLog, setTempoLog] = useState<TempoRun[]>(() => getTempoLog());
   
@@ -354,7 +354,7 @@ export const RhythmLab: React.FC = () => {
       const isAccented = beatNum === 0;
 
       // The ladder takes its rung on the bar line, which is where a change of
-      // tempo belongs — arriving mid-bar it reads as the click slipping.
+      // tempo belongs, arriving mid-bar it reads as the click slipping.
       if (isAccented && beatIndex.current > 0 && rampRef.current > 0) {
         const bar = beatIndex.current / beatsPerBar;
         if (bar % RAMP_BARS === 0) {
@@ -405,7 +405,7 @@ export const RhythmLab: React.FC = () => {
       beatIndex.current++;
     }
 
-    // Prune beats older than 2 seconds — long past any grading window
+    // Prune beats older than 2 seconds, long past any grading window
     scheduledBeats.current = scheduledBeats.current.filter(b => b.audioTime > ctxTime - 2);
   };
 
@@ -580,7 +580,7 @@ export const RhythmLab: React.FC = () => {
   // tap with, which is still "what this screen does when you press Space".
   usePlayKey(() => { if (isGameMode) handleTap(); else handleTogglePlay(); });
 
-  // Clean up timers on unmount — and leave the log behind, because walking
+  // Clean up timers on unmount, and leave the log behind, because walking
   // off to the chord page is a way of stopping the metronome too and a run
   // that only counted when you pressed the button would quietly lose half of
   // them.
@@ -655,10 +655,10 @@ export const RhythmLab: React.FC = () => {
                 onChange={(e) => setTimeSignature(Number(e.target.value))}
                 className="select-field"
               >
-                <option value={2}>2/4 (Duple)</option>
-                <option value={3}>3/4 (Triple / Waltz)</option>
-                <option value={4}>4/4 (Common Time)</option>
-                <option value={6}>6/8 (Compound)</option>
+                <option value={2}>2/4 · Duple</option>
+                <option value={3}>3/4 · Waltz</option>
+                <option value={4}>4/4 · Common</option>
+                <option value={6}>6/8 · Compound</option>
               </select>
             </div>
 
@@ -690,7 +690,7 @@ export const RhythmLab: React.FC = () => {
             value={metronomeVisual}
             onChange={setMetronomeVisual}
             options={[
-              { value: 'groove', label: 'Groove & Pulse', title: 'Concentric shockwaves, swing feel, and bouncing subdivision ball' },
+              { value: 'groove', label: 'Groove & Pulse', title: 'Pulse view with swing' },
               { value: 'precision', label: 'Precision Pendulum', title: 'Traditional mechanical pendulum with timing' }
             ]}
             size="sm"
@@ -739,7 +739,7 @@ export const RhythmLab: React.FC = () => {
           {!isGameMode ? (
             <div className="rhythm-practice">
               <p className="rhythm-lead">
-                Play along until your note and the tick stop being two sounds.
+                Play along until you lock in with the click.
               </p>
 
               {/* "Clean twice in a row? Add 5 BPM" was one of the four notes
@@ -770,7 +770,7 @@ export const RhythmLab: React.FC = () => {
               <div className="rhythm-tips">
                 {[
                   'Start slower than feels necessary.',
-                  'Beat 1 is the higher click. Lost it \u2014 restart, don\u2019t catch up.',
+                  'Beat 1 is the higher click. Lost it? Start again.',
                   'When it\u2019s easy, count two bars without the click.'
                 ].map(line => (
                   <div key={line} className="rhythm-tip">
@@ -780,7 +780,7 @@ export const RhythmLab: React.FC = () => {
                 ))}
               </div>
 
-              {/* Not a record and not a claim — this page has no ear. It is
+              {/* Not a record and not a claim, this page has no ear. It is
                   the answer to "what was I at last night?", which is the
                   question you actually have when you sit down. */}
               <div className="rhythm-been">
@@ -794,7 +794,7 @@ export const RhythmLab: React.FC = () => {
                 </div>
                 {tempoLog.length === 0 ? (
                   <p className="rhythm-none">
-                    Run it for a quarter of a minute and it starts remembering where you were.
+                    Runs longer than 15 seconds show up here.
                   </p>
                 ) : (
                   <TempoHistory

@@ -3,12 +3,12 @@ import { ChordCard } from './ChordCard';
 import { Segmented } from './Segmented';
 import { IconComfort } from './Icons';
 import {
+  FLAT_NAMES,
   GROUP_LABEL,
   allChords,
   chipLabel,
   groupChords,
   keyGroup,
-  noteLabel,
   type ChordGroup,
   type GroupBy
 } from '../utils/catalogue';
@@ -32,6 +32,17 @@ const ONLY: { value: Only; label: React.ReactNode }[] = [
   { value: 'none', label: comfortOption('none', 'Not yet') }
 ];
 
+// Scale names short enough to sit on a chip. The full name is the chip's title
+// and the heading of the group it opens.
+const SCALE_SHORT: Record<string, string> = {
+  'Major (Ionian)': 'Major',
+  'Natural Minor (Aeolian)': 'Minor',
+  'Harmonic Minor': 'Harmonic minor',
+  'Pentatonic Major': 'Pent. major',
+  'Pentatonic Minor': 'Pent. minor',
+  'Blues Scale': 'Blues'
+};
+
 const GROUPS: { value: GroupBy; label: string }[] =
   (['key', 'root', 'quality', 'difficulty'] as GroupBy[]).map(value => ({ value, label: GROUP_LABEL[value] }));
 
@@ -40,7 +51,7 @@ const GROUPS: { value: GroupBy; label: string }[] =
  *
  * A cap on the work, not on what is shown: the strip is masked to the width it
  * has, so a difficulty band of fifty chords fades out where it runs off the
- * end. Nothing is lost by that — the tally on the right says how many are in
+ * end. Nothing is lost by that, the tally on the right says how many are in
  * there, which is what a "+34" chip would have said less clearly.
  */
 const PEEK = 16;
@@ -56,13 +67,13 @@ interface ChordCatalogueProps {
  *
  * Groups are collapsed rather than paged. A collapsed group still shows its
  * tally, so the page answers "how much of A minor do I have" without opening
- * anything — and a hundred and thirty-two chord diagrams are not built until
+ * anything, and a hundred and thirty-two chord diagrams are not built until
  * something is actually being looked at.
  */
 export const ChordCatalogue: React.FC<ChordCatalogueProps> = ({ isPicked, onToggle }) => {
   const [by, setBy] = useState<GroupBy>('key');
   const [only, setOnly] = useState<Only>('all');
-  const [rootPc, setRootPc] = useState(9);           // A — where a guitarist starts
+  const [rootPc, setRootPc] = useState(9);           // A, where a guitarist starts
   const [scaleName, setScaleName] = useState(SCALE_FORMULAS[1].name);   // natural minor
   const [sevenths, setSevenths] = useState(false);
   const [open, setOpen] = useState<Set<string>>(new Set());
@@ -75,7 +86,7 @@ export const ChordCatalogue: React.FC<ChordCatalogueProps> = ({ isPicked, onTogg
     return groupChords(allChords(), by);
   }, [by, rootPc, scaleName, sevenths]);
 
-  // One group is a page, not a list — a key opens on its own.
+  // One group is a page, not a list, a key opens on its own.
   const singleton = groups.length === 1;
 
   const shown = useMemo(
@@ -105,25 +116,50 @@ export const ChordCatalogue: React.FC<ChordCatalogueProps> = ({ isPicked, onTogg
           <Segmented<GroupBy> value={by} onChange={setBy} options={GROUPS} ariaLabel="Arrange chords by" size="sm" />
         </label>
 
+        {/* The key, as the twelve notes laid out to tap, a dropdown hid
+            eleven of them behind a system menu. Sharps carry their flat name
+            under them, since a song in E♭ should not have to be found as D♯. */}
         {by === 'key' && (
-          <>
-            <label className="catalogue-field">
-              <span className="field-label">Key</span>
-              <select className="select-field" value={rootPc} onChange={e => setRootPc(Number(e.target.value))}>
-                {NOTE_NAMES.map((name, pc) => <option key={name} value={pc}>{noteLabel(name)}</option>)}
-              </select>
-            </label>
-            <label className="catalogue-field">
-              <span className="field-label">Scale</span>
-              <select className="select-field" value={scaleName} onChange={e => setScaleName(e.target.value)}>
-                {SCALE_FORMULAS.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
-              </select>
-            </label>
-            <label className="chart-toggle">
-              <input type="checkbox" checked={sevenths} onChange={e => setSevenths(e.target.checked)} />
-              Sevenths
-            </label>
-          </>
+          <div className="keypick">
+            <div className="keypick-grid" role="radiogroup" aria-label="Key">
+              {NOTE_NAMES.map((name, pc) => (
+                <button
+                  key={name}
+                  type="button"
+                  role="radio"
+                  aria-checked={rootPc === pc}
+                  className={`keypick-note${rootPc === pc ? ' is-on' : ''}${FLAT_NAMES[name] ? ' is-accidental' : ''}`}
+                  onClick={() => setRootPc(pc)}
+                >
+                  <span>{name.replace('#', '♯')}</span>
+                  {FLAT_NAMES[name] && <span className="keypick-flat">{FLAT_NAMES[name]}</span>}
+                </button>
+              ))}
+            </div>
+            <div className="keypick-scales" role="radiogroup" aria-label="Scale">
+              {SCALE_FORMULAS.map(sc => (
+                <button
+                  key={sc.name}
+                  type="button"
+                  role="radio"
+                  aria-checked={scaleName === sc.name}
+                  className={`chip-toggle${scaleName === sc.name ? ' is-on' : ''}`}
+                  title={sc.name}
+                  onClick={() => setScaleName(sc.name)}
+                >
+                  {SCALE_SHORT[sc.name] ?? sc.name}
+                </button>
+              ))}
+              <button
+                type="button"
+                aria-pressed={sevenths}
+                className={`chip-toggle is-switch${sevenths ? ' is-on' : ''}`}
+                onClick={() => setSevenths(v => !v)}
+              >
+                {sevenths ? '✓ ' : '+ '}Sevenths
+              </button>
+            </div>
+          </div>
         )}
 
         <label className="catalogue-field catalogue-only">
@@ -170,7 +206,7 @@ export const ChordCatalogue: React.FC<ChordCatalogueProps> = ({ isPicked, onTogg
               {/* Shut, a row used to be a title and a number: twelve of them
                   read as twelve identical rows. The chips say which chords are
                   in there and, in the book's three colours, how you stand with
-                  each — the reason to open one, without opening it. Decoration
+                  each, the reason to open one, without opening it. Decoration
                   to a screen reader, which is given the tally in words. */}
               {!opened && (
                 <span className="catgroup-peek" aria-hidden="true">
@@ -178,7 +214,7 @@ export const ChordCatalogue: React.FC<ChordCatalogueProps> = ({ isPicked, onTogg
                     <span
                       key={chord.symbol}
                       className={`chordchip is-sm is-${comfortOf(chord.symbol)}`}
-                      title={`${chord.symbol} — ${COMFORT_LABEL[comfortOf(chord.symbol)]}`}
+                      title={`${chord.symbol}: ${COMFORT_LABEL[comfortOf(chord.symbol)]}`}
                     >
                       {chipLabel(chord, by)}
                     </span>

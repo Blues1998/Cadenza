@@ -29,7 +29,7 @@ interface ChordPaletteProps {
 /**
  * Where the next chord comes from.
  *
- * Quick play used to be filled from the chord book underneath it — press a
+ * Quick play used to be filled from the chord book underneath it, press a
  * card on the page and it lands in the loop. That reads well as a sentence and
  * badly as a screen: a chord card is a thing for meeting a chord, two hundred
  * pixels of fretboard diagram and comfort marks, and a wall of them is a
@@ -52,7 +52,7 @@ interface ChordPaletteProps {
  * the only way in, which is what made them a problem.
  */
 export const ChordPalette: React.FC<ChordPaletteProps> = ({ onAdd }) => {
-  // A minor, where the catalogue opens too — the key a guitar falls into.
+  // A minor, where the catalogue opens too, the key a guitar falls into.
   const [rootPc, setRootPc] = useState(9);
   const [mode, setMode] = useState<Mode>('minor');
   const [sevenths, setSevenths] = useState(false);
@@ -140,11 +140,11 @@ export const ChordPalette: React.FC<ChordPaletteProps> = ({ onAdd }) => {
           Add{playable.length > 1 ? ` ${playable.length}` : ''}
         </button>
         {/* Empty, this says what the field takes; filled, it says what the
-            field was understood to say. Both are the same question — "what
-            will pressing Add do" — so they are the same line. */}
+            field was understood to say. Both are the same question, "what
+            will pressing Add do", so they are the same line. */}
         <span className="palette-read readout">
           {written.length === 0
-            ? 'spaces, arrows or dashes — a whole progression at once'
+            ? 'Add a whole progression at once'
             : playable.join(' · ')}
           {lost > 0 && <span className="palette-lost"> · {lost} not a chord we know</span>}
         </span>

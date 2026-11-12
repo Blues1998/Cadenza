@@ -4,7 +4,7 @@
 // this is a practice log kept on the machine you practise at, and the export
 // in library.ts is how it moves.
 //
-// A localStorage mirror stands in when IndexedDB will not open — a private
+// A localStorage mirror stands in when IndexedDB will not open, a private
 // window, an embedded webview, a browser with site data locked down. Losing
 // someone's practice history to a private tab would be a much worse failure
 // than the few kilobytes the mirror costs, and the record counts here are
@@ -96,7 +96,7 @@ const readMirror = (): Mirror => {
 const writeMirror = (mirror: Mirror): void => {
   try {
     localStorage.setItem(MIRROR_KEY, JSON.stringify(mirror));
-  } catch { /* out of quota or blocked — this session stays in memory */ }
+  } catch { /* out of quota or blocked, this session stays in memory */ }
 };
 
 // ---------------------------------------------------------------------------

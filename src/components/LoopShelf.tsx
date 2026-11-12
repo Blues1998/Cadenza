@@ -56,7 +56,7 @@ interface LoopShelfProps {
    * Shut the open drawer, because the loop has started.
    *
    * Everything on this shelf is for deciding what to play, and that is decided
-   * by the time anybody presses play — after which it is a screenful of things
+   * by the time anybody presses play, after which it is a screenful of things
    * to read instead of the two you need. Put back on stop, and put back open
    * at whatever it was showing: pressing stop is going back to the workbench,
    * and making someone re-find their place in a ladder of drills after every
@@ -64,7 +64,7 @@ interface LoopShelfProps {
    */
   shut?: boolean;
   /**
-   * Something was just saved — open the saved drawer so it can be seen.
+   * Something was just saved, open the saved drawer so it can be seen.
    *
    * A counter rather than a flag, because saving twice over the same name is
    * two events that both have to land, and "has this already been shown" is
@@ -92,7 +92,7 @@ const newCount = (symbols: string[]): number => symbols.filter(s => comfortOf(s)
  *
  * A ladder that always opens at the bottom is a ladder someone with four
  * months of practice scrolls past every time. This uses the chord book to
- * guess where they are and is only a default — the rail is right there.
+ * guess where they are and is only a default, the rail is right there.
  */
 function suggestedLevel(): number {
   for (const { level } of LOOP_LEVELS) {
@@ -108,7 +108,7 @@ function suggestedLevel(): number {
  * The number belongs on the shelf and not only on the card that set it: the
  * question this drawer is asked is "which of these am I working on", and the
  * one you left at 74 last week is a better answer than the one you have never
- * banked. Absent until there is something to say — a row of "—" would be a
+ * banked. Absent until there is something to say, a row of ", " would be a
  * reproach on nine drills nobody has got to yet.
  */
 const Best: React.FC<{ chords: [string, number][]; beatsPerBar: number }> = ({ chords, beatsPerBar }) => {
@@ -135,7 +135,7 @@ const Chips: React.FC<{ symbols: string[] }> = ({ symbols }) => (
  * Four drawers under the loop, one open at a time: the chords of a key, a
  * progression worth practising, one you kept, or one you merely played. They
  * are one strip rather than four panels because they answer the same question
- * and you only ever ask it once — and because quick play has to stay one
+ * and you only ever ask it once, and because quick play has to stay one
  * glance tall or it takes the screen away from everything it sits on top of.
  *
  * Saved sits before Recent because it is the deliberate one: everything in it
@@ -154,7 +154,7 @@ export const LoopShelf: React.FC<LoopShelfProps> = ({ onUse, onAppend, shut = fa
   const [level, setLevel] = useState(suggestedLevel);
 
   // Mirrored on render so the effect can read the current tab without taking
-  // it as a dependency — depending on it would park the drawer every time
+  // it as a dependency, depending on it would park the drawer every time
   // somebody merely changed which one was open.
   const open = useRef(tab);
   open.current = tab;

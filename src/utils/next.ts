@@ -1,7 +1,7 @@
 // What to learn next, and why.
 //
 // The chord book can say you cannot play F. The library can say six of your
-// songs use it. Neither on its own is a reason to practise anything — but put
+// songs use it. Neither on its own is a reason to practise anything, but put
 // together they are: F is the one chord standing between you and two songs you
 // have already chosen to learn.
 //
@@ -17,7 +17,7 @@ import { getSongs } from './library';
 import { makeSlot, type Slot } from './loop';
 
 export interface NextChord {
-  /** Canonical key — what the chord book files it under. */
+  /** Canonical key, what the chord book files it under. */
   key: string;
   /** How to write it, in the spelling it was marked with. */
   symbol: string;
@@ -30,7 +30,7 @@ export interface NextChord {
   /**
    * Chords you can already play that turn up in the same songs.
    *
-   * A new chord is not learned on its own — it is learned as a change into and
+   * A new chord is not learned on its own, it is learned as a change into and
    * out of the chords around it, and the ones around it are these.
    */
   partners: string[];
@@ -41,7 +41,7 @@ export interface NextChord {
  *
  * Only chords you have marked "not yet". An unrated chord is one you have not
  * had an opinion about, and telling someone to go and learn a chord they might
- * already play is how a suggestion stops being believed — the quick pass owns
+ * already play is how a suggestion stops being believed, the quick pass owns
  * those until they are rated.
  */
 export function nextChords(limit = 4): NextChord[] {
@@ -90,7 +90,7 @@ export function nextChords(limit = 4): NextChord[] {
 /**
  * The one line under the diagram that says why this chord is on the list.
  *
- * Named where the name fits on a card, counted where it does not — a title cut
+ * Named where the name fits on a card, counted where it does not, a title cut
  * off mid-word says less than "1 song" does.
  */
 export function reasonFor(chord: NextChord): string {
@@ -105,7 +105,7 @@ export function reasonFor(chord: NextChord): string {
  * A loop for learning one chord: the new shape, and the changes into it.
  *
  * Two bars each, alternating, because what is hard about a chord is never the
- * chord — it is arriving on it in time from the one before. With nobody to
+ * chord, it is arriving on it in time from the one before. With nobody to
  * alternate with, it is the shape on its own, which is still a metronome and a
  * chord to keep landing on.
  */

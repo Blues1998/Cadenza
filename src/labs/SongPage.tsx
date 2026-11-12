@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordCard } from '../components/ChordCard';
 import { FitPanel } from '../components/FitPanel';
+import { VoicePanel } from '../components/VoicePanel';
 import { IconBest, IconPlay, IconSection, IconTrash } from '../components/Icons';
 import { StrumChip } from '../components/StrumChip';
 import { Segmented } from '../components/Segmented';
@@ -44,7 +45,7 @@ interface SongPageProps {
 }
 
 // The strumming patterns from the tracker's own reference sheet, offered when a
-// song has none recorded yet. Suggestions, not defaults — nothing is written
+// song has none recorded yet. Suggestions, not defaults, nothing is written
 // until one is chosen.
 const PATTERN_IDEAS = ['D D D D', 'D D U U D U', 'D U D U', 'D - D U - U D U', 'D U x U D U'];
 
@@ -66,13 +67,13 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
     () => parseStrum(song.strumming ?? '', song.chart?.beatsPerBar ?? 4),
     [song.strumming, song.chart?.beatsPerBar]
   );
-  // Shown as "4 of 5 in your hands" — the question you actually have when you
+  // Shown as "4 of 5 in your hands", the question you actually have when you
   // open a song you have not played in a fortnight.
   const chordStanding = tally(chords);
   const progressions = songProgressions(song);
   // Recomputed every render rather than memoised on the song: rating a chord
   // on this very page changes which progression is the one in the way, and the
-  // chord book is a different store — the song object it would be keyed on
+  // chord book is a different store, the song object it would be keyed on
   // never moves.
   const drill = songDrill(song);
   const progressionDrills = progressions.map(prog => drillFrom(song, prog));
@@ -166,7 +167,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
   useEffect(() => setNotesDraft(song.notes), [song.id, song.notes]);
 
   // Two steps, because this takes the practice log with it and there is no
-  // undo. Quiet and last on the page — it is not something you should be able
+  // undo. Quiet and last on the page, it is not something you should be able
   // to hit on the way to the timer.
   const [confirmDelete, setConfirmDelete] = useState(false);
   useEffect(() => setConfirmDelete(false), [song.id]);
@@ -176,7 +177,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
   const lastAction = sessions.find(s => s.nextAction)?.nextAction;
 
   // The changes, put where you can practise them. The loop goes over as an
-  // intention rather than an address — the chord page picks it up, loads it
+  // intention rather than an address, the chord page picks it up, loads it
   // and spends it, so coming back here later does not re-load a drill over
   // whatever you had since built.
   const takeToDrill = (loop: SongDrill) => {
@@ -353,12 +354,13 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
 
         <div className="song-side">
           <FitPanel song={song} />
+          <VoicePanel song={song} />
           <section className="song-panel">
             <div className="surface-label"><IconSection kind="strumming" /><span>Strumming</span></div>
             {song.strumming ? (
               <>
                 <p className="strumming-pattern readout">{song.strumming}</p>
-                {/* What it comes to when a hand plays it — the same grid the
+                {/* What it comes to when a hand plays it, the same grid the
                     play-along runs, so the sheet and the sound agree. */}
                 {strumPattern && (
                   <StrumGrid

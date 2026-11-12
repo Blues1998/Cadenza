@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChordBucket } from '../components/ChordBucket';
 import { LabIcon } from '../components/LabIcon';
 import { IconComfort } from '../components/Icons';
@@ -15,14 +16,19 @@ import {
   COMFORT_LABEL,
   chordKey,
   comfortOf,
+  forgetChord,
   getChordSkills,
   setComfort,
+  setPreferredVoicing,
+  skillFor,
   voicingsFor,
   type ChordComfort
 } from '../utils/chordbook';
 import { drillSlots, nextChords, reasonFor, type NextChord } from '../utils/next';
 import type { ChartPhase } from '../hooks/useChartTransport';
 import { normalizeChordSymbol } from '../utils/songText';
+import { chartsWithChord, hideChord, removeFromSongs, songsWithChord, unhideAll, unhideChord, useHiddenChords } from '../utils/chordRemoval';
+import { useBackToClose } from '../utils/nativeShell';
 
 type View = 'songs' | 'all';
 
@@ -50,13 +56,15 @@ const FILTERS: { value: Filter; label: React.ReactNode }[] = [
 ];
 
 interface Entry {
-  /** The canonical key, and what the cards show. */
+  /** The canonical key the book files it under. */
+  key: string;
+  /** What the cards show. */
   symbol: string;
   /** Songs in the library that ask for this chord. */
   songs: string[];
   comfort: ChordComfort;
   rated: boolean;
-  /** How hard the easiest shape is — the order to meet them in. */
+  /** How hard the easiest shape is, the order to meet them in. */
   difficulty: number;
 }
 
@@ -81,10 +89,11 @@ export const ChordBookLab: React.FC = () => {
   const [adding, setAdding] = useState('');
   const skills = getChordSkills();
   const songs = getSongs();
+  const hidden = useHiddenChords();
 
   const entries = useMemo<Entry[]>(() => {
     // Keyed canonically so B flat and A sharp are one chord, but shown with
-    // the spelling the songs themselves used — the book is filed by pitch and
+    // the spelling the songs themselves used, the book is filed by pitch and
     // read in whatever language your sheets are written in.
     const found = new Map<string, { display: string; titles: Set<string> }>();
     const note = (symbol: string, title: string) => {
@@ -110,7 +119,9 @@ export const ChordBookLab: React.FC = () => {
     }
 
     return [...found.entries()]
+      .filter(([key]) => !hidden.has(key))
       .map(([key, { display, titles }]) => ({
+        key,
         symbol: display,
         songs: [...titles].sort(),
         comfort: comfortOf(key),
@@ -120,7 +131,7 @@ export const ChordBookLab: React.FC = () => {
       // Most-used first, then easiest: the order that gets the most songs
       // unlocked for the least work.
       .sort((a, b) => b.songs.length - a.songs.length || a.difficulty - b.difficulty || a.symbol.localeCompare(b.symbol));
-  }, [songs, skills]);
+  }, [songs, skills, hidden]);
 
   // The four are disjoint and add up to the total. An unrated chord is one you
   // cannot play either, but counting it under both headings put the same four
@@ -153,7 +164,69 @@ export const ChordBookLab: React.FC = () => {
   // lists hand off to each other: the quick pass shrinks as chords are rated,
   // and this one fills with what the rating turned up.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const next = useMemo(() => nextChords(4), [songs, skills]);
+  const next = useMemo(() => nextChords(6).filter(c => !hidden.has(c.key)).slice(0, 4), [songs, skills, hidden]);
+
+  // ---- Removing a chord ----------------------------------------------------
+  // A chord only you added is just forgotten. One a song asks for gets a
+  // question, out of the song, or just out of sight, because the right
+  // answer depends on whether the song's line was wrong. Either way there is
+  // an Undo for a few seconds, rather than a confirm in front of every press.
+  // Where the chord comes from, split the way removing it has to be: a chord
+  // line can be edited from here, a written chart cannot.
+  const [removing, setRemoving] = useState<{ entry: Entry; lines: string[]; charts: string[] } | null>(null);
+  const [toast, setToast] = useState<{ text: string; undo: () => Promise<void> | void } | null>(null);
+  const closeSheet = useCallback(() => setRemoving(null), []);
+  useBackToClose(removing !== null, closeSheet);
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 6000);
+    return () => window.clearTimeout(t);
+  }, [toast]);
+
+  // Everything forgetting a rating loses, so Undo can give it back.
+  const forgetWithUndo = async (entry: Entry) => {
+    const prev = skillFor(entry.key);
+    await forgetChord(entry.key);
+    return async () => {
+      if (!prev) return;
+      await setComfort(prev.label ?? entry.symbol, prev.comfort);
+      if (prev.voicingId) await setPreferredVoicing(prev.label ?? entry.symbol, prev.voicingId);
+    };
+  };
+
+  const startRemove = async (entry: Entry) => {
+    if (entry.songs.length > 0) {
+      setRemoving({
+        entry,
+        lines: songsWithChord(entry.key).map(song => song.title),
+        charts: chartsWithChord(entry.key).map(song => song.title)
+      });
+      return;
+    }
+    const undo = await forgetWithUndo(entry);
+    setToast({ text: `Removed ${entry.symbol}`, undo });
+  };
+
+  const removeFromSongLines = async (entry: Entry, lineCount: number) => {
+    setRemoving(null);
+    const undoSongs = await removeFromSongs(entry.key);
+    const undoRating = await forgetWithUndo(entry);
+    // A written chart that uses it isn't edited from here, so it would come
+    // straight back from there; hide it so the press does what it said.
+    const stillCharted = chartsWithChord(entry.key).length > 0;
+    if (stillCharted) hideChord(entry.key);
+    const n = lineCount;
+    setToast({
+      text: `Removed ${entry.symbol} from ${n} song${n === 1 ? '' : 's'}${stillCharted ? ' (hidden: still in a chart)' : ''}`,
+      undo: async () => { await undoSongs(); await undoRating(); if (stillCharted) unhideChord(entry.key); }
+    });
+  };
+
+  const hideFromBook = (entry: Entry) => {
+    setRemoving(null);
+    hideChord(entry.key);
+    setToast({ text: `Hid ${entry.symbol}`, undo: () => unhideChord(entry.key) });
+  };
 
   const addChord = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,15 +280,15 @@ export const ChordBookLab: React.FC = () => {
   };
 
   // Shutting the panel takes the standing order with it. The panel is where
-  // the transport lives, so closing it stops the loop — and an order left
+  // the transport lives, so closing it stops the loop, and an order left
   // lying about would be obeyed by the next panel the moment it opened.
   const close = () => {
     setOpen(false);
     setOrder(null);
   };
 
-  // Pressing play from the bucket opens the panel if it was shut — what is
-  // playing is worth seeing — but leaves you where you are if it was already
+  // Pressing play from the bucket opens the panel if it was shut, what is
+  // playing is worth seeing, but leaves you where you are if it was already
   // open, because being yanked to the top of the page is not what pressing
   // play asked for.
   const play = () => {
@@ -232,7 +305,7 @@ export const ChordBookLab: React.FC = () => {
   };
 
   /**
-   * A loop sent here from somewhere else — the palette, or today's run.
+   * A loop sent here from somewhere else, the palette, or today's run.
    *
    * Taken twice over, because there are two ways one can arrive. Sent from
    * another screen it is left waiting and the navigation brings us here, so
@@ -385,7 +458,7 @@ export const ChordBookLab: React.FC = () => {
       {shown.length === 0 ? (
         <p className="song-empty">
           {entries.length === 0
-            ? 'No chords yet. They appear here as soon as a song records some.'
+            ? 'No chords yet. Add a song with chords.'
             : `Nothing ${filter === 'unrated' ? 'unrated' : COMFORT_LABEL[filter as ChordComfort]?.toLowerCase() ?? ''} here.`}
         </p>
       ) : (
@@ -401,11 +474,61 @@ export const ChordBookLab: React.FC = () => {
               onToggle={toggle}
               meta={e.songs.length > 0 ? `${e.songs.length} song${e.songs.length === 1 ? '' : 's'}` : 'added by you'}
               metaTitle={e.songs.length > 0 ? e.songs.join(' · ') : undefined}
+              onRemove={() => void startRemove(e)}
             />
           ))}
         </div>
       )}
         </>
+      )}
+
+      {view === 'songs' && hidden.size > 0 && (
+        <p className="chordbook-hidden">
+          {hidden.size} hidden chord{hidden.size === 1 ? '' : 's'} ·{' '}
+          <button type="button" className="linklike" onClick={unhideAll}>show {hidden.size === 1 ? 'it' : 'them'}</button>
+        </p>
+      )}
+
+      {/* Portaled: inside the page they sat under the phone's tab bar, since
+          the lab's own stacking layer caps how high a z-index can reach. */}
+      {removing && createPortal(
+        <div className="msheet-backdrop is-dialog" onClick={closeSheet}>
+          <div className="msheet" role="dialog" aria-modal="true" aria-label={`Remove ${removing.entry.symbol}`} onClick={e => e.stopPropagation()}>
+            <h3 className="removesheet-title">Remove {removing.entry.symbol}?</h3>
+            {removing.lines.length > 0 && (
+              <p className="removesheet-said">
+                In the chord line of <strong>{removing.lines.join(', ')}</strong>.
+              </p>
+            )}
+            {removing.charts.length > 0 && (
+              <p className="removesheet-said">
+                In the chart of <strong>{removing.charts.join(', ')}</strong>. Edit the chart on the song page to remove it there.
+              </p>
+            )}
+            <div className="removesheet-actions">
+              {removing.lines.length > 0 && (
+                <>
+                  <button type="button" className="btn auth-delete-btn" onClick={() => void removeFromSongLines(removing.entry, removing.lines.length)}>
+                    Remove it from {removing.lines.length === 1 ? 'that chord line' : `those ${removing.lines.length} chord lines`}
+                  </button>
+                  <p className="removesheet-hint">Use this for typos or notes misread as chords.</p>
+                </>
+              )}
+              <button type="button" className="btn" onClick={() => hideFromBook(removing.entry)}>Just hide it here</button>
+              <p className="removesheet-hint">The songs keep it.</p>
+              <button type="button" className="btn removesheet-cancel" onClick={closeSheet}>Cancel</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {toast && createPortal(
+        <div className="undo-toast" role="status">
+          <span>{toast.text}</span>
+          <button type="button" onClick={() => { const { undo } = toast; setToast(null); void undo(); }}>Undo</button>
+        </div>,
+        document.body
       )}
 
       {/* Last in the page, so it pins to the bottom of the window for as long

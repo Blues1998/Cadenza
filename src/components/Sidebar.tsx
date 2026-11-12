@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Theme } from '../hooks/useTheme';
 import type { ActiveTab } from './navGroups';
 import { IconJump, IconSun, IconMoon } from './Icons';
-import { GROUPS } from './navGroups';
+import { PRACTICE_GROUPS, PRIMARY, parentTab } from './navGroups';
 import { preloadLab } from '../labs/chunks';
 import { AccountButton } from './AccountButton';
 
@@ -20,8 +20,8 @@ interface SidebarProps {
 
 const COLLAPSED_KEY = 'sidebar-collapsed';
 
-// A row can be running several animations at once — the target's three rings,
-// the pulse crossing the headphones — and animationend bubbles up from each of
+// A row can be running several animations at once, the target's three rings,
+// the pulse crossing the headphones, and animationend bubbles up from each of
 // them. Only the colour flash ends the flash: every row has one, they are all
 // cut to the same length, and taking the class off on the first one to finish
 // would dock whatever else was still moving.
@@ -62,7 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
   // The live channel's plate is one element that travels, rather than a
   // background and an orange bar switching off in one row and on in another.
   // Measured off the button itself so the same code serves the vertical rail
-  // and the horizontal bar a phone gets — there the plate slides sideways.
+  // and the horizontal bar a phone gets, there the plate slides sideways.
   const [plate, setPlate] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   // The first placement is a jump. Without this the plate would fly in from
   // the corner of the rail every time the app loads.
@@ -87,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
     // against the old geometry would sit off its row.
     const observer = new ResizeObserver(measure);
     observer.observe(nav);
-    // The groups and the rows, by selector rather than by walking children —
+    // The groups and the rows, by selector rather than by walking children,
     // the plate is a child of the nav too, and observing the thing this
     // measurement moves would have it chasing itself.
     for (const el of nav.querySelectorAll('.channel-group, .channel')) observer.observe(el);
@@ -99,7 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
   }, [plate]);
 
   // Entering a row flashes its icon. Driven by a class the row keeps until the
-  // animation reports itself finished, rather than by :hover — hung off :hover
+  // animation reports itself finished, rather than by :hover, hung off :hover
   // it is cancelled the instant the pointer leaves, and sweeping down the rail
   // cuts every icon from full orange back to grey mid-flash. A flash is
   // something that happened, not a state the pointer is holding open, so it
@@ -135,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
 
   return (
     <aside className={`sidebar${collapsed ? ' is-collapsed' : ''}`}>
-      {/* Logo plate — a square silk-screened badge, the way a desk carries the
+      {/* Logo plate, a square silk-screened badge, the way a desk carries the
           manufacturer's mark above the channels. Doubles as the collapse
           control, as it always has. */}
       <div className="console-brand">
@@ -161,13 +161,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
           className="console-jump navmark"
           onClick={onJump}
           aria-label="Jump to"
-          title="Jump to — ⌘K"
+          title="Search (⌘K)"
         >
           <IconJump size={15} aria-hidden="true" />
         </button>
       </div>
 
-      {/* Channels. Only the live one is marked — a single orange bar down its
+      {/* Channels. Only the live one is marked, a single orange bar down its
           left edge. Collapsed, the group headings become hairlines: the
           grouping survives, the words do not. */}
       <nav className="sidebar-nav" ref={navRef}>
@@ -178,33 +178,49 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
             aria-hidden="true"
           />
         )}
-        {GROUPS.map((group, i) => (
-          <div className="channel-group" key={group.name ?? i}>
-            {group.name && <span className="channel-group-label">{group.name}</span>}
-            {group.items.map(item => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`channel navmark${isActive ? ' is-live' : ''}${flashing.has(item.id) ? ' is-flashing' : ''}`}
-                  onMouseEnter={() => enter(item.id)}
-                  onFocus={() => preloadLab(item.id)}
-                  onAnimationEnd={e => {
-                    if (e.animationName === FLASH_CLOCK) endFlash(item.id);
-                  }}
-                  title={item.label}
-                  data-nav={item.id}
-                  data-active={isActive}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <span className="channel-icon">{item.icon}</span>
-                  {!collapsed && <span className="channel-label">{item.label}</span>}
-                </button>
-              );
-            })}
-          </div>
-        ))}
+        {(() => {
+          // The five, with Practice's own pages opened out under it while you
+          // are in there. A page with no row of its own (the Tab Player) lights
+          // the row it lives under.
+          const parent = parentTab(activeTab);
+          const row = (item: { id: ActiveTab; label: string; icon: React.ReactNode }, child = false) => {
+            const isActive = activeTab === item.id || (!child && parent === item.id && activeTab === 'tabs');
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`channel navmark${child ? ' is-child' : ''}${isActive ? ' is-live' : ''}${!child && parent === item.id ? ' is-parent' : ''}${flashing.has(item.id) ? ' is-flashing' : ''}`}
+                onMouseEnter={() => enter(item.id)}
+                onFocus={() => preloadLab(item.id)}
+                onAnimationEnd={e => {
+                  if (e.animationName === FLASH_CLOCK) endFlash(item.id);
+                }}
+                title={item.label}
+                data-nav={item.id}
+                data-active={isActive}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <span className="channel-icon">{item.icon}</span>
+                {!collapsed && <span className="channel-label">{item.label}</span>}
+              </button>
+            );
+          };
+          return (
+            <div className="channel-group">
+              {PRIMARY.map(item => (
+                <React.Fragment key={item.id}>
+                  {row(item)}
+                  {item.id === 'practice' && parent === 'practice' && PRACTICE_GROUPS.map(group => (
+                    <div className="channel-sub" key={group.name}>
+                      {!collapsed && <span className="channel-group-label">{group.name}</span>}
+                      {group.items.map(child => row(child, true))}
+                    </div>
+                  ))}
+                </React.Fragment>
+              ))}
+            </div>
+          );
+        })()}
       </nav>
 
       <div className="sidebar-footer" style={{ alignSelf: collapsed ? 'center' : 'stretch' }}>

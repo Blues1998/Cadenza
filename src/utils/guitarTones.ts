@@ -34,7 +34,7 @@ export function toneKey(bank: number, program: number): string {
 }
 
 // alphaTab bakes the instrument into an "automation" event on each track's
-// very first beat the first time it's accessed (during initial rendering) —
+// very first beat the first time it's accessed (during initial rendering),
 // after that, changing track.playbackInfo.program alone does nothing, since
 // playback always reads that frozen first-beat automation. Update both.
 // (Bank has no such freeze, so a plain property set is enough for it.)

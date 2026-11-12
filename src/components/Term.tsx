@@ -12,7 +12,7 @@ const EDGE_MARGIN = 10;
 
 // Finds the box that would actually clip the tooltip: the nearest ancestor
 // with non-visible overflow (e.g. .main-content's scroll pane, which clips
-// horizontally too — overflow-y: auto forces overflow-x to behave as auto
+// horizontally too, overflow-y: auto forces overflow-x to behave as auto
 // rather than visible), falling back to the viewport if there isn't one.
 const getClipRect = (el: HTMLElement): { left: number; right: number; top: number } => {
   let node = el.parentElement;
@@ -35,7 +35,7 @@ export const Term: React.FC<TermProps> = ({ k, source = GLOSSARY, children }) =>
 
   // Centering the tooltip on the trigger is right most of the time, but a
   // term near the edge of whatever actually clips it (viewport or a
-  // scrolling ancestor) would otherwise push it half off-screen — nudge it
+  // scrolling ancestor) would otherwise push it half off-screen, nudge it
   // back with a measured shift/flip instead.
   const reposition = () => {
     const tip = tipRef.current;

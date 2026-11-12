@@ -17,7 +17,7 @@ const load = (): ProgressData => {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed.counts === 'object') return parsed;
     }
-  } catch { /* corrupted or unavailable — start fresh */ }
+  } catch { /* corrupted or unavailable, start fresh */ }
   return { counts: {} };
 };
 
@@ -28,7 +28,7 @@ export function reportProgress(eventId: string, increment = 1): void {
   cache.counts[eventId] = (cache.counts[eventId] ?? 0) + increment;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
-  } catch { /* private browsing — in-memory only */ }
+  } catch { /* private browsing, in-memory only */ }
   window.dispatchEvent(new CustomEvent(CHANGE_EVENT));
 }
 

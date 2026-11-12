@@ -84,7 +84,7 @@ export const IconPause: React.FC<IconProps> = ({ size = 12, ...props }) => (
 /**
  * How a chord sits in your hands, as one mark.
  *
- * Three states of the same ring — empty, half, full — rather than three
+ * Three states of the same ring, empty, half, full, rather than three
  * different pictures. The shape carries the answer on its own, which is what
  * lets the word beside it go away; and because it is one object being filled
  * rather than three lamps, the control reads as a dial you turn.
@@ -101,7 +101,7 @@ export const IconComfort: React.FC<IconProps & { state: 'solid' | 'shaky' | 'non
  * A record, and only a record.
  *
  * Kept for the one number in the app that goes up, so that a personal best
- * always looks like a personal best wherever it turns up — on the card that
+ * always looks like a personal best wherever it turns up, on the card that
  * sets it, and on the shelf beside the loop that holds it.
  */
 export const IconBest: React.FC<IconProps> = ({ size = 14, ...props }) => (
@@ -114,7 +114,7 @@ export const IconBest: React.FC<IconProps> = ({ size = 14, ...props }) => (
 /**
  * The click, as the thing that makes it.
  *
- * `lean` is which side the arm is on — the caller hands it the beat, and the
+ * `lean` is which side the arm is on, the caller hands it the beat, and the
  * arm alternates, so the mark on the control keeps the time the control is
  * setting. Nought is upright, which is where a metronome sits when it is off.
  * `swingMs` is one beat, so the travel takes exactly as long as a beat does
@@ -162,7 +162,7 @@ export const IconTap: React.FC<IconProps> = ({ size = 14, ...props }) => (
 /**
  * One mark for every "you are about to hear something" in the app.
  *
- * It had four words — Hear it, Sound on, Listen, and a bare play triangle that
+ * It had four words, Hear it, Sound on, Listen, and a bare play triangle that
  * also meant "start the exercise" two buttons along. A cone with waves means
  * one thing, and `live` is whether the waves are moving, so the mark reports
  * the state instead of the label having to change.
@@ -196,7 +196,7 @@ export const IconBeats: React.FC<IconProps> = ({ size = 14, ...props }) => (
  * The one door to everywhere.
  *
  * Twelve destinations, nine template levels and every song need a way in that
- * is not a list, and ⌘K is only a door if you own a keyboard — on a phone the
+ * is not a list, and ⌘K is only a door if you own a keyboard, on a phone the
  * panel had no handle at all.
  */
 export const IconJump: React.FC<IconProps> = ({ size = 16, ...props }) => (
@@ -228,7 +228,7 @@ export const IconTray: React.FC<IconProps & { dir: 'out' | 'in' }> = ({ size = 1
 /**
  * The only thing in this app that takes something away for good.
  *
- * It was the plainest element on the song page — a bare text link under the
+ * It was the plainest element on the song page, a bare text link under the
  * notes. A destructive action should not be the quietest mark on a screen,
  * and it should not be the loudest either: muted until you reach for it, and
  * then unmistakable.
@@ -250,7 +250,7 @@ export const IconTrash: React.FC<IconProps> = ({ size = 14, ...props }) => (
  * "Chart" meant reading rather than glancing. One 14px glyph per heading makes
  * the page scannable by shape.
  *
- * Deliberately still — eight animated marks on one page is a fairground, and
+ * Deliberately still, eight animated marks on one page is a fairground, and
  * these are wayfinding rather than events. One component rather than nine
  * exports because they are one idea: the shapes a song is made of.
  */

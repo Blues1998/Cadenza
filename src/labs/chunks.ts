@@ -1,4 +1,4 @@
-// Which file each destination lives in — and nothing else, so this can be
+// Which file each destination lives in, and nothing else, so this can be
 // imported by the rail without dragging a screen's worth of React in with it.
 //
 // `satisfies` rather than a type annotation: the annotation would widen every
@@ -20,14 +20,15 @@ export const LAB_CHUNKS = {
   tuner: () => import('./TunerLab'),
   play: () => import('./PlayLab'),
   tabs: () => import('./TabPlayerLab'),
-  songs: () => import('./SongHeroLab')
+  practice: () => import('./PracticeLab'),
+  me: () => import('./MeLab')
 } satisfies Record<ActiveTab, () => Promise<unknown>>;
 
 /**
  * Start fetching a lab before it is asked for.
  *
  * A pointer resting on a rail row is a decision most of the way made, so the
- * download starts there rather than on the press — which is usually enough for
+ * download starts there rather than on the press, which is usually enough for
  * the screen to be ready by the time the button goes down. Failures are
  * swallowed: this is a guess, and the press that follows will ask properly and
  * surface any real problem itself.

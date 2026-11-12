@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 
 /**
- * The metronome, drawn — and the one thing on this page that knows the tempo.
+ * The metronome, drawn, and the one thing on this page that knows the tempo.
  *
  * A real metronome ticks at each end of its swing, once per beat, so the arm
  * is at an extreme on the beat and passing through upright between two. For
@@ -12,7 +12,7 @@ import React, { useEffect, useRef } from 'react';
  * Everything here is drawn from a clock rather than from React state. A beat
  * is an audio-clock event a few milliseconds wide and a render is not, so a
  * component that re-rendered per beat would show you a pulse that was near
- * enough — and near enough is the one thing a timing page cannot be. The
+ * enough, and near enough is the one thing a timing page cannot be. The
  * timing graph beside it takes refs for exactly the same reason.
  */
 
@@ -44,7 +44,7 @@ const HOLD = 0.6;
 /**
  * How a bar is counted out loud, after the number on the beat.
  *
- * "One and two and", "one trip-let two trip-let", "one-ee-and-a" — the
+ * "One and two and", "one trip-let two trip-let", "one-ee-and-a", the
  * vocabulary a teacher uses in the room, and the only part of subdividing
  * that is actually hard to pick up from a click alone.
  */
@@ -60,7 +60,7 @@ interface PendulumProps {
   /** Ticks to a beat: 1 quarters, 2 eighths, 3 triplets, 4 sixteenths. */
   subdivision: number;
   /**
-   * Where the beat is, continuously, in the time the click is *heard* — 0 on
+   * Where the beat is, continuously, in the time the click is *heard*, 0 on
    * the first beat of the run, 4.5 halfway through the fifth, null when
    * nothing is running.
    */
@@ -153,7 +153,7 @@ export const Pendulum: React.FC<PendulumProps> = ({ beatsPerBar, subdivision, at
       </svg>
 
       {/* One column per tick, grouped by beat, with the count written under
-          it — the syllables every teacher uses, which is the thing worth
+          it, the syllables every teacher uses, which is the thing worth
           learning and the thing a row of anonymous dots could never say. The
           words sit below the bars rather than inside them so that a lit cell
           never has to carry text it would swallow. */}

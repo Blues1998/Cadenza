@@ -3,7 +3,7 @@ import type { Slot } from './loop';
 /**
  * A loop handed to the chord page from somewhere else in the app.
  *
- * An intention, not a place — the same shape as the draft day the dashboard
+ * An intention, not a place, the same shape as the draft day the dashboard
  * hands the song library. It is spent the moment the page picks it up, because
  * an address you could return to would keep re-loading a drill over whatever
  * you had since built.

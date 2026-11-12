@@ -15,7 +15,7 @@ interface Command {
   group: string;
   /** Searched as well as shown, small, after the label. */
   hint?: string;
-  /** Shown at the right — a record, a day number. */
+  /** Shown at the right, a record, a day number. */
   tag?: React.ReactNode;
   icon?: React.ReactNode;
   run: () => void;
@@ -25,7 +25,7 @@ interface Command {
  * Where a match landed, lower being better.
  *
  * Three tiers, because "F" should find the chord drill called "Down to the F"
- * below the song called "Fix You" — a word you started typing beats a word you
+ * below the song called "Fix You", a word you started typing beats a word you
  * landed in the middle of, and both beat a match in the small print.
  */
 const score = (command: Command, needle: string): number => {
@@ -45,7 +45,7 @@ const score = (command: Command, needle: string): number => {
  *
  * Twelve destinations, thirty songs, nine rungs of drills: past a certain
  * amount of content, search beats hierarchy, and the rail cannot grow a
- * thirteenth row for every idea. Nothing here is reachable only from here —
+ * thirteenth row for every idea. Nothing here is reachable only from here,
  * this is a shortcut to places that exist, which is what keeps it honest.
  */
 export const JumpTo: React.FC<{ onClose: () => void; onToggleTheme: () => void }> = ({ onClose, onToggleTheme }) => {

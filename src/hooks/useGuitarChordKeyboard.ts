@@ -10,7 +10,7 @@ const SHAPE_KEY_TO_CHORD_ID: Record<string, string> = {
 };
 
 // Picking-hand keys: one per string, low to high, left to right on the
-// keyboard — matching GUITAR_STRINGS' index order (0 = high E ... 5 = low E).
+// keyboard, matching GUITAR_STRINGS' index order (0 = high E ... 5 = low E).
 const PICK_KEY_TO_STRING_INDEX: Record<string, number> = {
   z: 5, x: 4, c: 3, v: 2, b: 1, n: 0,
 };
@@ -25,7 +25,7 @@ const SHAPES_BY_ID = new Map(GUITAR_CHORD_SHAPES.map(s => [s.id, s]));
 
 // Drives real chord + fingerstyle guitar playing from the keyboard: hold a
 // shape key to fret a chord, tap pick keys in any order/rhythm to sound
-// individual strings of it — a fast sweep across pick keys is a strum, a
+// individual strings of it, a fast sweep across pick keys is a strum, a
 // slower deliberate sequence is fingerpicking. With no shape held, pick
 // keys ring their string open, same as an unfretted string would.
 export function useGuitarChordKeyboard(

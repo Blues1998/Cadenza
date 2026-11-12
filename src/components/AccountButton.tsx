@@ -16,9 +16,9 @@ export const AccountButton: React.FC<AccountButtonProps> = ({ collapsed = false 
       title={
         user
           ? `Signed in as ${user.email} (${syncStatus === 'synced' ? 'Synced' : syncStatus})`
-          : 'Back up songs & sync to cloud (Free)'
+          : 'Back up your songs'
       }
-      aria-label={user ? 'Account and Sync' : 'Sign In and Sync'}
+      aria-label={user ? 'Account' : 'Sign in'}
     >
       <div className="account-avatar-wrapper">
         {user ? (
@@ -26,7 +26,7 @@ export const AccountButton: React.FC<AccountButtonProps> = ({ collapsed = false 
             {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
           </span>
         ) : (
-          <span className="account-cloud-icon">☁️</span>
+          <svg className="account-cloud-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
         )}
         <span className={`sync-status-indicator is-${syncStatus}`} />
       </div>
@@ -34,14 +34,14 @@ export const AccountButton: React.FC<AccountButtonProps> = ({ collapsed = false 
       {!collapsed && (
         <div className="account-label-group">
           <span className="account-main-label">
-            {user ? (user.email ? user.email.split('@')[0] : 'Account') : 'Cloud Sync'}
+            {user ? (user.email ? user.email.split('@')[0] : 'Account') : 'Sign in'}
           </span>
           <span className="account-sub-label">
             {user
               ? syncStatus === 'syncing'
                 ? 'Syncing…'
                 : 'Synced'
-              : 'Sign In / Backup'}
+              : 'Back up your songs'}
           </span>
         </div>
       )}

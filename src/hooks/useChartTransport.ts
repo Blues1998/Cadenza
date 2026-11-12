@@ -21,12 +21,12 @@ const EMPTY_SHAPES: Record<string, ChordVoicing> = {};
  * position advances.
  *
  * Scheduled in a rolling window rather than all at once. The whole song could
- * be scheduled up front — it is completely known — but then stopping would mean
+ * be scheduled up front, it is completely known, but then stopping would mean
  * chasing down every oscillator already queued, and stopping is the button
  * people press most while practising.
  *
  * Position is reported once per beat, not once per frame. Everything watching
- * it moves on beats — the line, the chord, the pulse — so a value that changed
+ * it moves on beats, the line, the chord, the pulse, so a value that changed
  * sixty times a second would only be re-rendering the same chart to say the
  * same thing.
  */
@@ -73,7 +73,7 @@ export function useChartTransport(
   const nextBeat = useRef(0);
   const nextChord = useRef(0);
   // The pattern's own cursor, counting subdivisions rather than chords, plus
-  // the pattern it belongs to — changing the pattern mid-loop has to re-seat
+  // the pattern it belongs to, changing the pattern mid-loop has to re-seat
   // it or the new grid would be read at the old one's position.
   const nextStep = useRef(0);
   const patternKey = useRef<string | null>(null);
@@ -136,7 +136,7 @@ export function useChartTransport(
 
       // Looping counts on past the end rather than resetting the clock. The
       // anchor stays where it was set, so a lap boundary is just another beat
-      // and nothing has to be re-timed at the seam — which is the one place a
+      // and nothing has to be re-timed at the seam, which is the one place a
       // loop is heard to stutter.
       while ((loop || nextBeat.current < total) && timeOf(nextBeat.current) < horizon) {
         const b = nextBeat.current;
@@ -174,14 +174,14 @@ export function useChartTransport(
           const held = chordsAtBeat(cur, loop && total > 0 ? beatAt % total : beatAt).current;
           if (!held) continue;
           // The shape you chose, so what you hear is the chord you are being
-          // shown rather than a different inversion of the same name — unless
+          // shown rather than a different inversion of the same name, unless
           // the run has pinned one, which is a drill saying which grip it is
           // about.
           const voicing = shapes[held.symbol] ?? preferredVoicing(held.symbol);
           if (!voicing) continue;
           // Shorter than a single strike would ring: eight of these a bar all
           // holding a chord apiece is a wash, and a strummed guitar is not a
-          // wash — each stroke is still audible over the last.
+          // wash, each stroke is still audible over the last.
           audio.playStroke(voicing.midis, stroke, spb * PATTERN_RING, Math.min(0.018, spb / 10), timeOf(beatAt));
         }
       } else if (playChords) {
@@ -196,7 +196,7 @@ export function useChartTransport(
           const voicing = shapes[chord.symbol] ?? preferredVoicing(chord.symbol);
           if (voicing) {
             // Strummed, the chord is the part. Blocked, it is a reference
-            // under the click — which is what a song's play-along wants and
+            // under the click, which is what a song's play-along wants and
             // a chord loop does not.
             if (strum) audio.playStrum(voicing.midis, spb * 1.9, Math.min(0.022, spb / 8), timeOf(at(i)));
             else audio.playChord(voicing.midis, spb * 1.6, timeOf(at(i)));
@@ -260,8 +260,8 @@ export function useChartTransport(
   }, [halt]);
 
   // Resuming moves the anchor forward by however long the pause lasted, which
-  // leaves every beat's time — and both scheduling cursors, still pointing at
-  // the beat we stopped on — correct on the new timeline.
+  // leaves every beat's time, and both scheduling cursors, still pointing at
+  // the beat we stopped on, correct on the new timeline.
   const resume = useCallback(() => {
     if (phaseRef.current !== 'paused') return;
     audio.init();
@@ -275,7 +275,7 @@ export function useChartTransport(
    * Moving the tempo mid-flight.
    *
    * Beat times come from one anchor and one beat length, so changing the beat
-   * length alone would drag the whole timeline sideways — including the beats
+   * length alone would drag the whole timeline sideways, including the beats
    * already committed to the audio clock inside the look-ahead window. The
    * anchor is moved with it, chosen so the first beat not yet scheduled keeps
    * exactly the time it was already going to have. Everything before that

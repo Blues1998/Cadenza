@@ -3,6 +3,9 @@ import { KeySheet } from './components/KeySheet';
 import { JumpTo } from './components/JumpTo';
 import { RunBar, useRunning } from './components/RunBar';
 import { Sidebar } from './components/Sidebar';
+import { MobileNav } from './components/MobileNav';
+import { Onboarding } from './components/Onboarding';
+import { useBackToClose } from './utils/nativeShell';
 import { AuthProvider } from './context/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { GROUPS, type ActiveTab } from './components/navGroups';
@@ -17,7 +20,7 @@ import { LAB_CHUNKS } from './labs/chunks';
 // One download per destination.
 //
 // Imported together they came to a 1.6 MB bundle, most of it the score
-// renderer the Tab Player needs — paid for in full by someone opening the
+// renderer the Tab Player needs, paid for in full by someone opening the
 // tuner. Split, the shell and the screen you asked for are all that is
 // fetched, and the rail warms the rest as you point at it.
 const DashboardLanding = lazy(LAB_CHUNKS.dashboard);
@@ -31,15 +34,16 @@ const RhythmLab = lazy(LAB_CHUNKS.rhythm);
 const TunerLab = lazy(LAB_CHUNKS.tuner);
 const PlayLab = lazy(LAB_CHUNKS.play);
 const TabPlayerLab = lazy(LAB_CHUNKS.tabs);
-const SongHeroLab = lazy(LAB_CHUNKS.songs);
+const PracticeLab = lazy(LAB_CHUNKS.practice);
+const MeLab = lazy(LAB_CHUNKS.me);
 
 const LABELS = new Map<ActiveTab, string>(
   GROUPS.flatMap(group => group.items.map(item => [item.id, item.label] as [ActiveTab, string]))
 );
 
 function App() {
-  // The address bar is the state. Everything that used to be held here — which
-  // lab, which song — is read back from it, so a reload lands where you were,
+  // The address bar is the state. Everything that used to be held here, which
+  // lab, which song, is read back from it, so a reload lands where you were,
   // Back goes back, and a screen can be linked to.
   const { tab: activeTab, songId } = useRoute();
   const { theme, toggleTheme } = useTheme();
@@ -48,13 +52,13 @@ function App() {
   // the moment the form appears.
   const [openDraft, setOpenDraft] = useState(false);
 
-  // Whatever was typed, tidied to the address that was actually shown — a bare
+  // Whatever was typed, tidied to the address that was actually shown, a bare
   // URL, a stale slug, the wrong case. Replaced rather than pushed: the
   // correction is not a step anyone should be able to walk back into.
   //
   // Read from the bar at the moment it runs rather than from the render that
   // scheduled it. Effects run child-first, so a screen that corrects its own
-  // address on the way up — SongsLab does, for a link to a song that is gone —
+  // address on the way up, SongsLab does, for a link to a song that is gone,
   // would otherwise be overruled here by a parent still holding the address it
   // just replaced.
   useEffect(() => {
@@ -89,10 +93,12 @@ function App() {
   // The keys that belong to the app rather than to a screen.
   //
   // One listener at the top rather than one per lab, because the whole point
-  // of these is that they are the same wherever you are — and because a page
+  // of these is that they are the same wherever you are, and because a page
   // that forgot to add them is how Space came to work on Rhythm and nowhere
   // else. Anything being typed into keeps its keystrokes.
   const [overlay, setOverlay] = useState<'jump' | 'keys' | null>(null);
+  const closeOverlay = useCallback(() => setOverlay(null), []);
+  useBackToClose(overlay !== null, closeOverlay);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -105,7 +111,7 @@ function App() {
       if (e.key === 'Escape') { setOverlay(null); return; }
       // Held down, the bar would start and stop the loop forty times a second.
       if (e.code === 'Space' && !e.repeat && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        // Only swallow the scroll when something actually took the press —
+        // Only swallow the scroll when something actually took the press,
         // on a screen with no transport the bar should still page down.
         if (pressPlay()) e.preventDefault();
       }
@@ -142,8 +148,10 @@ function App() {
         return <TunerLab />;
       case 'tabs':
         return <TabPlayerLab />;
-      case 'songs':
-        return <SongHeroLab />;
+      case 'practice':
+        return <PracticeLab setActiveTab={navigate} />;
+      case 'me':
+        return <MeLab theme={theme} toggleTheme={toggleTheme} />;
       case 'chordbook':
         return <ChordBookLab />;
       case 'library':
@@ -171,6 +179,10 @@ function App() {
         <Sidebar activeTab={activeTab} setActiveTab={navigate} theme={theme} toggleTheme={toggleTheme}
               onJump={() => setOverlay(o => (o === 'jump' ? null : 'jump'))}
             />
+        {/* Below the shell breakpoint CSS hides the sidebar and shows this. */}
+        <MobileNav activeTab={activeTab} setActiveTab={navigate}
+          onJump={() => setOverlay(o => (o === 'jump' ? null : 'jump'))}
+        />
 
         {/* Main Panel Content Area */}
         {/* key on the tab so each lab mounts fresh and plays the entrance
@@ -196,6 +208,7 @@ function App() {
         {overlay === 'jump' && <JumpTo onClose={() => setOverlay(null)} onToggleTheme={toggleTheme} />}
         {overlay === 'keys' && <KeySheet onClose={() => setOverlay(null)} />}
         <AuthModal />
+        <Onboarding />
       </div>
     </AuthProvider>
   );

@@ -87,7 +87,7 @@ export const ScaleControlBar: React.FC<ScaleControlBarProps> = ({
         </button>
       </div>
 
-      {/* Scale or chord — one list at a time, so the mode is never ambiguous */}
+      {/* Scale or chord, one list at a time, so the mode is never ambiguous */}
       <div className="toolbar-row">
         <Segmented
           value={chordMode}

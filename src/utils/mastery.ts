@@ -1,13 +1,13 @@
 // Per-item mastery: what you are actually good at, one item at a time.
 //
-// progress.ts counts achievements — a single number for "intervals answered
+// progress.ts counts achievements, a single number for "intervals answered
 // correctly". That is enough to unlock a Journey level and useless for
 // deciding what to ask next, because it cannot tell a perfect fifth you nail
 // every time from a minor sixth you have been guessing at for a week. This
 // store keeps a record per item, so a drill can ask for the thing you are
 // worst at instead of rolling a die.
 //
-// Item ids are opaque strings — `interval:7`, `chord:Major Triad`. Nothing in
+// Item ids are opaque strings, `interval:7`, `chord:Major Triad`. Nothing in
 // here knows any music theory, so the same store backs any drill with a set
 // of things to learn.
 
@@ -18,11 +18,11 @@ export interface ItemStat {
   seen: number;
   correct: number;
   streak: number;           // consecutive correct answers, for a run readout
-  box: number;              // Leitner box — how far apart this item is spaced
+  box: number;              // Leitner box, how far apart this item is spaced
   ewma: number;             // recency-weighted accuracy, 0..1
   peak: number;             // the highest mastery this item has ever reached
   lastSeenAttempt: number;  // value of `attempts` when it was last asked
-  lastSeenAt: number;       // epoch ms — for a review session that spans days
+  lastSeenAt: number;       // epoch ms, for a review session that spans days
 }
 
 interface MasteryData {
@@ -30,14 +30,14 @@ interface MasteryData {
   items: Record<string, ItemStat>;
 }
 
-// How much the newest answer moves the running accuracy — the last nine or so
+// How much the newest answer moves the running accuracy, the last nine or so
 // answers are what decide an item's score.
 //
 // Chosen by measuring both ends of the trade-off rather than by feel. Faster
 // (0.34) and the reading is 13 points off the true rate and jumps 10 points an
 // answer, so two items you are equally good at show wildly different bars.
 // Slower (0.10) and it takes eight questions on one item to register that you
-// have improved — and since any one item comes up about a twelfth of the time,
+// have improved, and since any one item comes up about a twelfth of the time,
 // that is most of a session before the bar admits it. At 0.20 the reading sits
 // within about 10 points, moves 6 an answer, and notices real improvement in
 // four.
@@ -51,7 +51,7 @@ const CONFIDENCE_K = 2;
 
 // How many other questions should pass before an item comes back, by box. A
 // session here is minutes long, so spacing is counted in questions rather
-// than in hours — between two answers the wall clock barely moves.
+// than in hours, between two answers the wall clock barely moves.
 const BOX_SPACING = [0, 2, 4, 7, 12, 20];
 
 // Even a fully mastered item keeps a small share of the draw. Recognition you
@@ -83,7 +83,7 @@ const load = (): MasteryData => {
         return { attempts: Number(parsed.attempts) || 0, items: parsed.items };
       }
     }
-  } catch { /* corrupted or unavailable — start fresh */ }
+  } catch { /* corrupted or unavailable, start fresh */ }
   return { attempts: 0, items: {} };
 };
 
@@ -92,7 +92,7 @@ let cache: MasteryData = load();
 const persist = (): void => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
-  } catch { /* private browsing — in-memory only */ }
+  } catch { /* private browsing, in-memory only */ }
   window.dispatchEvent(new CustomEvent(CHANGE_EVENT));
 };
 
@@ -115,7 +115,7 @@ export function getAttemptCount(): number {
   return cache.attempts;
 }
 
-// Grade one answer. Called at the moment of the answer, right or wrong —
+// Grade one answer. Called at the moment of the answer, right or wrong,
 // a miss is the more informative of the two and has to be recorded.
 export function recordAttempt(itemId: string, correct: boolean): void {
   cache.attempts += 1;
@@ -162,7 +162,7 @@ const weightOf = (itemId: string): number => {
 };
 
 export interface PickOptions {
-  exclude?: string | null;  // the item just asked — never twice in a row
+  exclude?: string | null;  // the item just asked, never twice in a row
 }
 
 // Choose the next item to ask: weighted toward what you are weakest at and
@@ -195,7 +195,7 @@ export interface LadderOptions {
 }
 
 // How far along an ordered curriculum you have earned your way. The next item
-// unlocks once all but one of the items already in play are known — all-but-one
+// unlocks once all but one of the items already in play are known, all-but-one
 // rather than all, so a single item you find genuinely hard (the tritone, for
 // most people) slows the ladder down instead of stopping it forever.
 //
@@ -203,7 +203,7 @@ export interface LadderOptions {
 // forwards. Current mastery is a recency-weighted average and dips on any bad
 // run; scored on that, a curriculum takes things away from you for having a
 // bad five minutes, which is both wrong and demoralising. Forgetting is what
-// the weighting in pickNextItem is for — it will ask you again.
+// the weighting in pickNextItem is for, it will ask you again.
 export function unlockedCount(
   ladder: string[],
   { seed = 3, masteredAt = 0.7, minSeen = 4 }: LadderOptions = {}

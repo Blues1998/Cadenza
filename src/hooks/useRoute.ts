@@ -22,7 +22,7 @@ function subscribe(onChange: () => void): () => void {
 }
 
 // The address itself is the snapshot. It is a string, so React compares it by
-// value and a notification that changed nothing re-renders nothing — which is
+// value and a notification that changed nothing re-renders nothing, which is
 // what saves us when go() and the browser both report the same move.
 const readHash = (): string => window.location.hash;
 
@@ -30,7 +30,7 @@ const readHash = (): string => window.location.hash;
  * Go somewhere.
  *
  * `replace` rewrites the current entry instead of adding one, for a move that
- * is a correction rather than a destination — tidying a bare or misspelled
+ * is a correction rather than a destination, tidying a bare or misspelled
  * address on arrival, which nobody should be able to press Back into.
  *
  * Not a hook: navigating is something handlers do, and half the callers are

@@ -5,13 +5,13 @@ import { normalizeChordSymbol } from './songText';
 //
 // The timeline is bars and beats, not seconds. There is no recording in this
 // app to sync against, and a guitarist does not think "the F arrives at 14.6
-// seconds" — they think "the F is the second bar". Bars also stay true when the
+// seconds", they think "the F is the second bar". Bars also stay true when the
 // tempo is dragged down to something playable, which a list of timestamps does
 // not, and slowing a song down is most of what practising one is.
 //
 // The chart is stored as structure, not as text: a list of lines, each a list
 // of words, each word optionally carrying the chord that starts on it. Text is
-// what comes in from a chord sheet and what goes back out — it is a format, not
+// what comes in from a chord sheet and what goes back out, it is a format, not
 // the truth. Storing the structure is what lets a chord be changed by clicking
 // the chord, rather than by finding it in a paragraph of brackets.
 //
@@ -59,7 +59,7 @@ export interface ChartLine {
   beats: number;
   chords: ChartChord[];
   segments: ChartSegment[];
-  /** True when the line carries chords but no words — an intro, a turnaround. */
+  /** True when the line carries chords but no words, an intro, a turnaround. */
   instrumental: boolean;
 }
 
@@ -99,7 +99,7 @@ export const defaultBars = (words: ChartWord[]): number =>
  *
  * Chords with no beat of their own share the line evenly, which is what a chord
  * sheet means when it prints four chords over one line. A chord that names a
- * beat keeps it — that is the escape hatch for the change that lands on the
+ * beat keeps it, that is the escape hatch for the change that lands on the
  * "and" of three.
  */
 export function timeChart(lines: ChartLineRecord[], beatsPerBar = 4, transpose = 0): ParsedChart {
@@ -189,7 +189,7 @@ export function chordsAtBeat(chart: ParsedChart, beat: number): { current: Chart
 
 export const beatsToSeconds = (beats: number, tempo: number): number => (beats * 60) / tempo;
 
-/** "2:41" — how long the chart runs at this tempo. */
+/** "2:41", how long the chart runs at this tempo. */
 export function chartDuration(totalBeats: number, tempo: number): string {
   const seconds = Math.round(beatsToSeconds(totalBeats, tempo));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
@@ -201,7 +201,7 @@ export function chartDuration(totalBeats: number, tempo: number): string {
 
 // Nearly every chord sheet puts the chords on their own line, spaced so each one
 // sits above the syllable it lands on. That survives being read and does not
-// survive being reflowed — the alignment is the data, and it is gone the moment
+// survive being reflowed, the alignment is the data, and it is gone the moment
 // the column width changes. So it is converted on the way in rather than
 // supported.
 
@@ -311,7 +311,7 @@ export function convertAboveLine(text: string): string {
 
 const CHORD_TOKEN = /\[([^\]]{1,24})\]/g;
 
-// Ultimate Guitar marks its sections with brackets too — [Verse 1], [Chorus] —
+// Ultimate Guitar marks its sections with brackets too, [Verse 1], [Chorus],
 // which is the same punctuation this format uses for chords. A bracket holding
 // something that is not a chord is a heading.
 const isSectionBracket = (line: string): boolean => {
@@ -345,7 +345,7 @@ function wordsFromLine(text: string): ChartWord[] {
   }
   pushWords(normalized.slice(cursor));
 
-  // Chords with no word left to sit on — a change at the end of a line. They get
+  // Chords with no word left to sit on, a change at the end of a line. They get
   // an empty word so they still have somewhere to live and something to click.
   for (const chord of pending) words.push({ text: '', chord });
   return words;

@@ -37,7 +37,7 @@ const fmtWhen = (iso: string): string => {
 /**
  * Home answers one question: what should I do right now?
  *
- * It is not a launcher any more — the rail on the left already is one, and a
+ * It is not a launcher any more, the rail on the left already is one, and a
  * grid of the same ten destinations was the rail said twice. What is here
  * instead is the state of your repertoire: the song currently in practice,
  * the shape of your library, what has actually been played, and the one thing
@@ -80,7 +80,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         <div className="hero-copy">
           <span className="hero-eyebrow">{weekLine(recap)}</span>
           <h2 className="hero-title">
-            Cadenza <span>Lab</span>
+            Cadenza
           </h2>
         </div>
       </header>
@@ -91,7 +91,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
           <section className="today">
             <div className="today-mark">
               <span className="surface-label">
-                {lastPlayed?.song?.id === activeSong.id ? 'Active Practice · Pick Up' : 'Active Practice · In Repertoire'}
+                {lastPlayed?.song?.id === activeSong.id ? 'Continue' : 'Practising'}
               </span>
               <span className="today-day readout">{STATUS_LABEL[activeSong.status]}</span>
             </div>
@@ -122,11 +122,11 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         ) : (
           <section className="today is-empty">
             <div className="today-mark">
-              <span className="surface-label">Song Repertoire</span>
+              <span className="surface-label">Songs</span>
             </div>
-            <h3 className="today-title">No songs in library yet</h3>
+            <h3 className="today-title">No songs yet</h3>
             <p className="today-artist">
-              Add songs to your repertoire to log practice, manage chord charts, and track your progress.
+              Add a song to get started.
             </p>
             <button
               type="button"
@@ -148,7 +148,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
           <span className="dash-run-said">
             <span className="surface-label">Today's run</span>
             <span className="dash-run-title">Start a session</span>
-            <span className="dash-run-note">Tune, two drills picked from what is in your way, then your song.</span>
+            <span className="dash-run-note">Tune up, two drills, then your song.</span>
           </span>
           <span className="dash-run-go">
             Begin
@@ -225,7 +225,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
           </button>
         ) : alternativeSong ? (
           <button type="button" className="dash-card pickup" onClick={() => onOpenSong(alternativeSong.id)}>
-            <span className="surface-label">From your repertoire</span>
+            <span className="surface-label">From your songs</span>
             <span className="pickup-title">{alternativeSong.title}</span>
             <span className="pickup-meta readout">
               {alternativeSong.key}{alternativeSong.key && ' · '}{capoLabel(alternativeSong.capo)}
@@ -242,7 +242,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
           <button type="button" className="dash-card pickup is-empty" onClick={() => setActiveTab('library')}>
             <span className="surface-label">Your songs</span>
             <span className="pickup-title">Nothing played yet</span>
-            <span className="pickup-when">Every session you log shows up here.</span>
+            <span className="pickup-when">Your sessions show up here.</span>
             <span className="pickup-go">
               Open library
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

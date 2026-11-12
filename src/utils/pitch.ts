@@ -57,7 +57,7 @@ export function detectPitch(buffer: Float32Array, sampleRate: number): PitchResu
 
   // Lags outside the musical range are never consulted by the search below
   // (step 4) or its interpolation (step 5), which together only ever read
-  // up to index maxTau + 1 — so the two O(halfLen) x O(halfLen) loops below
+  // up to index maxTau + 1, so the two O(halfLen) x O(halfLen) loops below
   // only need to compute that far instead of all the way to halfLen, saving
   // a meaningful fraction of this function's dominant cost on every
   // animation frame it runs on. minTau/maxTau are computed here (rather than
@@ -80,7 +80,7 @@ export function detectPitch(buffer: Float32Array, sampleRate: number): PitchResu
     diff[tau] = sum;
   }
 
-  // 3. Cumulative mean normalized difference — dips toward 0 at the true period
+  // 3. Cumulative mean normalized difference, dips toward 0 at the true period
   const cmnd = cmndScratch;
   cmnd[0] = 1;
   let runningSum = 0;
@@ -104,7 +104,7 @@ export function detectPitch(buffer: Float32Array, sampleRate: number): PitchResu
     }
   }
 
-  // No clear periodicity found — treat as unpitched noise
+  // No clear periodicity found, treat as unpitched noise
   if (tauEstimate === -1) {
     return null;
   }
@@ -193,6 +193,50 @@ export class PitchStabilizer {
     this.smoothedFrequency = 0;
     this.candidateMidi = null;
     this.candidateFrames = 0;
+    this.silentFrames = 0;
+  }
+}
+
+// Smoothing for a singing voice, which wants nearly the opposite of the
+// instrument stabilizer above. A string holds one pitch, so snapping to a note
+// and holding it is right. A voice slides into notes, wobbles with vibrato and
+// drifts, and that movement is exactly what a singer needs to see, snapping
+// would draw a staircase over it.
+//
+// So this keeps the pitch continuous and only removes what is not the voice:
+// - a running median over a few frames, which drops the one-frame octave jumps
+//   YIN makes on breathy onsets and consonants without flattening a slide;
+// - a short hold through dropouts, so a trace does not break on every
+//   consonant, and no longer than that, so a breath reads as a breath.
+export class VoiceSmoother {
+  private recent: number[] = [];
+  private silentFrames = 0;
+
+  private static readonly WINDOW = 5;
+  private static readonly HOLD_FRAMES = 4;
+
+  update(raw: PitchResult | null): PitchResult | null {
+    if (!raw) {
+      this.silentFrames++;
+      if (this.silentFrames > VoiceSmoother.HOLD_FRAMES) this.recent = [];
+      return this.current();
+    }
+    this.silentFrames = 0;
+    this.recent.push(12 * Math.log2(raw.frequency / 440) + 69);
+    if (this.recent.length > VoiceSmoother.WINDOW) this.recent.shift();
+    return this.current();
+  }
+
+  private current(): PitchResult | null {
+    // Two agreeing frames before anything is shown, so a lone blip never draws.
+    if (this.recent.length < 2) return null;
+    const sorted = [...this.recent].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    return frequencyToResult(440 * Math.pow(2, (median - 69) / 12));
+  }
+
+  reset(): void {
+    this.recent = [];
     this.silentFrames = 0;
   }
 }

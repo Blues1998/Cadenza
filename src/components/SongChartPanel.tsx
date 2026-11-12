@@ -248,7 +248,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
               <span>
                 Capo <strong>{fit.best.capo}</strong> would put{' '}
                 {fit.best.playable ? 'every chord' : `${fit.best.chords.length - fit.best.missing} of ${fit.best.chords.length}`}{' '}
-                inside what you can play — same pitch, easier shapes.
+                inside what you can play. Same pitch.
               </span>
               <button
                 type="button"
@@ -390,7 +390,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                 onClick={() => setPlayChords(p => !p)}
                 title={playChords ? 'Mute guitar playback' : 'Play guitar with strumming pattern'}
               >
-                🎸 {playChords ? 'Guitar ON' : 'Guitar Muted'}
+                {playChords ? 'Guitar on' : 'Guitar off'}
               </button>
 
               <button
@@ -408,7 +408,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                 onClick={() => setIsLooping(l => !l)}
                 title={isLooping ? 'Disable practice looping' : 'Loop song continuously for practice'}
               >
-                🔁 {isLooping ? 'Looping ON' : 'Loop OFF'}
+                {isLooping ? 'Loop on' : 'Loop off'}
               </button>
 
               {isLooping && (
@@ -800,7 +800,7 @@ const ChartEditor: React.FC<EditorProps> = ({
    * Re-splitting a line's words keeps the chords on the same word positions.
    *
    * Fixing a typo should not cost you the chords over it, and the word index is
-   * the only anchor that survives the text changing underneath — a chord past
+   * the only anchor that survives the text changing underneath, a chord past
    * the new end moves to the last word rather than being dropped.
    */
   const commitLyric = () => {
@@ -1005,7 +1005,7 @@ const ChartImport: React.FC<{
   return (
     <div className="chart-import">
       <p className="chart-help">
-        Paste a sheet from anywhere — chords above the words or written into them, both work.
+        Paste a chord sheet. Chords above the lyrics or inline both work.
         Section markers, and a capo, key or tempo in the header, are picked up too. Nothing is
         applied until you press a button below.
       </p>
@@ -1029,7 +1029,7 @@ const ChartImport: React.FC<{
               <input type="checkbox" checked={takeMeta} onChange={e => setTakeMeta(e.target.checked)} />
               Also take {found.join(' · ')}
               {song.capo !== null && read.meta.capo !== undefined && read.meta.capo !== song.capo && (
-                <span className="import-warn"> — the song currently says capo {song.capo}</span>
+                <span className="import-warn"> (the song is set to capo {song.capo})</span>
               )}
             </label>
           )}

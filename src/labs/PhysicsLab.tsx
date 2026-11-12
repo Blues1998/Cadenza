@@ -63,7 +63,7 @@ const playDyad = (hzA: number, hzB: number, dur = 1.6) => {
   });
 };
 
-const BASE_HZ = 220; // A3 — comfortable reference pitch for every demo
+const BASE_HZ = 220; // A3, comfortable reference pitch for every demo
 
 // ============================================================
 // 1. Harmonic Series Explorer (timbre = overtone recipe)
@@ -108,7 +108,7 @@ const HarmonicExplorer: React.FC = () => {
       ctx.stroke();
     });
 
-    // The summed wave — what you actually hear
+    // The summed wave, what you actually hear
     ctx.strokeStyle = COLORS.primary;
     ctx.lineWidth = 2.5;
     ctx.shadowColor = 'rgba(255, 106, 42, 0.4)';
@@ -341,7 +341,7 @@ const RatioExplorer: React.FC = () => {
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
         Two tones are <strong style={{ color: 'var(--text-primary)' }}>consonant</strong> when their frequencies form a
-        simple ratio — 2:1, 3:2, 5:4 — and the combined wave repeats in a tidy pattern. In between, the
+        simple ratio (2:1, 3:2, 5:4) and the combined wave repeats in a tidy pattern. In between, the
         loudness wobbles at |f₂ − f₁| Hz. That wobble is
         <strong style={{ color: 'var(--text-primary)' }}> beating</strong>: the sound of "out of tune".
       </p>
@@ -354,7 +354,7 @@ const RatioExplorer: React.FC = () => {
         <span style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)', color: locked ? 'var(--success)' : 'var(--text-secondary)' }}>
           {BASE_HZ} Hz + {f2.toFixed(1)} Hz · ratio {ratio.toFixed(3)} ·
           {' '}nearest {closest[0]}:{closest[1]} ({closest[2]}) {closestCents >= 0 ? '+' : ''}{closestCents.toFixed(0)}¢
-          {locked ? ' — locked in!' : ''}
+          {locked ? ' · locked in' : ''}
         </span>
       </div>
 
@@ -369,15 +369,15 @@ const RatioExplorer: React.FC = () => {
       </div>
 
       <div>
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>35 ms — simple ratios repeat neatly</span>
+        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>35 ms: simple ratios repeat neatly</span>
         <canvas ref={waveCanvasRef} style={{ width: '100%', height: '80px', background: '#0E0F11', borderRadius: '8px', marginTop: '0.25rem' }} />
       </div>
       <div>
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>1 second — beating shows up as slow loudness waves</span>
+        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>1 second: beating shows as slow loudness waves</span>
         <canvas ref={envCanvasRef} style={{ width: '100%', height: '80px', background: '#0E0F11', borderRadius: '8px', marginTop: '0.25rem' }} />
       </div>
       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-        The tritone sits at √2 ≈ 1.414 — no tidy pattern, which is why it sounds tense. It is also how
+        The tritone sits at √2 ≈ 1.414. No tidy pattern, so it sounds tense. It is also how
         you tune by ear: adjust until the beating stops.
       </p>
     </section>
@@ -403,7 +403,7 @@ const TemperamentTable: React.FC = () => (
       3 · Why 12 notes
     </h3>
     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-      Pure ratios are perfect but incompatible — tune for C and E sounds sour. The fix, around 1600:
+      Pure ratios can't all fit at once. Tune for C and E sounds sour. The fix, around 1600:
       split the octave into 12 <em>equal</em> steps of 2<sup>1/12</sup> ≈ 1.0595. Now every interval is
       slightly wrong in every key by the same tiny amount. It works on a coincidence:
       <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}> 2^(7/12) = 1.4983 ≈ 3/2</span>.
@@ -448,7 +448,7 @@ const TemperamentTable: React.FC = () => (
       </table>
     </div>
     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-      Fifths land within 2¢ — inaudible. Thirds are ~14¢ off and you <em>can</em> hear it. Every piano,
+      Fifths land within 2¢, which you can't hear. Thirds are ~14¢ off and you <em>can</em> hear it. Every piano,
       every fret, and this app accept that error on purpose.
     </p>
   </section>
@@ -514,7 +514,7 @@ const ModularCircle: React.FC = () => {
         4 · Why the circle of fifths closes
       </h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-        Put the 12 notes in a circle and keep jumping up a fifth — 7 semitones. Because
+        Put the 12 notes in a circle and keep jumping up a fifth (7 semitones). Because
         <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}> gcd(7, 12) = 1</span>,
         the walk hits every note once before coming home. That is the whole reason the circle exists.
         Try other step sizes.
@@ -581,8 +581,8 @@ const ModularCircle: React.FC = () => {
           <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             Step size <strong style={{ color: 'var(--text-primary)' }}>+{stepSize}</strong>: gcd({stepSize}, 12) = {gcd(stepSize, 12)},
             so the walk reaches <strong style={{ color: uniqueVisited === 12 || reachable === 12 ? 'var(--success)' : 'var(--warning)' }}>{reachable} of 12</strong> notes
-            before looping. {stepSize === 7 ? 'Full coverage — this walk, spelled out, is C G D A E B F♯ D♭ A♭ E♭ B♭ F: the circle of fifths.' :
-            stepSize === 5 ? 'Also full coverage — stepping by fourths is the same circle walked backwards.' :
+            before looping. {stepSize === 7 ? 'Full coverage. Spelled out: C G D A E B F♯ D♭ A♭ E♭ B♭ F, the circle of fifths.' :
+            stepSize === 5 ? 'Full coverage. Fourths walk the same circle backwards.' :
             'A generator must be coprime with 12; this one isn\'t, so it cycles in a subgroup.'}
           </p>
         </div>

@@ -42,9 +42,9 @@ function formatRelativeTime(ms: number): string {
 
 // The hoverable region for a beat is a full-height column: horizontally a
 // centered slice of the beat's own slot (its realBounds spans the whole
-// rhythmic slot including the whitespace separating it from its neighbors —
+// rhythmic slot including the whitespace separating it from its neighbors,
 // too wide to feel like "pointing at the note"), vertically the bar's full
-// span across both the notation and tab staves (masterBarBounds — the same
+// span across both the notation and tab staves (masterBarBounds, the same
 // vertical extent alphaTab's own bar-cursor band uses). No guessed offsets:
 // the notation glyphs, the technique letters between the staves, and the
 // tab numbers all fall inside that column, and the highlight box draws this
@@ -53,7 +53,7 @@ const HOVER_WIDTH_FOCUS = 0.5; // fraction of the beat's own width to keep, cent
 const HOVER_MIN_WIDTH = 18;
 const HOVER_MARGIN = 4;
 // Shared by both the hover-explanation box and the mic play-along grading
-// box below — both are the same kind of "outline this beat" overlay.
+// box below, both are the same kind of "outline this beat" overlay.
 const HIGHLIGHT_PADDING = 4;
 
 type Box = { x: number; y: number; w: number; h: number };
@@ -75,7 +75,7 @@ function isNearBounds(x: number, y: number, box: Box): boolean {
 // playback auto-follow resumes.
 const BROWSE_GRACE_PERIOD_MS = 2000;
 
-// Remembers the hover-tooltip on/off preference across visits — most people
+// Remembers the hover-tooltip on/off preference across visits, most people
 // only need the explanations a handful of times before they've learned them.
 const TOOLTIPS_ENABLED_STORAGE_KEY = 'cadenza-tab-player-tooltips-enabled';
 
@@ -117,7 +117,7 @@ function detectBeatTechniques(beat: model.Beat): string[] {
 // but instead of the player pacing themselves note-by-note, grading is
 // paced by the tab's own moving cursor: alphaTab's activeBeatsChanged event
 // fires in real time, in sync with actual audio playback, whenever the set
-// of currently-sounding beats changes — exactly the same signal that drives
+// of currently-sounding beats changes, exactly the same signal that drives
 // alphaTab's own built-in cursor highlight. Driving grading off that event
 // (rather than pre-computing tick-based time windows ourselves) means it
 // automatically accounts for tempo, playback-speed changes, and repeats
@@ -129,7 +129,7 @@ const RECENT_RESULTS_CAP = 24;
 
 interface GradeTarget {
   beat: model.Beat;
-  pitchClass: number; // 0-11, matched ignoring octave — mic octave detection
+  pitchClass: number; // 0-11, matched ignoring octave, mic octave detection
                        // errors are common enough on guitar that Play
                        // Challenges already treats "any octave counts" as a
                        // deliberate, forgiving default; this keeps that
@@ -145,14 +145,14 @@ interface GradeResult {
 
 // Reads grading info straight off whatever Beat instance the playback
 // engine hands us via activeBeatsChanged, rather than pre-matching against
-// beats collected by walking api.score ourselves — Beat carries a
+// beats collected by walking api.score ourselves, Beat carries a
 // @clone_ignore'd id, so a beat handed back by the player isn't guaranteed
 // to share identity (or even .id) with the one found by tree-walking the
 // score, but it always carries the same notes/voice/bar data either way.
 // Only single, freshly-picked notes are gradable: a chord can't be verified
 // note-by-note through one monophonic pitch detector, a rest has nothing to
 // play, and a tied note isn't something the player re-picks (they just let
-// the previous note ring) — grading any of those would be meaningless.
+// the previous note ring), grading any of those would be meaningless.
 function gradeTargetFromBeat(beat: model.Beat): GradeTarget | null {
   if (beat.voice.bar.staff.track.index !== 0) return null;
   if (beat.isRest || beat.notes.length !== 1) return null;
@@ -173,7 +173,7 @@ export const TabPlayerLab: React.FC = () => {
   // Holds a restored position that's waiting to be applied once playback
   // actually starts (see the playerReady/playerPositionChanged handlers
   // below for why seeking can't happen any earlier than that), plus a count
-  // of real position ticks seen since — the seek waits for a couple of
+  // of real position ticks seen since, the seek waits for a couple of
   // those as proof the engine is actually warmed up and rendering.
   const pendingRestoreSeekRef = useRef<number | null>(null);
   const restoreSeekWarmupCountRef = useRef(0);
@@ -208,7 +208,7 @@ export const TabPlayerLab: React.FC = () => {
   // above gradeTargetFromBeat for the overall design.
   const { pitch: micPitch, isActive: micActive, error: micError, start: startMic, stop: stopMic } = useMicPitch();
   const [micGradingEnabled, setMicGradingEnabled] = useState(false);
-  // True only once the toggle is on AND the mic has actually come online —
+  // True only once the toggle is on AND the mic has actually come online,
   // the single gate both the activeBeatsChanged handler and the live pitch
   // effect check, so neither has to separately track both conditions.
   const micGradingLiveRef = useRef(false);
@@ -262,7 +262,7 @@ export const TabPlayerLab: React.FC = () => {
   }, [positionGradeBox]);
 
   // Flashes green/red over the box already positioned by showPendingBox,
-  // then fades it out — a brief result flash rather than a mark left
+  // then fades it out, a brief result flash rather than a mark left
   // sitting on the notation forever, since the cursor keeps moving on.
   const flashResultBox = useCallback((hit: boolean) => {
     const el = gradeHighlightElRef.current;
@@ -278,7 +278,7 @@ export const TabPlayerLab: React.FC = () => {
     }, 400);
   }, []);
 
-  // Resolves the currently-open grading window exactly once — called either
+  // Resolves the currently-open grading window exactly once, called either
   // the instant a correct pitch is heard (see the pitch-matching effect
   // below), or when the window closes without one (a new beat became
   // current, or playback paused/stopped) with no match ever recorded.
@@ -397,7 +397,7 @@ export const TabPlayerLab: React.FC = () => {
         enableCursor: true,
         // A non-Off mode is required for alphaTab to dispatch scroll updates
         // at all, but the actual behavior comes entirely from
-        // customScrollHandler below — it implements "follow, but pause while
+        // customScrollHandler below, it implements "follow, but pause while
         // the user is browsing", not alphaTab's built-in "always snap to
         // the cursor" (which would fight any attempt to scroll away).
         scrollMode: 'Continuous',
@@ -409,7 +409,7 @@ export const TabPlayerLab: React.FC = () => {
     // Animates scrollTop ourselves (instead of the native
     // scrollTo({behavior:'smooth'}), whose actual duration is entirely
     // browser-determined and not something we can know) so we always know
-    // exactly when our own scroll starts and ends — that precision is what
+    // exactly when our own scroll starts and ends, that precision is what
     // lets the manual-scroll guard below be exact instead of guessed.
     let scrollAnimationFrame: number | null = null;
     const animateScrollTo = (targetTop: number, durationMs: number) => {
@@ -444,7 +444,7 @@ export const TabPlayerLab: React.FC = () => {
     };
 
     api.customScrollHandler = {
-      // Deliberate "jump to the cursor now" — used by our own
+      // Deliberate "jump to the cursor now", used by our own
       // api.scrollToCursor() calls below, always honored.
       forceScrollTo(currentBeatBounds) {
         scrollToBar(currentBeatBounds.barBounds.masterBarBounds.realBounds.y, 400);
@@ -452,7 +452,7 @@ export const TabPlayerLab: React.FC = () => {
       // Fires continuously as the beat cursor advances during playback.
       // Only act if the user isn't browsing, nothing's already animating
       // (never stack a new scroll on top of one still in flight), and the
-      // bar has actually drifted near the edge of the visible pane — checked
+      // bar has actually drifted near the edge of the visible pane, checked
       // at both its top and bottom edge, so a tall system (lots of
       // fingerings/annotations) triggers a follow as soon as either end
       // gets close, not only once its top edge does.
@@ -485,7 +485,7 @@ export const TabPlayerLab: React.FC = () => {
     // Highlights whichever note the hover tooltip is currently explaining.
     // Plain, imperatively-managed DOM (not React-rendered) since it lives
     // inside the same container alphaTab itself injects its cursor/selection
-    // overlays into — React never gets a say over that div's children.
+    // overlays into, React never gets a say over that div's children.
     const highlightEl = document.createElement('div');
     highlightEl.style.position = 'absolute';
     highlightEl.style.pointerEvents = 'none';
@@ -502,7 +502,7 @@ export const TabPlayerLab: React.FC = () => {
     viewport.appendChild(highlightEl);
     highlightElRef.current = highlightEl;
 
-    // Mic play-along's own grading box — same imperative overlay pattern as
+    // Mic play-along's own grading box, same imperative overlay pattern as
     // the hover-explanation box above, kept as a separate element (rather
     // than repurposing highlightEl) since the two are shown for unrelated
     // reasons and could otherwise legitimately need to be visible together.
@@ -524,7 +524,7 @@ export const TabPlayerLab: React.FC = () => {
     // maps a raw x/y position back to the beat rendered there. Coordinates
     // are relative to the unscrolled content's own origin, which sits inset
     // from the viewport's border-box (what getBoundingClientRect reports) by
-    // the viewport's own padding — that inset has to be subtracted back out,
+    // the viewport's own padding, that inset has to be subtracted back out,
     // or every hit-test lands a few pixels away from whatever was clicked.
     let hoverFrame: number | null = null;
     const updateHoverAt = (clientX: number, clientY: number) => {
@@ -583,7 +583,7 @@ export const TabPlayerLab: React.FC = () => {
     viewport.addEventListener('touchstart', handleTouchStart);
 
     // loadSoundFont() silently no-ops until the internal player exists,
-    // which isn't the case yet right after construction — so wait for the
+    // which isn't the case yet right after construction, so wait for the
     // base GM soundfont to actually finish loading before appending the
     // higher-quality guitar samples on top of it. Guard against re-firing
     // for our own appended font's completion.
@@ -597,7 +597,7 @@ export const TabPlayerLab: React.FC = () => {
     api.error.on((e) => {
       console.error('alphaTab error', e);
       // Soundfont load failures (e.g. missing guitar samples) surface here
-      // too — alphaTab funnels them into the same `error` event.
+      // too, alphaTab funnels them into the same `error` event.
       if (e instanceof FileLoadError && e.xhr.responseURL.includes('/instruments/')) {
         setGuitarSoundfontMissing(true);
       } else {
@@ -606,7 +606,7 @@ export const TabPlayerLab: React.FC = () => {
     });
     // alphaTab's default mouse interaction (on by default via
     // player.enableUserInteraction) already turns click-drag on the notation
-    // into a real api.playbackRange, and a plain click clears it — we just
+    // into a real api.playbackRange, and a plain click clears it, we just
     // track the same start/end beat identities ourselves to know the bar
     // numbers for our own display, and to auto-enable looping once a section
     // is actually selected (a drag, not a plain click-to-seek).
@@ -629,7 +629,7 @@ export const TabPlayerLab: React.FC = () => {
     });
 
     // Mic play-along grading: fires in real time, synced to actual audio
-    // playback, whenever the set of currently-sounding beats changes — the
+    // playback, whenever the set of currently-sounding beats changes, the
     // same signal that drives alphaTab's own cursor. See the design comment
     // above gradeTargetFromBeat for why this beats pre-computed tick windows.
     api.activeBeatsChanged.on((args) => {
@@ -646,7 +646,7 @@ export const TabPlayerLab: React.FC = () => {
 
       // Known limitation: a section loop of exactly one gradable note re-
       // triggers this same id on every lap, which reads identically to "the
-      // one ongoing note hasn't changed yet" — so only the first lap grades.
+      // one ongoing note hasn't changed yet", so only the first lap grades.
       // Looping two or more notes (the realistic case) is unaffected, since
       // the loop's own first beat always differs in id from its last.
       const openId = pendingTargetRef.current?.beat.id ?? null;
@@ -677,7 +677,7 @@ export const TabPlayerLab: React.FC = () => {
       if (timeReadoutRef.current) timeReadoutRef.current.textContent = '0:00 / 0:00';
 
       // A new score invalidates any in-flight grading window and starts a
-      // fresh scoreboard — stats from a previous piece shouldn't bleed in.
+      // fresh scoreboard, stats from a previous piece shouldn't bleed in.
       pendingTargetRef.current = null;
       pendingResolvedRef.current = false;
       // Likewise, a pending restore-seek from whatever was loaded before
@@ -691,7 +691,7 @@ export const TabPlayerLab: React.FC = () => {
       setRecentResults([]);
 
       // Every loaded tab defaults to the nylon classical tone regardless of
-      // what the file itself specifies — this player is for guitar practice —
+      // what the file itself specifies, this player is for guitar practice,
       // unless we're reopening a piece that had a different tone/tempo saved.
       const restore = pendingRestoreRef.current;
       const tone = restore?.guitarTone ?? DEFAULT_GUITAR_TONE;
@@ -704,7 +704,7 @@ export const TabPlayerLab: React.FC = () => {
 
       const pending = pendingImportRef.current;
       if (pending) {
-        // Freshly dropped/browsed file — save it into the library now that
+        // Freshly dropped/browsed file, save it into the library now that
         // the score's title/artist are known for nicer display.
         pendingImportRef.current = null;
         saveTabToLibrary(pending.fileName, pending.data, {
@@ -720,7 +720,7 @@ export const TabPlayerLab: React.FC = () => {
           refreshLibrary();
         }).catch(() => {});
       } else if (currentTabIdRef.current) {
-        // Reopened from the library — bump it to the top of the list.
+        // Reopened from the library, bump it to the top of the list.
         updateTabMeta(currentTabIdRef.current, { lastOpenedAt: Date.now() }).then(refreshLibrary).catch(() => {});
       }
     });
@@ -733,7 +733,7 @@ export const TabPlayerLab: React.FC = () => {
       if (playing && !userBrowsingRef.current) api.scrollToCursor();
       if (!playing) {
         persistCurrentTab();
-        // Every opened grading window must resolve exactly once — pausing
+        // Every opened grading window must resolve exactly once, pausing
         // or stopping mid-note closes it out as a miss rather than leaving
         // it dangling (which would otherwise either silently eat the next
         // window's open, or double-count if playback resumes later).
@@ -747,18 +747,18 @@ export const TabPlayerLab: React.FC = () => {
     api.playerReady.on(() => {
       setIsReady(true);
       // Resume where we left off, if this score was reopened from the
-      // library — but NOT by seeking right here. alphaTab's audio output
+      // library, but NOT by seeking right here. alphaTab's audio output
       // only finishes its first-activation warm-up (worker/worklet spin-up)
       // once a real play() actually kicks off; seeking before that first
-      // Play — which is what reopening a saved tab used to do immediately,
-      // right here in playerReady — races that warm-up and leaves the synth
+      // Play, which is what reopening a saved tab used to do immediately,
+      // right here in playerReady, races that warm-up and leaves the synth
       // silently wedged: the cursor/position tracks correctly from then on,
       // but no audio ever comes out, even though a seek made *during*
       // already-active playback (e.g. clicking a different note) works
       // fine. So instead we let the first Play start completely normally
       // from wherever the engine already sits, and seek to the saved
       // position once a couple of real position ticks have come in during
-      // that first playback (see playerPositionChanged below) — actual
+      // that first playback (see playerPositionChanged below), actual
       // proof the engine is warmed up and rendering, rather than just
       // trusting the Playing state flag, which can flip before the output
       // is genuinely ready.
@@ -813,7 +813,7 @@ export const TabPlayerLab: React.FC = () => {
   const loadFile = async (file: File) => {
     const buf = await file.arrayBuffer();
     // Re-dropping a file already in the library should resume its saved
-    // progress rather than reset it — check before scoreLoaded fires.
+    // progress rather than reset it, check before scoreLoaded fires.
     const existing = libraryEntries.find(e => e.id === tabIdForFileName(file.name));
     pendingImportRef.current = { fileName: file.name, data: buf };
     pendingRestoreRef.current = existing
@@ -954,7 +954,7 @@ export const TabPlayerLab: React.FC = () => {
           <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
         <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-          Drop a file, or click to browse
+          Drop a file here, or choose one
         </span>
       </label>
 
@@ -966,7 +966,7 @@ export const TabPlayerLab: React.FC = () => {
 
       {guitarSoundfontMissing && (
         <div style={{ padding: '0.85rem 1rem', borderRadius: '8px', background: 'rgba(255, 106, 42, 0.08)', border: '1px solid rgba(255, 106, 42, 0.3)', color: 'var(--warning)', fontSize: '0.85rem' }}>
-          The high-quality guitar samples didn't load, so playback will fall back to a generic synth sound.
+          Guitar samples didn't load. Using a basic synth.
           Run <code>npm run setup:soundfont</code> in the project to fetch them.
         </div>
       )}
@@ -1015,9 +1015,9 @@ export const TabPlayerLab: React.FC = () => {
                   className="btn"
                   onClick={clearSection}
                   style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem' }}
-                  title="Clear the selected section and loop the whole song instead"
+                  title="Loop the whole song"
                 >
-                  Clear Bars {sectionRange.startBar + 1}–{sectionRange.endBar + 1}
+                  Clear bars {sectionRange.startBar + 1}-{sectionRange.endBar + 1}
                 </button>
               )}
             </div>
@@ -1071,7 +1071,7 @@ export const TabPlayerLab: React.FC = () => {
               <button
                 className="btn"
                 onClick={() => setTooltipsEnabled(v => !v)}
-                title="Explanations that pop up when you hover a note's technique marking"
+                title="Explain technique markings on hover"
                 style={{
                   padding: '0.4rem 0.85rem', fontSize: '0.75rem', whiteSpace: 'nowrap',
                   borderColor: tooltipsEnabled ? 'var(--primary)' : undefined,
@@ -1119,7 +1119,7 @@ export const TabPlayerLab: React.FC = () => {
                 <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Mic Play-Along</div>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem', maxWidth: '480px', lineHeight: 1.5 }}>
                   Green when the mic hears the note, red when the cursor moves on first.
-                  Use headphones — otherwise it hears the backing track, not you.
+                  Use headphones so it hears you, not the backing track.
                 </p>
               </div>
               <button
@@ -1149,7 +1149,7 @@ export const TabPlayerLab: React.FC = () => {
                   <span style={{ color: 'var(--success)' }}>Hits: <strong>{gradeStats.hits}</strong></span>
                   <span style={{ color: 'var(--danger)' }}>Misses: <strong>{gradeStats.misses}</strong></span>
                   <span style={{ color: 'var(--text-secondary)' }}>
-                    Accuracy: <strong>{gradeAccuracyPct === null ? '—' : `${gradeAccuracyPct}%`}</strong>
+                    Accuracy: <strong>{gradeAccuracyPct === null ? '-' : `${gradeAccuracyPct}%`}</strong>
                   </span>
                   {currentTargetLabel && (
                     <span style={{ color: 'var(--text-muted)' }}>Now: <strong style={{ color: 'var(--warning)' }}>{currentTargetLabel}</strong></span>
@@ -1184,7 +1184,7 @@ export const TabPlayerLab: React.FC = () => {
       )}
 
       {/* alphaTab's playback cursor divs (.at-cursor-bar/.at-cursor-beat) are
-          injected into the DOM with no default styling at all — invisible
+          injected into the DOM with no default styling at all, invisible
           until given a color, same story as the notation background. */}
       <style>{`
         .at-cursor-bar { background: rgba(255, 106, 42, 0.12); }
@@ -1208,12 +1208,12 @@ export const TabPlayerLab: React.FC = () => {
       />
 
       {/* Floating explanation for whatever technique marking is under the
-          cursor right now — same visual language as the <Term> tooltips
+          cursor right now, same visual language as the <Term> tooltips
           above, just following the mouse instead of being pinned to static
           text, since alphaTab renders the notation itself (not our JSX).
           Portaled straight to <body>: the panel this section lives in uses
           backdrop-filter, which (per spec) makes it the containing block for
-          any position:fixed descendant — without the portal, "fixed" ends up
+          any position:fixed descendant, without the portal, "fixed" ends up
           anchored to the panel's own box instead of the real viewport. */}
       {tooltipsEnabled && hoverInfo && createPortal(
         <div

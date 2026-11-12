@@ -1,5 +1,5 @@
 // The song library, the practice log, and the challenge that ties them
-// together. This is the whole domain: no React, no DOM, no formatting — so the
+// together. This is the whole domain: no React, no DOM, no formatting, so the
 // same store can back a different screen later, or sync to something remote,
 // without any of that leaking in here.
 //
@@ -15,8 +15,8 @@
 // disagree the first time a song is moved to another day. The song's `day` is
 // the single authority; `assignmentsFor` below derives the index on demand.
 //
-// The other is practice minutes. A song carries `practiceMinutes` — the total
-// that came in from the tracker before sessions existed — and sessions add to
+// The other is practice minutes. A song carries `practiceMinutes`, the total
+// that came in from the tracker before sessions existed, and sessions add to
 // it. Nothing ever folds a session back into that number, so the two can be
 // summed without double counting, and an imported total is never mistaken for
 // a session that was actually logged.
@@ -71,7 +71,7 @@ export interface SongChartRecord {
    * A sheet found online is written at sounding pitch; someone playing with a
    * capo on frets different shapes. Setting this to minus the capo shows the
    * shapes the hands are actually making, which is what the diagrams have to
-   * agree with. The stored words are never rewritten — this is a lens.
+   * agree with. The stored words are never rewritten, this is a lens.
    */
   transpose: number;
   /** Charts written before the structure existed. Migrated on load, then dropped. */
@@ -107,7 +107,7 @@ export interface PracticeSession {
   songId: string;
   date: string;          // ISO yyyy-mm-dd, local
   startedAt: number;     // epoch ms
-  sessionNumber: number; // per song, 1-based — the practice log's "Session #"
+  sessionNumber: number; // per song, 1-based, the practice log's "Session #"
   minutes: number;
   chordsNote: string;
   strummingNote: string;
@@ -132,7 +132,7 @@ const SEEDED_SETTING = 'seeded-september';
 interface Setting { id: string; value: unknown }
 
 // ---------------------------------------------------------------------------
-// Dates. Everything is local — a practice session belongs to the day you were
+// Dates. Everything is local, a practice session belongs to the day you were
 // sitting in, not to whatever UTC thought at the time.
 // ---------------------------------------------------------------------------
 
@@ -182,7 +182,7 @@ const newId = (): string => {
 
 /**
  * Charts written when the store held text are read into lines the first time
- * they are loaded, here rather than at every read — one conversion, and after
+ * they are loaded, here rather than at every read, one conversion, and after
  * it nothing downstream has to know two shapes.
  */
 function migrateChart(chart: SongChartRecord | null | undefined): SongChartRecord | null {
@@ -192,6 +192,8 @@ function migrateChart(chart: SongChartRecord | null | undefined): SongChartRecor
   if (!source) return chart;
   return { ...rest, lines: linesFromText(source, chart.beatsPerBar ?? 4) };
 }
+
+const EXCEL_MIGRATION_SETTING = 'seeded-excel-songs-v2';
 
 export function initLibrary(): Promise<void> {
   if (readyPromise) return readyPromise;
@@ -211,15 +213,20 @@ export function initLibrary(): Promise<void> {
     sessions = loadedSessions;
     challenge = null;
 
-    // Bring in all 36 songs from the Excel workbook with full chord chart lines
-    const EXCEL_MIGRATION_SETTING = 'seeded-excel-songs-v2';
+    // The 36-song workbook import. It used to be written into every install
+    // on first launch, which handed every new user somebody else's library;
+    // now a fresh install starts empty and onboarding offers the songs as a
+    // sample (loadSampleLibrary). An install that already holds songs from
+    // before the v2 import is still upgraded to it, as it always was.
     const excelMigrated = settings.find(s => s.id === EXCEL_MIGRATION_SETTING);
     if (!excelMigrated) {
-      await clearStore('challenges');
-      challenge = null;
-      songs = INITIAL_SONGS.map(song => ({ ...song, chart: migrateChart(song.chart) }));
-      await clearStore('songs');
-      await putRecords('songs', songs);
+      if (loadedSongs.length > 0) {
+        await clearStore('challenges');
+        challenge = null;
+        songs = INITIAL_SONGS.map(song => ({ ...song, chart: migrateChart(song.chart) }));
+        await clearStore('songs');
+        await putRecords('songs', songs);
+      }
       await putRecords('settings', [{ id: EXCEL_MIGRATION_SETTING, value: true }]);
     }
     ready = true;
@@ -233,6 +240,15 @@ export function initLibrary(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export const getSongs = (): Song[] => songs;
+
+/** Load the sample library (the workbook's 36 songs) into an empty one. */
+export async function loadSampleLibrary(): Promise<void> {
+  await initLibrary();
+  if (songs.length > 0) return;
+  songs = INITIAL_SONGS.map(song => ({ ...song, chart: migrateChart(song.chart) }));
+  await putRecords('songs', songs);
+  announce();
+}
 export const getSessions = (): PracticeSession[] => sessions;
 export const getChallenge = (): Challenge | null => challenge;
 export const getSong = (id: string): Song | undefined => songs.find(s => s.id === id);
@@ -252,7 +268,7 @@ export const minutesOn = (songId: string, date: string): number =>
 /**
  * day → song, derived rather than stored. See the note at the top of the file.
  *
- * Two songs can end up claiming the same day — nothing stops a day being typed
+ * Two songs can end up claiming the same day, nothing stops a day being typed
  * twice. First one wins, and `songForDay` resolves the same way, because the
  * two used to disagree: the calendar showed the later song while everything
  * else worked with the earlier one.
@@ -322,7 +338,7 @@ export interface LedgerEntry {
  * The tracker's per-song totals are dated to the day that song was worked on,
  * because that is what the column meant. Without them "this week" would read
  * zero next to a song that plainly says 60 minutes, which is worse than
- * approximate — it looks broken.
+ * approximate, it looks broken.
  */
 export function practiceLedger(): LedgerEntry[] {
   const out: LedgerEntry[] = [];
@@ -361,7 +377,7 @@ export function practiceStats(): PracticeStats {
 
   const practisedDays = new Set(ledger.filter(e => e.minutes > 0).map(e => e.date));
 
-  // A streak survives today being blank until the day is out — otherwise every
+  // A streak survives today being blank until the day is out, otherwise every
   // morning would report the run broken before you have had a chance to play.
   let streakDays = 0;
   let cursor = practisedDays.has(now) ? 0 : 1;
@@ -399,7 +415,7 @@ export function shiftIso(iso: string, days: number): string {
 /**
  * The song you last actually played, by anything the ledger knows about.
  *
- * `exclude` skips one song rather than giving up on it — Home uses this to
+ * `exclude` skips one song rather than giving up on it, Home uses this to
  * avoid repeating the song already at the top of the page, and returning null
  * there made the card claim nothing had been played on a day something had.
  */
@@ -507,7 +523,7 @@ export async function logSession(input: SessionInput): Promise<PracticeSession> 
     songId: input.songId,
     date: isoDate(new Date(startedAt)),
     startedAt,
-    // Next after the highest, not "how many there are" — deleting the middle
+    // Next after the highest, not "how many there are", deleting the middle
     // session used to hand the next one a number that already existed.
     sessionNumber: sessions
       .filter(s => s.songId === input.songId)
@@ -632,8 +648,8 @@ export async function importLibrary(raw: string): Promise<ImportResult> {
 /**
  * Every song and every session gone, and the seed does not return.
  *
- * The challenge itself stays. It is the frame rather than the contents — a
- * month with dates on it — and nothing in the app can create one, so throwing
+ * The challenge itself stays. It is the frame rather than the contents, a
+ * month with dates on it, and nothing in the app can create one, so throwing
  * it away would leave someone with a library that has no calendar and no way
  * to get one back.
  *

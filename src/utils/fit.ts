@@ -7,7 +7,7 @@
 // three, and the record still plays along with you.
 //
 // So this only ever proposes capo positions. Transposing without one is the
-// other half of the idea and a different promise — it moves the song into
+// other half of the idea and a different promise, it moves the song into
 // another key, which is right when the trouble is your voice and wrong when
 // you are playing along with a recording. Everything here keeps the pitch and
 // changes the grip, because that is the case where the app can be certain it
@@ -19,8 +19,8 @@
 // which is why the cost is ordered walls first and everything else after.
 //
 // One thing worth being careful about, because getting it wrong would give
-// confident wrong answers. Everything here works in *shapes* — what the hand
-// is doing — and never in absolute pitch. The two are not interchangeable in
+// confident wrong answers. Everything here works in *shapes*, what the hand
+// is doing, and never in absolute pitch. The two are not interchangeable in
 // this library: a chart is written at sounding pitch and read through a lens,
 // while the tracker's own chord line records the grips at whatever capo the
 // song already has ("Sitaare, B flat minor, capo 1, A min → F maj"). Those
@@ -28,7 +28,7 @@
 //
 // Working in shapes needs neither of them to be true in absolute terms. Moving
 // the capo from where it is to fret N shifts every grip by exactly the
-// difference, because the pitch is being held still — so all this needs is the
+// difference, because the pitch is being held still, so all this needs is the
 // grips you are making now, which is the one thing both sources genuinely
 // agree they are describing.
 
@@ -77,8 +77,8 @@ export const MAX_CAPO = 7;
 /**
  * Every grip the song asks for as it stands, with how often.
  *
- * The chart is the better source when there is one — it knows a chorus chord
- * is played nine times and the one in the bridge once — and the chord line
+ * The chart is the better source when there is one, it knows a chorus chord
+ * is played nine times and the one in the bridge once, and the chord line
  * from the tracker stands in when there is not. The chart is read through its
  * own lens, because that is by definition what it is showing you to play.
  */
@@ -106,7 +106,7 @@ export function songChordUses(song: Song): ChordUse[] {
 /** How this song would sit under the hands with the capo at one position. */
 export function fitAt(uses: ChordUse[], capo: number, currentCapo: number): FitOption {
   // Up the neck with the capo, down go the shapes, and the song stays where it
-  // was. The difference is all that matters — never the absolute position.
+  // was. The difference is all that matters, never the absolute position.
   const shift = currentCapo - capo;
   const chords: FitChord[] = uses.map(use => {
     const to = transposeSymbol(use.symbol, shift);
@@ -119,7 +119,7 @@ export function fitAt(uses: ChordUse[], capo: number, currentCapo: number): FitO
   const current = capo === currentCapo;
 
   // Ordered, not weighted: a wall beats any amount of tidiness below it, and a
-  // shaky chord beats any capo position. The last two terms only break ties —
+  // shaky chord beats any capo position. The last two terms only break ties,
   // the lower capo, and the setting the song already has, so a song that is
   // already right does not get told to move. They order equal options; they
   // never make one option better than another. See `better` below.
@@ -158,7 +158,7 @@ export function fitOptions(uses: ChordUse[], currentCapo: number | null): FitOpt
  * Only the chords count. The cost used to order the table also carries a mild
  * preference for a low capo, and comparing two costs let that preference alone
  * argue for a move: a song at capo 4 with nothing playable anywhere was told
- * to go to capo 0, which changed every grip and helped with none of them — the
+ * to go to capo 0, which changed every grip and helped with none of them, the
  * suggestion said so itself, in the same sentence. A tie-break may order equal
  * options. It may never make one of them better.
  */
@@ -184,7 +184,7 @@ export function fitSong(song: Song): FitVerdict | null {
   const now = options.find(o => o.capo === currentCapo) ?? options[0];
   const candidate = options[0];
   const improves = candidate.capo !== now.capo && better(candidate, now);
-  // With nothing to move to, where you already are is the answer — so the
+  // With nothing to move to, where you already are is the answer, so the
   // highlighted row, the chords to learn and the offer all talk about the capo
   // the song actually has rather than an arbitrary one that ranked first.
   const best = improves ? candidate : now;
@@ -195,7 +195,7 @@ export function fitSong(song: Song): FitVerdict | null {
  * The part of a position this app is entitled to describe.
  *
  * `missing` above files a chord nobody has rated under "not in your hands",
- * which is the right call for ordering positions — an unknown may well turn
+ * which is the right call for ordering positions, an unknown may well turn
  * out to be a wall, and a ranking that assumed otherwise would recommend a
  * capo on no evidence. It is the wrong thing to read back to someone, though:
  * counted that way, a chord book nobody has opened turns into four chords of

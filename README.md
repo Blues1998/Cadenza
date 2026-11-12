@@ -41,6 +41,22 @@ base General MIDI soundfont's piano programs. The file is too large to commit,
 so it is gitignored and this script recreates it on a fresh clone. Everything
 except realistic Tab Player tones works without it.
 
+## Android app
+
+The Android app wraps the same build with [Capacitor](https://capacitorjs.com). The site is bundled into the app, so it works offline. The native project is in `android/`.
+
+```bash
+npm run build:android   # builds with base "/" and copies it into android/
+npm run android:open    # opens the project in Android Studio
+```
+
+Android Studio provides the Java runtime and Gradle it needs. To make a Play Store upload, use **Build → Generate Signed App Bundle** (an `.aab` file). Keep the upload keystore outside the repo and back it up. `*.jks`, `*.keystore` and `keystore.properties` are git-ignored.
+
+- **App ID:** `io.github.blues1998.cadenza`. It can't be changed once the app is published.
+- **Icons and splash screen:** generated from the images in `assets/` with `npx capacitor-assets generate --android`.
+- **Microphone:** `RECORD_AUDIO` is declared in the manifest. Android asks for it the first time the tuner listens.
+- **Account deletion:** Google Play requires it. It uses the `delete_my_account` database function in `supabase/migrations/`, which has to be run once in the Supabase SQL editor. The web link for it is `https://blues1998.github.io/Cadenza/?account`.
+
 ## Where things are
 
 ```
@@ -48,7 +64,7 @@ public/          served as-is at the site root
   brand/         the app icon, at the sizes browsers and phones ask for
   img/           images the app loads at runtime
   font/          \
-  soundfont/      | fetched at dev/build time, gitignored — see setup:soundfont
+  soundfont/      | fetched at dev/build time, gitignored, see setup:soundfont
   instruments/   /
 src/             the app
 design/          full-size sources for everything in public/, never shipped
@@ -58,7 +74,7 @@ reference/       local working material, gitignored (Guitar Pro tab files)
 Code reaches anything under `public/` through `assetUrl()`, which prefixes
 Vite's `BASE_URL`: the site is served from `/Cadenza/` on Pages and from `/`
 in dev, so a bare absolute path would work in exactly one of those. The links
-in `index.html` are the exception — Vite rewrites those itself at build time.
+in `index.html` are the exception, Vite rewrites those itself at build time.
 
 ## Built with
 

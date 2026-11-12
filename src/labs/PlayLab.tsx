@@ -16,7 +16,7 @@ import { IconCheck } from '../components/Icons';
 // ---- Challenge tuning constants ----
 const CONFIRM_MS = 350;  // how long the correct note must be held to count
 const SLIP_MS = 550;     // how long a stable wrong note counts as a real miss
-const CENTS_TOL = 45;    // generous — this game grades WHICH note, not intonation
+const CENTS_TOL = 45;    // generous, this game grades WHICH note, not intonation
 
 const NOTE_POINTS = 10;
 const ROUND_BONUS = 20;
@@ -97,7 +97,7 @@ export const PlayLab: React.FC = () => {
   const armedRef = useRef<boolean>(true);
   const eventPcRef = useRef<number | null>(null);
   const nextRoundTimer = useRef<number | null>(null);
-  // While the app itself is playing sound, ignore the mic — otherwise speaker
+  // While the app itself is playing sound, ignore the mic, otherwise speaker
   // bleed from reference/reward notes could self-confirm the challenge
   const muteUntilRef = useRef<number>(0);
 
@@ -111,7 +111,7 @@ export const PlayLab: React.FC = () => {
         targets,
         chipLabels: targets.map(pc => NOTE_NAMES[pc]),
         promptTitle: `Climb the ${NOTE_NAMES[rootPc]} ${scale.name} scale`,
-        promptDetail: `${SCALE_FEELINGS[scale.name]?.feeling ?? ''} — play each note in order, one at a time, in any octave. Amber on the fretboard = play this now.`,
+        promptDetail: `${SCALE_FEELINGS[scale.name]?.feeling ?? ''}. Play each note in order, any octave. Amber = play this now.`,
         contextPcs: targets,
         referenceMidis: refMidis,
         rewardMidis: refMidis,
@@ -130,7 +130,7 @@ export const PlayLab: React.FC = () => {
         targets,
         chipLabels: targets.map((pc, i) => `${NOTE_NAMES[pc]} · ${ordinal(i)}`),
         promptTitle: `Build ${NOTE_NAMES[rootPc]} ${quality.name} (${feeling})`,
-        promptDetail: `A chord is just its notes stacked up. Play them one at a time — root first, then upward. Any octave counts.`,
+        promptDetail: `Play the chord's notes one at a time, root first. Any octave.`,
         contextPcs: targets,
         referenceMidis: refMidis,
         rewardMidis: refMidis,
@@ -161,7 +161,7 @@ export const PlayLab: React.FC = () => {
   // `sound` is what separates a round you are about to play from one that is
   // only on screen. The interval hunt opens by playing its reference note,
   // which is right when you asked for a round and startling when the page has
-  // merely finished loading — so the preview built before the mic is on is
+  // merely finished loading, so the preview built before the mic is on is
   // built silently, and turning the mic on deals a fresh one that speaks.
   const startNewRound = useCallback((sound = true) => {
     const r = makeRound();
@@ -258,7 +258,7 @@ export const PlayLab: React.FC = () => {
     const elapsed = lastTickRef.current === 0 ? 16 : Math.min(100, now - lastTickRef.current);
     lastTickRef.current = now;
 
-    // App audio is (or was just) playing — don't grade speaker bleed
+    // App audio is (or was just) playing, don't grade speaker bleed
     if (now < muteUntilRef.current) return;
 
     const targetPc = round.targets[progressIdx];
@@ -301,7 +301,7 @@ export const PlayLab: React.FC = () => {
           setProgressIdx(nextIdx);
           setFeedback({
             type: 'ok',
-            text: `${NOTE_NAMES[targetPc]} ✓ — next: ${NOTE_NAMES[round.targets[nextIdx]]}`
+            text: `${NOTE_NAMES[targetPc]} ✓ Next: ${NOTE_NAMES[round.targets[nextIdx]]}`
           });
         }
       }
@@ -325,7 +325,7 @@ export const PlayLab: React.FC = () => {
           setStreak(0);
           setFeedback({
             type: 'slip',
-            text: `Heard ${NOTE_NAMES[heardPc]} — the target is ${NOTE_NAMES[targetPc]}. Streak reset, keep going!`
+            text: `Heard ${NOTE_NAMES[heardPc]}, wanted ${NOTE_NAMES[targetPc]}. Streak reset.`
           });
         }
       }
@@ -345,7 +345,7 @@ export const PlayLab: React.FC = () => {
     setRevealed(true);
     setStreak(0);
     if (round) {
-      setFeedback({ type: 'info', text: `It's ${NOTE_NAMES[round.targets[progressIdx]]} — shown in amber below. Play it to continue.` });
+      setFeedback({ type: 'info', text: `It's ${NOTE_NAMES[round.targets[progressIdx]]}, shown in amber.` });
     }
   };
 
@@ -375,7 +375,7 @@ export const PlayLab: React.FC = () => {
           This used to be a permission prompt and nothing else: a microphone
           icon, one sentence, a button, and not a single clue what the app was
           about to do with the answer. The tuner had the same problem and the
-          fix there works here too — show the thing, greyed where it depends on
+          fix there works here too, show the thing, greyed where it depends on
           a signal and live where it does not. A round is already dealt, the
           reference note still plays, the fretboard still explains its colours,
           and the ask sits in the row it will later hand back to the score. */}
@@ -493,7 +493,7 @@ export const PlayLab: React.FC = () => {
                     style={{ width: 'auto', padding: '0.3rem 1.7rem 0.3rem 0.5rem', fontSize: '0.78rem' }}
                   >
                     {SCALE_FORMULAS.map((s, i) => (
-                      <option key={s.name} value={i}>{SCALE_FEELINGS[s.name]?.feeling ?? s.name} — {s.name}</option>
+                      <option key={s.name} value={i}>{SCALE_FEELINGS[s.name]?.feeling ?? s.name} ({s.name})</option>
                     ))}
                   </select>
                 </label>
@@ -543,7 +543,7 @@ export const PlayLab: React.FC = () => {
           <p style={{ textAlign: 'center', fontSize: '0.85rem', color: isActive ? feedbackColor : 'var(--text-muted)', minHeight: '2.4em', lineHeight: 1.4 }}>
             {isActive
               ? feedback.text
-              : 'These are answered by playing. Nothing is recorded or sent anywhere — the pitch is read in the browser and thrown away frame by frame.'}
+              : 'Answer by playing. Nothing is recorded or uploaded.'}
           </p>
 
           {!isActive && (

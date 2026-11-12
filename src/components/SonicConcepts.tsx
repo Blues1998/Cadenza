@@ -147,13 +147,12 @@ export const SonicConcepts: React.FC = () => {
     <section className="sonic-concepts-container">
       <div className="sonic-header">
         <div className="sonic-header-title">
-          <span className="sonic-header-icon" aria-hidden="true">⚡</span>
           <div>
             <h3 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', margin: 0 }}>
               Sonic Explorations
             </h3>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
-              Sound-first physical experiments. Tap and listen to discover why music works.
+              Tap and listen.
             </p>
           </div>
         </div>
@@ -167,7 +166,7 @@ export const SonicConcepts: React.FC = () => {
             <h4>Harmonics &amp; Overtones</h4>
           </div>
           <p className="sonic-card-desc">
-            A plucked string is not one pitch — it vibrates in halves, thirds, and fifths simultaneously!
+            A plucked string isn't one pitch. It vibrates in halves, thirds and fifths at once.
           </p>
 
           <div className="harmonics-pill-list">
@@ -193,7 +192,7 @@ export const SonicConcepts: React.FC = () => {
             className="btn sonic-action-btn"
             onClick={playHarmonicsChord}
           >
-            <span>✨ Ring All Harmonics Together</span>
+            <span>Ring all harmonics together</span>
           </button>
         </div>
 
@@ -213,7 +212,6 @@ export const SonicConcepts: React.FC = () => {
               className={`mood-button is-sun${mood === 'major' ? ' is-active' : ''}`}
               onClick={() => playMoodChord('major')}
             >
-              <span className="mood-glyph">☀️</span>
               <span className="mood-title">MAJOR</span>
               <span className="mood-notes">C · <strong>E</strong> · G</span>
               <span className="mood-sub">Bright &amp; Hopeful</span>
@@ -224,7 +222,6 @@ export const SonicConcepts: React.FC = () => {
               className={`mood-button is-moon${mood === 'minor' ? ' is-active' : ''}`}
               onClick={() => playMoodChord('minor')}
             >
-              <span className="mood-glyph">🌙</span>
               <span className="mood-title">MINOR</span>
               <span className="mood-notes">C · <strong style={{ color: '#818cf8' }}>E♭</strong> · G</span>
               <span className="mood-sub">Reflective &amp; Sad</span>
@@ -239,7 +236,7 @@ export const SonicConcepts: React.FC = () => {
             <h4>Tension &amp; Release</h4>
           </div>
           <p className="sonic-card-desc">
-            The heartbeat of music: chords create electric tension that aches to resolve home.
+            Some chords create tension that pulls back home.
           </p>
 
           <div className="tension-interaction-box">
@@ -253,19 +250,16 @@ export const SonicConcepts: React.FC = () => {
             >
               {isTense ? (
                 <div className="tension-state">
-                  <span className="tension-icon is-wobbling">⚡</span>
                   <span className="tension-text">UNSTABLE (G7 Tritone Tension)</span>
                   <span className="tension-sub">Release mouse/finger to resolve!</span>
                 </div>
               ) : tensionResolved ? (
                 <div className="tension-state is-peaceful">
-                  <span className="tension-icon">🌱</span>
                   <span className="tension-text">RESOLVED (C Major Home)</span>
                   <span className="tension-sub">The tension rests in peace.</span>
                 </div>
               ) : (
                 <div className="tension-state">
-                  <span className="tension-icon">🧲</span>
                   <span className="tension-text">HOLD FOR TENSION</span>
                   <span className="tension-sub">Press &amp; hold, then release to hear resolution</span>
                 </div>
@@ -323,7 +317,6 @@ export const SonicConcepts: React.FC = () => {
               className={`groove-btn${playingGroove === 'straight' ? ' is-active' : ''}`}
               onClick={() => playGrooveSample('straight')}
             >
-              <span className="groove-icon">🤖</span>
               <span className="groove-name">Straight 8ths</span>
               <span className="groove-sub">Even 50/50 clockwork</span>
             </button>
@@ -333,7 +326,6 @@ export const SonicConcepts: React.FC = () => {
               className={`groove-btn${playingGroove === 'swing' ? ' is-active' : ''}`}
               onClick={() => playGrooveSample('swing')}
             >
-              <span className="groove-icon">🎷</span>
               <span className="groove-name">Blues Swing</span>
               <span className="groove-sub">67/33 heart-pulse shuffle</span>
             </button>
@@ -347,7 +339,7 @@ export const SonicConcepts: React.FC = () => {
             <h4>Acoustic Touch: Open vs Mute</h4>
           </div>
           <p className="sonic-card-desc">
-            Guitar rhythm relies on the friction of palm muting to build percussive drive.
+            Palm muting makes strumming percussive.
           </p>
 
           <div className="touch-buttons-row">
@@ -356,7 +348,6 @@ export const SonicConcepts: React.FC = () => {
               className={`touch-btn is-open-touch${touchState === 'open' ? ' is-active' : ''}`}
               onClick={() => playTouch('open')}
             >
-              <span className="touch-icon">🎸</span>
               <span className="touch-title">Open Ring</span>
               <span className="touch-sub">Strings ring uninhibited</span>
             </button>
@@ -366,7 +357,6 @@ export const SonicConcepts: React.FC = () => {
               className={`touch-btn is-muted-touch${touchState === 'muted' ? ' is-active' : ''}`}
               onClick={() => playTouch('muted')}
             >
-              <span className="touch-icon">✋</span>
               <span className="touch-title">Palm Mute (Chuck)</span>
               <span className="touch-sub">Damped percussive attack</span>
             </button>

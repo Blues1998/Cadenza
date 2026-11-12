@@ -21,7 +21,7 @@ interface SegmentedProps<T> {
 // One choice out of a few, as a single control rather than a row of buttons
 // that each look like an independent action. Labs used to hand-roll these as
 // `btn`/`btn-primary` pairs, which read as two things you could press instead
-// of two states of one setting — and every lab sized them slightly differently.
+// of two states of one setting, and every lab sized them slightly differently.
 //
 // The selection is one element that slides between options rather than a
 // background switching off here and on there. This is the most-pressed control

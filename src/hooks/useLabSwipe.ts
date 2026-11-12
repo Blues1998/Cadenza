@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { GROUPS } from '../components/navGroups';
+import { PRACTICE_GROUPS } from '../components/navGroups';
 import type { ActiveTab } from '../components/navGroups';
 
 const MOBILE_MAX = 900;      // matches the shell's breakpoint
@@ -9,7 +9,8 @@ const DOMINANCE = 1.8;       // how much more horizontal than vertical it must b
 
 // Where a lab sits in the rail: which group, and where within it.
 function neighbour(current: ActiveTab, direction: 1 | -1): ActiveTab | null {
-  const group = GROUPS.find(g => g.items.some(i => i.id === current));
+  // Only between Practice's own screens: the main tabs are tapped, not swiped.
+  const group = PRACTICE_GROUPS.find(g => g.items.some(i => i.id === current));
   if (!group) return null;
   const index = group.items.findIndex(i => i.id === current);
   const next = group.items[index + direction];
@@ -34,8 +35,8 @@ export function useLabSwipe(activeTab: ActiveTab, setActiveTab: (tab: ActiveTab)
       if (e.touches.length !== 1) { armed = false; return; }
       const touch = e.touches[0];
 
-      // A swipe that begins on something scrollable sideways — the neck of the
-      // guitar, a toolbar, the tab score — belongs to that thing, not to us.
+      // A swipe that begins on something scrollable sideways, the neck of the
+      // guitar, a toolbar, the tab score, belongs to that thing, not to us.
       let node = e.target as HTMLElement | null;
       while (node && node !== document.body) {
         const overflowX = getComputedStyle(node).overflowX;

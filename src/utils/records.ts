@@ -2,7 +2,7 @@
 //
 // Everything else the app counts is a position: 2 of 10 chords marked, 0 of 15
 // journey steps, 860 minutes logged. A position tells you where you stand and
-// never that you moved, which is the one thing practice is for — so this is
+// never that you moved, which is the one thing practice is for, so this is
 // the other kind of number, and it is the only one in the app that can go up.
 //
 // Keyed by the loop's signature, which is the chords and the metre and
@@ -11,7 +11,7 @@
 // faster. See loopSignature in loopbook, which is the same key the recent
 // shelf dedupes by.
 //
-// Banked rather than measured. Quick play has no ear — it is playing the
+// Banked rather than measured. Quick play has no ear, it is playing the
 // chords to you, so a "record" it set by itself would only prove that the
 // slider can be dragged. The run's numbers are measured and shown whatever
 // happens; it becomes a record when you say it held together, which is a fact
@@ -21,7 +21,7 @@
 import { STORE_CHANGE_EVENT, clearStore, putRecords, readAll } from './db';
 
 export interface LoopRecord {
-  /** The loop's signature. Chords and metre — see loopSignature. */
+  /** The loop's signature. Chords and metre, see loopSignature. */
   id: string;
   /** Kept so a record can name the loop it belongs to without one to hand. */
   chords: [string, number][];
@@ -74,7 +74,7 @@ export interface Banked {
    * Whether this run set the best.
    *
    * Not derivable from `gained`, which is 0 for the very first run banked on a
-   * loop — there was no old number for it to be faster than, and that run is
+   * loop, there was no old number for it to be faster than, and that run is
    * still the record.
    */
   isBest: boolean;
@@ -89,7 +89,7 @@ export interface Banked {
 /**
  * Keeps a run.
  *
- * A run slower than the record still counts as a run — playing it clean again
+ * A run slower than the record still counts as a run, playing it clean again
  * is the practice, and a counter that only moved on records would sit still
  * through most of a week's work. What it does not do is lower the best:
  * `previous` is only rewritten when there is actually a new number to have

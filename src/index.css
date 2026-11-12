@@ -2,7 +2,7 @@
   /* Three faces, three jobs. Space Grotesk has enough character to carry a
      title and too much to read a paragraph in; Geist is the neutral that
      everything else is set in; JetBrains Mono is reserved for musical
-     readouts — "A minor · 7th fret · 92 BPM" — where the figures should line
+     readouts, "A minor · 7th fret · 92 BPM", where the figures should line
      up and read as instrument data rather than prose. */
   --font-display: 'Space Grotesk', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-ui: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -35,11 +35,11 @@ h1, h2, h3, h4, .lab-title {
    Everything theme-dependent is a custom property so components never branch
    on light/dark directly. --surface-tint-rgb is the one non-obvious token:
    it's the "elevation" tint used everywhere as rgba(var(--surface-tint-rgb), X)
-   — white-on-black in the dark theme, near-black-on-parchment in the light
-   theme — so every existing translucent card/border/divider inverts for free
+  white-on-black in the dark theme, near-black-on-parchment in the light
+   theme, so every existing translucent card/border/divider inverts for free
    without needing a distinct named token per opacity level.
    Instrument/canvas surfaces (fretboard wood & metal, piano keys, and the
-   waveform/timing-graph/tab-notation canvases) are intentionally exempt —
+   waveform/timing-graph/tab-notation canvases) are intentionally exempt,
    they keep their own literal dark colors in both themes, like a mixing
    console's meter bridge. */
 :root[data-theme='dark'] {
@@ -76,7 +76,7 @@ h1, h2, h3, h4, .lab-title {
     0 16px 36px -14px rgba(0, 0, 0, 0.7);
 
   /* Orange is rationed. It marks the live thing and the one action a screen
-     wants from you — a sounding note, the root of a scale, the primary
+     wants from you, a sounding note, the root of a scale, the primary
      button, the lab you are in. Selection states are tonal, which is what
      keeps the accent meaning anything at all. */
   --primary: #FF6A2A;
@@ -95,12 +95,12 @@ h1, h2, h3, h4, .lab-title {
 
   /* Notes on an instrument, as a heat ramp: a scale tone is a faint ember,
      the root burns, and whatever is sounding right now flashes white-hot.
-     This is where the colour budget goes — the instruments carry the richness
+     This is where the colour budget goes, the instruments carry the richness
      so the chrome does not have to. */
   --note-scale: #C08560;
   --note-scale-deep: #8E5A38;
   /* A major scale colours seven of twelve piano keys, so the full ember is
-     too much across that much surface — the large key faces get a wash and
+     too much across that much surface, the large key faces get a wash and
      the small fretboard dots keep the saturated version. */
   --note-scale-wash: #D8BCA8;
   --note-scale-wash-deep: #A9846A;
@@ -160,8 +160,8 @@ h1, h2, h3, h4, .lab-title {
     0 2px 5px rgba(23, 24, 26, 0.08),
     0 16px 36px -16px rgba(23, 24, 26, 0.22);
 
-  /* The accent darkens on paper. #FF6A2A over white is a 2.5:1 contrast —
-     fine as a fill, unreadable as text — so the light theme uses a deeper
+  /* The accent darkens on paper. #FF6A2A over white is a 2.5:1 contrast,
+     fine as a fill, unreadable as text, so the light theme uses a deeper
      burn that still reads as the same orange. */
   --primary: #D9480F;
   --primary-glow: rgba(217, 72, 15, 0.14);
@@ -253,7 +253,7 @@ body {
    A panel is a slab raised off the page, not a rectangle with a line drawn
    round it. Three things do the work: a surface a shade lighter than the
    ground, a one-pixel top highlight where the light would catch the edge, and
-   a soft shadow underneath. No border — an outline is what made these read as
+   a soft shadow underneath. No border, an outline is what made these read as
    cards. */
 .glass-panel {
   background: var(--elevated-bg);
@@ -323,7 +323,7 @@ body {
   color: var(--text-on-primary);
 }
 
-/* Not a second accent — a firmer neutral than .btn, still no colour. */
+/* Not a second accent, a firmer neutral than .btn, still no colour. */
 .btn-secondary {
   background: var(--surface-3);
   color: var(--text-primary);
@@ -336,7 +336,7 @@ body {
   border-color: var(--panel-border-hover);
 }
 
-/* Shared form chrome — <select>/<input> fields across the labs, themed as a
+/* Shared form chrome, <select>/<input> fields across the labs, themed as a
    single surface rather than each file hardcoding its own dark colors */
 
 
@@ -388,7 +388,7 @@ body {
    Nothing in the app drew a focus ring: .btn and friends set their own
    backgrounds and borders, which suppressed the UA default, so tabbing
    through a lab moved an invisible cursor. :focus-visible keeps this off the
-   mouse path — a clicked button does not sprout a ring. */
+   mouse path, a clicked button does not sprout a ring. */
 :where(a, button, select, input, textarea, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
@@ -435,7 +435,7 @@ body {
 /* ===== Motion =====
    Anchored scrolling glides rather than jumping, and everything that moves
    stops moving for anyone who has asked their system for less of it. The
-   animations are decorative — a pulsing glow, hover lifts, panel fades — so
+   animations are decorative, a pulsing glow, hover lifts, panel fades, so
    they are removed outright rather than merely shortened. */
 html {
   scroll-behavior: smooth;
@@ -539,7 +539,7 @@ html {
 /* ===== Console strip =====
    The rail is a channel bank. Every lab is a strip: a level meter that lights
    when the channel is live, the icon, and a silk-screened label. Uppercase and
-   letterspaced because that is how a desk labels its channels — and because at
+   letterspaced because that is how a desk labels its channels, and because at
    this size it stops nine navigation items from reading as nine sentences. */
 .console-brand {
   display: flex;
@@ -615,7 +615,7 @@ html {
   opacity: 0.75;
   /* Matches the row's own colour transition, so the icon and its label change
      together when a row is hovered or goes live. (It does not soften the flash
-     below — a cancelled animation gives a transition nothing to start from.
+     below, a cancelled animation gives a transition nothing to start from.
      That is why the flash is not hung off :hover at all.) */
   transition: color 180ms ease-out, opacity 180ms ease-out;
 }
@@ -630,7 +630,7 @@ html {
 }
 
 /* The live channel keeps only its ink. Everything that used to draw the plate
-   — the surface, the lift, the orange bar — is one element that slides between
+  the surface, the lift, the orange bar, is one element that slides between
    rows, so moving between labs reads as the same marker travelling rather than
    as one row going dark and another lighting up. */
 .channel.is-live {
@@ -653,8 +653,8 @@ html {
 }
 
 /* Only once it has been placed, so it does not fly in from the corner of the
-   rail on load. The travel is longer than the segmented control's — top of the
-   rail to the bottom is most of the screen — so it gets a little more time;
+   rail on load. The travel is longer than the segmented control's, top of the
+   rail to the bottom is most of the screen, so it gets a little more time;
    the same easing, which leaves fast and arrives soft. */
 .channel-plate.is-placed {
   transition:
@@ -664,7 +664,7 @@ html {
 }
 
 /* The rows sit over the plate, which is the surface they appear to sit on.
-   Raised on the rows themselves, which are already positioned — positioning
+   Raised on the rows themselves, which are already positioned, positioning
    the groups instead would make each group the offset parent its rows are
    measured against, and the plate would be placed relative to the wrong box. */
 .channel {
@@ -679,7 +679,7 @@ html {
    the rail, where the gesture plays on hover, and the heading of the lab the
    row leads to, where it plays once on arrival. One drawing, one animation,
    two sizes. It is the one place in the app
-   where the accent appears without meaning "this is live" — affordable
+   where the accent appears without meaning "this is live", affordable
    precisely because it is gone again before it can be read as a state.
 
    The trigger is .is-flashing, put on by the component and taken off when the
@@ -690,15 +690,15 @@ html {
    One duration per row, and every stagger is written into the keyframe
    percentages rather than into animation-delay. A row can have four elements
    moving in sequence, but they are four animations of the same length running
-   at the same time — so the class is never pulled while one still has a tail
+   at the same time, so the class is never pulled while one still has a tail
    left to run.
 
    How long that is depends on how many beats the gesture has, because a
    sequence has to spend time to be a sequence. One movement gets 900ms. A row
-   whose parts go in turn — the pulse crossing the headphones, the ripple
-   leaving the bullseye — needs each part to finish visibly before the next
+   whose parts go in turn, the pulse crossing the headphones, the ripple
+   leaving the bullseye, needs each part to finish visibly before the next
    starts, so it gets 1100ms. The metronome counts four and gets 1200ms, which
-   is 300ms a beat — a tempo you could actually play to.
+   is 300ms a beat, a tempo you could actually play to.
 
    Length alone was not what made the earlier passes hard to catch. A gesture
    that only touches its extreme for one frame reads as a flicker however long
@@ -710,7 +710,7 @@ html {
 }
 
 .navmark[data-nav='ear-training'],
-.navmark[data-nav='play'] {
+.navmark[data-nav='practice'] {
   --channel-flash: 1100ms;
 }
 
@@ -806,7 +806,7 @@ html {
 }
 
 /* Four beats. The face has no lamps to light in turn, so the hand counts them
-   — stepped, not swept, because a hand that glides is a clock and a hand that
+  stepped, not swept, because a hand that glides is a clock and a hand that
    snaps is a metronome. The dial takes the downbeat. Four in 300ms is quicker
    than anything you would set a metronome to; it is a bar being sounded out,
    not a tempo to play along with. */
@@ -843,7 +843,7 @@ html {
 /* The needle finds centre. The icon is a microphone rather than a dial, so the
    capsule is the needle: it swings off, overshoots the other way and settles,
    pivoting at its own base inside a body that stays put. Damped, the way a
-   real one comes to rest — the overshoots get smaller each time. */
+   real one comes to rest, the overshoots get smaller each time. */
 @keyframes channelNeedleSettle {
   20%, 34% {
     transform: rotate(-10deg);
@@ -864,7 +864,7 @@ html {
 
 /* The target takes a hit. The rings go outward from the bullseye and each one
    moves less than the one inside it, so the ripple loses energy on the way
-   out. The outermost is held to 1.06 — the icon is already as wide as its box,
+   out. The outermost is held to 1.06, the icon is already as wide as its box,
    and a rim that grew any further would be clipped by the viewBox. */
 @keyframes channelTargetIn {
   18%, 28% {
@@ -893,25 +893,25 @@ html {
   }
 }
 
-.navmark.is-flashing[data-nav='play'] .channel-icon svg > circle {
+.navmark.is-flashing[data-nav='practice'] .channel-icon svg > circle {
   transform-box: view-box;
   transform-origin: 12px 12px;
 }
 
-.navmark.is-flashing[data-nav='play'] .channel-icon svg > circle:nth-of-type(3) {
+.navmark.is-flashing[data-nav='practice'] .channel-icon svg > circle:nth-of-type(3) {
   animation: channelTargetIn var(--channel-flash) ease-out;
 }
 
-.navmark.is-flashing[data-nav='play'] .channel-icon svg > circle:nth-of-type(2) {
+.navmark.is-flashing[data-nav='practice'] .channel-icon svg > circle:nth-of-type(2) {
   animation: channelTargetMid var(--channel-flash) ease-out;
 }
 
-.navmark.is-flashing[data-nav='play'] .channel-icon svg > circle:nth-of-type(1) {
+.navmark.is-flashing[data-nav='practice'] .channel-icon svg > circle:nth-of-type(1) {
   animation: channelTargetOut var(--channel-flash) ease-out;
 }
 
 /* The notes scroll past. One glyph leaves to the left and the next arrives
-   from the right — the same element, moved across the gap while it is at zero
+   from the right, the same element, moved across the gap while it is at zero
    opacity, which is how a ticker is done with one of a thing. The whole svg
    travels: a beamed pair that left its heads behind would come apart. */
 @keyframes channelNoteScroll {
@@ -937,7 +937,7 @@ html {
   animation: channelNoteScroll var(--channel-flash) ease-in-out;
 }
 
-/* Three fingers land on the box, one after another, low string first — the
+/* Three fingers land on the box, one after another, low string first, the
    order they actually go down in. Each drops from above its string and holds
    where it lands, and the whole thing is staggered rather than simultaneous,
    because three dots appearing at once is a chord being stamped on and three
@@ -966,7 +966,7 @@ html {
   animation-delay: 180ms;
 }
 
-/* The star turns a few degrees and settles back — a nudge, not a spin. Five
+/* The star turns a few degrees and settles back, a nudge, not a spin. Five
    points means a 72deg rotation is indistinguishable from none, so this stays
    well under that: the eye reads it as the star having been knocked. */
 @keyframes channelStarTurn {
@@ -978,7 +978,7 @@ html {
   }
 }
 
-.navmark.is-flashing[data-nav='songs'] .channel-icon svg > polygon {
+.navmark.is-flashing[data-nav='play'] .channel-icon svg > polygon {
   transform-box: view-box;
   transform-origin: 12px 12.5px;
   animation: channelStarTurn var(--channel-flash) cubic-bezier(0.34, 1.3, 0.64, 1);
@@ -990,7 +990,7 @@ html {
   padding: 0.5rem 0;
 }
 
-/* Group headings. The rail's only uppercase voice — three of them label the
+/* Group headings. The rail's only uppercase voice, three of them label the
    whole bank, where nine shouting channel names labelled nothing. */
 .channel-group + .channel-group {
   margin-top: 1.35rem;
@@ -1008,7 +1008,7 @@ html {
 }
 
 /* Collapsed to the icon rail there is no room for the words, so the grouping
-   is carried by a rule instead — same information, no text. */
+   is carried by a rule instead, same information, no text. */
 .sidebar.is-collapsed .channel-group + .channel-group {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
@@ -1149,7 +1149,7 @@ html {
   box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
   /* Ebony rather than rosewood. The shell is a cool neutral now, and a warm
      brown neck sitting inside it read as a different app; ebony is also what
-     the orange note markers want behind them — on rosewood they went muddy.
+     the orange note markers want behind them, on rosewood they went muddy.
      Same construction: top-light gradient over a procedural grain over the
      base, with the grain recoloured neutral. */
   background-image:
@@ -1159,7 +1159,7 @@ html {
   background-repeat: no-repeat, repeat, no-repeat;
 }
 
-/* Inlay position markers — sit on the wood between strings 3 & 4 (or
+/* Inlay position markers, sit on the wood between strings 3 & 4 (or
    straddling it for the fret-12 octave marker), behind the strings/notes */
 .inlay-layer {
   position: absolute;
@@ -1244,7 +1244,7 @@ html {
   z-index: 5;
 }
 
-/* Fretboard String Line overlay — brushed-steel gradient instead of flat gray */
+/* Fretboard String Line overlay, brushed-steel gradient instead of flat gray */
 .guitar-string-line {
   position: absolute;
   left: 0;
@@ -1255,13 +1255,13 @@ html {
   box-shadow: 0 1px 3px rgba(0,0,0,0.75);
 }
 
-/* A plucked string does not show you its cycles — 80-330 Hz is far past what
+/* A plucked string does not show you its cycles, 80-330 Hz is far past what
    a screen draws or an eye resolves. What you see is the envelope: the string
    smeared between the two extremes of its swing.
 
    The important detail is that the smear is not uniform. A string is slowest
    at the turning points and fastest crossing the middle, so it dwells at the
-   edges and blurs through the centre — which is why this draws two bright
+   edges and blurs through the centre, which is why this draws two bright
    rails with a dim gap between them, not a fat bright line. That reads as
    movement at a glance; an earlier version put the brightness in the middle
    and merely looked like a thicker string, which on an already-pale steel
@@ -1342,7 +1342,7 @@ html {
 .string-thickness-2 { height: 1.2px; }
 .string-thickness-1 { height: 0.8px; }
 
-/* Guitar Note Marker — beveled jewel/pearl finish instead of a flat fill */
+/* Guitar Note Marker, beveled jewel/pearl finish instead of a flat fill */
 .guitar-note-marker {
   width: 24px;
   height: 24px;
@@ -1366,7 +1366,7 @@ html {
   border-color: rgba(255,255,255,0.5);
 }
 
-/* Fixed (not themed) colors below — the fretboard is an always-dark
+/* Fixed (not themed) colors below, the fretboard is an always-dark
    instrument surface, and these markers sit directly on its wood/fret
    texture, so they need the same fixed brightness in both themes rather
    than the page's --primary/--success/--warning, which go darker and
@@ -1395,7 +1395,7 @@ html {
   transform: scale(1.15);
 }
 
-/* Fret-number ruler along the bottom of the neck — fixed light-on-dark
+/* Fret-number ruler along the bottom of the neck, fixed light-on-dark
    colors like the rest of the fretboard, not page text, since it sits on
    the wood in both themes */
 .fret-ruler-row {
@@ -1535,7 +1535,7 @@ html {
   stroke-width: 1.9;
 }
 
-/* The label over an instrument — the piano, the fretboard. Sized like a
+/* The label over an instrument, the piano, the fretboard. Sized like a
    caption, not a heading, because the instrument under it is the content. */
 .surface-label {
   display: flex;
@@ -1605,7 +1605,7 @@ html {
   white-space: nowrap;
 }
 
-/* Chromatic key strip — the twelve notes laid out like a keyboard so the
+/* Chromatic key strip, the twelve notes laid out like a keyboard so the
    black notes read as black notes, instead of hidden in a dropdown. */
 .note-strip {
   display: flex;
@@ -1730,14 +1730,14 @@ html {
   color: var(--text-primary);
 }
 
-/* If the thumb has not been measured yet — the group is display:none, say —
+/* If the thumb has not been measured yet, the group is display:none, say,
    the pressed segment still has to look pressed. */
 .segmented:not(:has(.segmented-thumb)) button[aria-pressed='true'] {
   background: var(--surface-3);
 }
 
 /* Range sliders, checkboxes and radios were drawing in the browser's own
-   accent — the OS blue, which was merely bland against the old palette and
+   accent, the OS blue, which was merely bland against the old palette and
    fights the orange outright. accent-color re-tints the native widget without
    giving up its keyboard and touch behaviour. */
 input[type='range'],
@@ -1792,7 +1792,7 @@ input[type='range'] {
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-/* Compact choice pills — the feeling-named scales and chords */
+/* Compact choice pills, the feeling-named scales and chords */
 .pill-row {
   display: flex;
   flex-wrap: wrap;
@@ -1856,7 +1856,7 @@ input[type='range'] {
 
 /* ===== Mastery strip =====
    A row of bars, one per item in a drill, showing what is actually known.
-   The value is drawn twice — the bar grows and its colour warms — because
+   The value is drawn twice, the bar grows and its colour warms, because
    the reading that matters is the profile of the whole row, the dips more
    than the numbers. */
 .mastery {
@@ -1933,7 +1933,7 @@ input[type='range'] {
 }
 
 /* The accent laid over the grey, faded in across the stretch of the scale that
-   matters rather than across the whole of it — see WARM_FLOOR in the component.
+   matters rather than across the whole of it, see WARM_FLOOR in the component.
    Two layers rather than a colour interpolation: the grey has to be a real
    floor, or an item you have just started is indistinguishable from a dim
    orange one. */
@@ -1968,7 +1968,7 @@ input[type='range'] {
   opacity: 0.3;
 }
 
-/* The item just answered. No animation — the bar underneath has already moved,
+/* The item just answered. No animation, the bar underneath has already moved,
    and this only has to say which one moved. */
 .mastery-cell.is-latest .mastery-tick {
   color: var(--text-primary);
@@ -1989,103 +1989,23 @@ input[type='range'] {
     flex-direction: column;
   }
 
-  .sidebar,
-  .sidebar.is-collapsed {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.75rem;
-    width: auto;
-    height: auto;
-    padding: 0.6rem 0.8rem;
-    position: static;
-    border-right: none;
-    border-bottom: 1px solid var(--panel-border);
-    border-radius: 0 0 16px 16px;
-    overflow: visible;
-  }
-
-  .sidebar-nav {
-    flex-direction: row;
-    flex: 1;
-    min-width: 0;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: none;
-  }
-
-  .sidebar-nav::-webkit-scrollbar {
+  /* The phone gets its own navigation (MobileNav): a top bar and a bottom
+     tab bar. The rail, laid on its side, fitted one and a half destinations
+     on a phone. */
+  .sidebar {
     display: none;
   }
 
-  /* Laid on its side, a channel's meter becomes an underline — the same
-     signal, in the orientation the bar actually runs. */
-  .sidebar::after {
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      transparent 0%,
-      rgba(var(--surface-tint-rgb), 0.16) 12%,
-      rgba(var(--surface-tint-rgb), 0.05) 50%,
-      rgba(var(--surface-tint-rgb), 0.16) 88%,
-      transparent 100%
-    );
-  }
-
-  .channel {
-    width: auto;
-    flex-shrink: 0;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.4rem 0.7rem 0.35rem;
-  }
-
-  /* Laid on its side the marker becomes an underline, since a left-edge bar
-     reads as nothing in a horizontal bar. The plate travels sideways here for
-     the same reason it travels down the rail on a desktop. */
-  .channel-plate {
-    box-shadow: inset 0 -2px 0 var(--primary);
-  }
-
-  .channel-label {
-    font-size: 0.62rem;
-    letter-spacing: 0.06em;
-  }
-
-  /* The wordmark costs more than half the bar on a phone; the logo carries
-     the brand and the nav gets the room. */
-  .console-wordmark {
-    display: none;
-  }
-
-  /* Laid on its side the groups run inline, separated by a hairline instead
-     of a heading — the same three-part shape without spending bar width on
-     three more words. */
-  .channel-group {
-    display: flex;
-    align-items: center;
-  }
-
-  .channel-group + .channel-group {
-    margin-top: 0;
-    margin-left: 0.5rem;
-    padding-left: 0.5rem;
-    border-left: 1px solid var(--panel-border);
-  }
-
-  .channel-group-label {
+  /* The top bar already names the page; a second, larger title under it was
+     a screen-width banner and a gap of 4rem before anything you could use. */
+  .lab-header {
     display: none;
   }
 
   .main-content {
-    padding: 1rem;
+    padding: 0.75rem 1rem calc(var(--mtabs-h) + env(safe-area-inset-bottom, 0px) + 1.5rem);
     /* The centring margin is a main-axis margin while the shell is a row, but
-       becomes a cross-axis auto margin once it stacks — and an auto margin on
+       becomes a cross-axis auto margin once it stacks, and an auto margin on
        the cross axis cancels stretch, leaving the box sized by its widest
        content instead of by the screen. */
     margin-inline: 0;
@@ -2125,7 +2045,7 @@ input[type='range'] {
 }
 
 /* ===== Dashboard =====
-   A launcher. The name, the drawing, one line of progress, and the labs —
+   A launcher. The name, the drawing, one line of progress, and the labs,
    nothing that needs reading before you can press something. */
 .dash {
   display: flex;
@@ -2133,7 +2053,7 @@ input[type='range'] {
   gap: 1.25rem;
 }
 
-/* Flat, and flush with the grid below it — the hero is a masthead, not a
+/* Flat, and flush with the grid below it, the hero is a masthead, not a
    slab. Anything boxed here would be a card, which is the thing we removed. */
 /* The one photograph in the app. It is a stage surface like the waveform
    canvases: it stays dark in the light theme rather than being washed out,
@@ -2256,7 +2176,7 @@ input[type='range'] {
 }
 
 /* A question, not a tagline. Small enough that the name still carries the
-   frame — the guitar behind it is doing most of the talking. */
+   frame, the guitar behind it is doing most of the talking. */
 .hero-copy {
   position: relative;
   z-index: 2;
@@ -2524,7 +2444,7 @@ button.dash-card:active {
 }
 
 /* A day nobody has filled in is an outline. Anything with a song in it is
-   solid — that difference is the whole read of the grid, so it is carried by
+   solid, that difference is the whole read of the grid, so it is carried by
    fill and not by a shade of grey. */
 .daynode {
   position: relative;
@@ -2546,7 +2466,7 @@ button.dash-card:active {
 }
 
 /* At the size Home uses them the numbers are unreadable, so they are not
-   drawn — the shape of the run is the whole message and the tooltip carries
+   drawn, the shape of the run is the whole message and the tooltip carries
    the day. The Songs page has the room and keeps them. */
 .daygrid-sm .daynode-num {
   display: none;
@@ -2600,7 +2520,7 @@ button.daynode:active {
 }
 
 /* One pop, for a day that was finished while you were looking at it. Plays
-   only on the node that changed — see the note in DayGrid. */
+   only on the node that changed, see the note in DayGrid. */
 @keyframes dayComplete {
   35% {
     transform: scale(1.22);
@@ -2616,12 +2536,12 @@ button.daynode:active {
 
 /* ===== Practice snapshot =====
    Four numbers, every one of them derived from something that is actually
-   stored. A metric with no data behind it says "—" rather than nought:
+   stored. A metric with no data behind it shows "-" rather than nought:
    nought is a claim, and a claim we cannot support. */
 /* ===== This week ===== */
 /* Four unrelated metrics became one span. The strip carries the shape of the
    week, the list says what it contained, and the footer is the only thing on
-   the card talking about any other stretch of time — which is why it says so
+   the card talking about any other stretch of time, which is why it says so
    in its first two words. */
 .weekpanel {
   gap: 0.85rem;
@@ -2652,7 +2572,7 @@ button.daynode:active {
   background: rgba(var(--surface-tint-rgb), 0.07);
 }
 
-/* Today is not a day you failed to practise — it has not finished. An outline
+/* Today is not a day you failed to practise, it has not finished. An outline
    where an empty past day has a flat fill keeps the difference visible even
    before anything is logged. */
 .weekbar.is-today .weekbar-track {
@@ -2661,7 +2581,7 @@ button.daynode:active {
 }
 
 /* No floor on the height. A minimum kept a sliver of accent sitting at the
-   bottom of every blank day, which read as a day with something in it — the
+   bottom of every blank day, which read as a day with something in it, the
    share is already held above a visible fraction for days that do. */
 .weekbar-fill {
   width: 100%;
@@ -3068,7 +2988,7 @@ button.dash-card:hover .pickup-go svg {
    state gets one.
 
    It is the row's leading edge rather than a word in the last column, because
-   the four states are a ladder — learning, playable, solid, complete — and a
+   the four states are a ladder, learning, playable, solid, complete, and a
    ladder is read as a quantity. The stripe darkens up the rungs and turns green
    at the top, which is scannable down a list of thirty in a way that four
    different words are not. The word itself is not lost: it is still on the
@@ -3347,7 +3267,7 @@ button.dash-card:hover .pickup-go svg {
   transform: translateY(-1px);
 }
 
-/* A name we could not place keeps its aside — "G (single strum)" — and wraps
+/* A name we could not place keeps its aside, "G (single strum)", and wraps
    rather than being cut short: the aside is the part someone typed on purpose.
    The footnote beside it shrinks first. */
 .chordcard-name {
@@ -3359,7 +3279,7 @@ button.dash-card:hover .pickup-go svg {
   color: var(--text-primary);
 }
 
-/* A chord we can name but not place — "G(single strum)", a sus we do not
+/* A chord we can name but not place, "G(single strum)", a sus we do not
    model. It keeps its card so the progression is still complete. */
 .chordcard.is-plain {
   justify-content: center;
@@ -3375,7 +3295,7 @@ button.dash-card:hover .pickup-go svg {
 /* ---------------------------------------------------------------------------
    The chord book: what your hands can do
    ---------------------------------------------------------------------------
-   Three states, one colour each, used identically everywhere the app asks —
+   Three states, one colour each, used identically everywhere the app asks,
    on a card, in a sheet, in the Fit table. The colours are the ones already
    carrying good/careful/no elsewhere, so nothing new has to be learned. */
 
@@ -3407,7 +3327,7 @@ button.dash-card:hover .pickup-go svg {
 
 /* The diagram is the button. A shape you cannot hear is a picture of a chord,
    and the only way to tell two voicings of the same chord apart is to play
-   them both — so pressing one does, and a ring goes out from it to say the
+   them both, so pressing one does, and a ring goes out from it to say the
    press landed even when the volume is down. */
 .chordcard-play {
   position: relative;
@@ -3674,7 +3594,7 @@ button.dash-card:hover .pickup-go svg {
 
 /* The same strip of shapes the chord card offers, borrowed whole. Capped and
    scrolled because a C has seven of them and the loop above has to stay on
-   screen while you choose — a drawer that pushes its own subject out of view
+   screen while you choose, a drawer that pushes its own subject out of view
    is asking you to remember what you opened it for. */
 .qshapes {
   /* Left, under the loop, rather than centred under the panel: the row it
@@ -3811,7 +3731,7 @@ button.dash-card:hover .pickup-go svg {
   transition: color 0.3s ease;
 }
 
-/* Running, it takes the accent and breathes once a second — one beat, at the
+/* Running, it takes the accent and breathes once a second, one beat, at the
    rate the clock is actually counting, rather than decoration. */
 .timer-clock.is-running {
   color: var(--primary);
@@ -4039,8 +3959,8 @@ button.dash-card:hover .pickup-go svg {
   color: var(--primary);
 }
 
-/* Transport. Tempo is the control that gets touched most — it is how you
-   practise a song you cannot yet play — so it takes the width. */
+/* Transport. Tempo is the control that gets touched most, it is how you
+   practise a song you cannot yet play, so it takes the width. */
 .chart-transport {
   display: flex;
   align-items: center;
@@ -4231,7 +4151,7 @@ button.dash-card:hover .pickup-go svg {
 }
 
 /* This row is operated mid-practice, at arm's length, often with a guitar in
-   the way. Words were the wrong instrument for it — so the tap target, the
+   the way. Words were the wrong instrument for it, so the tap target, the
    beats-per-bar mark and the metronome carry what four labels used to, and
    Tempo keeps its word because the number beside it is the point. */
 .chart-tap {
@@ -4356,7 +4276,7 @@ button.dash-card:hover .pickup-go svg {
   text-transform: uppercase;
 }
 
-/* How many bars this line lasts — the number that decides whether the chart
+/* How many bars this line lasts, the number that decides whether the chart
    keeps time with the song, and the one thing a pasted sheet cannot know. */
 .ed-bars {
   display: flex;
@@ -4629,7 +4549,7 @@ button.dash-card:hover .pickup-go svg {
   color: var(--primary);
 }
 
-/* Now and next. The next shape is the one that matters — by the time the
+/* Now and next. The next shape is the one that matters, by the time the
    change lands there is no time left to look it up. */
 .chart-now {
   position: relative;
@@ -4730,7 +4650,7 @@ button.dash-card:hover .pickup-go svg {
   transition: background 0.2s ease;
 }
 
-/* The line being sung. A tonal lift rather than an accent — the accent is
+/* The line being sung. A tonal lift rather than an accent, the accent is
    spent on the chord you have to change to. */
 .chart-line.is-now {
   background: var(--surface-2);
@@ -5010,7 +4930,7 @@ button.dash-card:hover .pickup-go svg {
   color: #10221A;
 }
 
-/* Hollow with a heavy orange ring — the marker for "you are here" */
+/* Hollow with a heavy orange ring, the marker for "you are here" */
 .timeline-step.is-next .step-node {
   background: var(--surface-1);
   box-shadow: inset 0 0 0 2.5px var(--primary);
@@ -5175,7 +5095,7 @@ button.dash-card:hover .pickup-go svg {
 }
 
 /* Flipped when there's no room above the trigger (e.g. a term near the
-   top of the viewport) — same idea as --tip-shift, but for the vertical axis */
+   top of the viewport), same idea as --tip-shift, but for the vertical axis */
 .term-tip.term-tip--below {
   bottom: auto;
   top: calc(100% + 10px);
@@ -5355,7 +5275,7 @@ button.dash-card:hover .pickup-go svg {
 }
 
 /* Section marks on the song page: a tall stack of identical uppercase labels
-   was only findable by reading. Still, and 14px — wayfinding, not events. */
+   was only findable by reading. Still, and 14px, wayfinding, not events. */
 .section-mark {
   flex-shrink: 0;
   align-self: center;
@@ -5426,7 +5346,7 @@ button.dash-card:hover .pickup-go svg {
 /* ---------------------------------------------------------------------------
    One mark for "you are about to hear something"
    ---------------------------------------------------------------------------
-   It had four words across four screens — Hear it, Sound on, Listen — plus a
+   It had four words across four screens, Hear it, Sound on, Listen, plus a
    play triangle that also meant "start the exercise" two buttons along. The
    waves live while the audio does, so the mark reports the state and the
    label never has to. */
@@ -5476,7 +5396,7 @@ button.dash-card:hover .pickup-go svg {
 }
 
 /* A rest is part of the shape of the bar and has to hold its column so the
-   strokes stay on their beats — but it is not a stroke, and at full weight a
+   strokes stay on their beats, but it is not a stroke, and at full weight a
    chip of mostly rests reads as a busy pattern rather than a sparse one. */
 .strumchip-face.is-rest {
   color: var(--text-muted);
@@ -5539,7 +5459,7 @@ button.dash-card:hover .pickup-go svg {
 }
 
 /* Legibly present, legibly off. Grayscale as well as fade, so an idle meter
-   never shows the green that means "stop turning" — and the same on the
+   never shows the green that means "stop turning", and the same on the
    challenge screen, where green means the note was right. Two screens that
    ask for a microphone, one way of standing there without one. */
 .tunerface.is-off .tunerface-meter,
@@ -5707,7 +5627,7 @@ button.dash-card:hover .pickup-go svg {
   gap: 0.45rem;
 }
 
-/* Six, always — auto-fit drops to five on a narrow panel and orphans the top
+/* Six, always, auto-fit drops to five on a narrow panel and orphans the top
    E on a line of its own, which reads as a bug in the guitar. */
 .strings-row {
   display: grid;
@@ -5811,7 +5731,7 @@ button.dash-card:hover .pickup-go svg {
    Rhythm: the page called Timing, finally moving in time
    ---------------------------------------------------------------------------
    The arm and the grid are both driven from the audio clock by one animation
-   frame in Pendulum.tsx — nothing here animates on its own, because a CSS
+   frame in Pendulum.tsx, nothing here animates on its own, because a CSS
    keyframe and a metronome cannot agree about when a beat is. What lives here
    is only what a beat looks like when it arrives. */
 
@@ -5900,7 +5820,7 @@ button.dash-card:hover .pickup-go svg {
   opacity: 0;
 }
 
-/* Beat 1 is the higher click, so it is the different colour too — this page's
+/* Beat 1 is the higher click, so it is the different colour too, this page's
    own practice note says to listen for it. */
 .beatgrid-cell.is-one .beatgrid-lit {
   background: var(--success);
@@ -6100,8 +6020,8 @@ button.dash-card:hover .pickup-go svg {
    The capo bar: Fit made into something you move
    ---------------------------------------------------------------------------
    Seven fret spaces and the nut, spaced the way frets actually fall, so it is
-   recognisable to someone holding the instrument. Running along it previews —
-   the clamp slides and the letters under it redraw — and only a press moves
+   recognisable to someone holding the instrument. Running along it previews,
+   the clamp slides and the letters under it redraw, and only a press moves
    the song. */
 
 .capobar {
@@ -6209,7 +6129,7 @@ button.dash-card:hover .pickup-go svg {
   font-weight: 700;
 }
 
-/* Where Fit would put it. A dot rather than a second bar — two clamps on one
+/* Where Fit would put it. A dot rather than a second bar, two clamps on one
    neck is a picture of nothing anybody can do. */
 .capobar-slot.is-best::after {
   content: '';
@@ -6366,7 +6286,7 @@ button.progression-chord:hover {
   color: var(--text-secondary);
 }
 
-/* A chord in the sheet that is not in your hands says so quietly — a dotted
+/* A chord in the sheet that is not in your hands says so quietly, a dotted
    underline, not a colour wash, because the sheet is for reading while you
    play and every chord on it is already doing a job. */
 .chart-seg-chord.is-shaky {
@@ -6408,7 +6328,7 @@ button.progression-chord:hover {
 
 /* The other half of the same idea: the quick pass asks what you can play,
    this one answers what to do about it. Marked in the colour of the thing it
-   is aiming at — a chord you are about to be able to play. */
+   is aiming at, a chord you are about to be able to play. */
 /* The one press that turns a suggestion into practice: this chord and the
    changes into it, looped at a tempo you can move. A pill rather than a bar,
    so it reads as an offer on the card and not as the card's floor. */
@@ -6599,8 +6519,8 @@ button.progression-chord:hover {
 }
 
 /* The preview takes the slack between the title and the tally. It clips
-   rather than wraps — a heading that grows to three lines is no longer a
-   heading — and fades out where it clips, so a cut-off chip reads as "there
+   rather than wraps, a heading that grows to three lines is no longer a
+   heading, and fades out where it clips, so a cut-off chip reads as "there
    are more" instead of as a rendering fault. */
 .catgroup-peek {
   display: flex;
@@ -6676,7 +6596,7 @@ button.progression-chord:hover {
 /* ---------------------------------------------------------------------------
    Quick play: a progression, in time, in about four presses
    ---------------------------------------------------------------------------
-   Sticky, because the page under it is the chord picker — you scroll the shelf
+   Sticky, because the page under it is the chord picker, you scroll the shelf
    and press what you want while the loop stays in view and keeps running. That
    is the whole interaction, and it only works if this never scrolls away.
    Which is also why it is capped: a sticky panel with no ceiling pins whatever
@@ -6701,8 +6621,8 @@ button.progression-chord:hover {
 }
 
 /* The panel is what gives when it runs out of room, not the blocks inside it.
-   A flex child shrinks by default, and the two blocks here that can scroll —
-   the loop and the pattern — will happily shrink to nothing to let the panel
+   A flex child shrinks by default, and the two blocks here that can scroll,
+   the loop and the pattern, will happily shrink to nothing to let the panel
    keep its ceiling, which reads on a phone as the loop having vanished. */
 .quickplay > * { flex-shrink: 0; }
 
@@ -6713,7 +6633,7 @@ button.progression-chord:hover {
   }
 }
 
-/* Running, the edge lights up — the one signal you can catch from across the
+/* Running, the edge lights up, the one signal you can catch from across the
    room while your hands are on the guitar. */
 .quickplay.is-running {
   box-shadow: 0 6px 22px var(--primary-glow), inset 3px 0 0 var(--primary);
@@ -6804,7 +6724,7 @@ button.progression-chord:hover {
 
    Sized for the distance it is actually read at. Everything else in the panel
    assumes a pointer half a metre away; this assumes both hands on a guitar and
-   a glance of about a third of a second, which is a different set of sizes —
+   a glance of about a third of a second, which is a different set of sizes,
    the chord name is bigger than anything else in the app, and there are four
    things on it in total.
    --------------------------------------------------------------------------- */
@@ -6879,14 +6799,14 @@ button.progression-chord:hover {
 }
 
 /* The bar, as lamps. Wide enough to be caught without looking straight at it,
-   which is the whole job — counting you have to read is still counting. */
+   which is the whole job, counting you have to read is still counting. */
 .stage-mid {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.45rem;
   /* Centred in whatever is left between the two chords rather than pushed
-     against either — it belongs to the bar, not to one of them. */
+     against either, it belongs to the bar, not to one of them. */
   margin: 0 auto;
 }
 
@@ -7060,7 +6980,7 @@ button.progression-chord:hover {
 }
 
 /* A shape this loop chose rather than the one your chord book would. Marked
-   on the shape's name only, because the chord is still your chord — it is the
+   on the shape's name only, because the chord is still your chord, it is the
    line underneath that is not saying what it usually says. */
 .qslot.is-pinned .qslot-shapename {
   color: var(--warning);
@@ -7111,7 +7031,7 @@ button.progression-chord:hover {
   cursor: default;
 }
 
-/* The diagram is the face of the button, never a target of its own — left to
+/* The diagram is the face of the button, never a target of its own, left to
    itself it would hand back the default cursor over the middle of a control. */
 .qslot-shape svg,
 .shapepick-item svg {
@@ -7287,7 +7207,7 @@ button.qslot-shape:focus-visible {
 }
 
 /* Seven across on a laptop, and as many as fit anywhere else. Sized by the
-   longest name it has to hold — Bm7b5 — rather than by the count, so turning
+   longest name it has to hold, Bm7b5, rather than by the count, so turning
    sevenths on widens the chords rather than reflowing the row. */
 .palette-chords {
   display: grid;
@@ -7403,8 +7323,8 @@ button.qslot-shape:focus-visible {
   .stage-mid { flex-basis: 100%; margin: 0; }
   .stage-strum .strumbar { grid-template-columns: repeat(var(--slots), minmax(1.9rem, 1fr)); }
   .stage-strum .strumgrid { width: 100%; }
-  /* The box still reads at this size — six strings and five frets is not much
-     detail — and the panel has a phone's worth of height to spend. */
+  /* The box still reads at this size, six strings and five frets is not much
+     detail, and the panel has a phone's worth of height to spend. */
   /* Height, not width: a shape sitting up the neck carries a fret number in
      the margin and is the wider box for it. */
   .qslot-shape svg { width: auto; height: 46px; }
@@ -7711,7 +7631,7 @@ button.qslot-shape:focus-visible {
 
 /* ===== Ticking chords into the bucket =====
    The tick sits in the card's top-right corner, and the head is padded on
-   both sides to clear it — symmetric, so the chord's name stays centred over
+   both sides to clear it, symmetric, so the chord's name stays centred over
    its own diagram rather than being nudged off by a control. */
 .chordpick {
   position: absolute;
@@ -7755,7 +7675,7 @@ button.qslot-shape:focus-visible {
   padding: 0 1.1rem;
 }
 
-/* Ticked, the whole card says so from across the page — the tick alone is
+/* Ticked, the whole card says so from across the page, the tick alone is
    four square millimetres and the point of a bucket is seeing what is in it
    at a glance. The comfort hairline down the left edge survives it. */
 .chordcard.is-picked {
@@ -7904,7 +7824,7 @@ button.qslot-shape:focus-visible {
 
 /* ===== Strumming patterns =====
    A pattern is written as text and read as a grid. The grid is the part that
-   is true — it is what the hand will do and what the transport will play — so
+   is true, it is what the hand will do and what the transport will play, so
    it is drawn at full size under the field rather than tucked away as a
    preview, and every cell is a button. */
 .strumgrid {
@@ -7916,7 +7836,7 @@ button.qslot-shape:focus-visible {
 
 /* One bar per group, so a two-bar pattern reads as two bars rather than as a
    long row somebody has to count. The gutter on the right is where the bar's
-   own remove button lives — inside the bar's box rather than hung off its
+   own remove button lives, inside the bar's box rather than hung off its
    corner, so it survives being put in something that scrolls. */
 .strumbar {
   position: relative;
@@ -7976,7 +7896,7 @@ button.qslot-shape:focus-visible {
   color: var(--text-muted);
   font: inherit;
   cursor: default;
-  /* The ring and the wash have to arrive together — lit instantly over a
+  /* The ring and the wash have to arrive together, lit instantly over a
      background still fading out of the cell before it reads as two cells. */
   transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
 }
@@ -8043,8 +7963,8 @@ button.strumcell:hover { background: var(--surface-3); }
   color: var(--primary);
 }
 
-/* The pattern is the one part of the panel with no natural length — bars can
-   be added until the metre says stop — so it is the part that scrolls, and it
+/* The pattern is the one part of the panel with no natural length, bars can
+   be added until the metre says stop, so it is the part that scrolls, and it
    gives out at about three bars rather than pushing everything below it down. */
 .quickplay-strum .strumgrid {
   flex: 1 0 100%;
@@ -8233,7 +8153,7 @@ button.strumcell:hover { background: var(--surface-3); }
    Over everything
    ---------------------------------------------------------------------------
    The palette and the key sheet. Both sit on the same scrim and both are shut
-   by Escape, by the close, and by pressing the scrim — three ways out, because
+   by Escape, by the close, and by pressing the scrim, three ways out, because
    a thing that opens on a keystroke will sometimes open by accident.
    --------------------------------------------------------------------------- */
 .overlay {
@@ -8324,7 +8244,7 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 /* Highlighted by the arrow keys as well as by the pointer, so it is one
-   state and not two — moving the mouse moves the selection. */
+   state and not two, moving the mouse moves the selection. */
 .jump-row.is-at {
   background: var(--surface-2);
   color: var(--text-primary);
@@ -8505,8 +8425,8 @@ button.strumcell:hover { background: var(--surface-3); }
   /* Sticky, because the bar is the thread. A drill step scrolls quick play
      into view and a song page is four screens tall, so a bar that only lived
      at the top of the document would be out of sight for most of every step
-     it was meant to be guiding. The window is the scroll container — see the
-     note on .main-content — so this positions against it.
+     it was meant to be guiding. The window is the scroll container, see the
+     note on .main-content, so this positions against it.
      Above the lab toolbars and above quick play's own sticky panel, both of
      which pin to the same edge: they move under it, which is the right way
      round for a thing that outlives the screen it is standing on. */
@@ -10876,9 +10796,9 @@ button.strumcell:hover { background: var(--surface-3); }
   font-size: 0.88rem;
   font-weight: 700;
   border-radius: 9px;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background: var(--primary);
   border: none;
-  color: #fff;
+  color: var(--text-on-primary);
   cursor: pointer;
   transition: all 0.15s ease;
   margin-top: 0.25rem;
@@ -10887,7 +10807,7 @@ button.strumcell:hover { background: var(--surface-3); }
 .auth-submit-btn:hover:not(:disabled) {
   opacity: 0.95;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 6px 20px var(--primary-glow);
 }
 
 .auth-submit-btn:disabled {
@@ -10925,3 +10845,1289 @@ button.strumcell:hover { background: var(--surface-3); }
 
 
 
+
+/* Account deletion, quiet until asked for, plain about what it does. */
+.auth-delete-link {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.auth-delete-link:hover {
+  color: var(--danger);
+}
+
+.auth-delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: var(--danger-glow);
+}
+
+.auth-delete-confirm p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.btn.auth-delete-btn {
+  background: var(--danger);
+  color: #fff;
+}
+
+
+/* ===== Phone navigation (MobileNav) =====
+   A top bar that scrolls away with the page, so the labs' own sticky toolbars
+   keep the top edge to themselves, and a tab bar fixed where the thumb is. */
+:root {
+  --mtabs-h: 64px;
+}
+
+.mtop,
+.mtabs {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mtop {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem 0.6rem 1rem;
+    border-bottom: 1px solid var(--panel-border);
+    background: var(--rail-bg);
+  }
+
+  .mtop-brand {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary);
+    color: var(--text-on-primary);
+    cursor: pointer;
+  }
+
+  .mtop-title {
+    flex: 1;
+    min-width: 0;
+    margin-left: 0.25rem;
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+  }
+
+  .mtop-icon,
+  .mtop-account {
+    position: relative;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  .mtop-icon:active,
+  .mtop-account:active {
+    background: var(--surface-2);
+  }
+
+  .mtop-account.is-in {
+    width: 32px;
+    height: 32px;
+    margin: 0 4px;
+    background: var(--surface-3);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .mtop-sync {
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 9px;
+    height: 9px;
+    border: 2px solid var(--rail-bg);
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+
+  .mtop-sync.is-synced { background: var(--success); }
+  .mtop-sync.is-syncing { background: var(--warning); }
+  .mtop-sync.is-error { background: var(--danger); }
+
+  .mtabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    height: calc(var(--mtabs-h) + env(safe-area-inset-bottom, 0px));
+    padding: 0 0.25rem env(safe-area-inset-bottom, 0px);
+    border-top: 1px solid var(--panel-border);
+    /* Opaque: a translucent bar let buttons show through under the labels. */
+    background: var(--rail-bg);
+  }
+
+  .mtab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-family: var(--font-ui);
+    font-size: 0.68rem;
+    font-weight: 500;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* The active tab: the icon sits in a tinted pill, the way Android marks it. */
+  .mtab-icon {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 30px;
+    border-radius: 15px;
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+
+  .mtab-icon svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .mtab-label {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .mtab.is-active {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .mtab.is-active .mtab-icon {
+    background: var(--primary-glow);
+    color: var(--primary);
+  }
+
+  /* Things that stick to the bottom of the page sit on the tab bar, not under it. */
+  .bucket {
+    bottom: calc(var(--mtabs-h) + env(safe-area-inset-bottom, 0px) + 0.5rem);
+  }
+}
+
+.msheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.5);
+  animation: overlayIn 0.16s ease both;
+}
+
+.msheet {
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 0.25rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  border-radius: 20px 20px 0 0;
+  background: var(--elevated-bg);
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35);
+  animation: msheetUp 0.22s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes msheetUp {
+  from { transform: translateY(40px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msheet,
+  .msheet-backdrop {
+    animation: none;
+  }
+}
+
+
+/* On a phone the groove panel's three parts (title, slider, presets) cannot
+   share one line: the feel tag wrapped a word per line and the presets ran off
+   the edge. Title row on top, slider and presets under it. */
+@media (max-width: 640px) {
+  .swing-shuffle-control {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .swing-header-group {
+    flex: 1 0 100%;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .swing-slider-wrap {
+    max-width: none;
+  }
+}
+
+/* Fingers, not cursors. The segmented toggles were ~24px tall, fine for a
+   mouse, a near miss for a thumb. Only on touch screens, so the desktop
+   layout keeps its density. */
+@media (pointer: coarse) {
+  .segmented button,
+  .segmented.is-sm button {
+    min-height: 36px;
+  }
+}
+
+/* ===== Tuner page: one screen, nothing to scroll =====
+   The page is sized to the space left on screen (useFitViewport in
+   TunerLab.tsx); inside it everything is a column whose stage, the dial or
+   the trace, takes whatever height the controls do not need. */
+.tunerpage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 0;
+}
+
+.tunerpage > .lab-header {
+  margin-bottom: 0;
+}
+
+.tunerstack,
+.voice {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Instrument: the meter grows, the dial scales to fit it. */
+.tunerstack .tunerface {
+  flex: 1;
+  min-height: 0;
+  gap: 0.6rem;
+  padding: 1rem;
+}
+
+.tunerstack .tunerface-meter {
+  flex: 1;
+  min-height: 0;
+  justify-content: center;
+}
+
+.tunerstack .dial {
+  flex: 1 1 0;
+  min-height: 80px;
+  max-width: 460px;
+}
+
+.tunerstack .tuner-note-name {
+  font-size: clamp(2.6rem, 9vh, 4.5rem);
+}
+
+.tuner-start {
+  gap: 0.45rem;
+}
+
+.tunerdock {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+}
+
+.tunerdock .surface-label {
+  margin-bottom: 0;
+}
+
+.tunerdock .strings-again {
+  margin-left: auto;
+}
+
+.tunerdock-pickers {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tunerdock-pickers .select-field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Voice: the trace is the stage, and the readout floats over it. */
+.voice-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.pitchtrace {
+  display: block;
+  width: 100%;
+  background: var(--surface-1);
+  font-family: var(--font-mono);
+}
+
+.voice-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.6rem 1.5rem 3.4rem;
+  /* Fades the lanes under the readout so the note stays legible over them. */
+  background: linear-gradient(to bottom, var(--surface-1) 55%, transparent);
+  pointer-events: none;
+}
+
+.voice-hud > * {
+  pointer-events: auto;
+}
+
+.voice-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.voice-note {
+  font-size: clamp(2.2rem, 7vh, 3.4rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.voice-note.is-live {
+  color: var(--text-primary);
+}
+
+.voice-cents {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.voice-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.select-field.voice-sa {
+  width: auto;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  font-size: 0.78rem;
+}
+
+.voice-start {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-align: center;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.voice-stop {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--elevated-bg);
+  box-shadow: var(--elevation);
+  cursor: pointer;
+}
+
+.voice-stop .tuner-stop-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.voice-error {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0.75rem;
+}
+
+.voice-dock {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.75rem;
+}
+
+.voice-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.voice-pane p {
+  margin: 0;
+}
+
+.voice-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.voice-hint {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.voice-holdrow {
+  flex-wrap: nowrap;
+}
+
+.voice-target-note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 3.6rem;
+}
+
+.voice-target-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.voice-target-name {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.btn.voice-step {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.voice-holdrow .btn:not(.voice-step) {
+  margin-left: auto;
+}
+
+.voice-holdrow .btn:not(.voice-step) + .btn {
+  margin-left: 0;
+}
+
+.voice-hold-bar {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--surface-3);
+}
+
+.voice-hold-bar span {
+  display: block;
+  height: 100%;
+  background: var(--success);
+  transition: width 0.1s linear;
+}
+
+.voice-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-size: 0.75rem;
+}
+
+.voice-stats strong {
+  color: var(--primary);
+}
+
+.voice-rangerow {
+  flex-wrap: nowrap;
+}
+
+.voice-rangeend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 0;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.voice-range-note {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+/* A note name, or a sargam syllable with its marks: komal underlined, tivra
+   with a line over it, and octave dots above (taar) or below (mandra). */
+.notename {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.notename.is-komal .notename-text {
+  text-decoration: underline;
+  text-decoration-thickness: 0.07em;
+  text-underline-offset: 0.12em;
+}
+
+.notename.is-tivra .notename-text {
+  text-decoration: overline;
+  text-decoration-thickness: 0.07em;
+}
+
+.notename-dots {
+  font-size: 0.32em;
+  letter-spacing: 0.15em;
+  line-height: 1;
+}
+
+.notename-dots.is-above {
+  margin-bottom: 0.15em;
+}
+
+.notename-dots.is-below {
+  margin-top: 0.2em;
+}
+
+/* Song page: does it fit your voice? */
+.voicefit-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.voicefit-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.voicefit-step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.voicefit-step .btn.voice-step {
+  width: 36px;
+  height: 36px;
+}
+
+.voicefit-verdict {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.voicefit-verdict p {
+  margin: 0 0 0.35rem;
+}
+
+.voicefit-verdict.is-good {
+  color: var(--success);
+}
+
+.voice-capture {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.linklike {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ===== Chords: key picker, removing a chord ===== */
+.keypick {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.keypick-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.3rem;
+}
+
+@media (max-width: 640px) {
+  .keypick-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.keypick-note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  min-height: 44px;
+  padding: 0.3rem 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.keypick-note.is-accidental {
+  background: var(--surface-3);
+  color: var(--text-secondary);
+}
+
+.keypick-flat {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.keypick-note.is-on {
+  border-color: var(--primary);
+  background: var(--primary-glow);
+  color: var(--primary);
+}
+
+.keypick-scales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.chip-toggle {
+  min-height: 34px;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.chip-toggle.is-on {
+  border-color: var(--primary);
+  background: var(--primary-glow);
+  color: var(--text-primary);
+}
+
+.chip-toggle.is-switch {
+  border-style: dashed;
+}
+
+.chip-toggle.is-switch.is-on {
+  border-style: solid;
+}
+
+@media (max-width: 640px) {
+  .catalogue-only {
+    margin-left: 0;
+  }
+}
+
+.chordcard {
+  position: relative;
+}
+
+/* Remove: top-left, quiet like the bucket's checkbox opposite it. */
+.chordcard-remove {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-muted);
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.chordcard-remove:hover,
+.chordcard-remove:focus-visible {
+  opacity: 1;
+  color: var(--danger);
+  background: var(--danger-glow);
+}
+
+.chordbook-hidden {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* The bottom sheet doubles as a centred dialog where there is room. */
+@media (min-width: 901px) {
+  .msheet-backdrop.is-dialog {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .msheet-backdrop.is-dialog .msheet {
+    max-width: 440px;
+    border-radius: 16px;
+    padding-top: 1.25rem;
+  }
+}
+
+.removesheet-title {
+  margin: 0.5rem 0 0.4rem;
+  font-size: 1.15rem;
+}
+
+.removesheet-said {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.removesheet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.removesheet-actions .btn {
+  justify-content: center;
+  min-height: 44px;
+}
+
+.removesheet-hint {
+  margin: 0 0 0.6rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.removesheet-cancel {
+  margin-top: 0.25rem;
+}
+
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.6rem 0.6rem 0.6rem 1rem;
+  border-radius: 12px;
+  background: var(--text-primary);
+  color: var(--rail-bg);
+  font-size: 0.85rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transform: translateX(-50%);
+  animation: overlayIn 0.16s ease both;
+}
+
+.undo-toast button {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 0.8rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .undo-toast {
+    bottom: calc(var(--mtabs-h) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+  }
+
+  /* The top bar already says "Chords". */
+  .chordbook .songs-head .lab-title {
+    display: none;
+  }
+}
+
+
+/* ===== Practice hub ===== */
+.practice {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.practice-label {
+  margin: 0 0 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.practice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.6rem;
+}
+
+.practice-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 76px;
+  padding: 0.85rem 0.9rem;
+  border: none;
+  border-radius: 14px;
+  background: var(--elevated-bg);
+  box-shadow: var(--elevation-low);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.practice-card:hover {
+  background: var(--elevated-bg-hover);
+}
+
+.practice-card:active {
+  transform: scale(0.99);
+}
+
+.practice-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--primary-glow);
+  color: var(--primary);
+}
+
+.practice-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.practice-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.practice-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.practice-blurb {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.practice-stat {
+  font-size: 0.7rem;
+  color: var(--primary);
+}
+
+.practice-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* ===== Me ===== */
+.me {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.me-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.me-account {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.me-avatar {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.me-avatar.is-in {
+  background: var(--primary);
+  color: var(--text-on-primary);
+}
+
+.me-account-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.me-account-name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.me-account-sub,
+.me-row-sub {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.me-settings {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.me-heading {
+  margin: 0 0 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.me-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 56px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.me-heading + .me-row {
+  border-top: none;
+}
+
+.me-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* ===== Navigation details ===== */
+.mtop-back {
+  margin-left: -0.4rem;
+  color: var(--text-primary);
+}
+
+/* Practice's pages, opened out under it in the desktop rail. */
+.channel-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0.15rem 0 0.35rem 0.9rem;
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--panel-border);
+}
+
+.channel-sub .channel-group-label {
+  margin: 0.4rem 0 0.15rem 0.7rem;
+}
+
+.channel.is-parent:not(.is-live) {
+  color: var(--text-primary);
+}
+
+.sidebar.is-collapsed .channel-sub {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: none;
+}
+
+/* ===== Onboarding ===== */
+.onb {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  padding: max(env(safe-area-inset-top, 0px), 0.75rem) 1.25rem max(env(safe-area-inset-bottom, 0px), 1.25rem);
+  overflow-y: auto;
+  background: var(--rail-bg);
+}
+
+.onb-top {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 48px;
+}
+
+.onb-top > :last-child {
+  justify-self: end;
+}
+
+.onb-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.onb-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.onb-dot.is-on {
+  width: 16px;
+  background: var(--primary);
+}
+
+.onb-link {
+  min-height: 44px;
+  padding: 0 0.5rem;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.onb-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 1rem 0 2rem;
+  animation: labEnter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.onb-mark {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--primary);
+  color: var(--text-on-primary);
+}
+
+.onb-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 7vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.onb-said {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.btn.onb-cta {
+  justify-content: center;
+  min-height: 52px;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+
+.onb-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.onb-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 72px;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--elevated-bg);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.onb-choice.is-on {
+  border-color: var(--primary);
+  background: var(--primary-glow);
+}
+
+.onb-glyph {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.onb-choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.onb-choice-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.onb-choice-said {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.onb-songs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.onb-song {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 0.4rem;
+}
+
+.onb-sample {
+  font-size: 0.85rem;
+  color: var(--primary);
+  text-align: center;
+}

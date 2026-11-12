@@ -17,7 +17,7 @@ export interface RunResult {
   seconds: number;
   /** The record as it stood before this run, or null if there was none. */
   best: number | null;
-  /** Set once the run has been banked — see bankRun. */
+  /** Set once the run has been banked, see bankRun. */
   banked: { best: number; isBest: boolean; previous: number | null; gained: number; runs: number } | null;
 }
 
@@ -37,7 +37,7 @@ const ordinal = (n: number): string => {
  *
  * Stop used to put the panel back exactly as it was before you played, which
  * meant a drill ended with no evidence that it had happened. Four numbers and
- * a sentence, in the place the stage was standing a second ago — measured, so
+ * a sentence, in the place the stage was standing a second ago, measured, so
  * they are true whatever you decide, and then one press to say the thing the
  * app cannot know, which is whether it held together.
  *
@@ -62,11 +62,11 @@ export const LoopResult: React.FC<{
   const said = banked
     ? banked.isBest
       ? banked.previous === null
-        ? 'The first one banked on this loop. That is the number to beat.'
+        ? 'First saved run on this loop.'
         : `Up ${banked.gained} from ${banked.previous}.`
-      : `Banked — your best here is still ${banked.best} bpm. ${ordinal(banked.runs)} clean run.`
+      : `Saved. Best is still ${banked.best} bpm. ${ordinal(banked.runs)} clean run.`
     : best === null
-      ? 'Nothing banked on this loop yet. If that held together, keep it and you have a number to beat.'
+      ? 'Nothing saved yet. Save this run to set a target.'
       : tempo > best
         ? `Your best here is ${best} bpm. Keep this one and it becomes ${tempo}.`
         : `Your best here is ${best} bpm.`;
@@ -95,7 +95,7 @@ export const LoopResult: React.FC<{
             )
           : (
             <button type="button" className="btn btn-primary" onClick={onBank}>
-              Clean — keep it
+              Clean, save it
             </button>
           )}
       </div>

@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '../utils/supabase';
+
+// Where links in sign-up and magic-link emails send people back to. Inside the
+// Android app the page's own origin is https://localhost, which means nothing
+// outside the phone's WebView, so those links go to the hosted site instead.
+const EMAIL_REDIRECT = Capacitor.isNativePlatform()
+  ? 'https://blues1998.github.io/Cadenza/'
+  : window.location.origin;
 import { syncLibraryWithCloud, type SyncState } from '../utils/cloudSync';
 
 interface AuthContextType {
@@ -17,6 +25,7 @@ interface AuthContextType {
   signUpWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithMagicLink: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,11 +34,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  // ?account in the address opens the account panel. It is the web link Google
+  // Play asks for ("where can users delete their account"), and it lives in the
+  // query string because the hash is the app's router.
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(() => {
+    try { return new URLSearchParams(window.location.search).has('account'); } catch { return false; }
+  });
   const [syncStatus, setSyncStatus] = useState<SyncState>('idle');
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
 
   useEffect(() => {
+    // Tidy ?account out of the bar once it has done its job.
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('account')) {
+      url.searchParams.delete('account');
+      window.history.replaceState(window.history.state, '', url.toString());
+    }
+
     // 1. Initial session load
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -86,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin }
+      options: { emailRedirectTo: EMAIL_REDIRECT }
     });
     return { error };
   };
@@ -94,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithMagicLink = async (email: string): Promise<{ error: Error | null }> => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin }
+      options: { emailRedirectTo: EMAIL_REDIRECT }
     });
     return { error };
   };
@@ -104,6 +125,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setSession(null);
     setSyncStatus('idle');
+  };
+
+  // Deletes the account and everything synced to it (songs, practice
+  // sessions), through the delete_my_account database function, see
+  // supabase/migrations. Songs saved on this device are left alone: they were
+  // never the account's, and deleting an account is not deleting the app.
+  const deleteAccount = async (): Promise<{ error: Error | null }> => {
+    const { error } = await supabase.rpc('delete_my_account');
+    if (error) return { error: new Error(error.message) };
+    // The user no longer exists, so a server-side sign-out would only fail;
+    // clearing the stored session is all that is left to do.
+    await supabase.auth.signOut({ scope: 'local' });
+    setUser(null);
+    setSession(null);
+    setSyncStatus('idle');
+    return { error: null };
   };
 
   return (
@@ -121,7 +158,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithEmail,
         signUpWithEmail,
         signInWithMagicLink,
-        signOut
+        signOut,
+        deleteAccount
       }}
     >
       {children}

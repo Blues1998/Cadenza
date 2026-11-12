@@ -6,7 +6,7 @@ export interface Prompt {
 }
 
 // One small thing to go and do. Each one is a minute or two at the instrument
-// and lands somewhere in the app that can actually help you do it — a prompt
+// and lands somewhere in the app that can actually help you do it, a prompt
 // with nowhere to go is a slogan.
 //
 // Chosen by the date rather than at random, so it is the same all day: a
@@ -22,7 +22,7 @@ export const PROMPTS: Prompt[] = [
   { text: 'Hum the root while you strum the chord.', tab: 'ear-training' },
   { text: "Play today's progression at half speed, perfectly.", tab: 'rhythm' },
   { text: 'Read one bar of tab, look away, play it back.', tab: 'tabs' },
-  { text: 'Sing the melody while you strum. Badly is fine.', tab: 'songs' }
+  { text: 'Sing the melody while you strum.', tab: 'library' }
 ];
 
 export function promptForDate(date = new Date()): Prompt {

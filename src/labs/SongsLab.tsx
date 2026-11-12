@@ -4,6 +4,7 @@ import { Segmented } from '../components/Segmented';
 import { SongPage } from './SongPage';
 import { IconTray } from '../components/Icons';
 import { useLibrary } from '../hooks/useLibrary';
+import { go } from '../hooks/useRoute';
 import {
   createSong,
   exportLibrary,
@@ -24,7 +25,7 @@ import { capoLabel, parseCapo } from '../utils/songText';
 interface SongsLabProps {
   focusSongId: string | null;
   /** Open a song, or (null) go back to the list. `replace` for a correction
-   *  rather than a move — see the dead-link effect below. */
+   *  rather than a move, see the dead-link effect below. */
   onOpenSong: (id: string | null, replace?: boolean) => void;
   /** Set when Home sent you here to write a new song down. */
   openDraft?: boolean;
@@ -62,7 +63,7 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
   const songs = getSongs();
 
   // Opening or closing a song is a page change inside one tab, so the window's
-  // scroll offset survives it — from halfway down a long list you would land
+  // scroll offset survives it, from halfway down a long list you would land
   // halfway down the song, with its title above the fold. App.tsx does this for
   // tab changes and cannot see this one.
   useEffect(() => {
@@ -99,8 +100,8 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
 
   const focused = focusSongId ? getSong(focusSongId) : undefined;
 
-  // A link to a song that is no longer here — deleted, or carried over from
-  // someone else's library — lands on the list. The address is corrected with
+  // A link to a song that is no longer here, deleted, or carried over from
+  // someone else's library, lands on the list. The address is corrected with
   // it so the bar agrees with the screen and a reload does not try the dead id
   // again; replaced rather than pushed, or Back would walk straight into it.
   // Only once the library is open: until then every id is unresolved.
@@ -167,13 +168,18 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
           <button type="button" className="btn btn-primary" onClick={() => setDraft(blankDraft())}>
             Add song
           </button>
-          {/* Add song keeps its words — it is what this page is for. These two
+          {/* Add song keeps its words, it is what this page is for. These two
               are the pair either side of it, and a pair reads as a pair. */}
           <button type="button" className="btn btn-tray" onClick={doExport} aria-label="Export your library" title="Export your library to a file">
             <IconTray dir="out" aria-hidden="true" />
           </button>
           <button type="button" className="btn btn-tray" onClick={() => fileInput.current?.click()} aria-label="Import a library file" title="Import a library file">
             <IconTray dir="in" aria-hidden="true" />
+          </button>
+          {/* The Tab Player left the main navigation; it opens a score file,
+              which is a thing you do from your songs. */}
+          <button type="button" className="btn" onClick={() => go({ tab: 'tabs', songId: null })} title="Open a Guitar Pro or MusicXML file">
+            Tab file
           </button>
           <input
             ref={fileInput}
@@ -265,7 +271,7 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
       {visible.length === 0 ? (
         <p className="songs-empty">
           {songs.length === 0
-            ? 'No songs in repertoire yet. Add your first song to begin.'
+            ? 'No songs yet. Add your first one.'
             : 'Nothing matches that.'}
         </p>
       ) : (
@@ -278,7 +284,7 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
                   type="button"
                   className="songrow"
                   onClick={() => onOpenSong(song.id)}
-                  title={`${song.title} — ${STATUS_LABEL[song.status]}`}
+                  title={`${song.title}: ${STATUS_LABEL[song.status]}`}
                 >
                   <span className={`songrow-state is-${song.status}`} aria-hidden="true" />
                   <span className="songrow-day readout">

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { detectPitch, PitchStabilizer } from '../utils/pitch';
+import { detectPitch, PitchStabilizer, VoiceSmoother } from '../utils/pitch';
 import type { PitchResult } from '../utils/pitch';
 
 // Shared microphone + pitch detection pipeline (getUserMedia -> AnalyserNode
@@ -13,7 +13,13 @@ export interface MicPitch {
   stop: () => void;
 }
 
-export function useMicPitch(): MicPitch {
+/**
+ * 'instrument' snaps to a note and holds it, for a needle reading a string.
+ * 'voice' keeps the pitch continuous, for a trace of somebody singing.
+ */
+export type PitchMode = 'instrument' | 'voice';
+
+export function useMicPitch(mode: PitchMode = 'instrument'): MicPitch {
   const [pitch, setPitch] = useState<PitchResult | null>(null);
   const [isActive, setIsActive] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +30,9 @@ export function useMicPitch(): MicPitch {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameId = useRef<number | null>(null);
   const bufferRef = useRef<Float32Array | null>(null);
-  const stabilizerRef = useRef<PitchStabilizer>(new PitchStabilizer());
+  const stabilizerRef = useRef<PitchStabilizer | VoiceSmoother>(
+    mode === 'voice' ? new VoiceSmoother() : new PitchStabilizer()
+  );
 
   const stop = useCallback(() => {
     setIsActive(false);
@@ -90,7 +98,7 @@ export function useMicPitch(): MicPitch {
       setIsActive(true);
     } catch (err) {
       console.error('Microphone initialization failed:', err);
-      setError('Could not access the microphone. Please check system permissions.');
+      setError('Microphone blocked. Allow it in settings.');
       stop();
     }
   }, [stop]);

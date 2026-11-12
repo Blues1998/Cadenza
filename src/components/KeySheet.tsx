@@ -23,13 +23,13 @@ const GROUPS: { name: string; where?: string; rows: Row[] }[] = [
     name: 'Guitar mode',
     where: 'Theory · Physics',
     rows: [
-      { keys: <><Key>1</Key>…<Key>8</Key></>, what: 'Hold a chord shape — C G D A E Am Em Dm' },
-      { keys: <><Key>Z</Key><Key>X</Key><Key>C</Key><Key>V</Key><Key>B</Key><Key>N</Key></>, what: 'Pick a string, low to high — sweep them for a strum' }
+      { keys: <><Key>1</Key>…<Key>8</Key></>, what: 'Hold a chord shape: C G D A E Am Em Dm' },
+      { keys: <><Key>Z</Key><Key>X</Key><Key>C</Key><Key>V</Key><Key>B</Key><Key>N</Key></>, what: 'Pick a string, low to high. Sweep to strum' }
     ]
   },
   {
     name: 'Keyboard as an instrument',
-    where: 'Theory · Song Hero',
+    where: 'Theory',
     rows: [
       { keys: <><Key>A</Key><Key>S</Key><Key>D</Key><Key>F</Key><Key>G</Key><Key>H</Key><Key>J</Key><Key>K</Key></>, what: 'White keys, A being the root' },
       { keys: <><Key>W</Key><Key>E</Key><Key>T</Key><Key>Y</Key><Key>U</Key></>, what: 'The black keys between them' }
@@ -41,7 +41,7 @@ const GROUPS: { name: string; where?: string; rows: Row[] }[] = [
  * The keys, written down.
  *
  * The app has had a keyboard guitar and a keyboard piano in it for as long as
- * it has had a Theory page, and nothing anywhere said so — a shortcut nobody
+ * it has had a Theory page, and nothing anywhere said so, a shortcut nobody
  * can discover is a shortcut nobody has. One key opens the list, and the list
  * says which key opened it.
  */

@@ -2,26 +2,26 @@
 //
 // Everything lives behind a hash. The built site is served from a project
 // subpath on GitHub Pages with no server-side rewriting, so a real path like
-// /theory would 404 on reload — the one moment an address most needs to work.
+// /theory would 404 on reload, the one moment an address most needs to work.
 // A hash never reaches a server, so refresh, Back and a pasted link all behave
 // the same whether the app is on Pages, on a file:// copy, or on localhost.
 //
 // The slugs are not the internal tab ids. Two of the ids read as the wrong
-// thing in an address bar — 'library' is the song list and 'songs' is the
-// rhythm game — and an address is something people read.
+// thing in an address bar, 'library' is the song list and 'songs' is the
+// rhythm game, and an address is something people read.
 
 /**
  * Every destination the app has.
  *
  * Declared here rather than beside the rail's icons because this is the
  * module the addresses are built from, and the build reads it directly to
- * write the 404 page — which it can only do while nothing else has to be
+ * write the 404 page, which it can only do while nothing else has to be
  * loaded to make sense of it. The rail re-exports it, so nothing that already
  * imports it from there had to change.
  */
 export type ActiveTab =
   | 'dashboard' | 'journey' | 'ear-training' | 'theory' | 'play' | 'physics'
-  | 'rhythm' | 'tuner' | 'tabs' | 'songs' | 'library' | 'chordbook';
+  | 'rhythm' | 'tuner' | 'tabs' | 'library' | 'chordbook' | 'practice' | 'me';
 
 export interface Route {
   tab: ActiveTab;
@@ -49,7 +49,8 @@ export const SLUG: Record<ActiveTab, string> = {
   tuner: 'tuner',
   play: 'challenges',
   tabs: 'tabs',
-  songs: 'song-hero'
+  practice: 'practice',
+  me: 'me'
 };
 
 /** Every address there is, in the order the rail offers them. */
@@ -59,7 +60,7 @@ const TAB_BY_SLUG = new Map<string, ActiveTab>(
   (Object.entries(SLUG) as [ActiveTab, string][]).map(([tab, slug]) => [slug, tab])
 );
 
-// A song id is ours — a timestamp and some random — but it is decoded on the
+// A song id is ours, a timestamp and some random, but it is decoded on the
 // way back in, and anything at all can be typed into an address bar.
 const decode = (part: string): string => {
   try {

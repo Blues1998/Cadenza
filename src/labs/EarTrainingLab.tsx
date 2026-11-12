@@ -28,7 +28,7 @@ import { CHORD_FEELINGS } from '../utils/glossary';
 import { IconSounding } from '../components/Icons';
 
 // Two of the longer 7th-chord names get an abbreviated parenthetical
-// (everything else is short enough to show in full) — the feeling word
+// (everything else is short enough to show in full), the feeling word
 // itself always comes from CHORD_FEELINGS so it can't drift out of sync
 // with the rest of the app's chord-quality labeling.
 const CHORD_SHORT_LABEL_OVERRIDES: Record<string, string> = {
@@ -48,8 +48,8 @@ const chordItemId = (name: string): string => `chord:${name}`;
 // The order things are introduced in on Auto, easiest first. Not the
 // chromatic order: the octave and the fifth are the two intervals a beginner
 // can already hear before being taught anything, so they anchor the row, and
-// the tritone and the minor 2nd — the two that need a reference to place at
-// all — come last.
+// the tritone and the minor 2nd, the two that need a reference to place at
+// all, come last.
 const INTERVAL_LADDER = [0, 12, 7, 5, 4, 3, 2, 9, 8, 10, 11, 1, 6];
 
 // Same idea for chord qualities: the major/minor split first, then the
@@ -179,7 +179,7 @@ export const EarTrainingLab: React.FC = () => {
     : { items: CHORD_STRIP_ITEMS, unlocked: difficulty === 'auto' ? chordsUnlocked : CHORD_STRIP_ITEMS.length };
 
   // Which item to ask next. Weighted toward what you are weakest at and what
-  // is due — in every difficulty, not just Auto. A hand-set level chooses the
+  // is due, in every difficulty, not just Auto. A hand-set level chooses the
   // pool, not the order within it, and a uniform draw over a pool you have
   // half learned spends half its questions on the half you already know.
   const chooseInterval = (pool: IntervalInfo[]): IntervalInfo => {
@@ -198,7 +198,7 @@ export const EarTrainingLab: React.FC = () => {
     setIsAnswered(false);
     setUserAnswer(null);
     // The strip's marker is cleared with the answer it belonged to. Left up,
-    // it would sit on the previous question's item all through the next one —
+    // it would sit on the previous question's item all through the next one,
     // and since the drill never repeats an item back to back, that quietly
     // rules an option out for you.
     setLatestItemId(null);
@@ -362,7 +362,7 @@ export const EarTrainingLab: React.FC = () => {
       ? correctInterval?.name === option
       : correctChord?.name === option;
 
-    // Grade the item itself, right or wrong — the miss is the more useful of
+    // Grade the item itself, right or wrong, the miss is the more useful of
     // the two, and it is the one a running total of successes throws away.
     const itemId = quizMode === 'intervals'
       ? (correctInterval ? intervalItemId(correctInterval.semitones) : null)
@@ -396,7 +396,7 @@ export const EarTrainingLab: React.FC = () => {
   // If tab mode runs dry mid-session (switching the library pick to a piece
   // with no gradable candidates), generateQuestion() would otherwise bail
   // out early having already cleared the old candidate/correctMidis while
-  // leaving the previous correctInterval/options on screen — an unanswerable
+  // leaving the previous correctInterval/options on screen, an unanswerable
   // stale question. Bounce back to the start screen instead, same as the
   // already-disabled Start button for that same empty-candidates case.
   useEffect(() => {
@@ -448,7 +448,7 @@ export const EarTrainingLab: React.FC = () => {
               <span className="field-label">Practice From</span>
               {tabSource.libraryEntries.length === 0 ? (
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                  Nothing saved yet — import a piece in Tab Player first.
+                  Nothing saved yet. Open a tab file first.
                 </p>
               ) : (
                 <select
@@ -499,7 +499,7 @@ export const EarTrainingLab: React.FC = () => {
             tone="secondary"
             size="sm"
             options={[
-              { value: 'auto' as Difficulty, label: 'Auto', title: 'Asks whatever you are worst at, and adds a new one each time you have earned it' },
+              { value: 'auto' as Difficulty, label: 'Auto', title: 'Focuses on what you miss most' },
               { value: 'super-beginner' as Difficulty, label: 'Starter', title: 'Unison, 5th, octave' },
               { value: 'easy' as Difficulty, label: 'Easy' },
               { value: 'medium' as Difficulty, label: 'Medium' },

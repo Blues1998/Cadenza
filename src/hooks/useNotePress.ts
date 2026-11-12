@@ -53,7 +53,7 @@ export function useNotePress(play: (midi: number) => void, { holdMs = 300 }: Not
     begin(midi);
   }, [begin]);
 
-  // A pointer released outside the instrument — or off the window entirely —
+  // A pointer released outside the instrument, or off the window entirely,
   // must still let go of the note, or it rings until the safety cap.
   useEffect(() => {
     const stop = () => end();

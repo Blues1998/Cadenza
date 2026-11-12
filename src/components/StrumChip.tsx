@@ -7,7 +7,7 @@ import { STROKE_FACE, onBeat, parseStrum } from '../utils/strum';
  * These chips said "D D U U D U" directly above a grid drawing that same
  * pattern as arrows, so the one screen carried two notations for one idea and
  * the letters were the half nobody could read at a glance. The written form
- * still exists — it is what the field holds and what gets saved — but a thing
+ * still exists, it is what the field holds and what gets saved, but a thing
  * you pick by looking should be picked by looking.
  *
  * Anything that will not parse falls back to its own text rather than to

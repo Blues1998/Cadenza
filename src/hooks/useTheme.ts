@@ -30,7 +30,7 @@ export function useTheme() {
   }, [theme]);
 
   // Track the OS setting live, but only while the user hasn't picked an
-  // explicit override — re-checked on every change so a later toggle (which
+  // explicit override, re-checked on every change so a later toggle (which
   // writes an override) correctly stops this from clobbering their choice.
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: light)');
