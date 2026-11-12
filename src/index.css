@@ -12126,8 +12126,3 @@ button.strumcell:hover { background: var(--surface-3); }
   gap: 0.4rem;
 }
 
-.onb-sample {
-  font-size: 0.85rem;
-  color: var(--primary);
-  text-align: center;
-}

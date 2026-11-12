@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { go } from '../hooks/useRoute';
 import { useLibrary } from '../hooks/useLibrary';
-import { createSong, getSongs, loadSampleLibrary } from '../utils/library';
+import { createSong, getSongs } from '../utils/library';
 import { setProfile, useProfile, type Level, type ProfileInstrument } from '../utils/profile';
 import { useBackToClose } from '../utils/nativeShell';
 
@@ -57,13 +57,6 @@ export const Onboarding: React.FC = () => {
     const wanted = drafts.filter(d => d.title.trim());
     setBusy(true);
     for (const d of wanted) await createSong({ title: d.title, artist: d.artist });
-    setBusy(false);
-    next();
-  };
-
-  const sample = async () => {
-    setBusy(true);
-    await loadSampleLibrary();
     setBusy(false);
     next();
   };
@@ -175,9 +168,6 @@ export const Onboarding: React.FC = () => {
             </div>
             <button type="button" className="btn btn-primary onb-cta" disabled={busy} onClick={() => void saveSongs()}>
               {drafts.some(d => d.title.trim()) ? 'Add songs' : 'Skip'}
-            </button>
-            <button type="button" className="onb-link onb-sample" disabled={busy} onClick={() => void sample()}>
-              Or load 36 sample songs
             </button>
           </>
         ))}

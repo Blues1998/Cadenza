@@ -36,7 +36,6 @@ import {
 import { exportRecords, importRecords, loadRecords, type LoopRecord } from './records';
 import { parseProgressions, uniqueChords } from './songText';
 import { linesFromText, type ChartLineRecord } from './chart';
-import { INITIAL_SONGS } from '../data/septemberSeed';
 import { syncUpsertSong, syncDeleteSong } from './cloudSync';
 
 export type SongStatus = 'learning' | 'playable' | 'solid' | 'complete';
@@ -129,8 +128,6 @@ export interface Challenge {
 const CHANGE_EVENT = STORE_CHANGE_EVENT;
 const SEEDED_SETTING = 'seeded-september';
 
-interface Setting { id: string; value: unknown }
-
 // ---------------------------------------------------------------------------
 // Dates. Everything is local, a practice session belongs to the day you were
 // sitting in, not to whatever UTC thought at the time.
@@ -193,17 +190,13 @@ function migrateChart(chart: SongChartRecord | null | undefined): SongChartRecor
   return { ...rest, lines: linesFromText(source, chart.beatsPerBar ?? 4) };
 }
 
-const EXCEL_MIGRATION_SETTING = 'seeded-excel-songs-v2';
-
 export function initLibrary(): Promise<void> {
   if (readyPromise) return readyPromise;
   readyPromise = (async () => {
     kind = await storageKind();
-    const [loadedSongs, loadedSessions, _loadedChallenges, settings] = await Promise.all([
+    const [loadedSongs, loadedSessions] = await Promise.all([
       readAll<Song>('songs'),
       readAll<PracticeSession>('sessions'),
-      readAll<Challenge>('challenges'),
-      readAll<Setting>('settings'),
       loadChordBook(),
       loadLoopBook(),
       loadSavedLoops(),
@@ -212,23 +205,6 @@ export function initLibrary(): Promise<void> {
     songs = loadedSongs.map(song => ({ ...song, chart: migrateChart(song.chart) }));
     sessions = loadedSessions;
     challenge = null;
-
-    // The 36-song workbook import. It used to be written into every install
-    // on first launch, which handed every new user somebody else's library;
-    // now a fresh install starts empty and onboarding offers the songs as a
-    // sample (loadSampleLibrary). An install that already holds songs from
-    // before the v2 import is still upgraded to it, as it always was.
-    const excelMigrated = settings.find(s => s.id === EXCEL_MIGRATION_SETTING);
-    if (!excelMigrated) {
-      if (loadedSongs.length > 0) {
-        await clearStore('challenges');
-        challenge = null;
-        songs = INITIAL_SONGS.map(song => ({ ...song, chart: migrateChart(song.chart) }));
-        await clearStore('songs');
-        await putRecords('songs', songs);
-      }
-      await putRecords('settings', [{ id: EXCEL_MIGRATION_SETTING, value: true }]);
-    }
     ready = true;
     announce();
   })();
@@ -241,14 +217,6 @@ export function initLibrary(): Promise<void> {
 
 export const getSongs = (): Song[] => songs;
 
-/** Load the sample library (the workbook's 36 songs) into an empty one. */
-export async function loadSampleLibrary(): Promise<void> {
-  await initLibrary();
-  if (songs.length > 0) return;
-  songs = INITIAL_SONGS.map(song => ({ ...song, chart: migrateChart(song.chart) }));
-  await putRecords('songs', songs);
-  announce();
-}
 export const getSessions = (): PracticeSession[] => sessions;
 export const getChallenge = (): Challenge | null => challenge;
 export const getSong = (id: string): Song | undefined => songs.find(s => s.id === id);
