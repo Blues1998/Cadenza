@@ -21,6 +21,47 @@
         }
       })();
     </script>
+    <script>
+      // The last net. If the app's code never starts (a file that would not
+      // load, an error before anything was drawn), the page would otherwise
+      // stay blank. This draws a plain explanation instead, with no help from
+      // the code that just failed. Once the app is up, it stands down.
+      (function () {
+        var shown = false;
+        function show(reason) {
+          if (window.__sfBooted || shown) return;
+          var root = document.getElementById('root');
+          if (!root || root.childElementCount > 0) return;
+          shown = true;
+          var light = document.documentElement.getAttribute('data-theme') === 'light';
+          var bg = light ? '#F7F6F2' : '#111214', ink = light ? '#17191C' : '#F1F0EC';
+          var muted = light ? '#5C6066' : '#A9ADB3', accent = light ? '#D9531A' : '#FF6A2A';
+          document.body.style.background = bg;
+          root.innerHTML =
+            '<div style="min-height:100vh;display:grid;place-items:center;padding:24px 16px;box-sizing:border-box;font:16px/1.55 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:' + ink + '">' +
+            '<div style="max-width:26rem">' +
+            '<p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:' + accent + ';font-weight:700">Sharps&amp;Flats did not start</p>' +
+            '<h1 style="margin:0 0 10px;font-size:24px;line-height:1.25">The app could not finish opening</h1>' +
+            '<p style="margin:0 0 10px;color:' + muted + '">Part of it failed to load. On the web this is usually a dropped connection or a new version going live mid-load. In the Android app, an update from the Play Store fixes it if reloading does not.</p>' +
+            '<p style="margin:0 0 20px;color:' + muted + '">Your songs and progress are stored separately and are not affected.</p>' +
+            '<button type="button" onclick="location.replace(location.pathname + location.search)" style="font:inherit;font-weight:600;border:0;border-radius:8px;padding:10px 18px;background:' + accent + ';color:#111214;cursor:pointer">Reload</button>' +
+            '<p style="margin:20px 0 0;font:12px/1.5 ui-monospace,Menlo,monospace;color:' + muted + ';word-break:break-word"></p>' +
+            '</div></div>';
+          var code = root.querySelector('p:last-child');
+          if (code) code.textContent = String(reason || '').slice(0, 300);
+        }
+        window.__sfBootFail = show;
+        window.addEventListener('error', function (e) {
+          var t = e.target;
+          if (t && (t.tagName === 'SCRIPT' || (t.tagName === 'LINK' && t.rel === 'modulepreload'))) show('Could not load ' + (t.src || t.href));
+          else if (e.error || e.message) show(e.message);
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+          show(e.reason && e.reason.message ? e.reason.message : e.reason);
+        });
+        setTimeout(function () { show('It took too long to start.'); }, 20000);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

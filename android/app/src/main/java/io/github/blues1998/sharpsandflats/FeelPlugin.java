@@ -42,15 +42,21 @@ public class FeelPlugin extends Plugin {
     @PluginMethod
     public void play(PluginCall call) {
         String kind = call.getString("kind", "tap");
-        if (vibrator != null && vibrator.hasVibrator() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            VibrationEffect effect = effectFor(kind);
-            if (effect != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    vibrator.vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH));
-                } else {
-                    vibrator.vibrate(effect);
+        // Haptics are a nicety. A phone whose vibrator service misbehaves (some
+        // do, under battery savers or work profiles) loses the tap, never the app.
+        try {
+            if (vibrator != null && vibrator.hasVibrator() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                VibrationEffect effect = effectFor(kind);
+                if (effect != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        vibrator.vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH));
+                    } else {
+                        vibrator.vibrate(effect);
+                    }
                 }
             }
+        } catch (RuntimeException e) {
+            // Nothing to feel this time.
         }
         call.resolve();
     }
@@ -58,13 +64,18 @@ public class FeelPlugin extends Plugin {
     @PluginMethod
     public void capabilities(PluginCall call) {
         JSObject out = new JSObject();
-        out.put("vibrator", vibrator != null && vibrator.hasVibrator());
-        out.put("composition", Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && supported(VibrationEffect.Composition.PRIMITIVE_CLICK, VibrationEffect.Composition.PRIMITIVE_TICK));
+        try {
+            out.put("vibrator", vibrator != null && vibrator.hasVibrator());
+            out.put("composition", Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && supported(VibrationEffect.Composition.PRIMITIVE_CLICK, VibrationEffect.Composition.PRIMITIVE_TICK));
+        } catch (RuntimeException e) {
+            out.put("vibrator", false);
+            out.put("composition", false);
+        }
         call.resolve(out);
     }
 
     private boolean supported(int... primitives) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return false;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || vibrator == null) return false;
         for (boolean ok : vibrator.arePrimitivesSupported(primitives)) if (!ok) return false;
         return true;
     }

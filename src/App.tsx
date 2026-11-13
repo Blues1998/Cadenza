@@ -16,6 +16,7 @@ import { pressPlay } from './hooks/usePlayKey';
 import { isTypingTarget } from './utils/keys';
 import { parseHash } from './utils/route';
 import { LAB_CHUNKS } from './labs/chunks';
+import { QuietBoundary, ScreenTrouble, TroubleBoundary, TroubleToast } from './components/Trouble';
 
 // One download per destination.
 //
@@ -195,6 +196,22 @@ function App() {
           <div key={activeTab} className="lab-enter">
             {/* Shown only the first time a lab is opened, and usually not even
                 then: the rail has normally started the download already. */}
+            {/* A screen that crashes is replaced by an explanation in its
+                own place; the tabs, the run and every other screen carry on.
+                Opening another song or screen is a fresh start. */}
+            <TroubleBoundary
+              where={`the ${LABELS.get(activeTab) ?? activeTab} screen`}
+              resetKey={`${activeTab}/${songId ?? ''}`}
+              fallback={(error, retry, retries) => (
+                <ScreenTrouble
+                  error={error}
+                  retry={retry}
+                  retries={retries}
+                  label={LABELS.get(activeTab) ?? 'This screen'}
+                  onHome={activeTab === 'dashboard' && !songId ? undefined : () => navigate('dashboard')}
+                />
+              )}
+            >
             <Suspense fallback={
               <p className="lab-loading readout" role="status">
                 Opening {LABELS.get(activeTab) ?? 'Sharps&Flats'}…
@@ -202,13 +219,25 @@ function App() {
             }>
               {renderActiveContent()}
             </Suspense>
+            </TroubleBoundary>
           </div>
         </main>
 
-        {overlay === 'jump' && <JumpTo onClose={() => setOverlay(null)} onToggleTheme={toggleTheme} />}
-        {overlay === 'keys' && <KeySheet onClose={() => setOverlay(null)} />}
-        <AuthModal />
-        <Onboarding />
+        {/* Layers over the page. One that breaks closes itself and says so,
+            rather than taking the page underneath down with it. */}
+        <QuietBoundary where="search">
+          {overlay === 'jump' && <JumpTo onClose={() => setOverlay(null)} onToggleTheme={toggleTheme} />}
+        </QuietBoundary>
+        <QuietBoundary where="the shortcuts sheet">
+          {overlay === 'keys' && <KeySheet onClose={() => setOverlay(null)} />}
+        </QuietBoundary>
+        <QuietBoundary where="sign-in">
+          <AuthModal />
+        </QuietBoundary>
+        <QuietBoundary where="the welcome tour">
+          <Onboarding />
+        </QuietBoundary>
+        <TroubleToast />
       </div>
     </AuthProvider>
   );
