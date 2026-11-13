@@ -335,6 +335,9 @@ export const ChordBookLab: React.FC = () => {
         <div>
           <h2 className="lab-title"><LabIcon tab="chordbook" />Chords</h2>
           <p className="songs-count readout">
+            {entries.length === 0 ? (
+              <><strong>0</strong> chords</>
+            ) : (<>
             <strong>{String(counts.solid).padStart(2, '0')}</strong> / {entries.length}
             {entries.length > 0 && (
               <span className="tallybar is-wide" aria-hidden="true">
@@ -350,6 +353,7 @@ export const ChordBookLab: React.FC = () => {
                 counts.unrated > 0 && `${counts.unrated} unrated`
               ].filter(Boolean).join(' · ') || 'all marked'}
             </span>
+            </>)}
           </p>
         </div>
         <div className="chordbook-actions">

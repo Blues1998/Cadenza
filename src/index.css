@@ -6430,6 +6430,27 @@ button.progression-chord:hover {
   justify-content: flex-start;
 }
 
+/* On a phone, fixed-width cards wrapped two or three to a row with a ragged
+   gap at the end. Equal columns that fill the row instead. */
+@media (max-width: 640px) {
+  .chordcards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(6.25rem, 1fr));
+  }
+
+  .chordcards-book {
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  }
+
+  .chordcards-book .chordcard {
+    width: auto;
+  }
+
+  .chordcards .chordcard.is-open {
+    grid-column: 1 / -1;
+  }
+}
+
 
 /* ---------------------------------------------------------------------------
    The catalogue: every chord there is
@@ -12020,8 +12041,9 @@ button.strumcell:hover { background: var(--surface-3); }
   width: 72px;
   height: 72px;
   border-radius: 20px;
-  background: var(--primary);
-  color: var(--text-on-primary);
+  /* The logo's own navy, so the mark sits on its plate as it does on the icon. */
+  background: #00000d;
+  overflow: hidden;
 }
 
 .onb-title {
