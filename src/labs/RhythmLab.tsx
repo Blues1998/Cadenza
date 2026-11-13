@@ -10,6 +10,7 @@ import { clearTempoLog, getTempoLog, heldLabel, logTempo, whenHeld, type TempoRu
 import { reportProgress } from '../utils/progress';
 import { feel } from '../utils/haptics';
 import { frameGate } from '../utils/frames';
+import { swingOffbeat } from '../utils/swing';
 
 interface TapHit {
   id: number;
@@ -380,8 +381,11 @@ export const RhythmLab: React.FC = () => {
       for (let s = 1; s < sub; s++) {
         let ratio = s / sub;
         if (sub === 2 && s === 1 && sw > 0) {
-          // Swing pushes the offbeat 8th note towards the triplet pocket (0.5 -> ~0.667)
-          ratio = 0.5 + sw * (2 / 3 - 0.5);
+          // Swing delays the off-beat eighth: 0 is even (half way), 0.5 is the
+          // triplet shuffle (two thirds of the way, long-short 2:1), 0.75 a
+          // hard dotted swing (three quarters, 3:1). It used to stop at 0.61,
+          // so "Shuffle" never actually reached a shuffle.
+          ratio = swingOffbeat(sw);
         }
         audio.playClick(nextBeatTime.current + ratio * secondsPerBeat, false, true);
       }
@@ -668,7 +672,12 @@ export const RhythmLab: React.FC = () => {
             <Segmented<number>
               label="Clicks per beat"
               value={subdivision}
-              onChange={setSubdivision}
+              onChange={n => {
+                setSubdivision(n);
+                // Swing lives between pairs of eighths; with any other count
+                // there is nothing for it to move, so it goes back to straight.
+                if (n !== 2) setSwing(0);
+              }}
               options={SUBDIVISIONS}
               size="sm"
               full
@@ -708,7 +717,13 @@ export const RhythmLab: React.FC = () => {
               subdivision={subdivision}
               bpm={bpm}
               swing={swing}
-              onSwingChange={setSwing}
+              onSwingChange={amount => {
+                setSwing(amount);
+                // A swung feel is heard in the off-beat click. With one click a
+                // beat there is none, so Straight and Shuffle sounded identical:
+                // asking for swing brings in the eighths it needs.
+                if (amount > 0 && subdivision !== 2) setSubdivision(2);
+              }}
               at={beatAt}
               isPlaying={isPlaying}
             />

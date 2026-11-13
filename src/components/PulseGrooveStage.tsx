@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { SHUFFLE, SWING_MAX, swingName, swingOffbeat } from '../utils/swing';
 import { frameGate } from '../utils/frames';
 
 interface PulseGrooveStageProps {
@@ -19,6 +20,14 @@ interface PulseGrooveStageProps {
  * Sized with a fixed internal coordinate system (400x180 at 2x DPR) to ensure
  * rock-solid GPU rendering across all browsers without dynamic canvas resizing loops.
  */
+// What each feel sounds like, in the way people count it out loud.
+const FEEL_SAID: Record<string, string> = {
+  Straight: 'Even eighths: da-da da-da',
+  'Light swing': 'A slight lilt on the off-beat',
+  Shuffle: 'Long-short: daa-da daa-da',
+  'Heavy swing': 'Very long-short: daaa-d daaa-d'
+};
+
 export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
   beatsPerBar,
   subdivision,
@@ -35,6 +44,8 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
   // The loop reads these rather than the state, so it is not torn down and
   // rebuilt on every beat, which also threw away the ripples it was drawing.
   const beatRef = useRef(1);
+  const swingRef = useRef(swing);
+  swingRef.current = swing;
   const accentRef = useRef(false);
 
   useEffect(() => {
@@ -183,7 +194,12 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
         const totalSubTicks = (beatsPerBar - 1) * subdivision;
         for (let s = 0; s <= totalSubTicks; s++) {
           if (s % subdivision !== 0) {
-            const sx = trackLeft + (s / Math.max(1, totalSubTicks)) * trackWidth;
+            // With two clicks a beat the off-beat sits where the swing puts it,
+            // so the dots show the difference between straight and shuffle.
+            const at = subdivision === 2
+              ? Math.floor(s / 2) + swingOffbeat(swingRef.current)
+              : s / subdivision;
+            const sx = trackLeft + (at / Math.max(1, beatsPerBar - 1)) * trackWidth;
             ctx.beginPath();
             ctx.arc(sx, trackY, 1.5, 0, Math.PI * 2);
             ctx.fillStyle = alpha(TEXT, 0.15);
@@ -237,7 +253,8 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
     const themeWatch = new MutationObserver(() => { if (!rafId) rafId = requestAnimationFrame(render); });
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => { cancelAnimationFrame(rafId); themeWatch.disconnect(); };
-  }, [at, beatsPerBar, subdivision, isPlaying]);
+  // swing too: asleep, the stage still has to redraw its dots when it moves.
+  }, [at, beatsPerBar, subdivision, isPlaying, swing]);
 
   return (
     <div className={`pulse-groove-stage${isAccent && isPlaying ? ' is-accent-bar' : ''}`}>
@@ -280,15 +297,7 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
       <div className="swing-shuffle-control">
         <div className="swing-header-group">
           <span className="swing-title">Feel</span>
-          <span className="swing-feel-tag">
-            {swing === 0
-              ? 'Straight'
-              : swing < 0.4
-              ? 'Light swing'
-              : swing <= 0.67
-              ? 'Shuffle'
-              : 'Heavy swing'}
-          </span>
+          <span className="swing-feel-tag">{swingName(swing)}</span>
         </div>
 
         <div className="swing-slider-wrap">
@@ -296,16 +305,18 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
             type="range"
             className="swing-range-input"
             min={0}
-            max={0.75}
+            max={SWING_MAX}
             step={0.01}
             value={swing}
             onChange={e => onSwingChange(Number(e.target.value))}
             aria-label="Swing feel ratio"
           />
           <span className="swing-percent readout">
-            {Math.round((swing / 0.75) * 100)}%
+            {Math.round((swing / SWING_MAX) * 100)}%
           </span>
         </div>
+
+        <p className="swing-said">{FEEL_SAID[swingName(swing)]}</p>
 
         <div style={{ display: 'flex', gap: '0.35rem' }}>
           <button
@@ -318,9 +329,9 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
           </button>
           <button
             type="button"
-            className={`btn ramp-btn${Math.abs(swing - 0.67) < 0.05 ? ' is-active' : ''}`}
-            onClick={() => onSwingChange(0.67)}
-            title="Triplet shuffle, 2:1"
+            className={`btn ramp-btn${Math.abs(swing - SHUFFLE) < 0.05 ? ' is-active' : ''}`}
+            onClick={() => onSwingChange(SHUFFLE)}
+            title="Long-short, the triplet feel"
           >
             Shuffle
           </button>
