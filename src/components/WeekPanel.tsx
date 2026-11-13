@@ -34,7 +34,7 @@ export const WeekPanel: React.FC<{ recap: WeekRecap }> = ({ recap }) => {
       <div className="card-head">
         <span className="surface-label">This week</span>
         <span className="card-count readout">
-          {recap.minutes > 0 ? <><strong>{recap.minutes}</strong> min</> : 'nothing yet'}
+          {recap.minutes > 0 && <><strong>{recap.minutes}</strong> min</>}
         </span>
       </div>
 
@@ -63,7 +63,7 @@ export const WeekPanel: React.FC<{ recap: WeekRecap }> = ({ recap }) => {
 
       {recap.quiet ? (
         <p className="week-quiet">
-          Nothing logged in the last 7 days.
+          Nothing yet. Practice a song or a drill and your days fill in here.
         </p>
       ) : (
         <ul className="weekfacts">
@@ -96,15 +96,19 @@ export const WeekPanel: React.FC<{ recap: WeekRecap }> = ({ recap }) => {
         </ul>
       )}
 
+      {(recap.totalMinutes > 0 || recap.avgConfidence !== null) && (
       <div className="week-foot card-foot">
         {best && best.minutes > 0 && (
           <span className="week-most">Most of it on <strong>{best.title}</strong></span>
         )}
         <span className="week-alltime readout">
-          All time · {spanLabel(recap.totalMinutes)}
-          {recap.avgConfidence !== null && ` · ${recap.avgConfidence.toFixed(1)}/10 confidence`}
+          {[
+            recap.totalMinutes > 0 && `All time · ${spanLabel(recap.totalMinutes)}`,
+            recap.avgConfidence !== null && `${recap.avgConfidence.toFixed(1)}/10 average confidence`
+          ].filter(Boolean).join(' · ')}
         </span>
       </div>
+      )}
     </section>
   );
 };

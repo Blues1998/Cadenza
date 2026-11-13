@@ -410,12 +410,14 @@ const TemperamentTable: React.FC = () => (
       The error, measured in cents (1 semitone = 100¢):
     </p>
 
+    {/* On a phone the two raw cent columns go: the error is their difference
+        and says what they would, and without them the table fits. */}
     <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+      <table className="temper-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
         <thead>
           <tr style={{ color: 'var(--text-muted)', textAlign: 'left' }}>
-            {['Interval', 'Pure ratio', 'Pure (¢)', '12-TET (¢)', 'Error', 'Hear the difference'].map(hd => (
-              <th key={hd} style={{ padding: '0.4rem 0.6rem', fontWeight: 600 }}>{hd}</th>
+            {['Interval', 'Ratio', 'Pure (¢)', '12-TET (¢)', 'Error', 'Listen'].map((hd, i) => (
+              <th key={hd} className={i === 2 || i === 3 ? 'hide-sm' : undefined} style={{ padding: '0.4rem 0.6rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{hd}</th>
             ))}
           </tr>
         </thead>
@@ -428,8 +430,8 @@ const TemperamentTable: React.FC = () => (
               <tr key={row.name} style={{ borderBottom: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
                 <td style={{ padding: '0.4rem 0.6rem', fontWeight: 600 }}>{row.name}</td>
                 <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'var(--font-mono)' }}>{row.p}:{row.q}</td>
-                <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'var(--font-mono)' }}>{justCents.toFixed(1)}</td>
-                <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'var(--font-mono)' }}>{row.semis * 100}</td>
+                <td className="hide-sm" style={{ padding: '0.4rem 0.6rem', fontFamily: 'var(--font-mono)' }}>{justCents.toFixed(1)}</td>
+                <td className="hide-sm" style={{ padding: '0.4rem 0.6rem', fontFamily: 'var(--font-mono)' }}>{row.semis * 100}</td>
                 <td style={{ padding: '0.4rem 0.6rem', fontFamily: 'var(--font-mono)', color: bad ? 'var(--warning)' : 'var(--success)' }}>
                   {error >= 0 ? '+' : ''}{error.toFixed(1)}¢
                 </td>

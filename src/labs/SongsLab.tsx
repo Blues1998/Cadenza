@@ -164,22 +164,28 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
           <h2 className="lab-title"><LabIcon tab="library" />Songs</h2>
           <p className="songs-count readout">
             <strong>{songs.length}</strong> {songs.length === 1 ? 'song' : 'songs'}
-            <span className="songs-count-sub">
-              {stats.songsComplete} complete · {stats.totalMinutes} min logged
-            </span>
+            {songs.length > 0 && (
+              <span className="songs-count-sub">
+                {stats.songsComplete} complete{stats.totalMinutes > 0 && ` · ${stats.totalMinutes} min logged`}
+              </span>
+            )}
           </p>
         </div>
         <div className="songs-actions">
           <button type="button" className="btn btn-primary" onClick={() => setDraft(blankDraft())}>
             Add song
           </button>
-          {/* Add song keeps its words, it is what this page is for. These two
-              are the pair either side of it, and a pair reads as a pair. */}
-          <button type="button" className="btn btn-tray" onClick={doExport} aria-label="Export your library" title="Export your library to a file">
-            <IconTray dir="out" aria-hidden="true" />
-          </button>
-          <button type="button" className="btn btn-tray" onClick={() => fileInput.current?.click()} aria-label="Import a library file" title="Import a library file">
+          {/* Said in words: two tray arrows side by side read as the same
+              button twice, and nobody could tell which one saves. */}
+          {songs.length > 0 && (
+            <button type="button" className="btn btn-tray" onClick={doExport} title="Save your songs and progress to a file">
+              <IconTray dir="out" aria-hidden="true" />
+              Back up
+            </button>
+          )}
+          <button type="button" className="btn btn-tray" onClick={() => fileInput.current?.click()} title="Load songs and progress from a backup file">
             <IconTray dir="in" aria-hidden="true" />
+            Restore
           </button>
           {/* The Tab Player left the main navigation; it opens a score file,
               which is a thing you do from your songs. */}
@@ -250,6 +256,7 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
         </form>
       )}
 
+      {songs.length > 0 && (
       <div className="songs-controls">
         <label className="songs-search">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -271,16 +278,22 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
           size="sm"
         />
       </div>
+      )}
 
-      {visible.length === 0 ? (
-        <p className="songs-empty">
-          {songs.length === 0
-            ? 'No songs yet. Add your first one.'
-            : 'Nothing matches that.'}
-        </p>
+      {songs.length === 0 ? (
+        !draft && (
+          <div className="songs-blank">
+            <p className="songs-blank-title">Your songs live here</p>
+            <p className="songs-blank-said">
+              Add one with its chords and strumming, and it gets chord diagrams, a play-along and a practice log. Or restore a backup from another phone.
+            </p>
+          </div>
+        )
+      ) : visible.length === 0 ? (
+        <p className="songs-empty">Nothing matches that.</p>
       ) : (
         <ul className="songlist">
-          {visible.map((song, index) => {
+          {visible.map(song => {
             const chords = songChords(song);
             return (
               <li key={song.id}>
@@ -291,15 +304,15 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
                   title={`${song.title}: ${STATUS_LABEL[song.status]}`}
                 >
                   <span className={`songrow-state is-${song.status}`} aria-hidden="true" />
-                  <span className="songrow-day readout">
-                    #{String(index + 1).padStart(2, '0')}
-                  </span>
                   <span className="songrow-name">
                     <span className="songrow-titleline">
                       <span className="songrow-title">{song.title}</span>
                       {song.revisit && <span className="revisit-flag readout">revisit</span>}
                     </span>
-                    <span className="songrow-artist">{song.artist}</span>
+                    <span className="songrow-artist">
+                      {song.artist && <>{song.artist} · </>}
+                      <span className={`songrow-status is-${song.status}`}>{STATUS_LABEL[song.status]}</span>
+                    </span>
                   </span>
                   <span className="songrow-key readout">
                     {song.key}
@@ -308,10 +321,9 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
                   <span className="songrow-chords readout">{chords.join(' · ')}</span>
                   <span className="songrow-conf" title={`Confidence ${song.confidence} of 10`}>
                     <span className="conf-bar"><span style={{ width: `${song.confidence * 10}%` }} /></span>
-                    <span className="readout">{song.confidence}</span>
+                    <span className="readout">{song.confidence}<span className="songrow-of">/10</span></span>
                   </span>
                   <span className="songrow-mins readout">{totalMinutes(song)} min</span>
-                  <span className="sr-only">{STATUS_LABEL[song.status]}</span>
                 </button>
               </li>
             );

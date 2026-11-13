@@ -9,6 +9,7 @@ import {
   COMFORT_ORDER,
   comfortOf,
   preferredVoicing,
+  skillFor,
   setComfort,
   setPreferredVoicing,
   voicingsFor,
@@ -34,11 +35,14 @@ export const ComfortMark: React.FC<{
   size?: 'sm' | 'md';
 }> = ({ symbol, size = 'md' }) => {
   const comfort = comfortOf(symbol);
+  const rated = skillFor(symbol) !== undefined;
   // Which ring to congratulate, if any. Held rather than derived because the
   // flourish belongs to the act of answering, not to the answer: mounting a
   // page of already-marked chords should not set fourteen rings off at once.
   const [justSet, setJustSet] = useState<ChordComfort | null>(null);
-  return (
+  // On a phone there is no hover to bring the words back, so the small marks
+  // carry a caption: the question until it is answered, then the answer.
+  const mark = (
     <div className={`comfort comfort-${size}`} role="group" aria-label={`How ${symbol} feels`}>
       {COMFORT_ORDER.map(value => (
         <button
@@ -57,6 +61,15 @@ export const ComfortMark: React.FC<{
           <span className="comfort-text">{COMFORT_LABEL[value]}</span>
         </button>
       ))}
+    </div>
+  );
+  if (size !== 'sm') return mark;
+  return (
+    <div className="comfort-wrap">
+      {mark}
+      <span className={`comfort-caption${rated ? ` is-${comfort}` : ''}`}>
+        {rated ? COMFORT_LABEL[comfort] : 'How does it feel?'}
+      </span>
     </div>
   );
 };
@@ -131,14 +144,15 @@ export const ChordCard: React.FC<ChordCardProps> = ({
       {onToggle && (
         <label
           className="chordpick"
-          title={picked ? `Take ${symbol} out of the bucket` : `Put ${symbol} in the bucket`}
+          title={picked ? `Take ${symbol} out of the loop` : `Add ${symbol} to a loop you can play`}
         >
           <input
             type="checkbox"
             checked={picked}
             onChange={() => onToggle(symbol)}
-            aria-label={`${symbol} in the bucket`}
+            aria-label={`${symbol} in the loop`}
           />
+          <span className="chordpick-word" aria-hidden="true">Loop</span>
         </label>
       )}
       {onRemove && (

@@ -223,7 +223,10 @@ const toAppOrder = <T,>(lowToHigh: T[]): T[] => [...lowToHigh].reverse();
 const APP_STRING_INDEX = (lowToHighIdx: number) => 5 - lowToHighIdx;
 
 interface MovableForm {
+  /** Also part of the stored id of a chosen shape, so it never changes. */
   label: string;
+  /** What a player reads, when the label is shorthand they would not. */
+  name?: string;
   rootString: number;          // 0 = low E … 5 = high e
   offsets: (number | null)[];  // low→high, relative to the root's fret
   fingers: (number | null)[];  // low→high; 1 = index … 4 = pinky
@@ -234,24 +237,24 @@ interface MovableForm {
 // showing a wrong one.
 const MOVABLE_FORMS: Record<ChordTypeId, MovableForm[]> = {
   maj: [
-    { label: 'Top-3 triad',       rootString: 3, offsets: [null, null, null, 0, 0, -2],  fingers: [null, null, null, 2, 3, 1] },
-    { label: 'Middle-3 triad',    rootString: 2, offsets: [null, null, 0, -1, -2, null], fingers: [null, null, 3, 2, 1, null] },
+    { label: 'Top-3 triad', name: 'Top 3 strings',       rootString: 3, offsets: [null, null, null, 0, 0, -2],  fingers: [null, null, null, 2, 3, 1] },
+    { label: 'Middle-3 triad', name: 'Middle 3 strings',    rootString: 2, offsets: [null, null, 0, -1, -2, null], fingers: [null, null, 3, 2, 1, null] },
     { label: 'A-shape, 4 strings', rootString: 1, offsets: [null, 0, 2, 2, 2, null],     fingers: [null, 1, 2, 3, 4, null] },
     { label: 'D-shape',           rootString: 2, offsets: [null, null, 0, 2, 3, 2],      fingers: [null, null, 1, 2, 4, 3] },
     { label: 'A-shape barre',     rootString: 1, offsets: [null, 0, 2, 2, 2, 0],         fingers: [null, 1, 3, 3, 3, 1] },
     { label: 'E-shape barre',     rootString: 0, offsets: [0, 2, 2, 1, 0, 0],            fingers: [1, 3, 4, 2, 1, 1] }
   ],
   min: [
-    { label: 'Top-3 triad',        rootString: 3, offsets: [null, null, null, 0, -1, -2], fingers: [null, null, null, 3, 2, 1] },
-    { label: 'Middle-3 triad',     rootString: 2, offsets: [null, null, 0, -2, -2, null],  fingers: [null, null, 3, 1, 2, null] },
+    { label: 'Top-3 triad', name: 'Top 3 strings',        rootString: 3, offsets: [null, null, null, 0, -1, -2], fingers: [null, null, null, 3, 2, 1] },
+    { label: 'Middle-3 triad', name: 'Middle 3 strings',     rootString: 2, offsets: [null, null, 0, -2, -2, null],  fingers: [null, null, 3, 1, 2, null] },
     { label: 'Am-shape, 4 strings', rootString: 1, offsets: [null, 0, 2, 2, 1, null],     fingers: [null, 1, 3, 4, 2, null] },
     { label: 'Dm-shape',           rootString: 2, offsets: [null, null, 0, 2, 3, 1],      fingers: [null, null, 1, 3, 4, 2] },
     { label: 'Am-shape barre',     rootString: 1, offsets: [null, 0, 2, 2, 1, 0],         fingers: [null, 1, 3, 4, 2, 1] },
     { label: 'Em-shape barre',     rootString: 0, offsets: [0, 2, 2, 0, 0, 0],            fingers: [1, 3, 4, 1, 1, 1] }
   ],
   dim: [
-    { label: 'Top-3 triad',    rootString: 3, offsets: [null, null, null, 0, -1, -3], fingers: [null, null, null, 4, 3, 1] },
-    { label: 'Middle-3 triad', rootString: 2, offsets: [null, null, 0, -2, -3, null],  fingers: [null, null, 4, 2, 1, null] },
+    { label: 'Top-3 triad', name: 'Top 3 strings',    rootString: 3, offsets: [null, null, null, 0, -1, -3], fingers: [null, null, null, 4, 3, 1] },
+    { label: 'Middle-3 triad', name: 'Middle 3 strings', rootString: 2, offsets: [null, null, 0, -2, -3, null],  fingers: [null, null, 4, 2, 1, null] },
     { label: 'A-string root', rootString: 1, offsets: [null, 0, 1, 2, 1, null],     fingers: [null, 1, 2, 4, 3, null] }
   ],
   aug: [
@@ -463,7 +466,7 @@ function placeForm(form: MovableForm, rootPc: number, type: ChordType): ChordVoi
     const frets = toAppOrder(lowToHigh);
     if (!soundsLike(frets, rootPc, type)) continue;
 
-    return finish(`${type.id}-${form.label}`, form.label, frets, toAppOrder(form.fingers));
+    return finish(`${type.id}-${form.label}`, form.name ?? form.label, frets, toAppOrder(form.fingers));
   }
   return null;
 }

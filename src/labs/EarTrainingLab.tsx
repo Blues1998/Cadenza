@@ -562,24 +562,22 @@ export const EarTrainingLab: React.FC = () => {
           </div>
         </section>
 
-        {/* Quiz Arena Panel */}
-        <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', minHeight: '320px', justifyContent: 'center', alignItems: 'center', gap: '1.5rem' }}>
+        {/* Quiz Arena Panel. First on a phone: it is what the screen is for,
+            and the settings above it pushed Start off the bottom. */}
+        <section className="glass-panel ear-arena" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', minHeight: '320px', justifyContent: 'center', alignItems: 'center', gap: '1.5rem' }}>
           {!hasStarted ? (
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255, 106, 42, 0.05)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </div>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '300px' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '300px', margin: 0 }}>
                 {sourceMode === 'tab'
                   ? 'Hear a jump from your tab, then name it.'
                   : 'Hear it, then name it.'}
               </p>
               <button
                 onClick={handleStartQuiz}
-                className="btn btn-primary"
+                className="btn btn-primary ear-start"
                 disabled={sourceMode === 'tab' && tabSource.candidates.length === 0}
-                style={{ marginTop: '0.5rem' }}
               >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
                 Start
               </button>
             </div>

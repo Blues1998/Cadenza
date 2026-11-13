@@ -181,7 +181,7 @@ function App() {
               onJump={() => setOverlay(o => (o === 'jump' ? null : 'jump'))}
             />
         {/* Below the shell breakpoint CSS hides the sidebar and shows this. */}
-        <MobileNav activeTab={activeTab} setActiveTab={navigate}
+        <MobileNav activeTab={activeTab} setActiveTab={navigate} inSong={activeTab === 'library' && !!songId}
           onJump={() => setOverlay(o => (o === 'jump' ? null : 'jump'))}
         />
 

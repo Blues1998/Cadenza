@@ -16,12 +16,17 @@ interface MobileNavProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   onJump: () => void;
+  /** A song open inside Songs: one more level down, with its own way back. */
+  inSong?: boolean;
 }
 
-export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, onJump }) => {
-  const parent = parentTab(activeTab);
-  const nested = parent !== activeTab;
-  const title = activeTab === 'dashboard' ? null : navItem(activeTab).label;
+export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, onJump, inSong = false }) => {
+  // A song page sits under the Songs list the way Chords sits under Practice,
+  // so it gets the same arrow, in the same place, instead of a second "← Songs"
+  // link of its own under a bar that showed the logo.
+  const parent = inSong ? activeTab : parentTab(activeTab);
+  const nested = inSong || parent !== activeTab;
+  const title = inSong ? 'Song' : activeTab === 'dashboard' ? null : navItem(activeTab).label;
 
   return (
     <>

@@ -32,7 +32,7 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
     <section className="glass-panel journey">
       <div className="journey-meter">
         <span className="journey-stat readout">
-          <span className="journey-stat-figure">{String(completedCount).padStart(2, '0')}</span>
+          <span className="journey-stat-figure">{completedCount}</span>
           <span className="journey-stat-total">/ {totalLevels}</span>
         </span>
         <span className="journey-bar" role="presentation">
@@ -80,7 +80,7 @@ export const Journey: React.FC<JourneyProps> = ({ setActiveTab }) => {
                       aria-expanded={isOpen}
                       onClick={() => setExpandedId(isOpen ? '' : level.id)}
                     >
-                      <span className="step-index readout">{String(step).padStart(2, '0')}</span>
+                      <span className="step-index readout">{step}</span>
                       <span className="step-title">{level.title}</span>
                     </button>
 

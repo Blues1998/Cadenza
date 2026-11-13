@@ -31,7 +31,7 @@ const FEEL_SAID: Record<string, string> = {
 export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
   beatsPerBar,
   subdivision,
-  bpm: _bpm,
+  bpm,
   swing,
   onSwingChange,
   at,
@@ -174,7 +174,8 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
       ctx.font = "bold 18px 'JetBrains Mono', monospace";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(isPlaying ? String(currentBeatDisplay) : '-', cx, cy + 1);
+      // Idle, the hub shows where the count will start rather than a dash.
+      ctx.fillText(isPlaying ? String(currentBeatDisplay) : '1', cx, cy + 1);
       ctx.restore();
 
       // Draw Track along bottom for bouncing ball
@@ -260,21 +261,27 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
     <div className={`pulse-groove-stage${isAccent && isPlaying ? ' is-accent-bar' : ''}`}>
       {/* Top Status Strip */}
       <div className="pulse-groove-strip">
-        <div className="pulse-groove-readout">
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Beat
-          </span>
-          <span className={`beat-number${isAccent && isPlaying ? ' is-accent' : ''}`}>
-            {isPlaying ? currentBeatDisplay : '-'}
-          </span>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            / {beatsPerBar}
-          </span>
-        </div>
-
-        <span className={`pulse-groove-accent-chip${isAccent && isPlaying ? ' is-active' : ''}`}>
-          {isAccent && isPlaying ? 'Downbeat' : isPlaying ? `Beat ${currentBeatDisplay}` : 'Ready'}
-        </span>
+        {isPlaying ? (
+          <>
+            <div className="pulse-groove-readout">
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Beat
+              </span>
+              <span className={`beat-number${isAccent ? ' is-accent' : ''}`}>{currentBeatDisplay}</span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                / {beatsPerBar}
+              </span>
+            </div>
+            <span className={`pulse-groove-accent-chip${isAccent ? ' is-active' : ''}`}>
+              {isAccent ? 'Downbeat' : `Beat ${currentBeatDisplay}`}
+            </span>
+          </>
+        ) : (
+          // Before Start: what is about to happen, not a dash and a "Ready" pill.
+          <p className="pulse-groove-idle">
+            {beatsPerBar} beats a bar at {bpm} bpm{subdivision > 1 ? `, ${subdivision} clicks a beat` : ''}
+          </p>
+        )}
       </div>
 
       {/* Fixed 400x180 Retina Canvas Stage */}

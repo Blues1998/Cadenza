@@ -3,6 +3,8 @@ import type { ActiveTab } from '../components/navGroups';
 export interface Prompt {
   text: string;
   tab: ActiveTab;
+  /** Only makes sense once there is a song in the library. */
+  needsSong?: boolean;
 }
 
 // One small thing to go and do. Each one is a minute or two at the instrument
@@ -20,14 +22,15 @@ export const PROMPTS: Prompt[] = [
   { text: 'Change Am → F ten times without stopping.', tab: 'play' },
   { text: 'Find every C on the fretboard in under a minute.', tab: 'theory' },
   { text: 'Hum the root while you strum the chord.', tab: 'ear-training' },
-  { text: "Play today's progression at half speed, perfectly.", tab: 'rhythm' },
+  { text: "Play your song's progression at half speed, perfectly.", tab: 'library', needsSong: true },
   { text: 'Read one bar of tab, look away, play it back.', tab: 'tabs' },
-  { text: 'Sing the melody while you strum.', tab: 'library' }
+  { text: 'Sing the melody while you strum.', tab: 'library', needsSong: true }
 ];
 
-export function promptForDate(date = new Date()): Prompt {
+export function promptForDate(date = new Date(), hasSongs = true): Prompt {
   const dayOfYear = Math.floor(
     (date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000
   );
-  return PROMPTS[dayOfYear % PROMPTS.length];
+  const usable = hasSongs ? PROMPTS : PROMPTS.filter(p => !p.needsSong);
+  return usable[dayOfYear % usable.length];
 }

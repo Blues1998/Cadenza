@@ -2430,9 +2430,15 @@ button.dash-card:active {
   box-shadow: 0 0 8px color-mix(in srgb, var(--success) 40%, transparent);
 }
 
-.rep-dot.is-revisit {
-  background: var(--warning);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--warning) 40%, transparent);
+/* The four statuses run orange to green, the way a song does. */
+.rep-dot.is-playable,
+.meter-seg.is-playable {
+  background: color-mix(in srgb, var(--primary) 55%, var(--warning));
+}
+
+.rep-dot.is-solid,
+.meter-seg.is-solid {
+  background: color-mix(in srgb, var(--success) 55%, var(--warning));
 }
 
 .repertoire-meter {
@@ -2445,17 +2451,17 @@ button.dash-card:active {
   gap: 2px;
 }
 
-.meter-complete {
-  background: var(--success);
+.meter-seg {
   height: 100%;
-  border-radius: 999px 0 0 999px;
   transition: width 0.3s ease;
 }
 
-.meter-learning {
+.meter-seg.is-complete {
+  background: var(--success);
+}
+
+.meter-seg.is-learning {
   background: var(--primary);
-  height: 100%;
-  transition: width 0.3s ease;
 }
 
 .today-chords {
@@ -2911,7 +2917,7 @@ button.dash-card:hover .pickup-go svg {
 .songrow {
   position: relative;
   display: grid;
-  grid-template-columns: 2.2rem minmax(120px, 1.4fr) minmax(90px, 0.9fr) minmax(110px, 1.3fr) 4.6rem 4rem;
+  grid-template-columns: minmax(120px, 1.4fr) minmax(90px, 0.9fr) minmax(110px, 1.3fr) 5rem 4rem;
   align-items: center;
   gap: 0.9rem;
   width: 100%;
@@ -3033,23 +3039,45 @@ button.dash-card:hover .pickup-go svg {
   bottom: 0;
   left: 0;
   width: 3px;
-  background: var(--text-muted);
-  opacity: 0.22;
+  opacity: 0.85;
   transition: opacity 0.2s ease, background 0.2s ease;
 }
 
-.songrow-state.is-playable {
-  opacity: 0.45;
+/* The same orange-to-green as the Repertoire card on Today, edge and word. */
+.songrow-state.is-learning { background: var(--primary); }
+.songrow-state.is-playable { background: color-mix(in srgb, var(--primary) 55%, var(--warning)); }
+.songrow-state.is-solid { background: color-mix(in srgb, var(--success) 55%, var(--warning)); }
+.songrow-state.is-complete { background: var(--success); }
+
+.songrow-status.is-learning { color: var(--primary); }
+.songrow-status.is-playable { color: color-mix(in srgb, var(--primary) 55%, var(--warning)); }
+.songrow-status.is-solid { color: color-mix(in srgb, var(--success) 55%, var(--warning)); }
+.songrow-status.is-complete { color: var(--success); }
+
+.songrow-of {
+  color: var(--text-muted);
+  font-size: 0.85em;
 }
 
-.songrow-state.is-solid {
-  background: var(--text-secondary);
-  opacity: 0.8;
+.songs-blank {
+  padding: 1.5rem 1.25rem;
+  border: 1px dashed var(--panel-border-hover);
+  border-radius: 14px;
 }
 
-.songrow-state.is-complete {
-  background: var(--success);
-  opacity: 1;
+.songs-blank-title {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.songs-blank-said {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
 }
 
 .songrow:hover .songrow-state {
@@ -4763,7 +4791,7 @@ button.dash-card:hover .pickup-go svg {
      you can read on the song's own page: what it is, how confident you are,
      and the edge that says how far along it is. */
   .songrow {
-    grid-template-columns: 2rem minmax(0, 1fr) 3.6rem;
+    grid-template-columns: minmax(0, 1fr) 4.6rem;
   }
 
   .songrow-key,
@@ -7702,8 +7730,9 @@ button.qslot-shape:focus-visible {
   position: absolute;
   top: 0.3rem;
   right: 0.35rem;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
   cursor: pointer;
   /* Unticked it is nearly out of the way: a hundred and thirty-two cards each
      shouting a checkbox is a form, not a chord book. Hovering the card, or
@@ -8694,7 +8723,8 @@ button.strumcell:hover { background: var(--surface-3); }
   border: none;
   border-radius: 14px;
   background: var(--elevated-bg);
-  box-shadow: inset 3px 0 0 var(--primary), var(--elevation);
+  /* No accent edge: the song card above already has the one on this screen. */
+  box-shadow: var(--elevation);
   font-family: var(--font-ui);
   text-align: left;
   cursor: pointer;
@@ -8702,7 +8732,7 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .dash-run:hover {
-  box-shadow: inset 3px 0 0 var(--primary), var(--elevation-hover);
+  box-shadow: var(--elevation-hover);
 }
 
 .dash-run-said {
@@ -9136,19 +9166,21 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .nut-marker.is-muted {
-  color: #dc2626;
+  /* Neutral, as on every chord diagram: an x is information, not an error. */
+  color: #85898F;
   opacity: 0.9;
 }
 
 .nut-marker.is-open {
-  color: #10b981;
+  color: #F1F0EC;
   opacity: 0.95;
   transition: transform 0.1s ease;
 }
 
 .nut-marker.is-open.is-pulsing {
   transform: scale(1.3);
-  text-shadow: 0 0 8px #10b981;
+  color: #FF6A2A;
+  text-shadow: 0 0 8px rgba(255, 106, 42, 0.7);
 }
 
 /* String Metal Wire */
@@ -9180,9 +9212,10 @@ button.strumcell:hover { background: var(--surface-3); }
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border: 2px solid #ffffff;
-  color: #ffffff;
+  /* The same orange dot every chord diagram in the app uses. */
+  background: var(--note-root);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  color: #111214;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9194,9 +9227,9 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .fret-finger-dot.is-struck {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #FFD3BF;
   transform: translate(-50%, -50%) scale(1.18);
-  box-shadow: 0 0 16px #10b981, 0 2px 8px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 16px var(--primary-glow), 0 0 10px var(--note-root), 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 .finger-num {
@@ -9812,8 +9845,8 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .fret-finger-dot.is-anchor-pivot {
-  box-shadow: 0 0 0 3px #f59e0b, 0 0 16px rgba(245, 158, 11, 0.8) !important;
-  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px var(--warning), 0 0 16px var(--warning-glow) !important;
+  border-color: var(--warning) !important;
 }
 
 .anchor-glow-halo {
@@ -9822,7 +9855,7 @@ button.strumcell:hover { background: var(--surface-3); }
   left: -6px;
   right: -6px;
   bottom: -6px;
-  border: 2px dashed #f59e0b;
+  border: 2px dashed var(--warning);
   border-radius: 50%;
   animation: anchorHaloSpin 6s linear infinite;
   pointer-events: none;
@@ -12685,4 +12718,224 @@ button.dash-card:active,
 .trouble-toast .trouble-row .btn {
   padding: 0.45rem 0.8rem;
   font-size: 0.82rem;
+}
+
+/* On a phone the top bar's arrow is the way back from a song. */
+@media (max-width: 900px) {
+  .song-back {
+    display: none;
+  }
+}
+
+/* The challenge fretboard's key. Each swatch is the marker it names. */
+.fb-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.fb-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.fb-key {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.fb-key.is-target { background: var(--note-root); }
+.fb-key.is-context { background: var(--note-scale); }
+.fb-key.is-heard { background: var(--note-active); border-color: var(--panel-border-hover); }
+
+.fretboard-more {
+  display: none;
+  margin: 0;
+  padding: 0 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .fretboard-more {
+    display: block;
+  }
+}
+
+.metronome-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--panel-border);
+}
+
+.pulse-groove-idle {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6rem;
+  color: var(--text-muted);
+}
+
+.ear-start {
+  padding: 0.8rem 2.2rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  .ear-arena {
+    order: -1;
+    min-height: 0 !important;
+  }
+}
+
+.chordpick-word {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.chordcard.is-picked .chordpick-word {
+  color: var(--primary);
+}
+
+/* Touch has no hover to raise the box, so it stays legible there. */
+@media (hover: none) {
+  .chordpick {
+    opacity: 0.8;
+  }
+}
+
+.comfort-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.comfort-caption {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+
+.comfort-caption.is-solid { color: var(--success); }
+.comfort-caption.is-shaky { color: var(--warning); }
+.comfort-caption.is-none { color: var(--text-secondary); }
+
+@media (max-width: 640px) {
+  /* Four rows pinned to the top of a phone took a sixth of the screen from
+     everything under it. It scrolls with the page here. */
+  .lab-toolbar {
+    position: static;
+  }
+
+  /* A chip cut off at the edge reads as a mistake; faded, it reads as more. */
+  .pill-row {
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+    padding-right: 1.5rem;
+  }
+}
+
+.theory-sum {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.theory-sum p {
+  margin: 0;
+}
+
+.theory-sum-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.theory-sum-notes {
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  white-space: pre-wrap;
+  color: var(--primary);
+}
+
+.theory-sum-said {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.tabs-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.tabs-intro p {
+  margin: 0;
+}
+
+.tabs-intro-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tabs-intro-said {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.tabs-intro-formats {
+  margin-top: 0.2rem !important;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* The name keeps clear of the Loop box in the corner. */
+.chordcard.is-pickable .chordcard-head {
+  max-width: 100%;
+  padding-right: 2.7rem;
+  padding-left: 0.3rem;
+  align-self: stretch;
+}
+
+.chordcards-book .chordcard.is-pickable .chordcard-head {
+  padding-left: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  /* Four actions on one line, none of them broken over two. */
+  .songs-actions {
+    flex-wrap: wrap;
+  }
+
+  .songs-actions .btn {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .songs-actions .btn-tray svg {
+    display: none;
+  }
+
+  .songs-actions {
+    gap: 0.4rem;
+  }
 }

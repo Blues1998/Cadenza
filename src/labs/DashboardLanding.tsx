@@ -12,6 +12,7 @@ import {
   practiceStats,
   songProgressions,
   STATUS_LABEL,
+  STATUS_ORDER,
   today,
   totalMinutes
 } from '../utils/library';
@@ -19,13 +20,25 @@ import type { Song } from '../utils/library';
 import { promptForDate } from '../data/tryThis';
 import { getRun, startRun } from '../utils/practiceRun';
 import { capoLabel } from '../utils/songText';
-import { weekLine, weekRecap } from '../utils/weekly';
+import { weekRecap } from '../utils/weekly';
 
 interface DashboardLandingProps {
   setActiveTab: (tab: ActiveTab) => void;
   onOpenSong: (id: string) => void;
   onAddSong: () => void;
 }
+
+/** The masthead's line: the time of day, said the way a person would. */
+const greeting = (d = new Date()): string => {
+  const h = d.getHours();
+  return h < 5 ? 'Late night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+};
+
+const ARROW = (size: number) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+  </svg>
+);
 
 const fmtWhen = (iso: string): string => {
   const days = Math.round((new Date(`${today()}T12:00`).getTime() - new Date(`${iso}T12:00`).getTime()) / 86400000);
@@ -56,7 +69,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
   const stats = practiceStats();
   const recap = weekRecap();
   const songs = getSongs();
-  const prompt = promptForDate();
+  const prompt = promptForDate(new Date(), songs.length > 0);
 
   // Find the most relevant active song:
   // 1. Most recently practiced song, or
@@ -70,7 +83,10 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
   const pickUp: { song: Song; date: string } | null = lastPractised(activeSong?.id ?? null);
   const alternativeSong: Song | null = !pickUp ? (songs.find(s => s.id !== activeSong?.id) ?? null) : null;
 
-  const learningCount = songs.filter(s => s.status === 'learning').length;
+  // Every song has exactly one status, so these add up to the song count. Revisit
+  // is a flag that sits across them, and is said beside them, not among them.
+  const byStatus = STATUS_ORDER.map(status => ({ status, count: songs.filter(s => s.status === status).length }));
+  const started = activeSong ? totalMinutes(activeSong) > 0 : false;
 
   return (
     <div className="dash">
@@ -78,11 +94,13 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         className="hero"
         style={{ ['--hero-image' as string]: `url(${assetUrl('img/hero-guitar.webp')})` } as React.CSSProperties}
       >
+        {/* The name is already in the bar above. The masthead says when it is;
+            what the week held is the This week card's job. */}
         <div className="hero-copy">
-          <span className="hero-eyebrow">{weekLine(recap)}</span>
-          <h2 className="hero-title">
-            Sharps<span>&amp;</span>Flats
-          </h2>
+          <span className="hero-eyebrow">
+            {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+          </span>
+          <h2 className="hero-title">{greeting()}</h2>
         </div>
       </header>
 
@@ -92,7 +110,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
           <section className="today">
             <div className="today-mark">
               <span className="surface-label">
-                {lastPlayed?.song?.id === activeSong.id ? 'Continue' : 'Practising'}
+                {started ? 'Practising' : 'Up next'}
               </span>
               <span className="today-day readout">{STATUS_LABEL[activeSong.status]}</span>
             </div>
@@ -116,10 +134,8 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
               </span>
             </div>
             <button type="button" className="btn btn-primary today-go" onClick={() => onOpenSong(activeSong.id)}>
-              Continue practice
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-              </svg>
+              {started ? 'Continue practice' : 'Start practising'}
+              {ARROW(15)}
             </button>
           </section>
         ) : (
@@ -129,7 +145,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
             </div>
             <h3 className="today-title">No songs yet</h3>
             <p className="today-artist">
-              Add a song to get started.
+              Add a song you want to learn. Its chords, strumming and practice time all live with it.
             </p>
             <button
               type="button"
@@ -137,9 +153,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
               onClick={() => onAddSong()}
             >
               Add first song
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-              </svg>
+              {ARROW(15)}
             </button>
           </section>
         )
@@ -155,57 +169,45 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
           </span>
           <span className="dash-run-go">
             Begin
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-            </svg>
+            {ARROW(15)}
           </span>
         </button>
       )}
 
       <div className="dash-row">
-        {/* Repertoire overview card */}
-        <button type="button" className="dash-card repertoire-card" onClick={() => setActiveTab('library')}>
-          <div className="card-head">
-            <span className="surface-label">Repertoire</span>
-            <span className="card-count readout">
-              <strong>{stats.songsEntered}</strong> {stats.songsEntered === 1 ? 'song' : 'songs'}
-            </span>
-          </div>
-
-          <div className="repertoire-summary">
-            <div className="repertoire-stat-row">
-              <span className="rep-stat-item">
-                <span className="rep-dot is-learning" />
-                <span className="readout">{learningCount}</span> learning
-              </span>
-              <span className="rep-stat-item">
-                <span className="rep-dot is-complete" />
-                <span className="readout">{stats.songsComplete}</span> complete
-              </span>
-              <span className="rep-stat-item">
-                <span className="rep-dot is-revisit" />
-                <span className="readout">{stats.revisitCount}</span> revisit
+        {/* The library's shape. Not shown before there is a library: the
+            card above already says there are no songs. */}
+        {songs.length > 0 && (
+          <button type="button" className="dash-card repertoire-card" onClick={() => setActiveTab('library')}>
+            <div className="card-head">
+              <span className="surface-label">Repertoire</span>
+              <span className="card-count readout">
+                <strong>{stats.songsEntered}</strong> {stats.songsEntered === 1 ? 'song' : 'songs'}
               </span>
             </div>
 
-            {stats.songsEntered > 0 && (
-              <div className="repertoire-meter" aria-hidden="true">
-                <span
-                  className="meter-complete"
-                  style={{ width: `${(stats.songsComplete / stats.songsEntered) * 100}%` }}
-                />
-                <span
-                  className="meter-learning"
-                  style={{ width: `${(learningCount / stats.songsEntered) * 100}%` }}
-                />
+            <div className="repertoire-summary">
+              <div className="repertoire-stat-row">
+                {byStatus.filter(b => b.count > 0).map(b => (
+                  <span key={b.status} className="rep-stat-item">
+                    <span className={`rep-dot is-${b.status}`} />
+                    <span className="readout">{b.count}</span> {STATUS_LABEL[b.status].toLowerCase()}
+                  </span>
+                ))}
               </div>
-            )}
-          </div>
+              <div className="repertoire-meter" aria-hidden="true">
+                {[...byStatus].reverse().filter(b => b.count > 0).map(b => (
+                  <span key={b.status} className={`meter-seg is-${b.status}`} style={{ width: `${(b.count / songs.length) * 100}%` }} />
+                ))}
+              </div>
+            </div>
 
-          <span className="card-foot">
-            {stats.totalMinutes} min practice logged · View all {stats.songsEntered} songs →
-          </span>
-        </button>
+            <span className="card-foot">
+              {stats.revisitCount > 0 && <>{stats.revisitCount} marked to revisit · </>}
+              View all songs →
+            </span>
+          </button>
+        )}
 
         <WeekPanel recap={recap} />
       </div>
@@ -221,9 +223,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
             <span className="pickup-when">Last played {fmtWhen(pickUp.date)}</span>
             <span className="pickup-go">
               Practice
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-              </svg>
+              {ARROW(14)}
             </span>
           </button>
         ) : alternativeSong ? (
@@ -236,33 +236,17 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
             <span className="pickup-when">{STATUS_LABEL[alternativeSong.status]}</span>
             <span className="pickup-go">
               Practice
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-              </svg>
+              {ARROW(14)}
             </span>
           </button>
-        ) : (
-          <button type="button" className="dash-card pickup is-empty" onClick={() => setActiveTab('library')}>
-            <span className="surface-label">Your songs</span>
-            <span className="pickup-title">Nothing played yet</span>
-            <span className="pickup-when">Your sessions show up here.</span>
-            <span className="pickup-go">
-              Open library
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-              </svg>
-            </span>
-          </button>
-        )}
+        ) : null}
 
         <button type="button" className="dash-card tryit" onClick={() => setActiveTab(prompt.tab)}>
           <span className="surface-label">Try this</span>
           <span className="tryit-text">{prompt.text}</span>
           <span className="pickup-go">
             Start
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-            </svg>
+            {ARROW(14)}
           </span>
         </button>
       </div>
@@ -271,10 +255,8 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
       <button type="button" className="dash-progress" onClick={() => setActiveTab('journey')}>
         <span className="dash-progress-label">Journey</span>
         <span className="dash-progress-bar"><span style={{ width: `${pct}%` }} /></span>
-        <span className="dash-progress-count readout">{String(done).padStart(2, '0')}/{total}</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-        </svg>
+        <span className="dash-progress-count readout">{done}/{total}</span>
+        {ARROW(14)}
       </button>
     </div>
   );

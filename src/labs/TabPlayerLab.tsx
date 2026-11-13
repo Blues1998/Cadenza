@@ -896,9 +896,17 @@ export const TabPlayerLab: React.FC = () => {
       <h2 className="lab-title"><LabIcon tab="tabs" />Tab Player</h2>
     </div>
     <section className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', margin: 0, fontFamily: 'var(--font-mono)' }}>
-        .gp3 · .gp4 · .gp5 · .gpx · MusicXML
-      </p>
+      {/* Before a score is open, say what this is for. A file box alone on a
+          black page told nobody what they would get by using it. */}
+      {!hasScore && (
+        <div className="tabs-intro">
+          <p className="tabs-intro-title">Play along with a tab</p>
+          <p className="tabs-intro-said">
+            Open a Guitar Pro or MusicXML file to see the tab, hear it played, slow it down and loop the hard bars. Tabs you open stay here for next time.
+          </p>
+          <p className="tabs-intro-formats readout">.gp3 · .gp4 · .gp5 · .gpx · .musicxml</p>
+        </div>
+      )}
 
       {libraryEntries.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -971,8 +979,7 @@ export const TabPlayerLab: React.FC = () => {
 
       {guitarSoundfontMissing && (
         <div style={{ padding: '0.85rem 1rem', borderRadius: '8px', background: 'rgba(255, 106, 42, 0.08)', border: '1px solid rgba(255, 106, 42, 0.3)', color: 'var(--warning)', fontSize: '0.85rem' }}>
-          Guitar samples didn't load. Using a basic synth.
-          Run <code>npm run setup:soundfont</code> in the project to fetch them.
+          The guitar sound did not load, so a plain synth is playing instead. Closing and reopening the app usually brings it back.
         </div>
       )}
 

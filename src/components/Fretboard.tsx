@@ -164,10 +164,9 @@ const FretboardComponent: React.FC<FretboardProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 1rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-        <span>Open strings</span>
-        <span>12th fret</span>
-      </div>
+      {/* The ruler under the neck numbers every fret. On a phone the neck is
+          wider than the screen, so say that the rest is a swipe away. */}
+      <p className="fretboard-more">Swipe the neck for frets 7 to 12 →</p>
 
       <div
         className="fretboard-container"

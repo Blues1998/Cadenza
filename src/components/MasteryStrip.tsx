@@ -44,7 +44,7 @@ export const MasteryStrip: React.FC<MasteryStripProps> = ({
       <div className="surface-label mastery-head">
         <span>Mastery</span>
         <span className="readout">
-          {String(known).padStart(2, '0')}/{unlocked}
+          {known}/{unlocked}
         </span>
         {onReset && (
           <button type="button" className="mastery-reset" onClick={onReset} title="Clear mastery history">

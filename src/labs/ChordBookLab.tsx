@@ -163,6 +163,15 @@ export const ChordBookLab: React.FC = () => {
   // And once you have said what you cannot play, what to do about it. The two
   // lists hand off to each other: the quick pass shrinks as chords are rated,
   // and this one fills with what the rating turned up.
+  // The list under the quick pass leaves out the chords the quick pass is
+  // already showing: the same eight diagrams twice, one screen apart, read as
+  // a bug. Searching or filtering looks at everything again.
+  const listed = useMemo(() => {
+    if (filter !== 'all' || query.trim() || view !== 'songs') return shown;
+    const inQueue = new Set(queue.map(e => e.symbol));
+    return shown.filter(e => !inQueue.has(e.symbol));
+  }, [shown, queue, filter, query, view]);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const next = useMemo(() => nextChords(6).filter(c => !hidden.has(c.key)).slice(0, 4), [songs, skills, hidden]);
 
@@ -338,7 +347,7 @@ export const ChordBookLab: React.FC = () => {
             {entries.length === 0 ? (
               <><strong>0</strong> chords</>
             ) : (<>
-            <strong>{String(counts.solid).padStart(2, '0')}</strong> / {entries.length}
+            <strong>{counts.solid}</strong> / {entries.length}
             {entries.length > 0 && (
               <span className="tallybar is-wide" aria-hidden="true">
                 <span className="tallybar-seg is-solid" style={{ flexGrow: counts.solid }} />
@@ -359,7 +368,7 @@ export const ChordBookLab: React.FC = () => {
         <div className="chordbook-actions">
           <button
             type="button"
-            className={`btn${open ? '' : ' btn-primary'}`}
+            className={`btn${open ? '' : ' btn-secondary'}`}
             onClick={() => (open ? close() : show())}
             aria-pressed={open}
             title={open ? 'Close quick play' : undefined}
@@ -447,7 +456,16 @@ export const ChordBookLab: React.FC = () => {
         </section>
       )}
 
-      {view === 'songs' && (
+      {view === 'songs' && entries.length === 0 && (
+        <div className="songs-blank">
+          <p className="songs-blank-title">The chords your songs need</p>
+          <p className="songs-blank-said">
+            Add a song with its chords and they all land here, with diagrams, to rate and drill. You can also add one by name above, or browse every shape under All chords.
+          </p>
+        </div>
+      )}
+
+      {view === 'songs' && entries.length > 0 && (
         <>
       <div className="chordbook-filters">
         <Segmented<Filter> value={filter} onChange={setFilter} options={FILTERS} ariaLabel="Filter chords" size="sm" />
@@ -460,15 +478,15 @@ export const ChordBookLab: React.FC = () => {
         />
       </div>
 
-      {shown.length === 0 ? (
+      {listed.length === 0 ? (
         <p className="song-empty">
-          {entries.length === 0
-            ? 'No chords yet. Add a song with chords.'
+          {shown.length > 0
+            ? 'Every chord is in the quick pass above. Rate them there and they move down here.'
             : `Nothing ${filter === 'unrated' ? 'unrated' : COMFORT_LABEL[filter as ChordComfort]?.toLowerCase() ?? ''} here.`}
         </p>
       ) : (
         <div className="chordcards chordcards-book">
-          {shown.map(e => (
+          {listed.map(e => (
             <ChordCard
               key={e.symbol}
               symbol={e.symbol}

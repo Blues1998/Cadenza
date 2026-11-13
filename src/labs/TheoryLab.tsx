@@ -566,21 +566,20 @@ export const TheoryLab: React.FC = () => {
       />
 
       {/* Plain-English read-out of whatever the toolbar currently has selected */}
-      <div style={{ background: 'var(--surface-2)', borderRadius: '10px', padding: '0.85rem 1.1rem', fontSize: '0.85rem', lineHeight: 1.55, color: 'var(--text-secondary)' }}>
+      {/* Name, notes, then what to listen for, each on its own line. Run
+          together, the notes wrapped mid-scale and left "C." alone on a line. */}
+      <div className="theory-sum">
       {selectedChordQuality !== -1 ? (
         <>
-          <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</strong>
-          {' · '}
-          <strong className="readout" style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>
-          {': sounds '}
-          <strong style={{ color: 'var(--secondary)' }}>{(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}</strong>.
+          <p className="theory-sum-name">{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</p>
+          <p className="theory-sum-notes readout">{currentNoteNames().join('  ')}</p>
+          <p className="theory-sum-said">Sounds {(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}.</p>
         </>
       ) : (
         <>
-          <strong style={{ color: 'var(--text-primary)' }}>{selectedRoot} {selectedScale.name}</strong>
-          {' · '}
-          <strong className="readout" style={{ color: 'var(--text-primary)' }}>{currentNoteNames().join(' · ')}</strong>
-          {'. Listen for '}{SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}
+          <p className="theory-sum-name">{selectedRoot} {selectedScale.name}</p>
+          <p className="theory-sum-notes readout">{currentNoteNames().join('  ')}</p>
+          <p className="theory-sum-said">Listen for {SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}</p>
         </>
       )}
       </div>

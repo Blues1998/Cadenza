@@ -653,62 +653,6 @@ export const RhythmLab: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div>
-              <label className="field-label" htmlFor="time-signature">Time signature</label>
-              <select
-                id="time-signature"
-                value={timeSignature}
-                onChange={(e) => setTimeSignature(Number(e.target.value))}
-                className="select-field"
-              >
-                <option value={2}>2/4 · Duple</option>
-                <option value={3}>3/4 · Waltz</option>
-                <option value={4}>4/4 · Common</option>
-                <option value={6}>6/8 · Compound</option>
-              </select>
-            </div>
-
-            <Segmented<number>
-              label="Clicks per beat"
-              value={subdivision}
-              onChange={n => {
-                setSubdivision(n);
-                // Swing lives between pairs of eighths; with any other count
-                // there is nothing for it to move, so it goes back to straight.
-                if (n !== 2) setSwing(0);
-              }}
-              options={SUBDIVISIONS}
-              size="sm"
-              full
-            />
-          </div>
-
-          <Segmented
-            label="Mode"
-            value={isGameMode}
-            onChange={(v) => { setIsGameMode(v); stopMetronome(); }}
-            tone={isGameMode ? 'secondary' : 'primary'}
-            options={[
-              { value: false, label: 'Solo' },
-              { value: true, label: 'Game' }
-            ]}
-            full
-          />
-
-          {/* Visualizer Style Toggle */}
-          <Segmented<'groove' | 'precision'>
-            label="View"
-            value={metronomeVisual}
-            onChange={setMetronomeVisual}
-            options={[
-              { value: 'groove', label: 'Groove', title: 'Pulse view with swing' },
-              { value: 'precision', label: 'Pendulum', title: 'A pendulum, with your timing' }
-            ]}
-            size="sm"
-            full
-          />
-
           {/* Both views get the same height, so switching never moves Start. */}
           <div className="metronome-stage">
           {metronomeVisual === 'groove' ? (
@@ -749,6 +693,67 @@ export const RhythmLab: React.FC = () => {
               </>
             )}
           </button>
+
+          {/* The settings come after Start. They are changed now and then; Start
+              is pressed every time, and on a phone it used to sit a whole
+              screen down, under all of them. */}
+          <div className="metronome-settings">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label className="field-label" htmlFor="time-signature">Time signature</label>
+                <select
+                  id="time-signature"
+                  value={timeSignature}
+                  onChange={(e) => setTimeSignature(Number(e.target.value))}
+                  className="select-field"
+                >
+                  <option value={2}>2/4 · Duple</option>
+                  <option value={3}>3/4 · Waltz</option>
+                  <option value={4}>4/4 · Common</option>
+                  <option value={6}>6/8 · Compound</option>
+                </select>
+              </div>
+
+              <Segmented<number>
+                label="Clicks per beat"
+                value={subdivision}
+                onChange={n => {
+                  setSubdivision(n);
+                  // Swing lives between pairs of eighths; with any other count
+                  // there is nothing for it to move, so it goes back to straight.
+                  if (n !== 2) setSwing(0);
+                }}
+                options={SUBDIVISIONS}
+                size="sm"
+                full
+              />
+            </div>
+
+            <Segmented
+              label="Mode"
+              value={isGameMode}
+              onChange={(v) => { setIsGameMode(v); stopMetronome(); }}
+              tone={isGameMode ? 'secondary' : 'primary'}
+              options={[
+                { value: false, label: 'Solo' },
+                { value: true, label: 'Game' }
+              ]}
+              full
+            />
+
+            {/* Visualizer Style Toggle */}
+            <Segmented<'groove' | 'precision'>
+              label="View"
+              value={metronomeVisual}
+              onChange={setMetronomeVisual}
+              options={[
+                { value: 'groove', label: 'Groove', title: 'Pulse view with swing' },
+                { value: 'precision', label: 'Pendulum', title: 'A pendulum, with your timing' }
+              ]}
+              size="sm"
+              full
+            />
+          </div>
         </section>
 
         {/* Tapping Game Console */}

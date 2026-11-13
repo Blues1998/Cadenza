@@ -113,7 +113,7 @@ export const PlayLab: React.FC = () => {
         targets,
         chipLabels: targets.map(pc => NOTE_NAMES[pc]),
         promptTitle: `Climb the ${NOTE_NAMES[rootPc]} ${scale.name} scale`,
-        promptDetail: `${SCALE_FEELINGS[scale.name]?.feeling ?? ''}. Play each note in order, any octave. Amber = play this now.`,
+        promptDetail: `${SCALE_FEELINGS[scale.name]?.feeling ?? ''}. Play each note in order, any octave. Orange is the one to play now.`,
         contextPcs: targets,
         referenceMidis: refMidis,
         rewardMidis: refMidis,
@@ -439,9 +439,9 @@ export const PlayLab: React.FC = () => {
                       borderRadius: '8px',
                       fontSize: '0.78rem',
                       fontWeight: current ? 700 : 500,
-                      border: `1px solid ${done ? 'var(--success)' : current ? 'var(--warning)' : 'rgba(var(--surface-tint-rgb),0.1)'}`,
+                      border: `1px solid ${done ? 'var(--success)' : current ? 'var(--primary)' : 'rgba(var(--surface-tint-rgb),0.1)'}`,
                       background: done ? 'rgba(70, 192, 138, 0.12)' : current ? 'rgba(255, 106, 42, 0.12)' : 'var(--surface-2)',
-                      color: done ? 'var(--success)' : current ? 'var(--warning)' : 'var(--text-muted)',
+                      color: done ? 'var(--success)' : current ? 'var(--primary)' : 'var(--text-muted)',
                       display: 'inline-flex', alignItems: 'center', gap: '0.3rem'
                     }}
                   >
@@ -516,7 +516,10 @@ export const PlayLab: React.FC = () => {
         {/* Live listening panel. The only part of this screen that is a lie
             without a microphone, so it is the only part that goes grey. */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
-          <div className={`playhear${isActive ? '' : ' is-off'}`} aria-hidden={!isActive}>
+          {/* Nothing to show until the mic is on: an empty readout and a 0% bar
+              above the button that would fill them only looked broken. */}
+          {isActive && (
+          <div className="playhear">
             <div style={{ textAlign: 'center' }}>
               <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Hearing</span>
               <div style={{ fontSize: '3.2rem', fontWeight: 700, lineHeight: 1.1, color: pitch ? (currentTargetPc !== null && ((pitch.midi % 12) + 12) % 12 === currentTargetPc ? 'var(--success)' : 'var(--primary)') : 'var(--text-muted)' }}>
@@ -538,6 +541,7 @@ export const PlayLab: React.FC = () => {
               </div>
             </div>
           </div>
+          )}
 
           <p style={{ textAlign: 'center', fontSize: '0.85rem', color: isActive ? feedbackColor : 'var(--text-muted)', minHeight: '2.4em', lineHeight: 1.4 }}>
             {isActive
@@ -567,12 +571,12 @@ export const PlayLab: React.FC = () => {
             Show targets
           </label>
         </h3>
-        <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-          <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--warning)', marginRight: '0.35rem', verticalAlign: 'middle' }} />Play this now</span>
-          <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--success)', marginRight: '0.35rem', verticalAlign: 'middle' }} />{mode === 'interval' ? 'Reference note' : 'All notes in this challenge'}</span>
-          {isActive && (
-            <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)', marginRight: '0.35rem', verticalAlign: 'middle' }} />What you're playing</span>
-          )}
+        {/* Keyed to the colours the fretboard actually draws (note-root,
+            note-scale, note-active), so the legend cannot drift from the board. */}
+        <div className="fb-legend">
+          <span><span className="fb-key is-target" />Play this now</span>
+          <span><span className="fb-key is-context" />{mode === 'interval' ? 'Reference note' : 'Other notes in this challenge'}</span>
+          {isActive && <span><span className="fb-key is-heard" />What you're playing</span>}
         </div>
         <Fretboard
           activeMidis={heardMidis}
