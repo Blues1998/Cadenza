@@ -224,7 +224,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
             }}
           >
             <IconPlay size={14} />
-            Play Song &amp; Guitar
+            Play
           </button>
           <Segmented<SongStatus>
             value={song.status}

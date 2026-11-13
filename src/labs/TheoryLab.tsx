@@ -88,18 +88,18 @@ const MoodSwitch: React.FC<{
           type="button"
           className={`mood-toggle-pill is-sun${!isMinor ? ' is-active' : ''}`}
           onClick={() => toggleMood('major')}
-          title="Major Scale: Sunny, bright, resolved"
+          title="Major: bright"
         >
-          <span className="mood-pill-text">Major (Sun)</span>
+          <span className="mood-pill-text">Major</span>
         </button>
 
         <button
           type="button"
           className={`mood-toggle-pill is-moon${isMinor ? ' is-active' : ''}`}
           onClick={() => toggleMood('minor')}
-          title="Minor Scale: Moonlit, introspective, melancholic"
+          title="Minor: dark"
         >
-          <span className="mood-pill-text">Minor (Moon)</span>
+          <span className="mood-pill-text">Minor</span>
         </button>
       </div>
     </div>
@@ -523,11 +523,11 @@ export const TheoryLab: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="lab-stack">
       
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title"><LabIcon tab="theory" />Theory &amp; Scales</h2>
+        <h2 className="lab-title"><LabIcon tab="theory" />Theory</h2>
       </div>
 
       {/* Dismissible "Start here" guide for first-time visitors */}
@@ -658,7 +658,7 @@ export const TheoryLab: React.FC = () => {
             <div style={{ background: 'var(--surface-2)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
               <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.4rem' }}>About this Key</h4>
               <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <div><Term k="relativeMinor">Relative Minor</Term>: <span style={{ color: 'var(--secondary)' }}>{activeCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
+                <div><Term k="relativeMinor">Relative minor</Term>: <span style={{ color: 'var(--secondary)' }}>{activeCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
                 <div><Term k="accidentals">Accidentals</Term>: <span>
                   {activeCircleKey.sharps > 0 ? `${activeCircleKey.sharps} ♯ (Sharps)` :
                    activeCircleKey.sharps < 0 ? `${Math.abs(activeCircleKey.sharps)} ♭ (Flats)` :

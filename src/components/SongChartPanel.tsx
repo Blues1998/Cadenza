@@ -199,7 +199,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   };
 
   const modes: { value: Mode; label: string }[] = [
-    { value: 'play', label: 'Play Along' },
+    { value: 'play', label: 'Play along' },
     { value: 'edit', label: 'Edit' },
     { value: 'import', label: 'Import' }
   ];
@@ -207,7 +207,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   return (
     <section className="song-panel chart-panel" id="song-player-panel">
       <div className="surface-label">
-        <IconSection kind="chart" /><span>Live Guitar &amp; Lyrics</span>
+        <IconSection kind="chart" /><span>Chart</span>
         {lines.length > 0 && (
           <span className="readout">
             {chart.lines.length} lines · {chart.chords.length} chords · {chartDuration(chart.totalBeats, settings.tempo)}
@@ -365,7 +365,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
 
             {/* Time Signature / Meter Selector (e.g. 4/4, 3/4, 2/4, 6/8) */}
             <div className="chart-time-signature-studio">
-              <span className="field-label">Time Signature</span>
+              <span className="field-label">Time</span>
               <div className="signature-chips-row">
                 {TIME_SIGNATURE_OPTIONS.map(sig => (
                   <button
@@ -388,27 +388,30 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                 type="button"
                 className={`btn chart-sound-toggle${playChords ? ' is-active' : ''}`}
                 onClick={() => setPlayChords(p => !p)}
-                title={playChords ? 'Mute guitar playback' : 'Play guitar with strumming pattern'}
+                title={playChords ? 'Mute the guitar' : 'Play the guitar with the strum pattern'}
+                aria-pressed={playChords}
               >
-                {playChords ? 'Guitar on' : 'Guitar off'}
+                Guitar
               </button>
 
               <button
                 type="button"
                 className={`btn chart-click-toggle${metronome ? ' is-active' : ''}`}
                 onClick={() => setMetronome(m => !m)}
-                title={metronome ? 'Mute metronome click' : 'Enable metronome click'}
+                title={metronome ? 'Mute the click' : 'Turn on the click'}
+                aria-pressed={metronome}
               >
-                ⏱ {metronome ? 'Click ON' : 'Click OFF'}
+                Click
               </button>
 
               <button
                 type="button"
                 className={`btn chart-loop-toggle${isLooping ? ' is-active' : ''}`}
                 onClick={() => setIsLooping(l => !l)}
-                title={isLooping ? 'Disable practice looping' : 'Loop song continuously for practice'}
+                title={isLooping ? 'Stop looping' : 'Loop the song'}
+                aria-pressed={isLooping}
               >
-                {isLooping ? 'Loop on' : 'Loop off'}
+                Loop
               </button>
 
               {isLooping && (
@@ -460,14 +463,14 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
             <div className="chart-strum-studio">
               <div className="strum-studio-header">
                 <div>
-                  <span className="surface-label">Strumming Pattern Studio</span>
+                  <span className="surface-label">Strum pattern</span>
                   <p className="strum-studio-sub">
-                    Click any cell to cycle: <strong>↓ Down</strong> → <strong>↑ Up</strong> → <strong>✕ Chuck</strong> → <strong>· Rest</strong>
+                    Tap a slot to change it: down, up, chuck, rest.
                   </p>
                 </div>
                 {pattern && (
                   <span className="readout strum-summary-chip">
-                    {pattern.bars} bar{pattern.bars > 1 ? 's' : ''} · {pattern.steps.length} slots ({settings.beatsPerBar}/4)
+                    {pattern.bars} bar{pattern.bars > 1 ? 's' : ''} · {pattern.steps.length} slots
                   </span>
                 )}
               </div>
@@ -484,13 +487,13 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
 
               {/* Direct Quick-Add Buttons */}
               <div className="strum-quick-palette">
-                <span className="field-label">Quick Add:</span>
+                <span className="field-label">Add</span>
                 <div className="palette-buttons">
                   <button
                     type="button"
                     className="btn palette-stroke-btn is-d"
                     onClick={() => appendStroke('D')}
-                    title="Append Downstroke (↓)"
+                    title="Add a downstroke"
                   >
                     ↓ Down
                   </button>
@@ -498,7 +501,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                     type="button"
                     className="btn palette-stroke-btn is-u"
                     onClick={() => appendStroke('U')}
-                    title="Append Upstroke (↑)"
+                    title="Add an upstroke"
                   >
                     ↑ Up
                   </button>
@@ -506,7 +509,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                     type="button"
                     className="btn palette-stroke-btn is-x"
                     onClick={() => appendStroke('X')}
-                    title="Append Chuck / Mute (✕)"
+                    title="Add a chuck"
                   >
                     ✕ Mute
                   </button>
@@ -514,7 +517,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                     type="button"
                     className="btn palette-stroke-btn is-rest"
                     onClick={() => appendStroke('-')}
-                    title="Append Rest / Miss (·)"
+                    title="Add a rest"
                   >
                     · Rest
                   </button>
@@ -567,7 +570,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
               {/* Shorthand Text Field + Meter-Specific Presets */}
               <div className="strum-text-edit-cluster">
                 <label className="strum-input-field">
-                  <span className="field-label">Pattern Text:</span>
+                  <span className="field-label">Pattern</span>
                   <input
                     type="text"
                     className="text-field strum-text-input readout"
@@ -579,7 +582,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                 </label>
 
                 <div className="strum-presets-group">
-                  <span className="field-label">Presets for {settings.beatsPerBar}/4:</span>
+                  <span className="field-label">Presets</span>
                   <div className="strum-preset-chips">
                     {getPresetsForMeter(settings.beatsPerBar).map(preset => (
                       <button
@@ -602,7 +605,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
           {/* Moving Lyrics (Karaoke / Teleprompter Display) */}
           <div className="chart-lyrics-stage">
             <div className="chart-lyrics-header">
-              <span className="surface-label">Moving Lyrics with Tempo</span>
+              <span className="surface-label">Lyrics</span>
               <span className="chart-position readout">
                 {counting
                   ? `Count in: ${countInBeats + beat + 1}`

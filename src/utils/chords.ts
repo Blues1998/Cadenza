@@ -88,7 +88,8 @@ export function prettyNote(name: string): string {
 // and an augmented major 7th, and voicing lookup needs a stable id + suffix.
 export type ChordTypeId =
   | 'maj' | 'min' | 'dim' | 'aug'
-  | 'maj7' | 'min7' | 'dom7' | 'm7b5' | 'dim7' | 'mMaj7' | 'augMaj7';
+  | 'maj7' | 'min7' | 'dom7' | 'm7b5' | 'dim7' | 'mMaj7' | 'augMaj7'
+  | 'sus2' | 'sus4';
 
 export interface ChordType {
   id: ChordTypeId;
@@ -111,7 +112,9 @@ export const CHORD_TYPES: Record<ChordTypeId, ChordType> = {
   m7b5:    { id: 'm7b5',    name: 'Half-Diminished 7th', suffix: 'm7♭5', intervals: [0, 3, 6, 10], major: false, mark: 'ø', triadId: 'dim' },
   dim7:    { id: 'dim7',    name: 'Diminished 7th',     suffix: 'dim7',  intervals: [0, 3, 6, 9],   major: false, mark: '°',  triadId: 'dim' },
   mMaj7:   { id: 'mMaj7',   name: 'Minor-Major 7th',    suffix: 'mMaj7', intervals: [0, 3, 7, 11],  major: false, mark: '',        triadId: 'min' },
-  augMaj7: { id: 'augMaj7', name: 'Augmented Major 7th', suffix: 'augMaj7', intervals: [0, 4, 8, 11], major: true, mark: '+',      triadId: 'aug' }
+  augMaj7: { id: 'augMaj7', name: 'Augmented Major 7th', suffix: 'augMaj7', intervals: [0, 4, 8, 11], major: true, mark: '+',      triadId: 'aug' },
+  sus2:    { id: 'sus2',    name: 'Suspended 2nd',      suffix: 'sus2',  intervals: [0, 2, 7],      major: true,  mark: '',        triadId: 'maj' },
+  sus4:    { id: 'sus4',    name: 'Suspended 4th',      suffix: 'sus4',  intervals: [0, 5, 7],      major: true,  mark: '',        triadId: 'maj' }
 };
 
 const TYPE_BY_INTERVALS = new Map<string, ChordType>(
@@ -288,6 +291,15 @@ const MOVABLE_FORMS: Record<ChordTypeId, MovableForm[]> = {
   augMaj7: [
     { label: 'A-string root', rootString: 1, offsets: [null, 0, -1, -2, -3, null], fingers: [null, 4, 3, 2, 1, null] },
     { label: 'D-string root', rootString: 2, offsets: [null, null, 0, -1, -1, -3], fingers: [null, null, 4, 2, 3, 1] }
+  ],
+  sus2: [
+    { label: 'D-shape',       rootString: 2, offsets: [null, null, 0, 2, 3, 0],    fingers: [null, null, 1, 2, 3, 1] },
+    { label: 'A-shape barre', rootString: 1, offsets: [null, 0, 2, 2, 0, 0],       fingers: [null, 1, 3, 4, 1, 1] }
+  ],
+  sus4: [
+    { label: 'D-shape',       rootString: 2, offsets: [null, null, 0, 2, 3, 3],    fingers: [null, null, 1, 2, 3, 4] },
+    { label: 'A-shape barre', rootString: 1, offsets: [null, 0, 2, 2, 3, 0],       fingers: [null, 1, 2, 3, 4, 1] },
+    { label: 'E-shape barre', rootString: 0, offsets: [0, 2, 2, 2, 0, 0],          fingers: [1, 2, 3, 4, 1, 1] }
   ]
 };
 
@@ -327,7 +339,15 @@ const OPEN_CHORDS: OpenChord[] = [
   { rootPc: 9,  type: 'maj7', label: 'Open Amaj7', frets: [null, 0, 2, 1, 2, 0],    fingers: [null, 0, 3, 1, 2, 0] },
   { rootPc: 11, type: 'dom7', label: 'Open B7',    frets: [null, 2, 1, 2, 0, 2],    fingers: [null, 2, 1, 3, 0, 4] },
   { rootPc: 11, type: 'min7', label: 'Easy Bm7',   frets: [null, 2, 0, 2, 0, 2],    fingers: [null, 1, 0, 2, 0, 3] },
-  { rootPc: 11, type: 'dim',  label: 'Open Bdim',  frets: [null, 2, 3, 4, 3, null], fingers: [null, 1, 2, 4, 3, null] }
+  { rootPc: 11, type: 'dim',  label: 'Open Bdim',  frets: [null, 2, 3, 4, 3, null], fingers: [null, 1, 2, 4, 3, null] },
+  { rootPc: 0,  type: 'sus2', label: 'Open Csus2', frets: [null, 3, 0, 0, 3, 3],    fingers: [null, 2, 0, 0, 3, 4] },
+  { rootPc: 0,  type: 'sus4', label: 'Open Csus4', frets: [null, 3, 3, 0, 1, 1],    fingers: [null, 3, 4, 0, 1, 1] },
+  { rootPc: 2,  type: 'sus2', label: 'Open Dsus2', frets: [null, null, 0, 2, 3, 0], fingers: [null, null, 0, 1, 3, 0] },
+  { rootPc: 2,  type: 'sus4', label: 'Open Dsus4', frets: [null, null, 0, 2, 3, 3], fingers: [null, null, 0, 1, 2, 3] },
+  { rootPc: 4,  type: 'sus4', label: 'Open Esus4', frets: [0, 2, 2, 2, 0, 0],       fingers: [0, 2, 3, 4, 0, 0] },
+  { rootPc: 7,  type: 'sus4', label: 'Open Gsus4', frets: [3, 3, 0, 0, 1, 3],       fingers: [2, 3, 0, 0, 1, 4] },
+  { rootPc: 9,  type: 'sus2', label: 'Open Asus2', frets: [null, 0, 2, 2, 0, 0],    fingers: [null, 0, 1, 2, 0, 0] },
+  { rootPc: 9,  type: 'sus4', label: 'Open Asus4', frets: [null, 0, 2, 2, 3, 0],    fingers: [null, 0, 1, 2, 3, 0] }
 ];
 
 export type DifficultyTier = 'easy' | 'medium' | 'hard';

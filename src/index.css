@@ -148,15 +148,15 @@ h1, h2, h3, h4, .lab-title {
   --rail-bg: #F2F1EE;
   --elevated-bg: linear-gradient(180deg, #FFFFFF 0%, #FBFAF8 62%);
   --elevation:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 1px 0 rgba(var(--surface-tint-rgb), 0.9),
     0 1px 2px rgba(23, 24, 26, 0.06),
     0 10px 28px -14px rgba(23, 24, 26, 0.16);
   --elevation-low:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 1px 0 rgba(var(--surface-tint-rgb), 0.8),
     0 1px 2px rgba(23, 24, 26, 0.05);
   --elevated-bg-hover: linear-gradient(180deg, #FFFFFF 0%, #F7F5F2 62%);
   --elevation-hover:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 1px 0 rgba(var(--surface-tint-rgb), 0.9),
     0 2px 5px rgba(23, 24, 26, 0.08),
     0 16px 36px -16px rgba(23, 24, 26, 0.22);
 
@@ -1047,7 +1047,7 @@ html {
   background: #0E0F11;
   padding: 1.5rem;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.05);
   box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
   user-select: none;
   overflow-x: auto;
@@ -1178,7 +1178,7 @@ html {
   border-radius: 50%;
   transform: translate(-50%, -50%);
   background: radial-gradient(circle at 32% 28%, #ffffff 0%, #e8e2d0 25%, #cbbfa0 55%, #9c8f6d 100%);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.6), inset 0 0 2px rgba(255,255,255,0.6);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.6), inset 0 0 2px rgba(var(--surface-tint-rgb), 0.6);
 }
 
 .guitar-string-row {
@@ -1226,7 +1226,7 @@ html {
 .nut-cell {
   flex: 0 0 60px;
   width: 60px;
-  background: rgba(255,255,255,0.015);
+  background: rgba(var(--surface-tint-rgb), 0.015);
   font-family: var(--font-mono);
 }
 
@@ -1240,7 +1240,7 @@ html {
   width: 7px;
   border-radius: 2px;
   background: linear-gradient(90deg, #fbf6e8 0%, #e9dfc0 35%, #cbbf9c 60%, #a8987a 100%);
-  box-shadow: 2px 0 6px rgba(0,0,0,0.55), inset -1px 0 1px rgba(255,255,255,0.5);
+  box-shadow: 2px 0 6px rgba(0,0,0,0.55), inset -1px 0 1px rgba(var(--surface-tint-rgb), 0.5);
   z-index: 5;
 }
 
@@ -1284,13 +1284,13 @@ html {
     /* the two turning points, where the string dwells */
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0) 0%,
+      rgba(var(--surface-tint-rgb), 0) 0%,
       rgba(255, 246, 236, 1) 12%,
       rgba(255, 231, 206, 0.42) 29%,
       rgba(255, 178, 116, 0.2) 50%,
       rgba(255, 231, 206, 0.42) 71%,
       rgba(255, 246, 236, 1) 88%,
-      rgba(255, 255, 255, 0) 100%
+      rgba(var(--surface-tint-rgb), 0) 100%
     ),
     /* warm bloom around the whole swing, so it separates from the steel */
     linear-gradient(
@@ -1495,6 +1495,24 @@ html {
 
 .lab-header {
   margin-bottom: 2rem;
+}
+
+/* A settings row whose contents change with another control: it keeps the
+   height of its tallest version, so the rows under it stay put. */
+.settings-slot {
+  min-height: 3.75rem;
+}
+
+/* A lab laid out as a column of panels. The gap does the spacing, so the
+   header drops its own margin: title to content is 2rem on every page. */
+.lab-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.lab-stack > .lab-header {
+  margin-bottom: 0;
 }
 
 .lab-title {
@@ -2311,7 +2329,6 @@ button.dash-card {
 button.dash-card:hover {
   background: var(--elevated-bg-hover);
   box-shadow: var(--elevation-hover);
-  transform: translateY(-2px);
 }
 
 button.dash-card:active {
@@ -2391,13 +2408,13 @@ button.dash-card:active {
 }
 
 .rep-dot.is-complete {
-  background: #22c55e;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+  background: var(--success);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--success) 40%, transparent);
 }
 
 .rep-dot.is-revisit {
-  background: #f59e0b;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+  background: var(--warning);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--warning) 40%, transparent);
 }
 
 .repertoire-meter {
@@ -2411,7 +2428,7 @@ button.dash-card:active {
 }
 
 .meter-complete {
-  background: #22c55e;
+  background: var(--success);
   height: 100%;
   border-radius: 999px 0 0 999px;
   transition: width 0.3s ease;
@@ -2506,7 +2523,6 @@ button.daynode {
 }
 
 button.daynode:hover {
-  transform: translateY(-1px);
   background: var(--surface-3);
   color: var(--text-primary);
 }
@@ -2897,7 +2913,6 @@ button.dash-card:hover .pickup-go svg {
 .songrow:hover {
   background: var(--surface-3);
   box-shadow: var(--elevation);
-  transform: translateY(-1px);
 }
 
 .songrow:active {
@@ -3566,7 +3581,6 @@ button.dash-card:hover .pickup-go svg {
 
 .shapepick-item:hover {
   background: var(--surface-3);
-  transform: translateY(-1px);
 }
 
 .shapepick-item.is-on {
@@ -5130,6 +5144,9 @@ button.dash-card:hover .pickup-go svg {
 .fit-headline {
   margin: 0;
   font-size: 0.82rem;
+  line-height: 1.45;
+  /* Two lines held, so a shorter verdict does not pull everything under it up. */
+  min-height: 2.9em;
   color: var(--text-secondary);
 }
 
@@ -5856,6 +5873,10 @@ button.dash-card:hover .pickup-go svg {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
+  align-content: center;
+  /* Running or not, the same height: starting must not nudge the panel. */
+  min-height: 2.4rem;
+  box-sizing: border-box;
   gap: 0.6rem;
   margin: 0;
   padding: 0.5rem 0.7rem;
@@ -7234,7 +7255,6 @@ button.qslot-shape:focus-visible {
 .palette-chord:hover {
   border-color: var(--primary);
   background: var(--surface-2);
-  transform: translateY(-2px);
 }
 
 .palette-chord:active { transform: translateY(0); }
@@ -7489,7 +7509,6 @@ button.qslot-shape:focus-visible {
 
 .loopcard:hover {
   background: var(--surface-3);
-  transform: translateY(-2px);
 }
 
 /* The whole card is the button. Loading a loop is the only thing anyone comes
@@ -8639,7 +8658,6 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .dash-run:hover {
-  transform: translateY(-1px);
   box-shadow: inset 3px 0 0 var(--primary), var(--elevation-hover);
 }
 
@@ -8705,22 +8723,21 @@ button.strumcell:hover { background: var(--surface-3); }
   font-size: 0.88rem;
   font-weight: 600;
   border-radius: 9px;
-  background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
-  color: #ffffff;
+  background: var(--primary);
+  color: var(--text-on-primary);
   border: none;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
   cursor: pointer;
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
+  transition: filter 0.16s ease;
 }
 
 .song-play-hero-btn:hover {
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  filter: brightness(1.08);
 }
 
 /* Sound & Click Quick Toggles */
 .chart-sound-toggle,
-.chart-click-toggle {
+.chart-click-toggle,
+.chart-loop-toggle {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -8736,7 +8753,8 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .chart-sound-toggle.is-active,
-.chart-click-toggle.is-active {
+.chart-click-toggle.is-active,
+.chart-loop-toggle.is-active {
   background: var(--surface-3);
   border-color: var(--primary);
   color: var(--primary);
@@ -8768,7 +8786,9 @@ button.strumcell:hover { background: var(--surface-3); }
 .guitar-chord-badge {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.65rem;
+  min-width: 0;
 }
 
 .guitar-chord-label {
@@ -8798,11 +8818,11 @@ button.strumcell:hover { background: var(--surface-3); }
 .guitar-capo-chip {
   font-size: 0.72rem;
   font-weight: 600;
-  color: #f59e0b;
+  color: var(--warning);
   padding: 0.2rem 0.55rem;
   border-radius: 5px;
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
 }
 
 /* Dynamic Strum Stroke Banner */
@@ -8819,36 +8839,36 @@ button.strumcell:hover { background: var(--surface-3); }
   gap: 0.45rem;
   padding: 0.35rem 0.8rem;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(var(--surface-tint-rgb), 0.05);
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.1);
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #94a3b8;
+  color: var(--text-secondary);
   transition: all 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .strum-stroke-indicator.is-d {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: #10b981;
+  background: color-mix(in srgb, var(--success) 20%, transparent);
+  border-color: var(--success);
   color: #34d399;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--success) 40%, transparent);
   transform: translateY(-1px) scale(1.03);
 }
 
 .strum-stroke-indicator.is-u {
-  background: rgba(59, 130, 246, 0.2);
-  border-color: #3b82f6;
-  color: #60a5fa;
-  box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+  background: color-mix(in srgb, var(--secondary) 20%, transparent);
+  border-color: var(--secondary);
+  color: var(--secondary);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--secondary) 40%, transparent);
   transform: translateY(-1px) scale(1.03);
 }
 
 .strum-stroke-indicator.is-x {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: #ef4444;
+  background: color-mix(in srgb, var(--danger) 20%, transparent);
+  border-color: var(--danger);
   color: #f87171;
-  box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--danger) 40%, transparent);
   transform: translateY(-1px) scale(1.03);
 }
 
@@ -8865,7 +8885,7 @@ button.strumcell:hover { background: var(--surface-3); }
   padding: 0.25rem 0.4rem;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.08);
 }
 
 .tape-cell {
@@ -8878,8 +8898,8 @@ button.strumcell:hover { background: var(--surface-3); }
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 700;
-  color: #64748b;
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  background: rgba(var(--surface-tint-rgb), 0.04);
   transition: all 0.1s ease;
 }
 
@@ -8891,7 +8911,7 @@ button.strumcell:hover { background: var(--surface-3); }
   background: var(--primary);
   color: #ffffff;
   transform: scale(1.15);
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--secondary) 60%, transparent);
 }
 
 /* Guitar Fretboard & Neck */
@@ -9177,7 +9197,7 @@ button.strumcell:hover { background: var(--surface-3); }
   left: 0;
   right: 0;
   height: 3px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--surface-tint-rgb), 0.05);
   border-radius: 0 0 12px 12px;
   overflow: hidden;
 }
@@ -9185,15 +9205,15 @@ button.strumcell:hover { background: var(--surface-3); }
 .chart-progress-bottom span {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--primary) 0%, #10b981 100%);
+  background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
   transition: width 0.15s linear;
 }
 
 /* Active Moving Karaoke Word Highlight */
 .chart-seg.is-active-word .chart-seg-text {
   font-weight: 700;
-  color: #38bdf8;
-  text-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+  color: var(--primary);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--primary) 60%, transparent);
   transform: scale(1.05);
   display: inline-block;
   transition: all 0.1s ease;
@@ -9201,9 +9221,9 @@ button.strumcell:hover { background: var(--surface-3); }
 
 .chart-seg.is-active-word .chart-seg-chord {
   opacity: 1;
-  color: #38bdf8;
+  color: var(--primary);
   transform: translateY(-2px);
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--primary) 80%, transparent);
 }
 
 /* ==========================================================================
@@ -9251,7 +9271,7 @@ button.strumcell:hover { background: var(--surface-3); }
 .tempo-italian-badge {
   font-size: 0.72rem;
   font-weight: 600;
-  color: #38bdf8;
+  color: var(--primary);
 }
 
 .tempo-controls-row {
@@ -9361,13 +9381,12 @@ button.strumcell:hover { background: var(--surface-3); }
 
 .sig-chip-btn:hover {
   border-color: var(--primary);
-  transform: translateY(-1px);
 }
 
 .sig-chip-btn.is-active {
   border-color: var(--primary);
   background: var(--surface-3);
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--secondary) 20%, transparent);
 }
 
 .sig-chip-btn .sig-num {
@@ -9427,10 +9446,10 @@ button.strumcell:hover { background: var(--surface-3); }
   font-size: 0.74rem;
   font-weight: 600;
   color: var(--primary);
-  background: rgba(59, 130, 246, 0.1);
+  background: color-mix(in srgb, var(--secondary) 10%, transparent);
   padding: 0.2rem 0.6rem;
   border-radius: 6px;
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  border: 1px solid color-mix(in srgb, var(--secondary) 25%, transparent);
 }
 
 /* Quick Stroke Buttons */
@@ -9450,88 +9469,21 @@ button.strumcell:hover { background: var(--surface-3); }
 
 .palette-stroke-btn {
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   padding: 0.3rem 0.75rem;
   border-radius: 7px;
-  cursor: pointer;
-  transition: all 0.12s ease;
-}
-
-.palette-stroke-btn.is-d {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #10b981;
-}
-
-.palette-stroke-btn.is-d:hover {
-  background: rgba(16, 185, 129, 0.3);
-  transform: translateY(-1px);
-}
-
-.palette-stroke-btn.is-u {
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  color: #3b82f6;
-}
-
-.palette-stroke-btn.is-u:hover {
-  background: rgba(59, 130, 246, 0.3);
-  transform: translateY(-1px);
-}
-
-.palette-stroke-btn.is-x {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #ef4444;
-}
-
-.palette-stroke-btn.is-x:hover {
-  background: rgba(239, 68, 68, 0.3);
-  transform: translateY(-1px);
-}
-
-.palette-stroke-btn.is-rest {
-  background: rgba(148, 163, 184, 0.15);
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  color: #94a3b8;
-}
-
-.palette-stroke-btn.is-rest:hover {
-  background: rgba(148, 163, 184, 0.3);
-  transform: translateY(-1px);
-}
-
-.palette-stroke-btn.is-shift {
-  background: rgba(168, 85, 247, 0.15);
-  border: 1px solid rgba(168, 85, 247, 0.4);
-  color: #c084fc;
-}
-
-.palette-stroke-btn.is-shift:hover {
-  background: rgba(168, 85, 247, 0.3);
-  transform: translateY(-1px);
-}
-
-.palette-stroke-btn.is-pop {
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #f59e0b;
-}
-
-.palette-stroke-btn.is-pop:hover {
-  background: rgba(245, 158, 11, 0.3);
-  transform: translateY(-1px);
-}
-
-.palette-stroke-btn.is-clear {
-  background: var(--surface-2);
   border: 1px solid var(--panel-border);
-  color: var(--text-muted);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
-.palette-stroke-btn.is-clear:hover {
-  color: var(--text-primary);
+/* One quiet style for every quick-add button: the glyph says what it adds. */
+.palette-stroke-btn:hover {
+  background: var(--surface-3);
   border-color: var(--panel-border-hover);
+  color: var(--text-primary);
 }
 
 /* Strum Text Input & Presets */
@@ -9582,7 +9534,6 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .strum-preset-chip:hover {
-  transform: translateY(-1px);
 }
 
 .strum-preset-chip .preset-name {
@@ -9603,18 +9554,17 @@ button.strumcell:hover { background: var(--surface-3); }
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background: radial-gradient(circle at 50% 38%, rgba(56, 189, 248, 0.08) 0%, rgba(15, 23, 42, 0.95) 75%);
-  border: 1px solid rgba(56, 189, 248, 0.18);
+  background: var(--surface-2);
+  border: 1px solid var(--panel-border);
   border-radius: 12px;
   padding: 1.25rem;
   position: relative;
   overflow: hidden;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5), 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.12s ease;
 }
 
 .pulse-groove-stage.is-accent-bar {
-  border-color: rgba(245, 158, 11, 0.35);
-  box-shadow: inset 0 0 40px rgba(245, 158, 11, 0.06), 0 4px 20px rgba(0, 0, 0, 0.25);
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
 }
 
 .pulse-groove-strip {
@@ -9631,39 +9581,43 @@ button.strumcell:hover { background: var(--surface-3); }
   gap: 0.35rem;
   font-size: 1.15rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 .pulse-groove-readout .beat-number {
-  color: #38bdf8;
+  color: var(--primary);
   font-size: 1.5rem;
 }
 
 .pulse-groove-readout .beat-number.is-accent {
-  color: #f59e0b;
-  text-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+  color: var(--warning);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--warning) 60%, transparent);
 }
 
 .pulse-groove-accent-chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  /* Fixed width: "Ready", "Beat 3" and "Downbeat" must not resize the strip. */
+  min-width: 6.4rem;
+  text-transform: uppercase;
   gap: 0.35rem;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  background: rgba(var(--surface-tint-rgb), 0.05);
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.08);
   transition: all 0.15s ease;
 }
 
 .pulse-groove-accent-chip.is-active {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.16);
-  border-color: rgba(245, 158, 11, 0.4);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--warning) 30%, transparent);
 }
 
 .pulse-groove-canvas {
@@ -9677,8 +9631,8 @@ button.strumcell:hover { background: var(--surface-3); }
   display: flex;
   align-items: center;
   justify-content: space-around;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+  border: 1px solid rgba(var(--surface-tint-rgb), 0.06);
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
   position: relative;
@@ -9702,28 +9656,29 @@ button.strumcell:hover { background: var(--surface-3); }
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #38bdf8;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+  background: var(--primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--primary) 50%, transparent);
 }
 
 .subdivision-node.is-accent-node .node-dot {
-  background: #f59e0b;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
+  background: var(--warning);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--warning) 80%, transparent);
 }
 
 .subdivision-node .node-lbl {
   font-size: 0.65rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
 .swing-shuffle-control {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 0.6rem 1rem;
+  background: var(--surface-1);
+  border: 1px solid var(--panel-border);
   border-radius: 8px;
   padding: 0.5rem 0.85rem;
 }
@@ -9731,17 +9686,20 @@ button.strumcell:hover { background: var(--surface-3); }
 .swing-header-group {
   display: flex;
   flex-direction: column;
+  /* Wide enough for the longest feel name, so dragging never resizes the row. */
+  flex: 0 0 6.5rem;
 }
 
 .swing-title {
   font-size: 0.76rem;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 .swing-feel-tag {
+  white-space: nowrap;
   font-size: 0.68rem;
-  color: #38bdf8;
+  color: var(--primary);
   font-weight: 500;
 }
 
@@ -9749,31 +9707,48 @@ button.strumcell:hover { background: var(--surface-3); }
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  flex: 1 1 12rem;
+  flex: 1 1 8rem;
+  min-width: 0;
   max-width: 14rem;
 }
 
 .swing-range-input {
   flex: 1;
-  accent-color: #38bdf8;
+  accent-color: var(--primary);
   cursor: pointer;
 }
 
 .swing-percent {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #94a3b8;
-  min-width: 2.2rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.6rem;
   text-align: right;
+}
+
+/* The metronome's two views share one height: switching between them must not
+   move the Start button. Sized to the taller (groove) view. */
+.metronome-stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 344px;
+}
+
+@media (max-width: 640px) {
+  .metronome-stage {
+    min-height: 384px;
+  }
 }
 
 /* ==========================================================================
    Live Guitar Anchor & Pivot Visuals
    ========================================================================== */
 .guitar-anchor-chip {
-  background: rgba(245, 158, 11, 0.15) !important;
-  border-color: rgba(245, 158, 11, 0.4) !important;
-  color: #f59e0b !important;
+  background: color-mix(in srgb, var(--warning) 15%, transparent) !important;
+  border-color: color-mix(in srgb, var(--warning) 40%, transparent) !important;
+  color: var(--warning) !important;
   animation: anchorChipPulse 2s infinite ease-in-out;
 }
 
@@ -9807,11 +9782,6 @@ button.strumcell:hover { background: var(--surface-3); }
 /* ==========================================================================
    Song Chart Looper & Auto Speed Ramp
    ========================================================================== */
-.chart-loop-toggle.is-active {
-  background: rgba(16, 185, 129, 0.15) !important;
-  border-color: rgba(16, 185, 129, 0.4) !important;
-  color: #10b981 !important;
-}
 
 .chart-ramp-select {
   display: inline-flex;
@@ -9897,10 +9867,10 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .mood-toggle-pill.is-sun.is-active {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.5);
-  color: #f59e0b;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  border-color: color-mix(in srgb, var(--warning) 50%, transparent);
+  color: var(--warning);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--warning) 25%, transparent);
 }
 
 .mood-toggle-pill.is-moon.is-active {
@@ -9960,7 +9930,6 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .ladder-rung:hover {
-  transform: translateY(-2px);
   border-color: var(--primary);
 }
 
@@ -10022,9 +9991,9 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .ladder-link.is-whole .link-type {
-  background: rgba(56, 189, 248, 0.2);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 .ladder-link.is-half .link-type {
@@ -10034,9 +10003,9 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .ladder-link.is-leap .link-type {
-  background: rgba(168, 85, 247, 0.2);
-  color: #a855f7;
-  border: 1px solid rgba(168, 85, 247, 0.4);
+  background: color-mix(in srgb, var(--text-secondary) 20%, transparent);
+  color: var(--text-secondary);
+  border: 1px solid color-mix(in srgb, var(--text-secondary) 40%, transparent);
 }
 
 .ladder-link .link-frets {
@@ -10084,7 +10053,6 @@ button.strumcell:hover { background: var(--surface-3); }
 
 .sonic-card:hover {
   border-color: var(--panel-border-hover);
-  transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
@@ -10137,7 +10105,6 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .harmonic-pill:hover {
-  transform: translateY(-1px);
 }
 
 .harmonic-pill.is-active {
@@ -10202,10 +10169,10 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .mood-button.is-sun.is-active {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: #f59e0b;
-  color: #f59e0b;
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  border-color: var(--warning);
+  color: var(--warning);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--warning) 30%, transparent);
 }
 
 .mood-button.is-moon.is-active {
@@ -10253,13 +10220,13 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .tension-trigger-btn.is-tense {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: #ef4444;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border-color: var(--danger);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--danger) 40%, transparent);
 }
 
 .tension-trigger-btn.is-tense .tension-text {
-  color: #ef4444;
+  color: var(--danger);
 }
 
 .is-wobbling {
@@ -10272,7 +10239,7 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .tension-state.is-peaceful .tension-text {
-  color: #10b981;
+  color: var(--success);
 }
 
 .octave-leap-controls {
@@ -10299,9 +10266,9 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .octave-btn.is-active {
-  background: rgba(56, 189, 248, 0.15);
-  border-color: #38bdf8;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  border-color: var(--primary);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 .octave-sine-wave {
@@ -10349,10 +10316,10 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .groove-btn.is-active {
-  background: rgba(56, 189, 248, 0.15);
-  border-color: #38bdf8;
-  color: #38bdf8;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 .groove-icon {
@@ -10394,17 +10361,17 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .touch-btn.is-open-touch.is-active {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: #10b981;
-  color: #10b981;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  border-color: var(--success);
+  color: var(--success);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--success) 30%, transparent);
 }
 
 .touch-btn.is-muted-touch.is-active {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: #f59e0b;
-  color: #f59e0b;
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  border-color: var(--warning);
+  color: var(--warning);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--warning) 30%, transparent);
 }
 
 .touch-icon {
@@ -10455,7 +10422,6 @@ button.strumcell:hover { background: var(--surface-3); }
 .account-nav-btn:hover {
   background: var(--surface-3);
   border-color: var(--panel-border-hover);
-  transform: translateY(-1px);
 }
 
 .account-nav-btn.is-collapsed {
@@ -10482,7 +10448,7 @@ button.strumcell:hover { background: var(--surface-3); }
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, var(--secondary), var(--text-secondary));
   color: #fff;
   font-size: 0.75rem;
   font-weight: 700;
@@ -10504,20 +10470,20 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .sync-status-indicator.is-synced {
-  background: #10b981;
+  background: var(--success);
 }
 
 .sync-status-indicator.is-syncing {
-  background: #3b82f6;
+  background: var(--secondary);
   animation: pulse-sync 1s infinite alternate;
 }
 
 .sync-status-indicator.is-error {
-  background: #ef4444;
+  background: var(--danger);
 }
 
 .sync-status-indicator.is-idle {
-  background: #94a3b8;
+  background: var(--text-secondary);
 }
 
 @keyframes pulse-sync {
@@ -10568,7 +10534,7 @@ button.strumcell:hover { background: var(--surface-3); }
   border-radius: 16px;
   max-width: 440px;
   width: 100%;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(var(--surface-tint-rgb), 0.05);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -10652,7 +10618,7 @@ button.strumcell:hover { background: var(--surface-3); }
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, var(--secondary), var(--text-secondary));
   color: #fff;
   font-size: 1.1rem;
   font-weight: 700;
@@ -10692,10 +10658,10 @@ button.strumcell:hover { background: var(--surface-3); }
   border-radius: 50%;
 }
 
-.sync-dot.is-synced { background: #10b981; }
-.sync-dot.is-syncing { background: #3b82f6; animation: pulse-sync 1s infinite alternate; }
-.sync-dot.is-error { background: #ef4444; }
-.sync-dot.is-idle { background: #94a3b8; }
+.sync-dot.is-synced { background: var(--success); }
+.sync-dot.is-syncing { background: var(--secondary); animation: pulse-sync 1s infinite alternate; }
+.sync-dot.is-error { background: var(--danger); }
+.sync-dot.is-idle { background: var(--text-secondary); }
 
 .auth-action-row {
   display: flex;
@@ -10719,9 +10685,9 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .auth-signout-btn:hover {
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.4);
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
 /* Tabs & Form */
@@ -10787,9 +10753,9 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .auth-input:focus {
-  border-color: #3b82f6;
+  border-color: var(--secondary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--secondary) 20%, transparent);
 }
 
 .auth-submit-btn {
@@ -10808,7 +10774,6 @@ button.strumcell:hover { background: var(--surface-3); }
 
 .auth-submit-btn:hover:not(:disabled) {
   opacity: 0.95;
-  transform: translateY(-1px);
   box-shadow: 0 6px 20px var(--primary-glow);
 }
 
@@ -10826,15 +10791,15 @@ button.strumcell:hover { background: var(--surface-3); }
 }
 
 .auth-alert.is-success {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #10b981;
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
+  color: var(--success);
 }
 
 .auth-alert.is-error {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #ef4444;
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  color: var(--danger);
 }
 
 .auth-guest-notice {
@@ -11096,6 +11061,7 @@ button.strumcell:hover { background: var(--surface-3); }
 
   .swing-header-group {
     flex: 1 0 100%;
+    min-height: 1.2rem;
     flex-direction: row;
     align-items: baseline;
     justify-content: space-between;
@@ -11744,8 +11710,8 @@ button.strumcell:hover { background: var(--surface-3); }
     bottom: calc(var(--mtabs-h) + env(safe-area-inset-bottom, 0px) + 0.75rem);
   }
 
-  /* The top bar already says "Chords". */
-  .chordbook .songs-head .lab-title {
+  /* The top bar already names the page ("Songs", "Chords"). */
+  .songs-head .lab-title {
     display: none;
   }
 }

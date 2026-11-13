@@ -52,7 +52,7 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
           <span className="readout">{now.capo === 0 ? 'no capo' : `capo ${now.capo}`}</span>
         </div>
         <CapoBar verdict={verdict} onApply={apply} />
-        <p className="fit-note">
+        <p className="fit-headline">
           Rate the chords above and Fit picks the capo that suits your hands, at the same pitch.
         </p>
       </section>
@@ -85,9 +85,12 @@ export const FitPanel: React.FC<{ song: Song }> = ({ song }) => {
         <span className="readout">{now.capo === 0 ? 'no capo' : `capo ${now.capo}`}</span>
       </div>
 
-      <p className={`fit-headline${here.missing === 0 ? ' is-good' : ''}`}>{headline}</p>
-
+      {/* The capo picker leads, in the same place whether or not anything is
+          rated: it is what your finger is on, and the text under it changes
+          with every press. */}
       <CapoBar verdict={verdict} onApply={apply} />
+
+      <p className={`fit-headline${here.missing === 0 ? ' is-good' : ''}`}>{headline}</p>
 
       {now.capo > 0 && (
         <p className="fit-frame readout">

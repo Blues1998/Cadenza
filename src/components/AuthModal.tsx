@@ -243,7 +243,7 @@ export const AuthModal: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="auth-form">
               <label className="auth-field">
-                <span className="auth-label">Email Address</span>
+                <span className="auth-label">Email</span>
                 <input
                   type="email"
                   className="text-field auth-input"

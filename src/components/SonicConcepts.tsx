@@ -11,11 +11,11 @@ export const SonicConcepts: React.FC = () => {
   // --- 1. Overtones State ---
   const [activeHarmonics, setActiveHarmonics] = useState<number[]>([1]);
   const harmonicsList = [
-    { n: 1, name: 'Fundamental (1x)', midi: 48, note: 'C3', ratio: '1:1', color: '#f59e0b' },
-    { n: 2, name: 'Octave (2x)', midi: 60, note: 'C4', ratio: '2:1', color: '#10b981' },
-    { n: 3, name: 'Fifth (3x)', midi: 67, note: 'G4', ratio: '3:1', color: '#38bdf8' },
-    { n: 4, name: 'Double Octave (4x)', midi: 72, note: 'C5', ratio: '4:1', color: '#a855f7' },
-    { n: 5, name: 'Major Third (5x)', midi: 76, note: 'E5', ratio: '5:1', color: '#ec4899' },
+    { n: 1, name: 'Fundamental', midi: 48, note: 'C3', ratio: '1:1', color: 'var(--primary)' },
+    { n: 2, name: 'Octave', midi: 60, note: 'C4', ratio: '2:1', color: 'var(--primary)' },
+    { n: 3, name: 'Fifth', midi: 67, note: 'G4', ratio: '3:1', color: 'var(--primary)' },
+    { n: 4, name: 'Two octaves', midi: 72, note: 'C5', ratio: '4:1', color: 'var(--primary)' },
+    { n: 5, name: 'Major third', midi: 76, note: 'E5', ratio: '5:1', color: 'var(--primary)' },
   ];
 
   const playHarmonic = (h: typeof harmonicsList[0]) => {
@@ -162,8 +162,8 @@ export const SonicConcepts: React.FC = () => {
         {/* Card 1: Harmonics & Overtones */}
         <div className="sonic-card">
           <div className="sonic-card-head">
-            <span className="sonic-tag">Physics</span>
-            <h4>Harmonics &amp; Overtones</h4>
+            <span className="sonic-tag">Sound</span>
+            <h4>Harmonics</h4>
           </div>
           <p className="sonic-card-desc">
             A plucked string isn't one pitch. It vibrates in halves, thirds and fifths at once.
@@ -192,18 +192,18 @@ export const SonicConcepts: React.FC = () => {
             className="btn sonic-action-btn"
             onClick={playHarmonicsChord}
           >
-            <span>Ring all harmonics together</span>
+            <span>Play them together</span>
           </button>
         </div>
 
         {/* Card 2: Mood Flip (Major vs Minor) */}
         <div className="sonic-card">
           <div className="sonic-card-head">
-            <span className="sonic-tag">Emotion</span>
-            <h4>The Mood Flip</h4>
+            <span className="sonic-tag">Harmony</span>
+            <h4>One note apart</h4>
           </div>
           <p className="sonic-card-desc">
-            The secret between Joy and Sorrow is just <strong>one single semitone</strong>: the 3rd scale degree.
+            Major and minor differ by <strong>one note</strong>: the 3rd, a semitone apart.
           </p>
 
           <div className="mood-flip-stage">
@@ -212,9 +212,9 @@ export const SonicConcepts: React.FC = () => {
               className={`mood-button is-sun${mood === 'major' ? ' is-active' : ''}`}
               onClick={() => playMoodChord('major')}
             >
-              <span className="mood-title">MAJOR</span>
+              <span className="mood-title">Major</span>
               <span className="mood-notes">C · <strong>E</strong> · G</span>
-              <span className="mood-sub">Bright &amp; Hopeful</span>
+              <span className="mood-sub">Bright</span>
             </button>
 
             <button
@@ -222,9 +222,9 @@ export const SonicConcepts: React.FC = () => {
               className={`mood-button is-moon${mood === 'minor' ? ' is-active' : ''}`}
               onClick={() => playMoodChord('minor')}
             >
-              <span className="mood-title">MINOR</span>
-              <span className="mood-notes">C · <strong style={{ color: '#818cf8' }}>E♭</strong> · G</span>
-              <span className="mood-sub">Reflective &amp; Sad</span>
+              <span className="mood-title">Minor</span>
+              <span className="mood-notes">C · <strong>E♭</strong> · G</span>
+              <span className="mood-sub">Dark</span>
             </button>
           </div>
         </div>
@@ -232,11 +232,11 @@ export const SonicConcepts: React.FC = () => {
         {/* Card 3: Tension & Release (V7 -> I) */}
         <div className="sonic-card">
           <div className="sonic-card-head">
-            <span className="sonic-tag">Magnetism</span>
-            <h4>Tension &amp; Release</h4>
+            <span className="sonic-tag">Harmony</span>
+            <h4>Tension and release</h4>
           </div>
           <p className="sonic-card-desc">
-            Some chords create tension that pulls back home.
+            Some chords pull toward home.
           </p>
 
           <div className="tension-interaction-box">
@@ -250,18 +250,18 @@ export const SonicConcepts: React.FC = () => {
             >
               {isTense ? (
                 <div className="tension-state">
-                  <span className="tension-text">UNSTABLE (G7 Tritone Tension)</span>
-                  <span className="tension-sub">Release mouse/finger to resolve!</span>
+                  <span className="tension-text">G7: tense</span>
+                  <span className="tension-sub">Let go to resolve</span>
                 </div>
               ) : tensionResolved ? (
                 <div className="tension-state is-peaceful">
-                  <span className="tension-text">RESOLVED (C Major Home)</span>
-                  <span className="tension-sub">The tension rests in peace.</span>
+                  <span className="tension-text">C: home</span>
+                  <span className="tension-sub">Resolved</span>
                 </div>
               ) : (
                 <div className="tension-state">
-                  <span className="tension-text">HOLD FOR TENSION</span>
-                  <span className="tension-sub">Press &amp; hold, then release to hear resolution</span>
+                  <span className="tension-text">Hold for tension</span>
+                  <span className="tension-sub">Press, hold, let go</span>
                 </div>
               )}
             </button>
@@ -271,11 +271,11 @@ export const SonicConcepts: React.FC = () => {
         {/* Card 4: Octave Leap */}
         <div className="sonic-card">
           <div className="sonic-card-head">
-            <span className="sonic-tag">Acoustics</span>
-            <h4>The Octave Leap (2x Freq)</h4>
+            <span className="sonic-tag">Sound</span>
+            <h4>The octave</h4>
           </div>
           <p className="sonic-card-desc">
-            Double the vibration speed = the exact same note, an octave higher in the sky.
+            Double the frequency and you get the same note, an octave higher.
           </p>
 
           <div className="octave-leap-controls">
@@ -285,8 +285,8 @@ export const SonicConcepts: React.FC = () => {
               onClick={() => playOctaveNote(48)}
             >
               <div className="octave-sine-wave is-slow" />
-              <span className="octave-lbl">Low C3 · 130.8 Hz</span>
-              <span className="octave-sub">1x vibration speed</span>
+              <span className="octave-lbl">C3 · 130.8 Hz</span>
+              <span className="octave-sub">Base frequency</span>
             </button>
 
             <button
@@ -295,8 +295,8 @@ export const SonicConcepts: React.FC = () => {
               onClick={() => playOctaveNote(60)}
             >
               <div className="octave-sine-wave is-fast" />
-              <span className="octave-lbl">High C4 · 261.6 Hz</span>
-              <span className="octave-sub">2x exact speed</span>
+              <span className="octave-lbl">C4 · 261.6 Hz</span>
+              <span className="octave-sub">Twice as fast</span>
             </button>
           </div>
         </div>
@@ -304,11 +304,11 @@ export const SonicConcepts: React.FC = () => {
         {/* Card 5: Straight vs Swing Pocket */}
         <div className="sonic-card">
           <div className="sonic-card-head">
-            <span className="sonic-tag">Groove</span>
-            <h4>Straight vs Swing Shuffle</h4>
+            <span className="sonic-tag">Rhythm</span>
+            <h4>Straight or swing</h4>
           </div>
           <p className="sonic-card-desc">
-            Rhythm isn’t just speed; it’s where the offbeat lands. Hear the human pocket.
+            Same tempo, different feel: it’s where the offbeat lands.
           </p>
 
           <div className="groove-dual-buttons">
@@ -318,7 +318,7 @@ export const SonicConcepts: React.FC = () => {
               onClick={() => playGrooveSample('straight')}
             >
               <span className="groove-name">Straight 8ths</span>
-              <span className="groove-sub">Even 50/50 clockwork</span>
+              <span className="groove-sub">Even, 50/50</span>
             </button>
 
             <button
@@ -326,8 +326,8 @@ export const SonicConcepts: React.FC = () => {
               className={`groove-btn${playingGroove === 'swing' ? ' is-active' : ''}`}
               onClick={() => playGrooveSample('swing')}
             >
-              <span className="groove-name">Blues Swing</span>
-              <span className="groove-sub">67/33 heart-pulse shuffle</span>
+              <span className="groove-name">Swing</span>
+              <span className="groove-sub">Long-short, 67/33</span>
             </button>
           </div>
         </div>
@@ -335,8 +335,8 @@ export const SonicConcepts: React.FC = () => {
         {/* Card 6: Acoustic Touch (Open Ring vs Palm Mute) */}
         <div className="sonic-card">
           <div className="sonic-card-head">
-            <span className="sonic-tag">Guitar Dynamics</span>
-            <h4>Acoustic Touch: Open vs Mute</h4>
+            <span className="sonic-tag">Technique</span>
+            <h4>Open or muted</h4>
           </div>
           <p className="sonic-card-desc">
             Palm muting makes strumming percussive.
@@ -348,8 +348,8 @@ export const SonicConcepts: React.FC = () => {
               className={`touch-btn is-open-touch${touchState === 'open' ? ' is-active' : ''}`}
               onClick={() => playTouch('open')}
             >
-              <span className="touch-title">Open Ring</span>
-              <span className="touch-sub">Strings ring uninhibited</span>
+              <span className="touch-title">Open</span>
+              <span className="touch-sub">Let it ring</span>
             </button>
 
             <button
@@ -357,8 +357,8 @@ export const SonicConcepts: React.FC = () => {
               className={`touch-btn is-muted-touch${touchState === 'muted' ? ' is-active' : ''}`}
               onClick={() => playTouch('muted')}
             >
-              <span className="touch-title">Palm Mute (Chuck)</span>
-              <span className="touch-sub">Damped percussive attack</span>
+              <span className="touch-title">Palm mute</span>
+              <span className="touch-sub">Short and percussive</span>
             </button>
           </div>
         </div>

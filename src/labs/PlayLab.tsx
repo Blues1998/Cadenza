@@ -1,3 +1,4 @@
+import { Segmented } from '../components/Segmented';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useMicPitch } from '../hooks/useMicPitch';
 import { Fretboard } from '../components/Fretboard';
@@ -364,11 +365,11 @@ export const PlayLab: React.FC = () => {
     feedback.type === 'slip' ? 'var(--danger)' : 'var(--text-secondary)';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="lab-stack">
 
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title"><LabIcon tab="play" />Play Challenges</h2>
+        <h2 className="lab-title"><LabIcon tab="play" />Challenges</h2>
       </div>
 
       {/* The screen before it can hear you.
@@ -381,22 +382,16 @@ export const PlayLab: React.FC = () => {
           and the ask sits in the row it will later hand back to the score. */}
       {/* Mode tabs + scoreboard */}
       <section className="glass-panel" style={{ padding: '1rem 1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {([
-            ['scale', 'Scale Climb'],
-            ['interval', 'Interval Hunt'],
-            ['chord', 'Chord Builder']
-          ] as [Mode, string][]).map(([m, label]) => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              className={`btn ${mode === m ? 'btn-primary' : ''}`}
-              style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem' }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <Segmented<Mode>
+          value={mode}
+          onChange={setMode}
+          ariaLabel="Challenge"
+          options={[
+            { value: 'scale', label: 'Scale Climb' },
+            { value: 'interval', label: 'Interval Hunt' },
+            { value: 'chord', label: 'Chord Builder' }
+          ]}
+        />
         {/* A score of nought and a streak of nought are not facts about you,
             they are the absence of a game. Until one is running the only
             figure worth showing is the one a previous session left behind,
@@ -404,12 +399,12 @@ export const PlayLab: React.FC = () => {
         <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', fontSize: '0.9rem' }}>
           {isActive ? (
             <>
-              <span>Score: <strong style={{ color: 'var(--primary)' }}>{score}</strong></span>
+              <span>Score <strong style={{ color: 'var(--primary)' }}>{score}</strong></span>
               <span style={{ color: 'var(--warning)' }}>Streak <strong>{streak}</strong></span>
-              <span style={{ color: 'var(--text-secondary)' }}>Best: <strong>{best[mode]}</strong></span>
+              <span style={{ color: 'var(--text-secondary)' }}>Best <strong>{best[mode]}</strong></span>
               <button onClick={stop} className="btn" style={{ padding: '0.35rem 0.8rem', fontSize: '0.75rem' }}>
                 <span style={{ width: '8px', height: '8px', background: 'var(--danger)', borderRadius: '50%' }}></span>
-                Stop Mic
+                Stop
               </button>
             </>
           ) : (
@@ -424,7 +419,7 @@ export const PlayLab: React.FC = () => {
         {/* Challenge prompt */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <h3 style={{ fontSize: '1.05rem', color: 'var(--secondary)' }}>{round?.promptTitle ?? '…'}</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>{round?.promptDetail}</p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55, minHeight: '3.1em' }}>{round?.promptDetail}</p>
 
           {/* Step chips */}
           {round && (
@@ -456,11 +451,11 @@ export const PlayLab: React.FC = () => {
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: 'auto', paddingTop: '0.5rem' }}>
             <button onClick={playReference} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              {mode === 'interval' ? 'Replay Reference Note' : 'Hear It First'}
+              {mode === 'interval' ? 'Hear the note' : 'Hear it'}
             </button>
             {mode === 'interval' && !revealed && (
               <button onClick={revealAnswer} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem' }}>
-                Reveal Answer (resets streak)
+                Show answer
               </button>
             )}
             <button onClick={() => startNewRound()} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.78rem' }}>
@@ -473,7 +468,7 @@ export const PlayLab: React.FC = () => {
             {mode === 'scale' && (
               <>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  Root:
+                  Root
                   <select
                     value={String(scaleRootPc)}
                     onChange={e => setScaleRootPc(e.target.value === 'random' ? 'random' : Number(e.target.value))}
@@ -485,7 +480,7 @@ export const PlayLab: React.FC = () => {
                   </select>
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  Scale:
+                  Scale
                   <select
                     value={scaleIdx}
                     onChange={e => setScaleIdx(Number(e.target.value))}
@@ -493,7 +488,7 @@ export const PlayLab: React.FC = () => {
                     style={{ width: 'auto', padding: '0.3rem 1.7rem 0.3rem 0.5rem', fontSize: '0.78rem' }}
                   >
                     {SCALE_FORMULAS.map((s, i) => (
-                      <option key={s.name} value={i}>{SCALE_FEELINGS[s.name]?.feeling ?? s.name} ({s.name})</option>
+                      <option key={s.name} value={i}>{s.name}</option>
                     ))}
                   </select>
                 </label>
@@ -502,13 +497,13 @@ export const PlayLab: React.FC = () => {
             {mode === 'chord' && (
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
                 <input type="checkbox" checked={chordSevenths} onChange={e => setChordSevenths(e.target.checked)} />
-                Include 7th chords (4 notes)
+                7th chords too
               </label>
             )}
             {mode === 'interval' && (
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
                 <input type="checkbox" checked={trickyIntervals} onChange={e => setTrickyIntervals(e.target.checked)} />
-                Include tricky intervals (m2, tritone, 6ths, 7ths)
+                Harder intervals too
               </label>
             )}
           </div>
@@ -562,17 +557,17 @@ export const PlayLab: React.FC = () => {
       {/* Fretboard */}
       <section className="glass-panel" style={{ padding: '1.5rem' }}>
         <h3 style={{ fontSize: '1.15rem', marginBottom: '0.75rem', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <span>Guitar Fretboard Guide</span>
+        <span>Fretboard</span>
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 400, color: 'var(--text-secondary)', cursor: 'pointer' }}>
             <input type="checkbox" checked={showTargets} onChange={e => setShowTargets(e.target.checked)} />
-            Show targets (turn off for a harder ear workout)
+            Show targets
           </label>
         </h3>
         <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
           <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--warning)', marginRight: '0.35rem', verticalAlign: 'middle' }} />Play this now</span>
           <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--success)', marginRight: '0.35rem', verticalAlign: 'middle' }} />{mode === 'interval' ? 'Reference note' : 'All notes in this challenge'}</span>
           {isActive && (
-            <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)', marginRight: '0.35rem', verticalAlign: 'middle' }} />What we're hearing from you</span>
+            <span><span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)', marginRight: '0.35rem', verticalAlign: 'middle' }} />What you're playing</span>
           )}
         </div>
         <Fretboard

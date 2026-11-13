@@ -93,7 +93,7 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
             </span>
           )}
           {isPlaying && (
-            <span className="guitar-capo-chip readout" style={{ color: '#38bdf8', borderColor: 'rgba(56,189,248,0.3)', background: 'rgba(56,189,248,0.1)' }}>
+            <span className="guitar-capo-chip readout">
               Bar {barNum} · Beat {beatNum}
             </span>
           )}

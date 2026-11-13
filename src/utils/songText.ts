@@ -51,7 +51,8 @@ const TYPE_BY_SUFFIX: Record<string, ChordTypeId> = {
   // Shapes exist for both, so the catalogue can draw them; without these two
   // the symbol could be written but never read back, and a chord you cannot
   // read back is one the chord book cannot file.
-  mMaj7: 'mMaj7', augMaj7: 'augMaj7'
+  mMaj7: 'mMaj7', augMaj7: 'augMaj7',
+  sus2: 'sus2', sus4: 'sus4'
 };
 
 /** "A min" → "Am", "F maj" → "F", "B7" → "B7". Unreadable input comes back trimmed. */

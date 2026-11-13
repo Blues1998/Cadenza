@@ -156,7 +156,7 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
     <div className="songs">
       <header className="songs-head">
         <div>
-          <h2 className="lab-title"><LabIcon tab="library" />Repertoire</h2>
+          <h2 className="lab-title"><LabIcon tab="library" />Songs</h2>
           <p className="songs-count readout">
             <strong>{songs.length}</strong> {songs.length === 1 ? 'song' : 'songs'}
             <span className="songs-count-sub">

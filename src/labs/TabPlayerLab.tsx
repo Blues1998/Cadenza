@@ -1,3 +1,4 @@
+import { LabIcon } from '../components/LabIcon';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { AlphaTabApi, synth, model, FileLoadError } from '@coderline/alphatab';
@@ -890,17 +891,18 @@ export const TabPlayerLab: React.FC = () => {
   const gradeAccuracyPct = gradedTotal > 0 ? Math.round((gradeStats.hits / gradedTotal) * 100) : null;
 
   return (
+    <div className="lab-stack">
+    <div className="lab-header">
+      <h2 className="lab-title"><LabIcon tab="tabs" />Tab Player</h2>
+    </div>
     <section className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div>
-        <h3 style={{ fontSize: '1.35rem', fontWeight: 700 }}>Tab Player</h3>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '0.25rem', fontFamily: 'var(--font-mono)' }}>
-          .gp3 · .gp4 · .gp5 · .gpx · MusicXML
-        </p>
-      </div>
+      <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', margin: 0, fontFamily: 'var(--font-mono)' }}>
+        .gp3 · .gp4 · .gp5 · .gpx · MusicXML
+      </p>
 
       {libraryEntries.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Your Library</div>
+          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Your tabs</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             {libraryEntries.map(entry => (
               <div
@@ -1266,6 +1268,7 @@ export const TabPlayerLab: React.FC = () => {
         document.body
       )}
     </section>
+    </div>
   );
 };
 export default TabPlayerLab;

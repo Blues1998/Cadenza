@@ -79,11 +79,12 @@ export const ScaleControlBar: React.FC<ScaleControlBarProps> = ({
         <button
           type="button"
           onClick={onPlay}
-          className={`btn ${chordMode ? 'btn-secondary' : 'btn-primary'}`}
+          className="btn btn-primary"
           style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem' }}
+          aria-label={`Play ${selectionName}`}
         >
           <PlayIcon />
-          Play <span className="hide-sm">{selectionName}</span>
+          Play
         </button>
       </div>
 

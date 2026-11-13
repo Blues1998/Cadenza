@@ -57,7 +57,23 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
     const cx = VW / 2;
     const cy = VH / 2 - 14;
 
+    // Theme colours, read from the page so the stage follows light and dark.
+    const css = getComputedStyle(canvas);
+    const tok = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
+    const alpha = (hex: string, a: number) => {
+      const h = hex.replace('#', '');
+      const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h.slice(0, 6), 16);
+      return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+    };
+
     const render = () => {
+      // Read every frame (the style object is live), so a theme switch repaints at once.
+      const ACC = tok('--primary', '#FF6A2A');
+      const BEAT = tok('--secondary', '#C8CCD2');
+      const BG = tok('--surface-1', '#17191C');
+      const LINE = tok('--surface-3', '#24272C');
+      const TEXT = tok('--text-primary', '#F1F0EC');
+      const MUTED = tok('--text-muted', '#85898F');
       // 2x Retina scale onto fixed 800x360 buffer
       ctx.setTransform(2, 0, 0, 2, 0, 0);
       ctx.clearRect(0, 0, VW, VH);
@@ -82,7 +98,7 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
             maxRadius: 110,
             opacity: accented ? 0.95 : 0.65,
             isAccent: accented,
-            color: accented ? '#f59e0b' : '#38bdf8'
+            color: accented ? ACC : BEAT
           });
         }
       } else if (!isPlaying) {
@@ -116,22 +132,22 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
       ctx.save();
       const hubRadius = 26;
       const hubGrad = ctx.createRadialGradient(cx, cy, 4, cx, cy, hubRadius);
-      hubGrad.addColorStop(0, isAccent && isPlaying ? 'rgba(245, 158, 11, 0.45)' : 'rgba(56, 189, 248, 0.25)');
-      hubGrad.addColorStop(1, 'rgba(15, 23, 42, 0.9)');
+      hubGrad.addColorStop(0, isAccent && isPlaying ? alpha(ACC, 0.45) : alpha(BEAT, 0.25));
+      hubGrad.addColorStop(1, alpha(BG, 0.9));
 
       ctx.beginPath();
       ctx.arc(cx, cy, hubRadius, 0, Math.PI * 2);
       ctx.fillStyle = hubGrad;
       ctx.fill();
 
-      ctx.strokeStyle = isAccent && isPlaying ? '#f59e0b' : isPlaying ? '#38bdf8' : '#334155';
+      ctx.strokeStyle = isAccent && isPlaying ? ACC : isPlaying ? BEAT : LINE;
       ctx.lineWidth = isAccent && isPlaying ? 2.5 : 1.5;
-      ctx.shadowColor = isAccent && isPlaying ? '#f59e0b' : '#38bdf8';
+      ctx.shadowColor = isAccent && isPlaying ? ACC : BEAT;
       ctx.shadowBlur = isPlaying ? 10 : 0;
       ctx.stroke();
 
       // Number in center hub
-      ctx.fillStyle = isAccent && isPlaying ? '#f59e0b' : isPlaying ? '#f8fafc' : '#64748b';
+      ctx.fillStyle = isAccent && isPlaying ? ACC : isPlaying ? TEXT : MUTED;
       ctx.font = "bold 18px 'JetBrains Mono', monospace";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -143,7 +159,7 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
       const trackLeft = 45;
       const trackWidth = VW - 90;
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.strokeStyle = alpha(TEXT, 0.08);
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(trackLeft, trackY);
@@ -158,7 +174,7 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
             const sx = trackLeft + (s / Math.max(1, totalSubTicks)) * trackWidth;
             ctx.beginPath();
             ctx.arc(sx, trackY, 1.5, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.fillStyle = alpha(TEXT, 0.15);
             ctx.fill();
           }
         }
@@ -171,10 +187,10 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
 
         ctx.beginPath();
         ctx.arc(bx, trackY, b === 0 ? 5 : 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = isCurrent ? (b === 0 ? '#f59e0b' : '#38bdf8') : 'rgba(255, 255, 255, 0.25)';
+        ctx.fillStyle = isCurrent ? (b === 0 ? ACC : BEAT) : alpha(TEXT, 0.25);
         ctx.fill();
         if (isCurrent) {
-          ctx.strokeStyle = '#ffffff';
+          ctx.strokeStyle = TEXT;
           ctx.lineWidth = 1.2;
           ctx.stroke();
         }
@@ -191,8 +207,8 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
         ctx.save();
         ctx.beginPath();
         ctx.arc(ballX, ballY, 5.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = '#38bdf8';
+        ctx.fillStyle = TEXT;
+        ctx.shadowColor = BEAT;
         ctx.shadowBlur = 8;
         ctx.fill();
         ctx.restore();
@@ -210,24 +226,24 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
       {/* Top Status Strip */}
       <div className="pulse-groove-strip">
         <div className="pulse-groove-readout">
-          <span style={{ fontSize: '0.82rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Beat
           </span>
           <span className={`beat-number${isAccent && isPlaying ? ' is-accent' : ''}`}>
             {isPlaying ? currentBeatDisplay : '-'}
           </span>
-          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             / {beatsPerBar}
           </span>
         </div>
 
         <span className={`pulse-groove-accent-chip${isAccent && isPlaying ? ' is-active' : ''}`}>
-          {isAccent && isPlaying ? 'DOWNBEAT' : isPlaying ? `BEAT ${currentBeatDisplay}` : 'STANDBY'}
+          {isAccent && isPlaying ? 'Downbeat' : isPlaying ? `Beat ${currentBeatDisplay}` : 'Ready'}
         </span>
       </div>
 
       {/* Fixed 400x180 Retina Canvas Stage */}
-      <div style={{ position: 'relative', width: '100%', height: '180px', overflow: 'hidden', borderRadius: '8px', background: '#090d16' }}>
+      <div style={{ position: 'relative', width: '100%', height: '180px', overflow: 'hidden', borderRadius: '8px', background: 'var(--surface-1)' }}>
         <canvas
           ref={canvasRef}
           width={800}
@@ -245,15 +261,15 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
       {/* Rhythmic Feel: Straight vs Swing Controller */}
       <div className="swing-shuffle-control">
         <div className="swing-header-group">
-          <span className="swing-title">Groove Feel</span>
+          <span className="swing-title">Feel</span>
           <span className="swing-feel-tag">
             {swing === 0
-              ? 'Straight 1:1 (Even clock)'
+              ? 'Straight'
               : swing < 0.4
-              ? 'Light Shuffle'
+              ? 'Light swing'
               : swing <= 0.67
-              ? 'Blues / Triplet Shuffle'
-              : 'Heavy Dotted Swing'}
+              ? 'Shuffle'
+              : 'Heavy swing'}
           </span>
         </div>
 
@@ -278,7 +294,7 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
             type="button"
             className={`btn ramp-btn${swing === 0 ? ' is-active' : ''}`}
             onClick={() => onSwingChange(0)}
-            title="Set even straight meter"
+            title="Even eighths"
           >
             Straight
           </button>
@@ -286,7 +302,7 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
             type="button"
             className={`btn ramp-btn${Math.abs(swing - 0.67) < 0.05 ? ' is-active' : ''}`}
             onClick={() => onSwingChange(0.67)}
-            title="Set classic 2:1 triplet blues shuffle"
+            title="Triplet shuffle, 2:1"
           >
             Shuffle
           </button>

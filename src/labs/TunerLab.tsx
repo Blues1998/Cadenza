@@ -75,7 +75,7 @@ export const TunerLab: React.FC = () => {
   return (
     <div className="lab-narrow tunerpage" ref={pageRef}>
       <div className="lab-header">
-        <h2 className="lab-title"><LabIcon tab="tuner" />Pitch &amp; Tuner</h2>
+        <h2 className="lab-title"><LabIcon tab="tuner" />Tuner</h2>
       </div>
       <Segmented<TunerMode>
         value={mode}

@@ -419,7 +419,7 @@ export const EarTrainingLab: React.FC = () => {
   }, [correctMidis]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="lab-stack">
       
       {/* Header */}
       <div className="lab-header">
@@ -437,15 +437,18 @@ export const EarTrainingLab: React.FC = () => {
             value={sourceMode}
             onChange={(v) => { setSourceMode(v); if (v === 'tab') setQuizMode('intervals'); }}
             options={[
-              { value: 'random', label: 'Random Tones' },
-              { value: 'tab', label: 'From My Tabs' }
+              { value: 'random', label: 'Random notes' },
+              { value: 'tab', label: 'My tabs' }
             ]}
             full
           />
 
+          {/* One slot, the same height whichever source is on, so switching
+              never moves the rows below it. */}
+          <div className="settings-slot">
           {sourceMode === 'tab' && (
             <div>
-              <span className="field-label">Practice From</span>
+              <span className="field-label">Tab</span>
               {tabSource.libraryEntries.length === 0 ? (
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
                   Nothing saved yet. Open a tab file first.
@@ -486,11 +489,12 @@ export const EarTrainingLab: React.FC = () => {
               onChange={setQuizMode}
               options={[
                 { value: 'intervals', label: 'Intervals' },
-                { value: 'chords', label: 'Chord Qualities' }
+                { value: 'chords', label: 'Chords' }
               ]}
               full
             />
           )}
+          </div>
 
           <Segmented
             label="Difficulty"
@@ -508,19 +512,19 @@ export const EarTrainingLab: React.FC = () => {
             full
           />
 
-          {sourceMode === 'random' && (
-            <Segmented
-              label="Playback"
-              value={playbackStyle}
-              onChange={setPlaybackStyle}
-              size="sm"
-              options={[
-                { value: 'melodic', label: 'Melodic (Stepwise)' },
-                { value: 'harmonic', label: 'Harmonic (Together)' }
-              ]}
-              full
-            />
-          )}
+          {/* Always shown, so the panel keeps its shape: a tab's jumps are
+              played one note after the other, so "together" is off there. */}
+          <Segmented
+            label="Playback"
+            value={sourceMode === 'tab' ? 'melodic' : playbackStyle}
+            onChange={setPlaybackStyle}
+            size="sm"
+            options={[
+              { value: 'melodic', label: 'One after another' },
+              { value: 'harmonic', label: 'Together', disabled: sourceMode === 'tab' }
+            ]}
+            full
+          />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', marginTop: 'auto' }}>
           {hasStarted && (
@@ -563,7 +567,7 @@ export const EarTrainingLab: React.FC = () => {
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '300px' }}>
                 {sourceMode === 'tab'
-                  ? 'Hear a jump from the piece you picked, then name it.'
+                  ? 'Hear a jump from your tab, then name it.'
                   : 'Hear it, then name it.'}
               </p>
               <button
@@ -683,7 +687,7 @@ export const EarTrainingLab: React.FC = () => {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                    <span>Melody Clue Reference</span>
+                    <span>Melody clue</span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>Click <IconSounding size={12} /> to hear reference</span>
                   </div>
                   {getPossibleIntervals().map((interval) => (

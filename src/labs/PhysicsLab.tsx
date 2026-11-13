@@ -593,7 +593,7 @@ const ModularCircle: React.FC = () => {
 
 // ============================================================
 export const PhysicsLab: React.FC = () => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+  <div className="lab-stack">
     <div className="lab-header">
       <h2 className="lab-title"><LabIcon tab="physics" />Sound Physics</h2>
     </div>

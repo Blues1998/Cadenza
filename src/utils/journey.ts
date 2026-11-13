@@ -69,7 +69,7 @@ export const JOURNEY: JourneyChapter[] = [
         idea: 'A scale is a family of notes. Minor is major with three notes lowered.',
         task: 'Play Major, then Natural Minor. Hear the mood flip.',
         tab: 'theory',
-        buttonText: 'Theory & Scales',
+        buttonText: 'Theory',
         requirements: [
           { event: 'theory-scale-played:major', count: 1 },
           { event: 'theory-scale-played:minor', count: 1 }
@@ -168,7 +168,7 @@ export const JOURNEY: JourneyChapter[] = [
         idea: 'Each key owns seven chords. Most songs you know use only those.',
         task: 'Play 4 of them in a row. That is a progression.',
         tab: 'theory',
-        buttonText: 'Theory & Scales',
+        buttonText: 'Theory',
         requirements: [{ event: 'theory-diatonic-played', count: 4 }]
       },
       {
@@ -191,7 +191,7 @@ export const JOURNEY: JourneyChapter[] = [
         idea: 'Timing matters as much as the notes.',
         task: 'Land 5 taps within 45 ms of the beat.',
         tab: 'rhythm',
-        buttonText: 'Rhythm Lab',
+        buttonText: 'Rhythm',
         requirements: [{ event: 'rhythm-perfect-tap', count: 5 }]
       }
     ]

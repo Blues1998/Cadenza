@@ -165,8 +165,8 @@ const FretboardComponent: React.FC<FretboardProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 1rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-        <span>Nut (Open Strings)</span>
-        <span>12th Fret (Octave)</span>
+        <span>Open strings</span>
+        <span>12th fret</span>
       </div>
 
       <div

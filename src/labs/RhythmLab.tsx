@@ -1,3 +1,4 @@
+import { getTempoMarking } from '../utils/strum';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Segmented } from '../components/Segmented';
 import { LabIcon } from '../components/LabIcon';
@@ -262,14 +263,6 @@ const TempoHistory: React.FC<{ runs: TempoRun[]; onPick: (run: TempoRun) => void
   );
 };
 
-const getTempoLabel = (bpmVal: number): string => {
-  if (bpmVal < 60) return 'Largo (Very Slow)';
-  if (bpmVal < 76) return 'Adagio (Slow)';
-  if (bpmVal < 108) return 'Andante (Walking)';
-  if (bpmVal < 120) return 'Moderato (Moderate)';
-  if (bpmVal < 156) return 'Allegro (Fast)';
-  return 'Presto (Very Fast)';
-};
 
 export const RhythmLab: React.FC = () => {
   const [bpm, setBpm] = useState<number>(100);
@@ -602,11 +595,11 @@ export const RhythmLab: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="lab-stack">
       
       {/* Header */}
       <div className="lab-header">
-        <h2 className="lab-title"><LabIcon tab="rhythm" />Rhythm &amp; Timing</h2>
+        <h2 className="lab-title"><LabIcon tab="rhythm" />Rhythm</h2>
       </div>
 
       <div className="grid-2">
@@ -648,7 +641,7 @@ export const RhythmLab: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
-              <label className="field-label" htmlFor="time-signature">Time Signature</label>
+              <label className="field-label" htmlFor="time-signature">Time signature</label>
               <select
                 id="time-signature"
                 value={timeSignature}
@@ -686,17 +679,19 @@ export const RhythmLab: React.FC = () => {
 
           {/* Visualizer Style Toggle */}
           <Segmented<'groove' | 'precision'>
-            label="Visual Style"
+            label="View"
             value={metronomeVisual}
             onChange={setMetronomeVisual}
             options={[
-              { value: 'groove', label: 'Groove & Pulse', title: 'Pulse view with swing' },
-              { value: 'precision', label: 'Precision Pendulum', title: 'Traditional mechanical pendulum with timing' }
+              { value: 'groove', label: 'Groove', title: 'Pulse view with swing' },
+              { value: 'precision', label: 'Pendulum', title: 'A pendulum, with your timing' }
             ]}
             size="sm"
             full
           />
 
+          {/* Both views get the same height, so switching never moves Start. */}
+          <div className="metronome-stage">
           {metronomeVisual === 'groove' ? (
             <PulseGrooveStage
               beatsPerBar={timeSignature}
@@ -710,6 +705,7 @@ export const RhythmLab: React.FC = () => {
           ) : (
             <Pendulum beatsPerBar={timeSignature} subdivision={subdivision} at={beatAt} onBar={setBars} />
           )}
+          </div>
 
           <button
             onClick={handleTogglePlay}
@@ -719,12 +715,12 @@ export const RhythmLab: React.FC = () => {
             {isPlaying ? (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-                Stop Metronome
+                Stop
               </>
             ) : (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Start Metronome
+                Start
               </>
             )}
           </button>
@@ -733,7 +729,7 @@ export const RhythmLab: React.FC = () => {
         {/* Tapping Game Console */}
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', minHeight: '340px' }}>
           <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-            {isGameMode ? 'Tap Accuracy' : 'Practice'}
+            {isGameMode ? 'Tap accuracy' : 'Practice'}
           </h3>
 
           {!isGameMode ? (
@@ -813,7 +809,7 @@ export const RhythmLab: React.FC = () => {
               
               {/* Score / Accuracy Banner */}
               <div style={{ display: 'flex', justifyItems: 'space-between', alignItems: 'center', background: 'var(--surface-2)', padding: '0.75rem 1rem', borderRadius: '8px', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Session Accuracy:</span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Accuracy</span>
                 <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: overallAccuracy > 80 ? 'var(--success)' : 'var(--primary)' }}>
                   {overallAccuracy}%
                 </span>
@@ -821,24 +817,24 @@ export const RhythmLab: React.FC = () => {
 
               {/* Interactive Game Pace Control Row */}
               <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-2)', padding: '0.75rem 1rem', borderRadius: '8px', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Game Pace:</span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Tempo</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <button 
                     onClick={() => setBpm(prev => Math.max(BPM_MIN, prev - 10))} 
                     className="btn" 
                     style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
-                    title="Slower (-10 BPM)"
+                    title="10 bpm slower"
                   >
                     Slower
                   </button>
-                  <strong style={{ color: 'var(--primary)', fontSize: '0.9rem', fontFamily: 'var(--font-mono)' }}>
-                    {bpm} BPM ({getTempoLabel(bpm)})
+                  <strong style={{ color: 'var(--primary)', fontSize: '0.9rem', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', minWidth: '10.5rem', textAlign: 'center' }}>
+                    {bpm} bpm · {getTempoMarking(bpm)}
                   </strong>
                   <button 
                     onClick={() => setBpm(prev => Math.min(BPM_MAX, prev + 10))} 
                     className="btn" 
                     style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}
-                    title="Faster (+10 BPM)"
+                    title="10 bpm faster"
                   >
                     Faster
                   </button>
@@ -871,12 +867,12 @@ export const RhythmLab: React.FC = () => {
                       {feedback.text}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                      Press SPACEBAR or CLICK this area on the beat
+                      Tap here or press Space, on the beat
                     </div>
                   </div>
                 ) : (
                   <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    Click here (or press Space) to start Tapping!
+                    Tap here or press Space, on the beat
                   </div>
                 )}
               </div>
@@ -886,11 +882,11 @@ export const RhythmLab: React.FC = () => {
 
               {/* Hit History Scrolling track */}
               <div>
-                <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Timing Log (Recent hits)</h4>
+                <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Recent taps</h4>
                 
                 {tapHistory.length === 0 ? (
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                    No taps recorded yet.
+                    No taps yet.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '110px', overflowY: 'auto', paddingRight: '0.2rem' }}>

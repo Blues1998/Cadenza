@@ -358,8 +358,9 @@ export const ChordBookLab: React.FC = () => {
             className={`btn${open ? '' : ' btn-primary'}`}
             onClick={() => (open ? close() : show())}
             aria-pressed={open}
+            title={open ? 'Close quick play' : undefined}
           >
-            {open ? 'Close quick play' : 'Quick play'}
+            Quick play
           </button>
         </div>
         <form className="chordbook-add" onSubmit={addChord}>
