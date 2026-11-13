@@ -9,6 +9,7 @@ import { useSpringValue } from '../hooks/useSpringValue';
 import { audio } from '../utils/audio';
 import { HOLD_MS, INSTRUMENTS, IN_TUNE_CENTS, TUNINGS, nearestString, stringsOf, tuningsFor, type Instrument } from '../utils/tuning';
 import { reportProgress } from '../utils/progress';
+import { feel } from '../utils/haptics';
 
 const TUNING_KEY = 'cadenza-tuning';
 const INSTRUMENT_KEY = 'cadenza-instrument';
@@ -180,6 +181,14 @@ const InstrumentTuner: React.FC = () => {
   }, [isMicrophoneActive]);
 
   const tunedCount = targets.filter(target => tuned[target.number]).length;
+
+  // Felt as well as seen: you are looking at the guitar, not the phone. Each
+  // string settling in tune is a nod; the last of them is the moment.
+  const feltCount = useRef(0);
+  useEffect(() => {
+    if (tunedCount > feltCount.current) feel(tunedCount === targets.length ? 'celebrate' : 'success');
+    feltCount.current = tunedCount;
+  }, [tunedCount, targets.length]);
 
   const reportedPitchRef = useRef<boolean>(false); // journey event fired this session
 

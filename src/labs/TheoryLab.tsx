@@ -125,7 +125,7 @@ const ScaleStepLadder: React.FC<{
           Step Formula: <strong>{scale.name}</strong>
         </span>
         <span className="step-ladder-hint">
-          Click any note to hear the distance · <strong>W</strong> (2 frets) vs <strong>H</strong> (1 fret)
+          Tap any note to hear the distance · <strong>W</strong> (2 frets) vs <strong>H</strong> (1 fret)
         </span>
       </div>
 
@@ -626,7 +626,7 @@ export const TheoryLab: React.FC = () => {
               </span>
             </h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
-              All 12 <Term k="musicalKey">keys</Term>. Neighbours share almost every note. Click one to hear it.
+              All 12 <Term k="musicalKey">keys</Term>. Neighbours share almost every note. Tap one to hear it.
             </p>
           </div>
           <button
@@ -656,20 +656,20 @@ export const TheoryLab: React.FC = () => {
           {/* Key signature info */}
           <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ background: 'var(--surface-2)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
-              <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.4rem' }}>About this Key</h4>
+              <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.4rem' }}>About this key</h4>
               <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 <div><Term k="relativeMinor">Relative minor</Term>: <span style={{ color: 'var(--secondary)' }}>{activeCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
                 <div><Term k="accidentals">Accidentals</Term>: <span>
                   {activeCircleKey.sharps > 0 ? `${activeCircleKey.sharps} ♯ (Sharps)` :
                    activeCircleKey.sharps < 0 ? `${Math.abs(activeCircleKey.sharps)} ♭ (Flats)` :
-                   'None (Natural Key)'}
+                   'None, all natural notes'}
                 </span></div>
               </div>
             </div>
 
             <div>
               <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                <Term k="diatonicChords">Chords that belong</Term> in the Key of {activeCircleKey.name}
+                <Term k="diatonicChords">Chords that belong</Term> in the key of {activeCircleKey.name}
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
                 {activeCircleKey.chords.map((chordName, i) => {
@@ -719,7 +719,7 @@ export const TheoryLab: React.FC = () => {
                 { value: 'both', label: 'Both' }
               ]}
             />
-            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+            <span className="keys-only" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
               your keyboard plays the <strong style={{ color: 'var(--text-secondary)' }}>{guitarMode ? 'guitar' : 'piano'}</strong>
               {!guitarMode && <> · octave <strong className="readout" style={{ color: 'var(--text-secondary)' }}>{keyboardOctave}</strong></>}
             </span>
@@ -728,7 +728,7 @@ export const TheoryLab: React.FC = () => {
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
               onClick={() => setShowKeyMap(v => !v)}
-              className="btn"
+              className="btn keys-only"
               aria-expanded={showKeyMap}
               style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem' }}
             >
@@ -747,7 +747,7 @@ export const TheoryLab: React.FC = () => {
         </div>
 
         {showKeyMap && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.78rem', color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
+          <div className="keys-only" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.78rem', color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
             {guitarMode ? (
               <>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>

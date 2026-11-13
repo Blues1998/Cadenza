@@ -5,6 +5,7 @@ import { SCALE_FORMULAS, NOTE_NAMES } from '../utils/musicTheory';
 import type { ScaleFormula } from '../utils/musicTheory';
 import { getScaleChords, getVoicings, prettyNote } from '../utils/chords';
 import type { ChordVoicing, DifficultyTier, ScaleChord } from '../utils/chords';
+import { Segmented } from './Segmented';
 
 interface ScaleChordsProps {
   rootName: string;          // a NOTE_NAMES entry, from the explorer above
@@ -51,7 +52,7 @@ const VoicingCard: React.FC<{
 }> = ({ voicing, onStrum, compact = false }) => (
   <div
     onClick={() => onStrum(voicing.midis)}
-    title="Click to hear it strummed"
+    title="Tap to hear it strummed"
     style={{
       display: 'flex',
       flexDirection: 'column',
@@ -113,7 +114,7 @@ const ChordCard: React.FC<{ chord: ScaleChord; onStrum: (m: number[]) => void }>
           className="btn"
           style={{ padding: '0.3rem 0.6rem', fontSize: '0.72rem', justifyContent: 'center' }}
         >
-          {expanded ? 'Hide' : `${rest.length} other way${rest.length === 1 ? '' : 's'} to play it`} {expanded ? '▴' : '▾'}
+          {expanded ? 'Hide' : `${rest.length} more ${rest.length === 1 ? 'shape' : 'shapes'}`} {expanded ? '▴' : '▾'}
         </button>
       )}
 
@@ -153,27 +154,20 @@ export const ScaleChords: React.FC<ScaleChordsProps> = ({ rootName, scale, onStr
             Chords in {prettyNote(scaleNotes[0] ?? rootName)} {scale.name}
           </h3>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5, maxWidth: '52ch' }}>
-            Click one to hear it. Numbers are fingers (1 = index, 4 = pinky);
+            Tap one to hear it. Numbers are fingers (1 = index, 4 = pinky);
             <strong> ×</strong> means skip that string.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
-          <button
-            onClick={() => setSevenths(false)}
-            className={`btn ${!sevenths ? 'btn-secondary' : ''}`}
-            style={{ padding: '0.35rem 0.9rem', fontSize: '0.8rem' }}
-          >
-            Triads
-          </button>
-          <button
-            onClick={() => setSevenths(true)}
-            className={`btn ${sevenths ? 'btn-secondary' : ''}`}
-            style={{ padding: '0.35rem 0.9rem', fontSize: '0.8rem' }}
-          >
-            <Term k="seventhChord">7th chords</Term>
-          </button>
-        </div>
+        <Segmented<boolean>
+          value={sevenths}
+          onChange={setSevenths}
+          ariaLabel="Chord size"
+          options={[
+            { value: false, label: 'Triads' },
+            { value: true, label: <Term k="seventhChord">7th chords</Term> }
+          ]}
+        />
       </div>
 
       {borrowedFrom && (
@@ -194,7 +188,7 @@ export const ScaleChords: React.FC<ScaleChordsProps> = ({ rootName, scale, onStr
         </p>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(232px, 1fr))', gap: '0.85rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(145px, 100%), 1fr))', gap: '0.6rem', alignItems: 'start' }}>
         {chords.map(chord => (
           <ChordCard key={chord.degree} chord={chord} onStrum={onStrum} />
         ))}

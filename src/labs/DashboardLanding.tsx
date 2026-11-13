@@ -10,6 +10,7 @@ import {
   lastPractised,
   minutesOn,
   practiceStats,
+  songProgressions,
   STATUS_LABEL,
   today,
   totalMinutes
@@ -99,7 +100,9 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
             <p className="today-artist">{activeSong.artist || 'Unknown artist'}</p>
             <p className="today-meta readout">
               {activeSong.key}{activeSong.key && ' · '}{capoLabel(activeSong.capo)}
-              {activeSong.chordsRaw && <span className="today-chords"> · {activeSong.chordsRaw}</span>}
+              {songProgressions(activeSong).length > 0 && (
+                <span className="today-chords"> · {songProgressions(activeSong).map(p => p.join(' → ')).join('  |  ')}</span>
+              )}
             </p>
             <div className="today-stats">
               <span className="today-stat">

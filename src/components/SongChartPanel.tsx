@@ -106,7 +106,8 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   const currentLine = holding ? lineAtBeat(chart, beat) : null;
   const { current, next } = holding
     ? chordsAtBeat(chart, beat)
-    : { current: null, next: chart.lines[0]?.chords[0] ?? null };
+    // Before it starts you hold the first chord, so what is next is the second.
+    : { current: null, next: chordsAtBeat(chart, chart.lines[0]?.chords[0]?.beat ?? 0).next };
 
   const fit = useMemo(() => fitSong(song), [song]);
 
@@ -210,7 +211,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
         <IconSection kind="chart" /><span>Chart</span>
         {lines.length > 0 && (
           <span className="readout">
-            {chart.lines.length} lines · {chart.chords.length} chords · {chartDuration(chart.totalBeats, settings.tempo)}
+            {chart.lines.length} {chart.lines.length === 1 ? 'line' : 'lines'} · {chart.chords.length} {chart.chords.length === 1 ? 'chord' : 'chords'} · {chartDuration(chart.totalBeats, settings.tempo)}
           </span>
         )}
         <span className="chart-modes">
@@ -311,7 +312,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                 </button>
                 <span className="chart-bpm readout">
                   <strong>{settings.tempo}</strong>
-                  <span className="bpm-unit">BPM</span>
+                  <span className="bpm-unit">bpm</span>
                 </span>
                 <button
                   type="button"
@@ -429,14 +430,14 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                     className={`btn ramp-btn${speedRamp === 1 ? ' is-active' : ''}`}
                     onClick={() => setSpeedRamp(1)}
                   >
-                    +1 BPM
+                    +1 bpm
                   </button>
                   <button
                     type="button"
                     className={`btn ramp-btn${speedRamp === 2 ? ' is-active' : ''}`}
                     onClick={() => setSpeedRamp(2)}
                   >
-                    +2 BPM
+                    +2 bpm
                   </button>
                 </div>
               )}
@@ -465,7 +466,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                 <div>
                   <span className="surface-label">Strum pattern</span>
                   <p className="strum-studio-sub">
-                    Tap a slot to change it: down, up, chuck, rest.
+                    {pattern ? 'Tap a slot to change it: down, up, chuck, rest.' : 'Pick a preset below or type one in.'}
                   </p>
                 </div>
                 {pattern && (
@@ -482,7 +483,7 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                   onChange={text => void updateSong(song.id, { strumming: text })}
                 />
               ) : (
-                <p className="song-empty">No strumming pattern set yet. Pick a preset below or type one in:</p>
+                null
               )}
 
               {/* Direct Quick-Add Buttons */}
@@ -1024,7 +1025,7 @@ const ChartImport: React.FC<{
       {read && (
         <div className="import-read">
           <span className="import-count readout">
-            {read.lines.filter(l => l.kind === 'lyric').length} lines · {chordCount} chords
+            {read.lines.filter(l => l.kind === 'lyric').length} {read.lines.filter(l => l.kind === 'lyric').length === 1 ? 'line' : 'lines'} · {chordCount} {chordCount === 1 ? 'chord' : 'chords'}
           </span>
           <span className="import-format">{read.stacked ? 'chords above the words' : 'chords written in'}</span>
           {found.length > 0 && (

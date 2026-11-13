@@ -36,6 +36,7 @@
          Capacitor's WebView bridge asks for these at the moment the page calls
          getUserMedia, so nothing is requested at launch. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <!-- Everything except listening works without a mic, so don't hide the app
          from devices that have none (RECORD_AUDIO would otherwise imply it). -->

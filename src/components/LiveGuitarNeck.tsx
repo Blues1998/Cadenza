@@ -70,6 +70,11 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
     return Array.from({ length: numFrets }, (_, i) => baseFret + i);
   }, [baseFret]);
 
+  // A point along the frets, past the 2.2rem column the string names and the
+  // nut take on the left. Measured against the whole row, a finger landed on
+  // the fret wire instead of in the space behind it.
+  const onFrets = (fraction: number) => `calc(2.2rem + (100% - 2.2rem) * ${fraction.toFixed(4)})`;
+
   const activeStroke = isPlaying && stroke && stroke !== '-' ? stroke : null;
   const barNum = Math.max(1, Math.floor(beat / Math.max(1, beatsPerBar)) + 1);
   const beatNum = ((beat % beatsPerBar) + beatsPerBar) % beatsPerBar + 1;
@@ -81,14 +86,14 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
           <span className="guitar-chord-label">Holding</span>
           <span className="guitar-chord-name readout">{chordSymbol ?? '-'}</span>
           {voicing && <span className="guitar-chord-voicing">{voicing.label}</span>}
-          {capo && capo > 0 && <span className="guitar-capo-chip readout">Capo {capo}</span>}
+          {capo != null && capo > 0 && <span className="guitar-capo-chip readout">Capo {capo}</span>}
           {nextChordSymbol && (
             <span className="guitar-next-chip readout" title="Next chord coming up">
               Next: <strong>{nextChordSymbol}</strong>
             </span>
           )}
           {anchorStrings.size > 0 && (
-            <span className="guitar-capo-chip guitar-anchor-chip readout" title="Anchor finger stays planted during this change!">
+            <span className="guitar-capo-chip guitar-anchor-chip readout" title="Keep this finger down through the change">
               Anchor finger
             </span>
           )}
@@ -105,31 +110,31 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
             {activeStroke === 'D' && (
               <>
                 <span className="stroke-arrow">↓</span>
-                <span className="stroke-text">DOWNSTROKE</span>
+                <span className="stroke-text">Down</span>
               </>
             )}
             {activeStroke === 'U' && (
               <>
                 <span className="stroke-arrow">↑</span>
-                <span className="stroke-text">UPSTROKE</span>
+                <span className="stroke-text">Up</span>
               </>
             )}
             {activeStroke === 'X' && (
               <>
                 <span className="stroke-arrow">✕</span>
-                <span className="stroke-text">CHUCK / MUTE</span>
+                <span className="stroke-text">Chuck</span>
               </>
             )}
             {!activeStroke && isPlaying && (
               <>
                 <span className="stroke-arrow">~</span>
-                <span className="stroke-text">RINGING</span>
+                <span className="stroke-text">Ringing</span>
               </>
             )}
             {!isPlaying && (
               <>
                 <span className="stroke-arrow">▶</span>
-                <span className="stroke-text">READY</span>
+                <span className="stroke-text">Ready</span>
               </>
             )}
           </div>
@@ -158,19 +163,15 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
         <div className="guitar-neck">
           {/* Nut or Base Fret Marker */}
           <div className={`neck-nut${baseFret > 1 ? ' is-fret' : ''}`}>
-            {baseFret > 1 ? (
-              <span className="base-fret-number readout">{baseFret}fr</span>
-            ) : (
-              <span className="nut-cap">NUT</span>
-            )}
+            {baseFret > 1 && <span className="base-fret-number readout">{baseFret}fr</span>}
           </div>
 
           {/* Capo bar overlay if within visible range */}
-          {capo && capo >= baseFret && capo < baseFret + numFrets && (
+          {capo != null && capo > 0 && capo >= baseFret && capo < baseFret + numFrets && (
             <div
               className="neck-capo-bar"
               style={{
-                left: `${((capo - baseFret + 0.5) / numFrets) * 100}%`
+                left: onFrets((capo - baseFret + 0.5) / numFrets)
               }}
               title={`Capo on fret ${capo}`}
             >
@@ -244,7 +245,7 @@ export const LiveGuitarNeck: React.FC<LiveGuitarNeckProps> = ({
                       <div
                         className={`fret-finger-dot${isStringActive ? ' is-struck' : ''}${isAnchor ? ' is-anchor-pivot' : ''}`}
                         style={{
-                          left: `${((fretVal - baseFret + 0.5) / numFrets) * 100}%`
+                          left: onFrets((fretVal - baseFret + 0.5) / numFrets)
                         }}
                         title={`Fret ${fretVal} (${noteName}) - Finger ${fingerVal ?? ''}${isAnchor ? ' · anchor finger, keep it down' : ''}`}
                       >

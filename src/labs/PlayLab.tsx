@@ -13,6 +13,7 @@ import {
 import { SCALE_FEELINGS, CHORD_FEELINGS } from '../utils/glossary';
 import { reportProgress } from '../utils/progress';
 import { IconCheck } from '../components/Icons';
+import { feel } from '../utils/haptics';
 
 // ---- Challenge tuning constants ----
 const CONFIRM_MS = 350;  // how long the correct note must be held to count
@@ -233,7 +234,8 @@ export const PlayLab: React.FC = () => {
     if (mode === 'scale' && SCALE_FORMULAS[scaleIdx].name.includes('Pentatonic')) {
       reportProgress('play-scale-completed:pentatonic');
     }
-    setFeedback({ type: 'ok', text: 'Nailed it! Here is how it sounds together…' });
+    feel('celebrate');
+    setFeedback({ type: 'ok', text: 'Got it. Here it is all together.' });
 
     // Reward: hear what you just built
     audio.init();
@@ -296,6 +298,7 @@ export const PlayLab: React.FC = () => {
         audio.playMidi(93, 0.18); // bright confirmation ping
 
         const nextIdx = progressIdx + 1;
+        if (nextIdx < round.targets.length) feel('success');
         if (nextIdx >= round.targets.length) {
           completeRound();
         } else {
@@ -324,6 +327,7 @@ export const PlayLab: React.FC = () => {
           armedRef.current = false;
           eventPcRef.current = heardPc;
           setStreak(0);
+          feel('error');
           setFeedback({
             type: 'slip',
             text: `Heard ${NOTE_NAMES[heardPc]}, wanted ${NOTE_NAMES[targetPc]}. Streak reset.`

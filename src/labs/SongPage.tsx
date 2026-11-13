@@ -29,6 +29,8 @@ import {
 import type { Song, SongStatus } from '../utils/library';
 import { capoLabel } from '../utils/songText';
 import { parseStrum } from '../utils/strum';
+import { feel } from '../utils/haptics';
+import { DEFAULT_CHART } from '../utils/chart';
 
 interface SessionDraft {
   minutes: string;
@@ -207,7 +209,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
           <h2 className="lab-title">{song.title}</h2>
           <p className="song-artist">{song.artist || 'Unknown artist'}</p>
           <p className="song-meta readout">
-            {song.key || 'Key not set'} · {capoLabel(song.capo)} · {song.chart?.tempo ?? 92} BPM · {song.chart?.beatsPerBar ?? 4}/4
+            {song.key || 'Key not set'} · {capoLabel(song.capo)} · {song.chart?.tempo ?? DEFAULT_CHART.tempo} bpm · {song.chart?.beatsPerBar ?? DEFAULT_CHART.beatsPerBar}/4
           </p>
         </div>
         <div className="song-head-actions">
@@ -228,7 +230,10 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
           </button>
           <Segmented<SongStatus>
             value={song.status}
-            onChange={status => void updateSong(song.id, { status })}
+            onChange={status => {
+              if (status === 'complete' && song.status !== 'complete') feel('celebrate');
+              void updateSong(song.id, { status });
+            }}
             options={STATUS_ORDER.map(s => ({ value: s, label: STATUS_LABEL[s] }))}
             ariaLabel="Song status"
             size="sm"
@@ -298,7 +303,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
               </span>
               <button
                 type="button"
-                className="btn btn-primary song-drill-go"
+                className="btn btn-secondary song-drill-go"
                 onClick={() => takeToDrill(drill)}
                 title={`Open the chord page with these four bars loaded at ${drill.tempo} bpm`}
               >
@@ -434,7 +439,7 @@ export const SongPage: React.FC<SongPageProps> = ({ song, onBack }) => {
             <div className="timer-controls">
               {runningSince
                 ? <button type="button" className="btn btn-secondary" onClick={pause}>Pause</button>
-                : <button type="button" className="btn btn-primary" onClick={start}>{elapsed > 0 ? 'Resume' : 'Start practice'}</button>}
+                : <button type="button" className="btn btn-secondary" onClick={start}>{elapsed > 0 ? 'Resume' : 'Start practice'}</button>}
               <button type="button" className="btn" onClick={finish} disabled={elapsed < 1000}>Finish &amp; log</button>
               {elapsed > 0 && !runningSince && (
                 <button type="button" className="btn timer-reset" onClick={discard}>Reset</button>

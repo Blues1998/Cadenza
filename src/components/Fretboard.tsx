@@ -209,22 +209,25 @@ const FretboardComponent: React.FC<FretboardProps> = ({
 
                 {/* Open String Note Label on Headstock */}
                 <div className="fret-cell nut-cell" data-midi={str.midi}>
-                  <span style={{ cursor: 'pointer', zIndex: 11, color: 'var(--primary)', fontWeight: 'bold' }}>
-                    {str.note}
-                    <span style={{ fontSize: '0.65rem', verticalAlign: 'sub' }}>{str.octave}</span>
-                  </span>
-
-                  {/* Highlight indicator if open string is playing / in scale */}
-                  {(activeMidis.includes(str.midi) || rootMidis.includes(str.midi) || highlightCorrectMidis.includes(str.midi)) && (
+                  {/* The open string's name, or, when the open string is a
+                      note in play, the name turned into that note's marker.
+                      It used to sit astride the nut as a second circle, where
+                      it collided with whatever was on the first fret. */}
+                  {(activeMidis.includes(str.midi) || rootMidis.includes(str.midi) || highlightCorrectMidis.includes(str.midi)) ? (
                     <div
                       className={`guitar-note-marker ${
                         activeMidis.includes(str.midi) ? 'active' :
                         rootMidis.includes(str.midi) ? 'highlight-root' : 'highlight-correct'
                       }`}
-                      style={{ position: 'absolute', right: '-12px', top: '8px' }}
+                      style={{ position: 'relative', zIndex: 11 }}
                     >
                       {str.note}
                     </div>
+                  ) : (
+                    <span style={{ cursor: 'pointer', zIndex: 11, color: 'var(--primary)', fontWeight: 'bold' }}>
+                      {str.note}
+                      <span style={{ fontSize: '0.65rem', verticalAlign: 'sub' }}>{str.octave}</span>
+                    </span>
                   )}
                 </div>
 

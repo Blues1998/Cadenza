@@ -26,6 +26,7 @@ import { useTabIntervalSource } from '../hooks/useTabIntervalSource';
 import type { TabIntervalCandidate } from '../utils/tabIntervalSource';
 import { CHORD_FEELINGS } from '../utils/glossary';
 import { IconSounding } from '../components/Icons';
+import { feel } from '../utils/haptics';
 
 // Two of the longer 7th-chord names get an abbreviated parenthetical
 // (everything else is short enough to show in full), the feeling word
@@ -375,9 +376,12 @@ export const EarTrainingLab: React.FC = () => {
     if (isCorrect) {
       setScore(prev => prev + 1);
       setStreak(prev => prev + 1);
+      // Every fifth in a row is a moment; the rest are just right.
+      feel((streak + 1) % 5 === 0 ? 'celebrate' : 'success');
       reportProgress(quizMode === 'intervals' ? 'ear-interval-correct' : 'ear-chord-correct');
     } else {
       setStreak(0);
+      feel('error');
     }
 
     // Play sound of correct answer again so they reinforce the auditory memory
@@ -583,9 +587,9 @@ export const EarTrainingLab: React.FC = () => {
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               
               {/* Audio Playback controls */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem' }}>
-                <h3 style={{ fontSize: '1.1rem' }}>Listen & Identify</h3>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '0.6rem', paddingBottom: '0.75rem' }}>
+                <h3 style={{ fontSize: '1.1rem', whiteSpace: 'nowrap' }}>Name it</h3>
+                <div style={{ display: 'flex', gap: '0.5rem', whiteSpace: 'nowrap' }}>
                   <button onClick={playSound} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
                     <IconSounding />
                     Replay
@@ -632,13 +636,9 @@ export const EarTrainingLab: React.FC = () => {
                   let borderClass = 'glass-card';
                   if (isAnswered) {
                     if (isCorrectOpt) {
-                      cardStyle.borderColor = 'var(--success)';
-                      cardStyle.background = 'rgba(70, 192, 138, 0.08)';
-                      cardStyle.color = 'var(--text-primary)';
+                      borderClass += ' answer-right';
                     } else if (isUserAnswer) {
-                      cardStyle.borderColor = 'var(--danger)';
-                      cardStyle.background = 'rgba(239, 68, 68, 0.08)';
-                      cardStyle.color = 'var(--text-primary)';
+                      borderClass += ' answer-wrong';
                     } else {
                       cardStyle.opacity = 0.55;
                     }

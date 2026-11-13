@@ -69,10 +69,10 @@ const BASE_HZ = 220; // A3, comfortable reference pitch for every demo
 // 1. Harmonic Series Explorer (timbre = overtone recipe)
 // ============================================================
 const HARMONIC_PRESETS: { name: string; amps: number[] }[] = [
-  { name: 'Pure Sine', amps: [1, 0, 0, 0, 0, 0] },
-  { name: 'Our Guitar Synth', amps: [0.55, 0.25, 0.12, 0.06, 0.03, 0.015] },
-  { name: 'Hollow (odd only)', amps: [1, 0, 0.33, 0, 0.2, 0] },
-  { name: 'Bright & Buzzy', amps: [0.6, 0.5, 0.45, 0.4, 0.35, 0.3] }
+  { name: 'Pure sine', amps: [1, 0, 0, 0, 0, 0] },
+  { name: 'Guitar', amps: [0.55, 0.25, 0.12, 0.06, 0.03, 0.015] },
+  { name: 'Hollow, odd only', amps: [1, 0, 0.33, 0, 0.2, 0] },
+  { name: 'Bright and buzzy', amps: [0.6, 0.5, 0.45, 0.4, 0.35, 0.3] }
 ];
 
 const HarmonicExplorer: React.FC = () => {

@@ -4,6 +4,7 @@ import { Segmented } from '../components/Segmented';
 import { PRIVACY_URL } from '../components/Brand';
 import { useAuth } from '../context/AuthContext';
 import { ACCOUNTS_ENABLED } from '../utils/nativeShell';
+import { HAS_HAPTICS, setHaptics, useHaptics } from '../utils/haptics';
 import { go } from '../hooks/useRoute';
 import type { Theme } from '../hooks/useTheme';
 import { restartOnboarding, setProfile, useProfile, type ProfileInstrument } from '../utils/profile';
@@ -35,6 +36,7 @@ export const MeLab: React.FC<MeLabProps> = ({ theme, toggleTheme }) => {
   const { user, openAuthModal, syncStatus, lastSyncedAt } = useAuth();
   const profile = useProfile();
   const voice = useVoice();
+  const haptics = useHaptics();
 
   const toVoiceRange = () => {
     try { localStorage.setItem('cadenza-tuner-mode', 'voice'); } catch { /* fine */ }
@@ -100,6 +102,18 @@ export const MeLab: React.FC<MeLabProps> = ({ theme, toggleTheme }) => {
             size="sm"
           />
         </div>
+
+        {HAS_HAPTICS && (
+          <div className="me-row">
+            <span className="me-row-label">Haptics</span>
+            <Segmented<boolean>
+              value={haptics}
+              onChange={setHaptics}
+              options={[{ value: true, label: 'On' }, { value: false, label: 'Off' }]}
+              size="sm"
+            />
+          </div>
+        )}
 
         <div className="me-row">
           <span className="me-row-label">

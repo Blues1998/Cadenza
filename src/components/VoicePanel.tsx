@@ -101,7 +101,7 @@ export const VoicePanel: React.FC<{ song: Song }> = ({ song }) => {
             Sing the song once to check it fits your voice.
           </p>
           <div className="voice-row">
-            <button type="button" className="btn btn-primary" onClick={() => setCapturing(true)}>Sing it to measure</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setCapturing(true)}>Sing it to measure</button>
           </div>
         </>
       ) : (

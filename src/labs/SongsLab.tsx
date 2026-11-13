@@ -21,6 +21,7 @@ import {
 import type { SongStatus } from '../utils/library';
 import { capoLabel, parseCapo } from '../utils/songText';
 import { saveTextFile } from '../utils/saveFile';
+import { feel } from '../utils/haptics';
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
@@ -114,6 +115,7 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
   const submitDraft = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!draft || !draft.title.trim()) return;
+    feel('success');
     const song = await createSong({
       title: draft.title,
       artist: draft.artist,

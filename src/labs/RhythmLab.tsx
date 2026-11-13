@@ -8,6 +8,7 @@ import { usePlayKey } from '../hooks/usePlayKey';
 import { audio } from '../utils/audio';
 import { clearTempoLog, getTempoLog, heldLabel, logTempo, whenHeld, type TempoRun } from '../utils/tempoLog';
 import { reportProgress } from '../utils/progress';
+import { feel } from '../utils/haptics';
 
 interface TapHit {
   id: number;
@@ -475,7 +476,7 @@ export const RhythmLab: React.FC = () => {
       // Auto-start metronome if tapped while idle in game mode
       startMetronome();
       setTapHistory([]);
-      setFeedback({ text: 'Session Started! Tap along...', color: 'var(--primary)', offset: 0 });
+      setFeedback({ text: 'Started. Tap along on the beat.', color: 'var(--primary)', offset: 0 });
       return;
     }
 
@@ -512,23 +513,27 @@ export const RhythmLab: React.FC = () => {
 
     // Grade accuracy
     let rating: TapHit['rating'] = 'miss';
-    let text = 'MISS';
+    let text = 'Miss';
     let color = 'var(--danger)';
 
     if (absDiff <= 45) {
       rating = 'perfect';
-      text = 'PERFECT!';
+      text = 'Perfect';
       color = 'var(--success)';
       reportProgress('rhythm-perfect-tap');
     } else if (absDiff <= 90) {
       rating = 'good';
-      text = 'GOOD';
+      text = 'Good';
       color = 'var(--primary)';
     } else if (absDiff <= 160) {
       rating = 'imprecise';
-      text = differenceMs > 0 ? 'LATE' : 'EARLY';
+      text = differenceMs > 0 ? 'Late' : 'Early';
       color = 'var(--warning)';
     }
+
+    // Felt in the hand that tapped: a crisp click on the beat, a softer one
+    // near it, a knock when it was not close.
+    feel(rating === 'perfect' ? 'tap' : rating === 'good' || rating === 'imprecise' ? 'select' : 'error');
 
     // Set real-time overlay feedback
     setFeedback({
@@ -608,7 +613,7 @@ export const RhythmLab: React.FC = () => {
         <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <h3 style={{ fontSize: '1.15rem', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
             <span>Metronome</span>
-            <span className="readout" style={{ color: 'var(--primary)', fontWeight: 600 }}>{bpm} BPM</span>
+            <span className="readout" style={{ color: 'var(--primary)', fontWeight: 600 }}>{bpm} bpm</span>
           </h3>
 
           {/* Tempo Controls */}
@@ -800,7 +805,7 @@ export const RhythmLab: React.FC = () => {
                 )}
               </div>
 
-              <p className="rhythm-key">
+              <p className="rhythm-key keys-only">
                 <kbd className="key-hint">Space</kbd> starts and stops.
               </p>
             </div>

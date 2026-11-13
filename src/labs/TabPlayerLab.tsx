@@ -958,7 +958,8 @@ export const TabPlayerLab: React.FC = () => {
           <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
         <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-          Drop a file here, or choose one
+          <span className="keys-only">Drop a file here, or choose one</span>
+          <span className="touch-only">Choose a tab file</span>
         </span>
       </label>
 
@@ -1202,7 +1203,10 @@ export const TabPlayerLab: React.FC = () => {
       <div
         ref={viewportRef}
         style={{
-          minHeight: hasScore ? '400px' : '120px',
+          // Nothing to show until a tab is open: an empty black box under the
+          // file picker looked like something had failed to load.
+          minHeight: hasScore ? '400px' : 0,
+          height: hasScore ? undefined : 0,
           maxHeight: hasScore ? '65vh' : undefined,
           overflow: 'auto',
           background: hasScore ? '#ffffff' : '#0E0F11',

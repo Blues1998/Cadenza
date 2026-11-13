@@ -22,6 +22,7 @@ import { getRecords } from './records';
 import { LOOP_LEVELS, LOOP_TEMPLATES, templateChords, templateSlots } from './loopTemplates';
 import type { Slot } from './loop';
 import type { ActiveTab } from './route';
+import { feel } from './haptics';
 
 const KEY = 'cadenza-run';
 /** Long enough for an evening, short enough that tomorrow starts fresh. */
@@ -215,6 +216,7 @@ export function step(to: number): void {
 export function finish(): void {
   const held = run;
   if (!held) { announce(); return; }
+  feel('celebrate');
 
   // The whole point of the snapshot taken at the start: what moved while the
   // run was on. A level says where you stand; this is the other kind.

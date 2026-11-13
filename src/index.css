@@ -148,15 +148,15 @@ h1, h2, h3, h4, .lab-title {
   --rail-bg: #F2F1EE;
   --elevated-bg: linear-gradient(180deg, #FFFFFF 0%, #FBFAF8 62%);
   --elevation:
-    inset 0 1px 0 rgba(var(--surface-tint-rgb), 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
     0 1px 2px rgba(23, 24, 26, 0.06),
     0 10px 28px -14px rgba(23, 24, 26, 0.16);
   --elevation-low:
-    inset 0 1px 0 rgba(var(--surface-tint-rgb), 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
     0 1px 2px rgba(23, 24, 26, 0.05);
   --elevated-bg-hover: linear-gradient(180deg, #FFFFFF 0%, #F7F5F2 62%);
   --elevation-hover:
-    inset 0 1px 0 rgba(var(--surface-tint-rgb), 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
     0 2px 5px rgba(23, 24, 26, 0.08),
     0 16px 36px -16px rgba(23, 24, 26, 0.22);
 
@@ -299,7 +299,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.22s cubic-bezier(0.3, 1.5, 0.6, 1);
 }
 
 .btn:hover {
@@ -307,8 +307,10 @@ body {
   color: var(--text-primary);
 }
 
-.btn:active {
-  transform: scale(0.98);
+/* A press gives: in quickly, back with a little spring. */
+.btn:active:not(:disabled) {
+  transform: scale(0.96);
+  transition-duration: 0.15s, 0.15s, 0.06s;
 }
 
 .btn-primary {
@@ -2289,13 +2291,14 @@ input[type='range'] {
 .today-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.4rem;
+  gap: 0.5rem 1.1rem;
   margin-top: 1.1rem;
 }
 
 .today-stat {
   font-size: 0.78rem;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .today-stat .readout {
@@ -4257,6 +4260,18 @@ button.dash-card:hover .pickup-go svg {
 /* The mode switch lives in the panel's own label row. */
 .chart-modes {
   margin-left: auto;
+}
+
+/* The counts stay on one line; on a phone the mode switch drops below them
+   rather than squeezing them into a column. */
+.chart-panel > .surface-label {
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 0.6rem;
+}
+
+.chart-panel > .surface-label .readout {
+  white-space: nowrap;
 }
 
 /* ===== Editing the sheet =====
@@ -8723,10 +8738,15 @@ button.strumcell:hover { background: var(--surface-3); }
   flex-shrink: 0;
   padding: 0.5rem 0.95rem;
   border-radius: 8px;
-  background: var(--primary);
+  /* Tonal: the song card above already holds the screen's one orange button. */
+  background: var(--surface-3);
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-on-primary);
+  color: var(--text-primary);
+}
+
+.dash-run-go svg {
+  color: var(--primary);
 }
 
 @media (max-width: 640px) {
@@ -8958,7 +8978,8 @@ button.strumcell:hover { background: var(--surface-3); }
 .guitar-neck {
   position: relative;
   display: flex;
-  min-width: 580px;
+  /* Five frets fit a phone: the whole shape in view beats a neck you scroll. */
+  min-width: 0;
   height: 165px;
   background: linear-gradient(180deg, #241c17 0%, #18120e 45%, #1f1712 100%);
   border-radius: 8px;
@@ -11015,17 +11036,37 @@ button.strumcell:hover { background: var(--surface-3); }
 
   /* The active tab: the icon sits in a tinted pill, the way Android marks it. */
   .mtab-icon {
+    position: relative;
     display: grid;
     place-items: center;
     width: 56px;
     height: 30px;
     border-radius: 15px;
-    transition: background 0.18s ease, color 0.18s ease;
+    transition: color 0.18s ease, transform 0.2s cubic-bezier(0.3, 1.4, 0.6, 1);
+  }
+
+  /* The pill grows out from the icon when a tab is chosen, rather than
+     blinking on. */
+  .mtab-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--primary-glow);
+    opacity: 0;
+    transform: scaleX(0.4);
+    transition: opacity 0.2s ease, transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15);
   }
 
   .mtab-icon svg {
+    position: relative;
     width: 21px;
     height: 21px;
+  }
+
+  .mtab:active .mtab-icon {
+    transform: scale(0.9);
+    transition-duration: 0.06s;
   }
 
   .mtab-label {
@@ -11041,8 +11082,12 @@ button.strumcell:hover { background: var(--surface-3); }
   }
 
   .mtab.is-active .mtab-icon {
-    background: var(--primary-glow);
     color: var(--primary);
+  }
+
+  .mtab.is-active .mtab-icon::before {
+    opacity: 1;
+    transform: none;
   }
 
   /* Things that stick to the bottom of the page sit on the tab bar, not under it. */
@@ -11336,6 +11381,7 @@ button.strumcell:hover { background: var(--surface-3); }
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .voice-hint {
@@ -12182,5 +12228,98 @@ a.btn {
 @media (max-width: 900px) {
   .is-typing .mtabs {
     display: none;
+  }
+}
+
+/* ===== Answer feedback =====
+   One look for right and wrong everywhere a question is answered: right
+   settles in with a small lift and a green edge, wrong gives a short shake
+   and a red one. Quick, so the next question is never waiting on it. */
+.answer-right {
+  border-color: var(--success) !important;
+  background: color-mix(in srgb, var(--success) 10%, transparent) !important;
+  color: var(--text-primary) !important;
+  animation: answerRight 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+
+.answer-wrong {
+  border-color: var(--danger) !important;
+  background: color-mix(in srgb, var(--danger) 10%, transparent) !important;
+  color: var(--text-primary) !important;
+  animation: answerWrong 0.36s ease-in-out;
+}
+
+@keyframes answerRight {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 45%, transparent); }
+  40% { transform: scale(1.04); }
+  100% { transform: scale(1); box-shadow: 0 0 0 10px transparent; }
+}
+
+@keyframes answerWrong {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .answer-right,
+  .answer-wrong {
+    animation: none;
+  }
+}
+
+/* ===== Press feedback =====
+   Android paints a grey rectangle over anything tapped. The app draws its own
+   press states, so that one goes. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Rows and cards sink a touch under the finger and spring back. */
+.dash-run,
+.songrow,
+.practice-card,
+button.dash-card,
+.onb-choice,
+.daynode,
+.chip,
+.segmented button {
+  transition-property: background, color, border-color, box-shadow, opacity, transform;
+  transition-duration: 0.15s, 0.15s, 0.15s, 0.15s, 0.15s, 0.22s;
+  transition-timing-function: ease, ease, ease, ease, ease, cubic-bezier(0.3, 1.5, 0.6, 1);
+}
+
+.dash-run:active,
+.songrow:active,
+.practice-card:active,
+button.dash-card:active,
+.onb-choice:active,
+.daynode:active {
+  transform: scale(0.985);
+  transition-duration: 0.06s;
+}
+
+.chip:active,
+.segmented button:active:not(:disabled) {
+  transform: scale(0.94);
+  transition-duration: 0.06s;
+}
+
+/* Computer-keyboard tips mean nothing on a touch screen. */
+@media (hover: none) and (pointer: coarse) {
+  .keys-only {
+    display: none !important;
+  }
+}
+
+.touch-only {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .touch-only {
+    display: inline;
   }
 }
