@@ -36,9 +36,16 @@ export const NoteName: React.FC<{ label: NoteLabel; className?: string }> = ({ l
 );
 
 // ---- A tanpura-ish drone on Sa, for singing against -----------------------
-// Sa, Pa and the Sa above, on soft triangle waves with a slow shimmer. Plain
+// Sa and the Sa above, on soft triangle waves with a slow shimmer. Plain
 // oscillators rather than samples: it only has to hold still, and it has to
 // be quiet enough that the mic still hears the voice over it.
+//
+// Only Sa. It used to add Pa and the Sa below as well, and that drone was
+// heard, by ears and by the pitch detector alike, an octave under the Sa it
+// was named for: the low Sa sat underneath, and Sa with Pa repeats once per
+// cycle of the Sa below. A drone on C3 read as C2, and so did a voice singing
+// C3 against it. A triangle wave's third harmonic is Pa an octave up, so the
+// fifth is still in the sound without moving its pitch.
 function startDrone(sa: number): () => void {
   const bus = audio.getMasterBus();
   if (!bus) return () => {};
@@ -48,7 +55,7 @@ function startDrone(sa: number): () => void {
   out.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.8);
   out.connect(input);
   const oscs: OscillatorNode[] = [];
-  for (const [semi, level] of [[0, 0.5], [7, 0.3], [12, 0.25], [-12, 0.2]] as const) {
+  for (const [semi, level] of [[0, 0.55], [12, 0.3]] as const) {
     const osc = ctx.createOscillator();
     osc.type = 'triangle';
     osc.frequency.value = 440 * Math.pow(2, (sa + semi - 69) / 12);
@@ -250,7 +257,7 @@ export const VoiceTuner: React.FC = () => {
                 {droning ? <IconStop size={12} /> : <IconPlay size={12} />}
                 {droning ? 'Stop drone' : `Drone on Sa · ${prettyNote(sa)}`}
               </button>
-              <span className="voice-hint">Use headphones with the drone.</span>
+              <span className="voice-hint">Use headphones: through the speaker, the mic hears the drone too.</span>
             </div>
             
           </div>
