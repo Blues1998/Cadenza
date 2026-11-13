@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { ACCOUNTS_ENABLED } from '../utils/nativeShell';
 
 interface AccountButtonProps {
   collapsed?: boolean;
@@ -7,6 +8,7 @@ interface AccountButtonProps {
 
 export const AccountButton: React.FC<AccountButtonProps> = ({ collapsed = false }) => {
   const { user, openAuthModal, syncStatus } = useAuth();
+  if (!ACCOUNTS_ENABLED) return null;
 
   return (
     <button

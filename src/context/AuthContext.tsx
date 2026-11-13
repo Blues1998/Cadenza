@@ -10,6 +10,7 @@ const EMAIL_REDIRECT = Capacitor.isNativePlatform()
   ? 'https://blues1998.github.io/Cadenza/'
   : window.location.origin;
 import { syncLibraryWithCloud, type SyncState } from '../utils/cloudSync';
+import { ACCOUNTS_ENABLED } from '../utils/nativeShell';
 
 interface AuthContextType {
   user: User | null;
@@ -38,12 +39,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Play asks for ("where can users delete their account"), and it lives in the
   // query string because the hash is the app's router.
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(() => {
+    if (!ACCOUNTS_ENABLED) return false;
     try { return new URLSearchParams(window.location.search).has('account'); } catch { return false; }
   });
   const [syncStatus, setSyncStatus] = useState<SyncState>('idle');
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!ACCOUNTS_ENABLED) { setLoading(false); return; }
     // Tidy ?account out of the bar once it has done its job.
     const url = new URL(window.location.href);
     if (url.searchParams.has('account')) {
@@ -90,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const openAuthModal = () => setIsAuthModalOpen(true);
+  const openAuthModal = () => { if (ACCOUNTS_ENABLED) setIsAuthModalOpen(true); };
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
   const triggerSync = async (): Promise<boolean> => {

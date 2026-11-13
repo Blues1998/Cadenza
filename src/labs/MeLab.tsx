@@ -1,7 +1,9 @@
 import React from 'react';
 import { LabIcon } from '../components/LabIcon';
 import { Segmented } from '../components/Segmented';
+import { PRIVACY_URL } from '../components/Brand';
 import { useAuth } from '../context/AuthContext';
+import { ACCOUNTS_ENABLED } from '../utils/nativeShell';
 import { go } from '../hooks/useRoute';
 import type { Theme } from '../hooks/useTheme';
 import { restartOnboarding, setProfile, useProfile, type ProfileInstrument } from '../utils/profile';
@@ -10,6 +12,19 @@ import { prettyNote, setVoice, useVoice, type Notation } from '../utils/voice';
 // You: your account, and the handful of settings that shape the rest of the
 // app. On a phone this is also where the theme switch and sign-in live, now
 // that the tab bar has no room for a "More".
+
+// Everything the app ships that someone else made, and the terms it came on.
+const CREDITS: { name: string; what: string; licence: string }[] = [
+  { name: 'Meta Open Sound', what: 'Nylon and steel guitar recordings', licence: 'CC0, public domain' },
+  { name: 'FreePats', what: 'Electric guitar recordings', licence: 'CC0, public domain' },
+  { name: 'Sonivox EAS', what: 'Backing instrument sounds in the Tab Player', licence: 'Apache License 2.0' },
+  { name: 'alphaTab', what: 'Tab rendering and playback, unmodified, source at github.com/CoderLine/alphaTab', licence: 'Mozilla Public License 2.0' },
+  { name: 'Bravura', what: 'Music notation font', licence: 'SIL Open Font License 1.1' },
+  { name: 'Geist, Space Grotesk, JetBrains Mono', what: 'Typefaces', licence: 'SIL Open Font License 1.1' },
+  { name: 'React', what: 'Interface library', licence: 'MIT License' },
+  { name: 'Capacitor', what: 'Android app shell', licence: 'MIT License' },
+  { name: 'Supabase JS', what: 'Account backup on the website', licence: 'MIT License' }
+];
 
 interface MeLabProps {
   theme: Theme;
@@ -34,7 +49,7 @@ export const MeLab: React.FC<MeLabProps> = ({ theme, toggleTheme }) => {
         <h2 className="lab-title"><LabIcon tab="me" />Me</h2>
       </div>
 
-      <section className="glass-panel me-card">
+      {ACCOUNTS_ENABLED && <section className="glass-panel me-card">
         <div className="me-account">
           <span className={`me-avatar${user ? ' is-in' : ''}`} aria-hidden="true">
             {user?.email ? user.email.charAt(0).toUpperCase() : '?'}
@@ -51,7 +66,7 @@ export const MeLab: React.FC<MeLabProps> = ({ theme, toggleTheme }) => {
         <button type="button" className={`btn${user ? '' : ' btn-primary'}`} onClick={openAuthModal}>
           {user ? 'Account & sync' : 'Sign in to back up'}
         </button>
-      </section>
+      </section>}
 
       <section className="glass-panel me-card me-settings">
         <h3 className="me-heading">Preferences</h3>
@@ -103,6 +118,39 @@ export const MeLab: React.FC<MeLabProps> = ({ theme, toggleTheme }) => {
           <span className="me-account-sub">Instrument, level and songs</span>
         </div>
         <button type="button" className="btn" onClick={restartOnboarding}>Run it again</button>
+      </section>
+
+      <section className="glass-panel me-card me-settings">
+        <h3 className="me-heading">About</h3>
+        <div className="me-row">
+          <span className="me-row-label">
+            Sharps&amp;Flats
+            <span className="me-row-sub">Version {__APP_VERSION__}</span>
+          </span>
+        </div>
+        <div className="me-row">
+          <span className="me-row-label">
+            Privacy
+            <span className="me-row-sub">Everything stays on this device</span>
+          </span>
+          <a className="btn" href={PRIVACY_URL} target="_blank" rel="noreferrer">Read policy</a>
+        </div>
+        <details className="me-licences">
+          <summary className="me-row">
+            <span className="me-row-label">
+              Credits and licences
+              <span className="me-row-sub">Sounds, fonts and code we build on</span>
+            </span>
+          </summary>
+          <dl>
+            {CREDITS.map(c => (
+              <div key={c.name}>
+                <dt>{c.name}</dt>
+                <dd>{c.what}. {c.licence}.</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
       </section>
     </div>
   );

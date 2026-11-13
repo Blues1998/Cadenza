@@ -12107,3 +12107,51 @@ button.strumcell:hover { background: var(--surface-3); }
   gap: 0.4rem;
 }
 
+
+/* Me: credits and licences, folded away under About. */
+.me-licences summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.me-licences summary::-webkit-details-marker {
+  display: none;
+}
+
+.me-licences summary::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-right: 0.4rem;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.me-licences[open] summary::after {
+  transform: rotate(225deg);
+}
+
+.me-licences dl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0 0 0.5rem;
+}
+
+.me-licences dt {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.me-licences dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* A link styled as a button reads as a button, not as underlined text. */
+a.btn {
+  text-decoration: none;
+}

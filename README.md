@@ -43,7 +43,11 @@ npm run build:android   # builds with base "/" and copies it into android/
 npm run android:open    # opens the project in Android Studio
 ```
 
-Android Studio provides the Java runtime and Gradle it needs. To make a Play Store upload, use **Build → Generate Signed App Bundle** (an `.aab` file). Keep the upload keystore outside the repo and back it up. `*.jks`, `*.keystore` and `keystore.properties` are git-ignored.
+Android Studio provides the Java runtime and Gradle it needs.
+
+**Play Store release:** `npm run release:android` writes a signed `.aab` (to upload) and a signed `.apk` (to test on a phone) into `release/`. It signs with the upload key named in `android/keystore.properties`, which lives outside the repo; back up the key and its password. Raise `versionCode` in `android/app/build.gradle` before every upload. The version name comes from `package.json`. `*.jks`, `*.keystore`, `keystore.properties` and `release/` are git-ignored.
+
+- **No accounts on Android:** sign-in and cloud backup are website-only (`ACCOUNTS_ENABLED` in `src/utils/nativeShell.ts`), so the app sends nothing anywhere. The privacy policy is `public/privacy.html`.
 
 - **App ID:** `io.github.blues1998.cadenza`. It can't be changed once the app is published.
 - **Icons and splash screen:** generated from the images in `assets/` with `npx capacitor-assets generate --android --iconBackgroundColor '#00000d' --splashBackgroundColor '#00000d'`. The logo and the cropped ♯♭ mark they come from are in `design/brand/`.

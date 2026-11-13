@@ -10,6 +10,16 @@
 import { Capacitor } from '@capacitor/core';
 import { useEffect } from 'react';
 
+/** True inside the Android app. */
+export const IS_NATIVE = Capacitor.isNativePlatform();
+
+/**
+ * Accounts and cloud backup exist on the website only. The Android app keeps
+ * everything on the phone and makes no requests of its own, so there is no
+ * sign-in, no account to delete and nothing to declare beyond the microphone.
+ */
+export const ACCOUNTS_ENABLED = !IS_NATIVE;
+
 /** Fired before the Android back button navigates; cancel it to consume Back. */
 export const BACK_EVENT = 'cadenza:back';
 

@@ -131,7 +131,7 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `cadenza-library-${isoDate()}.json`;
+    a.download = `sharps-and-flats-library-${isoDate()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     setNotice(`Exported ${songs.length} songs and ${stats.sessionCount} sessions.`);

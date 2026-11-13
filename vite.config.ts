@@ -20,7 +20,7 @@ const notFoundPage = (base: string): Plugin => ({
     // page is written from the routing table and cannot fall behind it.
     const ways = SLUGS.map(slug => {
       const label = slug === 'home'
-        ? 'Back to Cadenza'
+        ? 'Back to Sharps&amp;Flats'
         : slug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')
       return `<a class="way${slug === 'home' ? ' is-home' : ''}" href="${base}#/${slug}">${label}</a>`
     }).join('\n        ')
@@ -50,6 +50,7 @@ export default defineConfig(({ command, mode }) => {
   // was opened. Assets are addressed through import.meta.env.BASE_URL, so both
   // values are handled.
   base,
+  define: { __APP_VERSION__: JSON.stringify(JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version) },
   plugins: [react(), alphaTab(), ...(mode === 'android' ? [] : [notFoundPage(base)])],
   }
 })

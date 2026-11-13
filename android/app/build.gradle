@@ -1,5 +1,16 @@
 apply plugin: 'com.android.application'
 
+import groovy.json.JsonSlurper
+
+// The release upload key lives outside the repo; android/keystore.properties
+// (gitignored) says where. Without it, release builds come out unsigned.
+def keystorePropsFile = rootProject.file('keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) keystorePropsFile.withInputStream { keystoreProps.load(it) }
+
+// One version for the website and the app: package.json's.
+def appVersion = new JsonSlurper().parse(rootProject.file('../package.json')).version
+
 android {
     namespace = "io.github.blues1998.sharpsandflats"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +18,9 @@ android {
         applicationId "io.github.blues1998.sharpsandflats"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        // Raise by one for every upload to Play; it can never go down.
         versionCode 1
-        versionName "1.0"
+        versionName appVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +28,19 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystoreProps['storeFile']) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keystoreProps['storeFile']) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

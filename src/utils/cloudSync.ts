@@ -1,6 +1,7 @@
 import { supabase, songToDbRow, dbRowToSong, sessionToDbRow, dbRowToSession, type DbSongRow, type DbSessionRow } from './supabase';
 import { getSongs, getSessions, type Song, type PracticeSession } from './library';
 import { putRecords, STORE_CHANGE_EVENT } from './db';
+import { ACCOUNTS_ENABLED } from './nativeShell';
 
 export type SyncState = 'idle' | 'syncing' | 'synced' | 'error';
 
@@ -22,6 +23,7 @@ function announceSync(state: SyncState) {
  * Perform a two-way merge between local IndexedDB and Supabase cloud.
  */
 export async function syncLibraryWithCloud(): Promise<boolean> {
+  if (!ACCOUNTS_ENABLED) return false;
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) {
     announceSync('idle');
@@ -136,6 +138,7 @@ export async function syncLibraryWithCloud(): Promise<boolean> {
  * Mirror a song creation or update directly to Supabase if authenticated.
  */
 export async function syncUpsertSong(song: Song): Promise<void> {
+  if (!ACCOUNTS_ENABLED) return;
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return;
@@ -150,6 +153,7 @@ export async function syncUpsertSong(song: Song): Promise<void> {
  * Mirror a song deletion directly to Supabase if authenticated.
  */
 export async function syncDeleteSong(songId: string): Promise<void> {
+  if (!ACCOUNTS_ENABLED) return;
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return;
