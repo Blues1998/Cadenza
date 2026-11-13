@@ -113,6 +113,23 @@ export function readChordLine(raw: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * "G D Em C" is four chords, the way most people type them, but "A min" and
+ * "G (let ring)" are one. A word starts a new chord when it begins with a
+ * capital note name, or is a whole lower-case chord on its own ("am", "e7");
+ * anything else ("min", "maj7", "(let ring)") belongs to the chord before it.
+ */
+function splitSpacedChords(part: string): string[] {
+  const words = part.trim().split(/\s+/).filter(Boolean);
+  const chords: string[] = [];
+  for (const word of words) {
+    const starts = /^[A-G]/.test(word) || /^[a-g][#b♯♭]?m?\d*$/.test(word);
+    if (starts || chords.length === 0) chords.push(word);
+    else chords[chords.length - 1] += ` ${word}`;
+  }
+  return chords;
+}
+
 /** The progressions on one line, in order, each already normalised. */
 export function parseProgressions(raw: string | undefined | null): string[][] {
   if (!raw) return [];
@@ -121,6 +138,7 @@ export function parseProgressions(raw: string | undefined | null): string[][] {
     .map(part =>
       part
         .split(/→|->|>|,|;/)
+        .flatMap(splitSpacedChords)
         .map(token => normalizeChordSymbol(token))
         .filter(Boolean)
     )

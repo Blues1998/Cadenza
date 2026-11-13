@@ -16,11 +16,13 @@ import {
   songChords,
   STATUS_LABEL,
   STATUS_ORDER,
-  storageLabel,
   totalMinutes
 } from '../utils/library';
 import type { SongStatus } from '../utils/library';
 import { capoLabel, parseCapo } from '../utils/songText';
+import { saveTextFile } from '../utils/saveFile';
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 interface SongsLabProps {
   focusSongId: string | null;
@@ -126,22 +128,23 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
     onOpenSong(song.id);
   };
 
-  const doExport = () => {
-    const blob = new Blob([JSON.stringify(exportLibrary(), null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `sharps-and-flats-library-${isoDate()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setNotice(`Exported ${songs.length} songs and ${stats.sessionCount} sessions.`);
+  const doExport = async () => {
+    const result = await saveTextFile(
+      `sharps-and-flats-library-${isoDate()}.json`,
+      JSON.stringify(exportLibrary(), null, 2),
+      'application/json'
+    );
+    if (result === 'cancelled') return;
+    setNotice(result === 'failed'
+      ? 'Could not save the backup. Try again.'
+      : `Backed up ${plural(songs.length, 'song')} and ${plural(stats.sessionCount, 'practice session')}.`);
   };
 
   const doImport = async (file: File) => {
     const text = await file.text();
     const result = await importLibrary(text);
     setNotice(result.ok
-      ? `Restored ${result.songs} songs and ${result.sessions} sessions.`
+      ? `Restored ${plural(result.songs ?? 0, 'song')} and ${plural(result.sessions ?? 0, 'practice session')}.`
       : result.message);
     onOpenSong(null);
   };
@@ -198,7 +201,6 @@ export const SongsLab: React.FC<SongsLabProps> = ({ focusSongId, onOpenSong, ope
       {notice && (
         <p className="songs-notice" role="status">
           {notice}
-          <span className="songs-notice-where">Stored in {storageLabel()} on this device</span>
           <button type="button" className="songs-notice-close" onClick={() => setNotice(null)} aria-label="Dismiss">×</button>
         </p>
       )}

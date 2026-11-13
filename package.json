@@ -16,6 +16,8 @@
     "@capacitor/android": "^8.6.2",
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.6.2",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
     "@coderline/alphatab": "^1.8.4",
     "@coderline/alphatab-vite": "^1.8.4",
     "@fontsource/geist": "^5.3.0",

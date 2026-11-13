@@ -33,7 +33,43 @@ export function useBackToClose(open: boolean, close: () => void): void {
   }, [open, close]);
 }
 
+/** Fields that bring up the on-screen keyboard. */
+const NO_KEYBOARD = new Set(['button', 'checkbox', 'color', 'file', 'hidden', 'image', 'radio', 'range', 'reset', 'submit']);
+const opensKeyboard = (el: EventTarget | null): boolean =>
+  el instanceof HTMLTextAreaElement ||
+  (el instanceof HTMLInputElement && !NO_KEYBOARD.has(el.type)) ||
+  (el instanceof HTMLElement && el.isContentEditable);
+
+/**
+ * While the keyboard is up, html gets .is-typing, and the phone tab bar steps
+ * aside. The page shrinks to the space above the keyboard, so a bar fixed to
+ * the bottom rode up with it and covered the very field being typed into.
+ *
+ * Focus alone is not enough: Back closes the keyboard and leaves the field
+ * focused. So it is a text field with focus AND a screen shorter than its
+ * full height, by more than any browser toolbar would take.
+ */
+function watchTyping(): void {
+  let full = 0;
+  const sync = () => {
+    const h = Math.min(window.innerHeight, window.visualViewport?.height ?? Infinity);
+    full = Math.max(full, h);
+    const up = opensKeyboard(document.activeElement) && h < full - 150;
+    document.documentElement.classList.toggle('is-typing', up);
+  };
+  // After focus has settled, so moving from one field to the next never flickers the bar.
+  const later = () => setTimeout(sync, 0);
+  document.addEventListener('focusin', later);
+  document.addEventListener('focusout', later);
+  window.addEventListener('resize', sync);
+  window.visualViewport?.addEventListener('resize', sync);
+  // A rotation changes what full height means.
+  window.addEventListener('orientationchange', () => { full = 0; setTimeout(sync, 300); });
+  sync();
+}
+
 export async function initNativeShell(): Promise<void> {
+  watchTyping();
   if (!Capacitor.isNativePlatform()) return;
   const { App } = await import('@capacitor/app');
   await App.addListener('backButton', ({ canGoBack }) => {

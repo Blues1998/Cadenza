@@ -12155,3 +12155,10 @@ button.strumcell:hover { background: var(--surface-3); }
 a.btn {
   text-decoration: none;
 }
+
+/* The keyboard is up: the phone tab bar steps aside so it cannot cover the field. */
+@media (max-width: 900px) {
+  .is-typing .mtabs {
+    display: none;
+  }
+}
