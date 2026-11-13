@@ -9769,6 +9769,9 @@ button.strumcell:hover { background: var(--surface-3); }
 
 .swing-range-input {
   flex: 1;
+  /* A range input has a built-in minimum width; without this the row could not
+     shrink below it and the percentage spilled out over the presets. */
+  min-width: 0;
   accent-color: var(--primary);
   cursor: pointer;
 }
@@ -9779,6 +9782,7 @@ button.strumcell:hover { background: var(--surface-3); }
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   min-width: 2.6rem;
+  flex-shrink: 0;
   text-align: right;
 }
 
@@ -11146,7 +11150,10 @@ button.strumcell:hover { background: var(--surface-3); }
     justify-content: space-between;
   }
 
+  /* The slider gets a row of its own and the presets go under it, at any
+     phone width: sharing a line, the percentage ended up under Straight. */
   .swing-slider-wrap {
+    flex: 1 0 100%;
     max-width: none;
   }
 }
