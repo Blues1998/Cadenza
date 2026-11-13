@@ -12,7 +12,7 @@ import {
   deleteTabFromLibrary
 } from '../utils/tabLibrary';
 import type { TabLibraryEntry } from '../utils/tabLibrary';
-import { GUITAR_SOUNDFONT_URL, GUITAR_TONES, DEFAULT_GUITAR_TONE, toneKey, setScoreInstrument } from '../utils/guitarTones';
+import { GUITAR_SOUNDFONT_URL, GUITAR_TONES, DEFAULT_GUITAR_TONE, knownTone, toneKey, setScoreInstrument } from '../utils/guitarTones';
 import { assetUrl } from '../utils/assetUrl';
 import { useMicPitch } from '../hooks/useMicPitch';
 import { NOTE_NAMES } from '../utils/musicTheory';
@@ -694,9 +694,11 @@ export const TabPlayerLab: React.FC = () => {
       // what the file itself specifies, this player is for guitar practice,
       // unless we're reopening a piece that had a different tone/tempo saved.
       const restore = pendingRestoreRef.current;
-      const tone = restore?.guitarTone ?? DEFAULT_GUITAR_TONE;
+      // A tone saved with an older guitar bank may no longer exist; fall back to the default.
+      const known = knownTone(restore?.guitarTone);
+      const tone = { bank: known.bank, program: known.program };
       setScoreInstrument(score, tone.bank, tone.program);
-      setGuitarTone(GUITAR_TONES.find(t => t.bank === tone.bank && t.program === tone.program) ?? DEFAULT_GUITAR_TONE);
+      setGuitarTone(known);
       const tempoToUse = restore?.tempoPct ?? 100;
       setTempoPct(tempoToUse);
       api.playbackSpeed = tempoToUse / 100;
@@ -1059,7 +1061,7 @@ export const TabPlayerLab: React.FC = () => {
           </div>
 
           <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-            Guitar samples: "Nylon and Steel Guitars" by Soundfonts4U, CC BY-NC-SA 4.0
+            Guitar samples: Meta Open Sound and FreePats (CC0)
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>

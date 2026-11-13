@@ -18,8 +18,10 @@ dist-ssr
 public/font
 public/soundfont
 
-# Guitar soundfont (~37MB, too big to commit) — run `npm run setup:soundfont`
-public/instruments
+# Guitar bank build: downloaded recordings and cache (see scripts/guitar-bank)
+scripts/guitar-bank/work
+scripts/guitar-bank/.venv
+__pycache__
 
 # Reference Guitar Pro tab files used while hand-authoring Song Hero's chart
 # data (src/data/songCharts.ts), kept in reference/tabs/. Several are

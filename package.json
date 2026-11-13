@@ -8,7 +8,6 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "setup:soundfont": "node scripts/fetch-guitar-soundfont.mjs",
     "build:android": "tsc -b && vite build --mode android && cap sync android",
     "android:open": "cap open android"
   },

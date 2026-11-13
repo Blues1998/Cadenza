@@ -29,17 +29,10 @@ Light and dark themes, a collapsible sidebar, and progress that persists in
 
 ```sh
 npm install
-npm run setup:soundfont   # optional, see below
 npm run dev               # vite dev server
 npm run build             # tsc -b && vite build
 npm run lint              # oxlint
 ```
-
-`setup:soundfont` downloads the ~37 MB guitar soundfont used by the Tab Player
-and rebanks its presets from bank 0 to bank 1 so they cannot collide with the
-base General MIDI soundfont's piano programs. The file is too large to commit,
-so it is gitignored and this script recreates it on a fresh clone. Everything
-except realistic Tab Player tones works without it.
 
 ## Android app
 
@@ -63,9 +56,9 @@ Android Studio provides the Java runtime and Gradle it needs. To make a Play Sto
 public/          served as-is at the site root
   brand/         the app icon, at the sizes browsers and phones ask for
   img/           images the app loads at runtime
-  font/          \
-  soundfont/      | fetched at dev/build time, gitignored, see setup:soundfont
-  instruments/   /
+  font/          \ copied from alphaTab at dev/build time, gitignored
+  soundfont/     /
+  instruments/   the guitar bank, built by scripts/guitar-bank
 src/             the app
 design/          full-size sources for everything in public/, never shipped
 reference/       local working material, gitignored (Guitar Pro tab files)
@@ -87,9 +80,10 @@ push to `main`.
 
 ## Credits
 
-Guitar tones use the "Nylon and Steel Guitars-4U" soundfont from
-[Soundfonts4U](https://huggingface.co/datasets/projectlosangeles/soundfonts4u),
-licensed CC BY-NC-SA 4.0.
+Guitar sounds are built from CC0 recordings: Meta Nylon Guitar and Meta Steel
+Guitar from [Meta Open Sound](https://github.com/facebookincubator/Meta-open-sound),
+and FSBS Electric Guitar Clean from [FreePats](https://freepats.zenvoid.org/).
+See `scripts/guitar-bank`.
 
 ## License
 

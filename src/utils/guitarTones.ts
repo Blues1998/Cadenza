@@ -4,13 +4,12 @@
 import { model } from '@coderline/alphatab';
 import { assetUrl } from './assetUrl';
 
-// Real recorded classical/steel guitar samples (4 velocity layers + fret
-// noise) from the "Nylon and Steel Guitars-4U" soundfont (soundfonts4u,
-// CC BY-NC-SA 4.0), which sounds far less robotic than the default GM patch.
-// Its presets were rebanked from 0 to 1 (see scripts/fetch-guitar-soundfont.mjs)
-// purely to avoid colliding with the base soundfont's bank-0 GM programs
-// 0-6 (pianos) when both are loaded together.
-export const GUITAR_SOUNDFONT_URL = assetUrl('instruments/soundfonts4u-nylon-steel-guitars-bank1.sf2');
+// Recorded guitars, all CC0 (free for any use, including paid apps):
+//   Meta Nylon Guitar and Meta Steel Guitar (Meta Open Sound)
+//   FSBS Electric Guitar Clean (FreePats)
+// Built into one SF3 bank by scripts/guitar-bank (see its README). Presets sit
+// in bank 1 so they never collide with the base soundfont's bank-0 programs.
+export const GUITAR_SOUNDFONT_URL = assetUrl('instruments/cadenza-guitars.sf3');
 
 export interface GuitarTone {
   bank: number;
@@ -19,15 +18,19 @@ export interface GuitarTone {
 }
 
 export const GUITAR_TONES: GuitarTone[] = [
-  { bank: 1, program: 0, label: 'Nylon Classical' },
-  { bank: 1, program: 1, label: 'Nylon (No Fret Noise)' },
-  { bank: 1, program: 2, label: 'Nylon Smooth' },
-  { bank: 1, program: 3, label: 'Steel-String Acoustic' },
-  { bank: 1, program: 4, label: 'Chorus Guitar' },
-  { bank: 1, program: 5, label: 'Clean Electric' },
-  { bank: 1, program: 6, label: '12-String Guitar' }
+  { bank: 1, program: 0, label: 'Nylon' },
+  { bank: 1, program: 1, label: 'Nylon fingerstyle' },
+  { bank: 1, program: 3, label: 'Steel acoustic' },
+  { bank: 1, program: 6, label: '12-string' },
+  { bank: 1, program: 5, label: 'Clean electric' },
+  { bank: 1, program: 4, label: 'Chorus electric' }
 ];
-export const DEFAULT_GUITAR_TONE = GUITAR_TONES[0]; // Nylon Classical
+export const DEFAULT_GUITAR_TONE = GUITAR_TONES[0]; // Nylon
+
+/** The saved tone if this bank still has it, otherwise the default. */
+export function knownTone(saved?: { bank: number; program: number } | null): GuitarTone {
+  return GUITAR_TONES.find(t => saved && t.bank === saved.bank && t.program === saved.program) ?? DEFAULT_GUITAR_TONE;
+}
 
 export function toneKey(bank: number, program: number): string {
   return `${bank}:${program}`;
