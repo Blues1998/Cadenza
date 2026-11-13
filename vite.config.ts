@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, rmSync } from 'node:fs'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { alphaTab } from '@coderline/alphatab-vite'
@@ -37,6 +37,23 @@ const notFoundPage = (base: string): Plugin => ({
   }
 })
 
+// alphaTab's plugin copies its whole font and soundfont folders into the
+// build. Every browser the app runs in takes Bravura as woff2, the first
+// format alphaTab asks for, and the app loads the compressed sf3 soundfont,
+// so the rest was 4 MB of APK nobody downloads. The font's licence stays.
+const pruneAssets = (): Plugin => ({
+  name: 'prune-unused-assets',
+  apply: 'build',
+  closeBundle() {
+    const out = new URL('./dist/', import.meta.url)
+    for (const file of [
+      'font/Bravura.eot', 'font/Bravura.svg', 'font/Bravura.otf', 'font/Bravura.woff',
+      'font/Bravura-FONTLOG.txt', 'font/Bravura-OFL-FAQ.txt',
+      'soundfont/sonivox.sf2'
+    ]) rmSync(new URL(file, out), { force: true })
+  }
+})
+
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   // The Android app (Capacitor) serves the same build from the root of
@@ -51,6 +68,6 @@ export default defineConfig(({ command, mode }) => {
   // values are handled.
   base,
   define: { __APP_VERSION__: JSON.stringify(JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version) },
-  plugins: [react(), alphaTab(), ...(mode === 'android' ? [] : [notFoundPage(base)])],
+  plugins: [react(), alphaTab(), pruneAssets(), ...(mode === 'android' ? [] : [notFoundPage(base)])],
   }
 })

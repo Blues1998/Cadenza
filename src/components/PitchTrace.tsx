@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { labelFor, type Notation, type NoteLabel } from '../utils/voice';
+import { frameGate } from '../utils/frames';
 
 // A voice drawn over time.
 //
@@ -62,8 +63,14 @@ export const PitchTrace: React.FC<PitchTraceProps> = ({
   const props = useRef({ notation, sa, target, bandCents, seconds });
   props.current = { notation, sa, target, bandCents, seconds };
 
+  // The drawing loop sleeps once nothing voiced is left on screen, and the
+  // next pitch wakes it. Running flat out, it drew a blank graph sixty times a
+  // second whenever the voice page was open.
+  const wake = useRef<() => void>(() => {});
+
   useEffect(() => {
     points.current.push({ t: performance.now(), m: pitch });
+    if (pitch !== null) wake.current();
   }, [pitch]);
 
   useEffect(() => {
@@ -73,8 +80,11 @@ export const PitchTrace: React.FC<PitchTraceProps> = ({
     if (!ctx) return;
     let raf = 0;
 
+    const due = frameGate();
     const draw = () => {
-      raf = requestAnimationFrame(draw);
+      if (!due()) { raf = requestAnimationFrame(draw); return; }
+      const quiet = !points.current.some(p => p.m !== null && p.t > performance.now() - props.current.seconds * 1000);
+      raf = quiet ? 0 : requestAnimationFrame(draw);
       const { notation, sa, target, bandCents, seconds } = props.current;
       const dpr = window.devicePixelRatio || 1;
       const w = canvas.clientWidth;
@@ -172,8 +182,12 @@ export const PitchTrace: React.FC<PitchTraceProps> = ({
       }
     };
 
+    wake.current = () => { if (!raf) raf = requestAnimationFrame(draw); };
     raf = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(raf);
+    // Asleep, a theme switch still repaints the lanes once.
+    const themeWatch = new MutationObserver(() => wake.current());
+    themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => { cancelAnimationFrame(raf); themeWatch.disconnect(); wake.current = () => {}; };
   }, []);
 
   return <canvas ref={canvasRef} className="pitchtrace" style={{ height: height === 'fill' ? '100%' : height }} aria-label="Your pitch over the last few seconds" role="img" />;

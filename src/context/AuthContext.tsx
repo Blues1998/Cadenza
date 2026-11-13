@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
-import { supabase } from '../utils/supabase';
+import { getSupabase } from '../utils/supabase';
 
 // Where links in sign-up and magic-link emails send people back to. Inside the
 // Android app the page's own origin is https://localhost, which means nothing
@@ -54,26 +54,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       window.history.replaceState(window.history.state, '', url.toString());
     }
 
-    // 1. Initial session load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user) {
-        void syncLibraryWithCloud();
-      }
-    });
+    // 1 and 2: the session, and changes to it, once the client has loaded.
+    let unsubscribe = () => {};
+    let gone = false;
+    void getSupabase().then(supabase => {
+      if (gone) return;
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        if (session?.user) {
+          void syncLibraryWithCloud();
+        }
+      });
 
-    // 2. Auth state subscription
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user) {
-        void syncLibraryWithCloud();
-      } else {
-        setSyncStatus('idle');
-      }
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        if (session?.user) {
+          void syncLibraryWithCloud();
+        } else {
+          setSyncStatus('idle');
+        }
+      });
+      unsubscribe = () => subscription.unsubscribe();
     });
 
     // 3. Listen to sync status events
@@ -88,7 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.addEventListener('cadenza-sync-change', handleSyncChange);
 
     return () => {
-      subscription.unsubscribe();
+      gone = true;
+      unsubscribe();
       window.removeEventListener('cadenza-sync-change', handleSyncChange);
     };
   }, []);
@@ -101,12 +107,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithEmail = async (email: string, password: string): Promise<{ error: Error | null }> => {
+    const supabase = await getSupabase();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) setIsAuthModalOpen(false);
     return { error };
   };
 
   const signUpWithEmail = async (email: string, password: string): Promise<{ error: Error | null }> => {
+    const supabase = await getSupabase();
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -116,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithMagicLink = async (email: string): Promise<{ error: Error | null }> => {
+    const supabase = await getSupabase();
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: EMAIL_REDIRECT }
@@ -124,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    const supabase = await getSupabase();
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -135,6 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // supabase/migrations. Songs saved on this device are left alone: they were
   // never the account's, and deleting an account is not deleting the app.
   const deleteAccount = async (): Promise<{ error: Error | null }> => {
+    const supabase = await getSupabase();
     const { error } = await supabase.rpc('delete_my_account');
     if (error) return { error: new Error(error.message) };
     // The user no longer exists, so a server-side sign-out would only fail;

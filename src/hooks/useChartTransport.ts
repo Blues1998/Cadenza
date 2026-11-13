@@ -4,6 +4,7 @@ import { chartChords, chordsAtBeat, type ChartSettings, type ParsedChart } from 
 import { preferredVoicing } from '../utils/chordbook';
 import type { ChordVoicing } from '../utils/chords';
 import { slotBeats, type StrumPattern } from '../utils/strum';
+import { frameGate } from '../utils/frames';
 
 export type ChartPhase = 'idle' | 'countin' | 'playing' | 'paused' | 'done';
 
@@ -212,7 +213,9 @@ export function useChartTransport(
       }
     }, TICK_MS);
 
+    const due = frameGate();
     const follow = () => {
+      if (!due()) { frame.current = requestAnimationFrame(follow); return; }
       const { spb, lead } = plan.current;
       const elapsed = audio.getCurrentTime() - startTime.current;
       const exact = elapsed / spb - lead;

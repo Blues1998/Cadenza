@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { detectPitch, PitchStabilizer, VoiceSmoother } from '../utils/pitch';
 import type { PitchResult } from '../utils/pitch';
+import { frameGate } from '../utils/frames';
 
 // Shared microphone + pitch detection pipeline (getUserMedia -> AnalyserNode
 // -> YIN detector -> stabilizer), polled once per animation frame.
@@ -85,7 +86,9 @@ export function useMicPitch(mode: PitchMode = 'instrument'): MicPitch {
       stabilizerRef.current.reset();
 
       const sampleRate = ctx.sampleRate;
+      const due = frameGate();
       const updatePitch = () => {
+        if (!due()) { animationFrameId.current = requestAnimationFrame(updatePitch); return; }
         analyser.getFloatTimeDomainData(buffer as any);
         const raw = detectPitch(buffer, sampleRate);
         // Stabilize: hysteresis on note changes + smoothing, so the reading

@@ -81,7 +81,7 @@ export function useTabIntervalSource(): TabIntervalSource {
       player: {
         enablePlayer: true,
         playerMode: 'EnabledAutomatic',
-        soundFont: assetUrl('soundfont/sonivox.sf2'),
+        soundFont: assetUrl('soundfont/sonivox.sf3'),
         enableCursor: false
       }
     });

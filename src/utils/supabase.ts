@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Song, PracticeSession } from './library';
 
 // Default to the provided Supabase project, with override via Vite env vars
@@ -7,13 +7,22 @@ export const SUPABASE_URL =
 export const SUPABASE_ANON_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_kYFhJOiOrJH33N_weQxGrg_YX-gGQ3v';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  }
-});
+// Loaded on first use rather than with the app. Accounts are a website
+// feature: the Android app never asks for this, and the website asks after
+// its first screen is up, so neither waits on ~150 KB it does not need yet.
+let client: Promise<SupabaseClient> | null = null;
+export function getSupabase(): Promise<SupabaseClient> {
+  client ??= import('@supabase/supabase-js').then(({ createClient }) =>
+    createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    })
+  );
+  return client;
+}
 
 export interface DbSongRow {
   id: string;

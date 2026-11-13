@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { frameGate } from '../utils/frames';
 
 /**
  * The metronome, drawn, and the one thing on this page that knows the tempo.
@@ -67,9 +68,11 @@ interface PendulumProps {
   at: () => number | null;
   /** Called once each time the heard bar changes, for a readout elsewhere. */
   onBar?: (bar: number) => void;
+  /** Whether the click is running: the drawing sleeps once it is not and the arm is upright. */
+  running?: boolean;
 }
 
-export const Pendulum: React.FC<PendulumProps> = ({ beatsPerBar, subdivision, at, onBar }) => {
+export const Pendulum: React.FC<PendulumProps> = ({ beatsPerBar, subdivision, at, onBar, running = true }) => {
   const arm = useRef<SVGGElement | null>(null);
   const lit = useRef<(SVGElement | HTMLElement | null)[]>([]);
   const angle = useRef(0);
@@ -85,7 +88,9 @@ export const Pendulum: React.FC<PendulumProps> = ({ beatsPerBar, subdivision, at
     const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     let raf = 0;
 
+    const due = frameGate();
     const draw = () => {
+      if (!due()) { raf = requestAnimationFrame(draw); return; }
       const t = at();
 
       // Upright when the click stops, eased rather than frozen mid-swing: a
@@ -118,12 +123,14 @@ export const Pendulum: React.FC<PendulumProps> = ({ beatsPerBar, subdivision, at
         }
       }
 
-      raf = requestAnimationFrame(draw);
+      // At rest and upright, every further frame would be the same one.
+      const settled = t === null && Math.abs(angle.current) < 0.05;
+      raf = settled ? 0 : requestAnimationFrame(draw);
     };
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [at, beatsPerBar, subdivision]);
+  }, [at, beatsPerBar, subdivision, running]);
 
   return (
     <div className="pendulum">

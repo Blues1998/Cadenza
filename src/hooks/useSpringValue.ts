@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { frameGate } from '../utils/frames';
 
 interface SpringOptions {
   stiffness?: number;   // how hard it is pulled toward the target
@@ -35,37 +36,46 @@ export function useSpringValue(
   // component is mounted.
   const pushed = useRef(target);
 
+  // Sleeps once settled and wakes when the target moves. It used to integrate
+  // sixty times a second for as long as the tuner was open, mic or no mic.
+  const frame = useRef(0);
+  const due = useRef(frameGate());
+  const last = useRef(0);
+
+  const step = useRef<(now: number) => void>(() => {});
+  step.current = (now: number) => {
+    if (!due.current(now)) { frame.current = requestAnimationFrame(t => step.current(t)); return; }
+    // Clamped so a backgrounded tab does not resume with one enormous step
+    const dt = Math.min((now - last.current) / 1000, 1 / 30);
+    last.current = now;
+
+    const to = targetRef.current;
+    const displacement = to - position.current;
+    // Critical damping is 2*sqrt(k) for unit mass; `damping` scales from there
+    const accel = stiffness * displacement - 2 * Math.sqrt(stiffness) * damping * velocity.current;
+    velocity.current += accel * dt;
+    position.current += velocity.current * dt;
+
+    const settled = Math.abs(to - position.current) < precision && Math.abs(velocity.current) < precision;
+    if (settled) {
+      position.current = to;
+      velocity.current = 0;
+    }
+
+    if (position.current !== pushed.current) {
+      pushed.current = position.current;
+      setDisplay(position.current);
+    }
+    frame.current = settled ? 0 : requestAnimationFrame(t => step.current(t));
+  };
+
   useEffect(() => {
-    let frame = 0;
-    let last = performance.now();
+    if (frame.current || (target === position.current && velocity.current === 0)) return;
+    last.current = performance.now();
+    frame.current = requestAnimationFrame(t => step.current(t));
+  }, [target]);
 
-    const step = (now: number) => {
-      // Clamped so a backgrounded tab does not resume with one enormous step
-      const dt = Math.min((now - last) / 1000, 1 / 30);
-      last = now;
-
-      const to = targetRef.current;
-      const displacement = to - position.current;
-      // Critical damping is 2*sqrt(k) for unit mass; `damping` scales from there
-      const accel = stiffness * displacement - 2 * Math.sqrt(stiffness) * damping * velocity.current;
-      velocity.current += accel * dt;
-      position.current += velocity.current * dt;
-
-      if (Math.abs(to - position.current) < precision && Math.abs(velocity.current) < precision) {
-        position.current = to;
-        velocity.current = 0;
-      }
-
-      if (position.current !== pushed.current) {
-        pushed.current = position.current;
-        setDisplay(position.current);
-      }
-      frame = requestAnimationFrame(step);
-    };
-
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [stiffness, damping, precision]);
+  useEffect(() => () => { cancelAnimationFrame(frame.current); frame.current = 0; }, []);
 
   return display;
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { frameGate } from '../utils/frames';
 
 interface PulseGrooveStageProps {
   beatsPerBar: number;
@@ -31,6 +32,10 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
   const [currentBeatDisplay, setCurrentBeatDisplay] = useState<number>(1);
   const [isAccent, setIsAccent] = useState<boolean>(false);
   const lastBeatRef = useRef<number>(-1);
+  // The loop reads these rather than the state, so it is not torn down and
+  // rebuilt on every beat, which also threw away the ripples it was drawing.
+  const beatRef = useRef(1);
+  const accentRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -66,7 +71,9 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
       return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
     };
 
+    const due = frameGate();
     const render = () => {
+      if (!due()) { rafId = requestAnimationFrame(render); return; }
       // Read every frame (the style object is live), so a theme switch repaints at once.
       const ACC = tok('--primary', '#FF6A2A');
       const BEAT = tok('--secondary', '#C8CCD2');
@@ -87,6 +94,8 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
           const beatInBar = ((currentIntBeat % beatsPerBar) + beatsPerBar) % beatsPerBar + 1;
           const accented = beatInBar === 1;
 
+          beatRef.current = beatInBar;
+          accentRef.current = accented;
           setCurrentBeatDisplay(beatInBar);
           setIsAccent(accented);
 
@@ -104,6 +113,9 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
       } else if (!isPlaying) {
         lastBeatRef.current = -1;
       }
+
+      const isAccent = accentRef.current;
+      const currentBeatDisplay = beatRef.current;
 
       // Draw active ripples
       for (let i = ripples.length - 1; i >= 0; i--) {
@@ -214,12 +226,18 @@ export const PulseGrooveStage: React.FC<PulseGrooveStageProps> = ({
         ctx.restore();
       }
 
-      rafId = requestAnimationFrame(render);
+      // Stopped and still: the frame on screen is the frame there would be, so
+      // stop asking for more. It was drawing sixty identical frames a second
+      // for as long as the page was open.
+      rafId = isPlaying || ripples.length > 0 ? requestAnimationFrame(render) : 0;
     };
 
     rafId = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(rafId);
-  }, [at, beatsPerBar, subdivision, isAccent, isPlaying, currentBeatDisplay]);
+    // Asleep, a theme switch still has to repaint the stage once.
+    const themeWatch = new MutationObserver(() => { if (!rafId) rafId = requestAnimationFrame(render); });
+    themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => { cancelAnimationFrame(rafId); themeWatch.disconnect(); };
+  }, [at, beatsPerBar, subdivision, isPlaying]);
 
   return (
     <div className={`pulse-groove-stage${isAccent && isPlaying ? ' is-accent-bar' : ''}`}>

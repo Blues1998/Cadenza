@@ -394,7 +394,7 @@ export const TabPlayerLab: React.FC = () => {
       player: {
         enablePlayer: true,
         playerMode: 'EnabledAutomatic',
-        soundFont: assetUrl('soundfont/sonivox.sf2'),
+        soundFont: assetUrl('soundfont/sonivox.sf3'),
         enableCursor: true,
         // A non-Off mode is required for alphaTab to dispatch scroll updates
         // at all, but the actual behavior comes entirely from

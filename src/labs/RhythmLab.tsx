@@ -9,6 +9,7 @@ import { audio } from '../utils/audio';
 import { clearTempoLog, getTempoLog, heldLabel, logTempo, whenHeld, type TempoRun } from '../utils/tempoLog';
 import { reportProgress } from '../utils/progress';
 import { feel } from '../utils/haptics';
+import { frameGate } from '../utils/frames';
 
 interface TapHit {
   id: number;
@@ -36,7 +37,9 @@ interface TimelineTap {
 const TimingGraph: React.FC<{
   beatsRef: React.MutableRefObject<TimelineBeat[]>;
   tapsRef: React.MutableRefObject<TimelineTap[]>;
-}> = ({ beatsRef, tapsRef }) => {
+  /** Scrolling only while the click runs; stopped, the last frame holds. */
+  active: boolean;
+}> = ({ beatsRef, tapsRef, active }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -64,8 +67,10 @@ const TimingGraph: React.FC<{
 
     const WINDOW_S = 4; // seconds of history shown
     let rafId = 0;
+    const due = frameGate();
 
     const draw = () => {
+      if (!due()) { rafId = requestAnimationFrame(draw); return; }
       const dpr = window.devicePixelRatio || 1;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
@@ -158,12 +163,12 @@ const TimingGraph: React.FC<{
       g.closePath();
       g.fill();
 
-      rafId = requestAnimationFrame(draw);
+      rafId = active ? requestAnimationFrame(draw) : 0;
     };
 
     rafId = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(rafId);
-  }, [beatsRef, tapsRef]);
+  }, [beatsRef, tapsRef, active]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
@@ -708,7 +713,7 @@ export const RhythmLab: React.FC = () => {
               isPlaying={isPlaying}
             />
           ) : (
-            <Pendulum beatsPerBar={timeSignature} subdivision={subdivision} at={beatAt} onBar={setBars} />
+            <Pendulum beatsPerBar={timeSignature} subdivision={subdivision} at={beatAt} onBar={setBars} running={isPlaying} />
           )}
           </div>
 
@@ -883,7 +888,7 @@ export const RhythmLab: React.FC = () => {
               </div>
 
               {/* Live latency timeline graph */}
-              <TimingGraph beatsRef={timelineBeats} tapsRef={timelineTaps} />
+              <TimingGraph beatsRef={timelineBeats} tapsRef={timelineTaps} active={isPlaying} />
 
               {/* Hit History Scrolling track */}
               <div>
