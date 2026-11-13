@@ -2095,8 +2095,10 @@ input[type='range'] {
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 260px;
-  padding: 0 3rem;
+  /* A masthead, not a poster: it names the app and the week, and the cards
+     under it are what the screen is for. */
+  min-height: 176px;
+  padding: 0 2.5rem;
   border-radius: 14px;
   overflow: hidden;
   background-color: rgb(var(--hero-ground-rgb));
@@ -4797,31 +4799,24 @@ button.dash-card:hover .pickup-go svg {
 }
 
 @media (max-width: 900px) {
-  /* Side by side there is no room left of the guitar, so the composition
-     turns: the instrument takes the top of the frame and the name sits under
-     it, with the scrim running down instead of across. */
+  /* A short band on a phone: the name on the left, the guitar's body
+     showing on the right, the scrim running across as on a wide screen. */
   .hero {
-    min-height: 210px;
-    align-items: flex-end;
-    padding: 0 1.4rem 1.3rem;
+    min-height: 116px;
+    padding: 0 1.25rem;
   }
 
   .hero::after {
-    background-position: 62% top;
-  }
-
-  .hero::before {
-    background: linear-gradient(
-      180deg,
-      rgba(var(--hero-ground-rgb), 0.5) 0%,
-      rgba(var(--hero-ground-rgb), 0.55) 30%,
-      rgba(var(--hero-ground-rgb), 0.9) 70%,
-      rgb(var(--hero-ground-rgb)) 100%
-    );
+    background-position: 70% 40%;
   }
 
   .hero-title {
-    font-size: 2.3rem;
+    font-size: 1.9rem;
+  }
+
+  .hero-eyebrow {
+    margin-bottom: 0.35rem;
+    font-size: 0.64rem;
   }
 
   .songs-actions {
