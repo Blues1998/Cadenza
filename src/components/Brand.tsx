@@ -4,7 +4,7 @@ import { assetUrl } from '../utils/assetUrl';
 export const BRAND = 'Sharps&Flats';
 
 /** The website, which also hosts the privacy policy. */
-export const SITE_URL = 'https://blues1998.github.io/Cadenza/';
+export const SITE_URL = 'https://blues1998.github.io/sharps-and-flats/';
 export const PRIVACY_URL = `${SITE_URL}privacy.html`;
 
 /** The ♯♭ mark, cropped from the logo (design/brand). Decorative: the name is always beside it. */

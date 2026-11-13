@@ -7,7 +7,7 @@ import { supabase } from '../utils/supabase';
 // Android app the page's own origin is https://localhost, which means nothing
 // outside the phone's WebView, so those links go to the hosted site instead.
 const EMAIL_REDIRECT = Capacitor.isNativePlatform()
-  ? 'https://blues1998.github.io/Cadenza/'
+  ? 'https://blues1998.github.io/sharps-and-flats/'
   : window.location.origin;
 import { syncLibraryWithCloud, type SyncState } from '../utils/cloudSync';
 import { ACCOUNTS_ENABLED } from '../utils/nativeShell';
