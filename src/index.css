@@ -3251,6 +3251,10 @@ button.dash-card:hover .pickup-go svg {
   gap: 0.6rem;
 }
 
+/* Hover never animates transform here. An animated transform lifts the card
+   onto its own GPU layer, and with the blurred bucket overlapping the grid,
+   Chrome then has to promote every card painted after it too: they arrive
+   empty for a frame and the lower half of the page flickers on every hover. */
 .chordcard {
   display: flex;
   flex-direction: column;
@@ -3259,12 +3263,11 @@ button.dash-card:hover .pickup-go svg {
   padding: 0.5rem 0.35rem 0.2rem;
   border-radius: 9px;
   background: var(--surface-2);
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease;
 }
 
 .chordcard:hover {
   background: var(--surface-3);
-  transform: translateY(-1px);
 }
 
 /* A name we could not place keeps its aside, "G (single strum)", and wraps
@@ -3337,17 +3340,16 @@ button.dash-card:hover .pickup-go svg {
   border-radius: 8px;
   background: none;
   cursor: pointer;
-  transition: background 0.16s ease, transform 0.16s cubic-bezier(0.34, 1.36, 0.64, 1);
+  transition: background 0.16s ease;
 }
 
 .chordcard-play:hover {
   background: var(--surface-1);
-  transform: scale(1.04);
 }
 
+/* Instant, not transitioned: a static transform stays in the page's own layer. */
 .chordcard-play:active {
   transform: scale(0.97);
-  transition-duration: 0.07s;
 }
 
 .chordcard-play:focus-visible {
