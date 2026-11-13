@@ -77,7 +77,7 @@ export const Onboarding: React.FC = () => {
   );
 
   return createPortal(
-    <div className="onb" role="dialog" aria-modal="true" aria-label="Welcome to Cadenza">
+    <div className="onb" role="dialog" aria-modal="true" aria-label="Welcome to Sharps&Flats">
       <div className="onb-top">
         {index > 0 ? (
           <button type="button" className="onb-link" onClick={back}>Back</button>

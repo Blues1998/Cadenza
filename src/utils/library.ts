@@ -581,7 +581,7 @@ export async function importLibrary(raw: string): Promise<ImportResult> {
   }
   const data = parsed as Partial<LibraryExport>;
   if (!data || data.format !== 'cadenza-library' || !Array.isArray(data.songs)) {
-    return { ok: false, message: 'That is not a Cadenza library export.' };
+    return { ok: false, message: 'That is not a Sharps&Flats library export.' };
   }
   const nextSongs = data.songs
     .filter(s => s && typeof s.id === 'string' && typeof s.title === 'string')

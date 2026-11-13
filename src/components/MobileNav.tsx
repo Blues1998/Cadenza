@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrandMark, Wordmark } from './Brand';
 import type { ActiveTab } from './navGroups';
 import { PRIMARY, navItem, parentTab } from './navGroups';
 import { IconJump } from './Icons';
@@ -20,7 +21,7 @@ interface MobileNavProps {
 export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, onJump }) => {
   const parent = parentTab(activeTab);
   const nested = parent !== activeTab;
-  const title = activeTab === 'dashboard' ? 'Cadenza' : navItem(activeTab).label;
+  const title = activeTab === 'dashboard' ? null : navItem(activeTab).label;
 
   return (
     <>
@@ -33,12 +34,10 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, o
           </button>
         ) : (
           <button type="button" className="mtop-brand" onClick={() => setActiveTab('dashboard')} aria-label="Today">
-            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-            </svg>
+            <BrandMark />
           </button>
         )}
-        <span className="mtop-title">{title}</span>
+        <span className="mtop-title">{title ?? <Wordmark />}</span>
         <button type="button" className="mtop-icon" onClick={onJump} aria-label="Search">
           <IconJump size={18} aria-hidden="true" />
         </button>

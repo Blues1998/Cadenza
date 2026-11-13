@@ -80,7 +80,7 @@ export const DashboardLanding: React.FC<DashboardLandingProps> = ({ setActiveTab
         <div className="hero-copy">
           <span className="hero-eyebrow">{weekLine(recap)}</span>
           <h2 className="hero-title">
-            Cadenza
+            Sharps<span>&amp;</span>Flats
           </h2>
         </div>
       </header>

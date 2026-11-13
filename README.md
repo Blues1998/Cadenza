@@ -1,4 +1,4 @@
-# Cadenza
+# Sharps&Flats
 
 An interactive music theory companion that teaches by ear and by hand rather
 than by diagram. It listens to your microphone, plays back what it is talking
@@ -46,7 +46,7 @@ npm run android:open    # opens the project in Android Studio
 Android Studio provides the Java runtime and Gradle it needs. To make a Play Store upload, use **Build → Generate Signed App Bundle** (an `.aab` file). Keep the upload keystore outside the repo and back it up. `*.jks`, `*.keystore` and `keystore.properties` are git-ignored.
 
 - **App ID:** `io.github.blues1998.cadenza`. It can't be changed once the app is published.
-- **Icons and splash screen:** generated from the images in `assets/` with `npx capacitor-assets generate --android`.
+- **Icons and splash screen:** generated from the images in `assets/` with `npx capacitor-assets generate --android --iconBackgroundColor '#00000d' --splashBackgroundColor '#00000d'`. The logo and the cropped ♯♭ mark they come from are in `design/brand/`.
 - **Microphone:** `RECORD_AUDIO` is declared in the manifest. Android asks for it the first time the tuner listens.
 - **Account deletion:** Google Play requires it. It uses the `delete_my_account` database function in `supabase/migrations/`, which has to be run once in the Supabase SQL editor. The web link for it is `https://blues1998.github.io/Cadenza/?account`.
 

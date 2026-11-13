@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { BrandMark, Wordmark } from './Brand';
 import type { Theme } from '../hooks/useTheme';
 import type { ActiveTab } from './navGroups';
 import { IconJump, IconSun, IconMoon } from './Icons';
@@ -146,13 +147,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
           aria-expanded={!collapsed}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18V5l12-2v13" />
-            <circle cx="6" cy="18" r="3" />
-            <circle cx="18" cy="16" r="3" />
-          </svg>
+          <BrandMark />
         </button>
-        {!collapsed && <h1 className="console-wordmark">CADENZA</h1>}
+        {!collapsed && <h1 className="console-wordmark"><Wordmark /></h1>}
         {/* The rail lists twelve destinations and the panel behind this also
             holds every song and every drill. On a phone there is no ⌘K, so
             without a handle the whole panel was unreachable. */}

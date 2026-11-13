@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Cadenza</string>
-    <string name="title_activity_main">Cadenza</string>
-    <string name="package_name">io.github.blues1998.cadenza</string>
-    <string name="custom_url_scheme">io.github.blues1998.cadenza</string>
+    <string name="app_name">Sharps&amp;Flats</string>
+    <string name="title_activity_main">Sharps&amp;Flats</string>
+    <string name="package_name">io.github.blues1998.sharpsandflats</string>
+    <string name="custom_url_scheme">io.github.blues1998.sharpsandflats</string>
 </resources>

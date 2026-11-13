@@ -6,8 +6,8 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // appId is permanent once the app is on the Play Store: it is the listing's
 // identity and cannot be changed later.
 const config: CapacitorConfig = {
-  appId: 'io.github.blues1998.cadenza',
-  appName: 'Cadenza',
+  appId: 'io.github.blues1998.sharpsandflats',
+  appName: 'Sharps&Flats',
   webDir: 'dist',
   android: {
     // Audio samples and the soundfont are already compressed; packing them

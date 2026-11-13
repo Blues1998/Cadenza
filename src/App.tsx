@@ -197,7 +197,7 @@ function App() {
                 then: the rail has normally started the download already. */}
             <Suspense fallback={
               <p className="lab-loading readout" role="status">
-                Opening {LABELS.get(activeTab) ?? 'Cadenza'}…
+                Opening {LABELS.get(activeTab) ?? 'Sharps&Flats'}…
               </p>
             }>
               {renderActiveContent()}
