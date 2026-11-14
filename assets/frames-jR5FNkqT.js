@@ -1,0 +1,1 @@
+function e(){let e=-1/0;return(t=performance.now())=>t-e<14.666666666666668?!1:(e=t,!0)}export{e as t};

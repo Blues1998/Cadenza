@@ -1,0 +1,1 @@
+import{n as e,t}from"./jsx-runtime-bzQ4Vb5N.js";import{$ as n}from"./index-LXkSqPwL.js";e();var r=t(),i=new Map(n.flatMap(e=>e.items.map(e=>[e.id,e.icon]))),a=({tab:e})=>{let t=i.get(e);return t?(0,r.jsx)(`span`,{className:`labicon navmark is-flashing`,"data-nav":e,"aria-hidden":`true`,children:(0,r.jsx)(`span`,{className:`channel-icon`,children:t})}):null};export{a as t};
