@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { LabIcon } from '../components/LabIcon';
 import { Segmented } from '../components/Segmented';
-import { PRIVACY_URL } from '../components/Brand';
+import { BrandMark, PRIVACY_URL } from '../components/Brand';
+import { audio } from '../utils/audio';
+import { voicingsFor } from '../utils/chordbook';
+import { setSunburst, useSunburst } from '../utils/sunburst';
 import { useAuth } from '../context/AuthContext';
 import { ACCOUNTS_ENABLED } from '../utils/nativeShell';
 import { HAS_HAPTICS, setHaptics, useHaptics } from '../utils/haptics';
@@ -25,7 +28,30 @@ const CREDITS: { name: string; what: string; licence: string }[] = [
   { name: 'React', what: 'Interface library', licence: 'MIT License' },
   { name: 'Capacitor', what: 'Android app shell', licence: 'MIT License' },
   { name: 'Supabase JS', what: 'Account backup on the website', licence: 'MIT License' }
-];
+].filter(c => ACCOUNTS_ENABLED || c.name !== 'Supabase JS');
+
+// What the mark in About plays, one per tap, round and round. Open, ringing
+// shapes, the kind a guitar sounds best on, ending on Hendrix's.
+const MARK_CHORDS = ['E', 'Am', 'Cadd9', 'D/F#', 'G', 'Em7', 'A7sus4', 'Dsus2', 'E7#9'];
+
+/** The ♯♭ mark as an instrument: every tap strums the next chord. */
+const PlayableMark: React.FC = () => {
+  const turn = useRef(0);
+  const [shown, setShown] = useState<{ chord: string; key: number } | null>(null);
+  const strum = () => {
+    const chord = MARK_CHORDS[turn.current % MARK_CHORDS.length];
+    turn.current++;
+    const v = voicingsFor(chord)[0];
+    if (v) audio.playStrum(v.midis);
+    setShown({ chord, key: turn.current });
+  };
+  return (
+    <button type="button" className="me-mark" onClick={strum} aria-label="Play a chord">
+      <BrandMark key={shown?.key ?? 0} className={shown ? 'is-struck' : undefined} />
+      {shown && <span key={`chord-${shown.key}`} className="me-mark-chord readout" aria-live="polite">{shown.chord}</span>}
+    </button>
+  );
+};
 
 interface MeLabProps {
   theme: Theme;
@@ -37,6 +63,7 @@ export const MeLab: React.FC<MeLabProps> = ({ theme, toggleTheme }) => {
   const profile = useProfile();
   const voice = useVoice();
   const haptics = useHaptics();
+  const sunburst = useSunburst();
 
   const toVoiceRange = () => {
     try { localStorage.setItem('cadenza-tuner-mode', 'voice'); } catch { /* fine */ }
@@ -103,6 +130,21 @@ export const MeLab: React.FC<MeLabProps> = ({ theme, toggleTheme }) => {
           />
         </div>
 
+        {sunburst.earned && (
+          <div className="me-row">
+            <span className="me-row-label">
+              Finish
+              <span className="me-row-sub">Earned with a 7 day streak</span>
+            </span>
+            <Segmented<boolean>
+              value={sunburst.on}
+              onChange={setSunburst}
+              options={[{ value: false, label: 'Classic' }, { value: true, label: 'Sunburst' }]}
+              size="sm"
+            />
+          </div>
+        )}
+
         {HAS_HAPTICS && (
           <div className="me-row">
             <span className="me-row-label">Haptics</span>
@@ -136,7 +178,8 @@ export const MeLab: React.FC<MeLabProps> = ({ theme, toggleTheme }) => {
 
       <section className="glass-panel me-card me-settings">
         <h3 className="me-heading">About</h3>
-        <div className="me-row">
+        <div className="me-row me-about">
+          <PlayableMark />
           <span className="me-row-label">
             Sharps&amp;Flats
             <span className="me-row-sub">Version {__APP_VERSION__}</span>
@@ -149,23 +192,21 @@ export const MeLab: React.FC<MeLabProps> = ({ theme, toggleTheme }) => {
           </span>
           <a className="btn" href={PRIVACY_URL} target="_blank" rel="noreferrer">Read policy</a>
         </div>
-        <details className="me-licences">
-          <summary className="me-row">
-            <span className="me-row-label">
-              Credits and licences
-              <span className="me-row-sub">Sounds, fonts and code we build on</span>
-            </span>
-          </summary>
-          <dl>
-            {CREDITS.map(c => (
-              <div key={c.name}>
-                <dt>{c.name}</dt>
-                <dd>{c.what}. {c.licence}.</dd>
-              </div>
-            ))}
-          </dl>
-        </details>
       </section>
+
+      {/* Owed to the people whose work ships inside the app, and kept out of
+          the way: one small line under everything else. */}
+      <details className="me-licences">
+        <summary>Open-source licences</summary>
+        <dl>
+          {CREDITS.map(c => (
+            <div key={c.name}>
+              <dt>{c.name}</dt>
+              <dd>{c.what}. {c.licence}.</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
     </div>
   );
 };

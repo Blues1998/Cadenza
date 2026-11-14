@@ -12913,6 +12913,17 @@ button.dash-card:active,
   align-self: stretch;
 }
 
+/* On a narrow card the name keeps its width and the numeral beside it gives
+   way: squeezed, "Am" broke into "A" over "m". */
+.chordcard.is-pickable .chordcard-name {
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.chordcard.is-pickable .chordcard-meta {
+  min-width: 0;
+}
+
 .chordcards-book .chordcard.is-pickable .chordcard-head {
   padding-left: 1.5rem;
 }
@@ -12938,4 +12949,301 @@ button.dash-card:active,
   .songs-actions {
     gap: 0.4rem;
   }
+}
+
+/* ===== About: the mark you can play ===== */
+.me-about {
+  justify-content: flex-start;
+}
+
+.me-mark {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  background: #00000d;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.me-mark .brandmark {
+  border-radius: 12px;
+}
+
+.me-mark .brandmark.is-struck {
+  animation: me-mark-strum 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+@keyframes me-mark-strum {
+  0% { transform: scale(1) rotate(0); }
+  30% { transform: scale(0.88) rotate(-6deg); }
+  65% { transform: scale(1.06) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+/* The chord's name floats up off the mark and fades, like the sound. */
+.me-mark-chord {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: me-mark-rise 1.2s ease-out forwards;
+}
+
+@keyframes me-mark-rise {
+  0% { opacity: 0; transform: translate(-50%, 6px); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -18px); }
+}
+
+/* ===== Licences: owed, and out of the way ===== */
+.me-licences {
+  margin: 0.25rem 0 1.5rem;
+  text-align: center;
+}
+
+.me-licences summary {
+  display: inline-block;
+  padding: 0.5rem 0.75rem;
+  list-style: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--text-muted) 40%, transparent);
+  text-underline-offset: 3px;
+}
+
+.me-licences summary::-webkit-details-marker {
+  display: none;
+}
+
+.me-licences dl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  text-align: left;
+}
+
+.me-licences dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.me-licences dd {
+  margin: 0.05rem 0 0;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* ===== Sunburst: the reward for a 7 day streak ===== */
+
+/* The mark, gilded. Its own colours run through a warm filter, and a slow
+   glint crosses it now and then, so it reads as earned rather than restyled. */
+.is-gold .brandmark,
+.brandmark.is-gold {
+  filter: sepia(1) saturate(2.4) hue-rotate(-12deg) brightness(1.18) contrast(1.08);
+}
+
+.mtop-brand.is-gold,
+.console-plate.is-gold {
+  position: relative;
+  box-shadow: 0 0 0 1.5px rgba(236, 176, 74, 0.75), 0 0 14px rgba(236, 176, 74, 0.4);
+}
+
+.mtop-brand.is-gold::after,
+.console-plate.is-gold::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 236, 190, 0.55) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: sunburst-glint 7s ease-in-out infinite 1.5s;
+  pointer-events: none;
+}
+
+@keyframes sunburst-glint {
+  0%, 82% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+.sunburst-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(8, 6, 4, 0.72);
+  animation: sunburst-fade 0.25s ease-out;
+}
+
+@keyframes sunburst-fade {
+  from { opacity: 0; }
+}
+
+.sunburst-card {
+  width: min(100%, 22rem);
+  padding: 1.75rem 1.5rem 1.25rem;
+  border-radius: 20px;
+  text-align: center;
+  color: #F6EEDF;
+  background: radial-gradient(120% 70% at 50% 0%, #4a2a12 0%, #1d130c 55%, #140d08 100%);
+  box-shadow: 0 0 0 1px rgba(236, 176, 74, 0.35), 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+  animation: sunburst-rise 0.45s cubic-bezier(0.2, 1.3, 0.4, 1);
+}
+
+@keyframes sunburst-rise {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+}
+
+.sunburst-art {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin: 0.25rem auto 1.1rem;
+}
+
+.sunburst-art .brandmark {
+  position: relative;
+  border-radius: 22px;
+  box-shadow: 0 0 0 2px rgba(236, 176, 74, 0.8), 0 0 30px rgba(236, 176, 74, 0.5);
+}
+
+/* Rays behind the mark, turning slowly: the burst the finish is named for. */
+.sunburst-rays {
+  position: absolute;
+  inset: -60px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgba(236, 176, 74, 0.28) 0deg 7deg, transparent 7deg 18deg);
+  -webkit-mask-image: radial-gradient(circle, #000 25%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 25%, transparent 68%);
+  animation: sunburst-turn 24s linear infinite;
+}
+
+@keyframes sunburst-turn {
+  to { transform: rotate(360deg); }
+}
+
+.sunburst-eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ECB04A;
+}
+
+.sunburst-title {
+  margin: 0.3rem 0 0.6rem;
+  font-size: 1.6rem;
+  color: #FFF6E6;
+}
+
+.sunburst-body {
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #D8C8B0;
+}
+
+.sunburst-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sunburst-actions .btn {
+  justify-content: center;
+  width: 100%;
+}
+
+.sunburst-card .btn-primary {
+  color: #1d130c;
+  background: linear-gradient(180deg, #F2BC5C 0%, #E0952F 100%);
+  border-color: transparent;
+}
+
+.sunburst-card .btn:not(.btn-primary) {
+  color: #E8D9C2;
+  background: rgba(255, 236, 200, 0.06);
+  border-color: rgba(255, 236, 200, 0.12);
+}
+
+.sunburst-note {
+  margin: 0.9rem 0 0;
+  font-size: 0.75rem;
+  color: #9F8B70;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sunburst-rays,
+  .mtop-brand.is-gold::after,
+  .console-plate.is-gold::after,
+  .me-mark .brandmark.is-struck {
+    animation: none;
+  }
+}
+
+/* The finish itself. Amber where the app is orange, and the dark theme's
+   greys warmed toward tobacco brown, the colours of a sunburst top. */
+:root[data-theme='dark'][data-finish='sunburst'] {
+  background-color: #14100C;
+  --panel-bg: #1B1611;
+  --panel-border: #30271E;
+  --panel-border-hover: #403427;
+  --surface-1: #1B1611;
+  --surface-2: #221B15;
+  --surface-3: #2A221A;
+  --rail-bg: #120E0B;
+  --elevated-bg: linear-gradient(180deg, #211A14 0%, #1B1611 62%);
+  --elevated-bg-hover: linear-gradient(180deg, #261E17 0%, #1F1913 62%);
+  --primary: #EDA73F;
+  --primary-glow: rgba(237, 167, 63, 0.24);
+  --primary-end: #D9622B;
+  --note-root: #EDA73F;
+  --note-root-deep: #A8641B;
+  --note-scale: #B98552;
+  --note-scale-deep: #8A5A2E;
+  --hero-accent: #EDA73F;
+  --hero-ground-rgb: 20, 16, 12;
+  --text-primary: #F4EDE2;
+  --text-secondary: #B5A894;
+  --text-muted: #8F8473;
+  --text-on-primary: #1B1611;
+  --toolbar-bg: rgba(20, 16, 12, 0.94);
+  --input-bg: #14100C;
+  --tooltip-bg: #221B15;
+  --tooltip-border: #30271E;
+}
+
+:root[data-theme='light'][data-finish='sunburst'] {
+  background-color: #F5EEE2;
+  --panel-bg: #FFFCF6;
+  --panel-border: #E8DDCB;
+  --panel-border-hover: #D8C9B2;
+  --surface-1: #FFFCF6;
+  --surface-2: #F6EEE1;
+  --surface-3: #ECE1CF;
+  --rail-bg: #F2EADC;
+  --elevated-bg: linear-gradient(180deg, #FFFCF6 0%, #FBF6EC 62%);
+  --elevated-bg-hover: linear-gradient(180deg, #FFFCF6 0%, #F7F0E3 62%);
+  --primary: #A85A08;
+  --primary-glow: rgba(168, 90, 8, 0.16);
+  --primary-end: #9A3E12;
+  --note-root: #C26A0C;
+  --note-root-deep: #8A4A06;
+  --hero-accent: #A85A08;
+  --hero-ground-rgb: 245, 238, 226;
+  --toolbar-bg: rgba(245, 238, 226, 0.94);
+  --input-bg: #FFFCF6;
 }

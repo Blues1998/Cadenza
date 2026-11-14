@@ -5,6 +5,7 @@ import { RunBar, useRunning } from './components/RunBar';
 import { Sidebar } from './components/Sidebar';
 import { MobileNav } from './components/MobileNav';
 import { Onboarding } from './components/Onboarding';
+import { SunburstReveal } from './components/Sunburst';
 import { useBackToClose } from './utils/nativeShell';
 import { AuthProvider } from './context/AuthContext';
 import { AuthModal } from './components/AuthModal';
@@ -238,6 +239,7 @@ function App() {
           <Onboarding />
         </QuietBoundary>
         <TroubleToast />
+        <SunburstReveal />
       </div>
     </AuthProvider>
   );

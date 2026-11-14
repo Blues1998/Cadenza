@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BrandMark, Wordmark } from './Brand';
+import { useGoldMark } from '../hooks/useGoldMark';
 import type { Theme } from '../hooks/useTheme';
 import type { ActiveTab } from './navGroups';
 import { IconJump, IconSun, IconMoon } from './Icons';
@@ -46,6 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
       return !prev;
     });
   };
+  const mark = useGoldMark(toggleCollapsed);
 
   // When the nav is the horizontal bar used on narrow screens it can scroll
   // past the active item, leaving no on-screen sign of which lab you are in.
@@ -142,8 +144,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, theme
       <div className="console-brand">
         <button
           type="button"
-          onClick={toggleCollapsed}
-          className="console-plate"
+          onClick={mark.onClick}
+          className={`console-plate${mark.gold ? ' is-gold' : ''}`}
           aria-expanded={!collapsed}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >

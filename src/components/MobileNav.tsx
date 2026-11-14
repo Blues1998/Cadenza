@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrandMark, Wordmark } from './Brand';
+import { useGoldMark } from '../hooks/useGoldMark';
 import type { ActiveTab } from './navGroups';
 import { PRIMARY, navItem, parentTab } from './navGroups';
 import { IconJump } from './Icons';
@@ -27,6 +28,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, o
   const parent = inSong ? activeTab : parentTab(activeTab);
   const nested = inSong || parent !== activeTab;
   const title = inSong ? 'Song' : activeTab === 'dashboard' ? null : navItem(activeTab).label;
+  const mark = useGoldMark(() => setActiveTab('dashboard'));
 
   return (
     <>
@@ -38,7 +40,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, o
             </svg>
           </button>
         ) : (
-          <button type="button" className="mtop-brand" onClick={() => setActiveTab('dashboard')} aria-label="Today">
+          <button type="button" className={`mtop-brand${mark.gold ? ' is-gold' : ''}`} onClick={mark.onClick} aria-label="Today">
             <BrandMark />
           </button>
         )}

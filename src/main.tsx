@@ -6,6 +6,7 @@ import App from './App.tsx'
 import { initNativeShell } from './utils/nativeShell'
 import { wireHaptics } from './utils/haptics'
 import { installTroubleHandlers, record } from './utils/trouble'
+import { watchSunburst } from './utils/sunburst'
 import { AppTrouble, TroubleBoundary } from './components/Trouble'
 
 declare global {
@@ -18,6 +19,7 @@ declare global {
 }
 
 installTroubleHandlers()
+watchSunburst()
 void initNativeShell().catch(e => record(e, 'starting the Android shell'))
 wireHaptics()
 
