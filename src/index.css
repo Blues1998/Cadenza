@@ -13881,3 +13881,453 @@ button.dash-card:active,
 @media (prefers-reduced-motion: reduce) {
   .chart-bar-cell { transition: none; }
 }
+
+/* ===== Theory: one key bar, three tabs =====
+   Key, mood and Play drive every tab, so they stay pinned with the tabs. */
+.theory-keybar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem 0;
+  background: var(--toolbar-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.theory-keybar .note-strip {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.theory-keybar .note-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.theory-keybar .note-key {
+  flex: 1 0 auto;
+  min-height: 34px;
+}
+
+.theory-keybar-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.theory-mood {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0 0.8rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: var(--surface-2);
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.theory-mood svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.theory-mood-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.theory-mood-text small {
+  margin-left: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.theory-mood select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.theory-play {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 1rem;
+}
+
+.theory-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.theory-tab {
+  padding: 0.65rem 0 0.6rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.theory-tab.is-active {
+  color: var(--text-primary);
+  border-bottom-color: var(--primary);
+}
+
+.theory-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.theory-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.15rem 1.25rem;
+}
+
+.theory-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.theory-card-title {
+  font-size: 1.15rem;
+}
+
+.theory-listen {
+  margin: 0.25rem 0 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.theory-note {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.theory-note strong {
+  color: var(--text-secondary);
+}
+
+.theory .step-ladder-track {
+  padding: 0.15rem 0;
+}
+
+.theory-legend {
+  display: flex;
+  gap: 0.9rem;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.theory-legend i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.theory-keys .btn {
+  font-size: 0.78rem;
+}
+
+.theory-keymap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.theory-keymap > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Chords tab */
+.theory-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.4rem, 1fr));
+  gap: 0.4rem;
+}
+
+.theory-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+  padding: 0.5rem 0.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: var(--surface-2);
+  font: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.theory-chip-name {
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.theory-chip-num {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+
+.theory-chip.is-open {
+  border-color: var(--primary);
+  background: var(--primary-glow);
+}
+
+.theory-chip.is-open .theory-chip-name {
+  color: var(--primary);
+}
+
+.theory-chord {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.theory-chord-shape {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.theory-chord-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.theory-chord-name {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.theory-chord-sub {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.theory-chord-notes {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.theory-hear {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--text-on-primary);
+  cursor: pointer;
+}
+
+.theory-more {
+  align-self: flex-start;
+  padding: 0.2rem 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--panel-border-hover);
+  cursor: pointer;
+}
+
+.theory-shapes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: 0.4rem;
+}
+
+.theory-shape {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.45rem 0.3rem;
+  border: none;
+  border-radius: 9px;
+  background: var(--surface-2);
+  font: inherit;
+  font-size: 0.66rem;
+  color: var(--text-secondary);
+  text-align: center;
+  cursor: pointer;
+}
+
+.theory-rows {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--panel-border);
+}
+
+.theory-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.theory-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.theory-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+
+.theory-row-text small {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.theory-row .btn {
+  flex-shrink: 0;
+  gap: 0.3rem;
+}
+
+.theory-select select {
+  max-width: 8.5rem;
+  min-height: 36px;
+  padding: 0 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--surface-2);
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+/* Keys tab */
+.theory-keys-card {
+  align-items: center;
+}
+
+.theory-keys-card .theory-note {
+  align-self: stretch;
+}
+
+.theory-circle {
+  max-width: 100%;
+  height: auto;
+}
+
+.theory-facts {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.theory-facts div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.theory-facts small {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.theory-facts strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+@media (max-width: 900px) {
+  .theory-keybar {
+    margin: -0.75rem -1rem 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* The ladder fits the card: the frets live in the note under it, so each
+   link is just its W or H, and the rungs share the width. */
+.theory .step-ladder-track {
+  gap: 0;
+  overflow: visible;
+}
+
+.theory .ladder-rung {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 3rem;
+}
+
+.theory .ladder-link {
+  flex: 0 0 auto;
+  padding: 0 0.15rem;
+}
+
+.theory .ladder-link .link-frets {
+  display: none;
+}
+
+.theory .ladder-link .link-type {
+  padding: 0.05rem 0.25rem;
+  font-size: 0.66rem;
+}

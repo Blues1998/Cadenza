@@ -4,13 +4,12 @@ import { LabIcon } from '../components/LabIcon';
 import { Fretboard } from '../components/Fretboard';
 import { Term } from '../components/Term';
 import { ScaleChords } from '../components/ScaleChords';
-import { ScaleControlBar } from '../components/ScaleControlBar';
+import { ScaleControlBar, type TheoryTab } from '../components/ScaleControlBar';
 import { Segmented } from '../components/Segmented';
 import { audio } from '../utils/audio';
 import {
   NOTE_NAMES,
   CIRCLE_OF_FIFTHS,
-  CHORD_QUALITIES,
   SCALE_FORMULAS,
   GUITAR_CHORD_SHAPES,
   noteNameToMidi,
@@ -20,91 +19,23 @@ import type {
   CircleKeyInfo,
   ScaleFormula
 } from '../utils/musicTheory';
-import { SCALE_FEELINGS, CHORD_FEELINGS } from '../utils/glossary';
+import { SCALE_FEELINGS, shortScaleName } from '../utils/glossary';
 import { reportProgress } from '../utils/progress';
 import { useComputerKeyboardInstrument } from '../hooks/useComputerKeyboardInstrument';
 import { useGuitarChordKeyboard } from '../hooks/useGuitarChordKeyboard';
-import { SonicConcepts } from '../components/SonicConcepts';
 
-const INTRO_DISMISSED_KEY = 'theory-intro-dismissed';
 const INSTRUMENT_KEY = 'theory-instrument-view';
-const CIRCLE_OPEN_KEY = 'theory-circle-open';
+const OCTAVE = 3;
 
-type InstrumentView = 'piano' | 'guitar' | 'both';
+type InstrumentView = 'piano' | 'guitar';
 
-// Color legend explaining the keyboard/fretboard highlights
-const HighlightLegend: React.FC<{ mode: 'scale' | 'chord' }> = ({ mode }) => {
-  const dot = (color: string): React.CSSProperties => ({
-    display: 'inline-block',
-    width: '10px',
-    height: '10px',
-    borderRadius: '50%',
-    background: color,
-    marginRight: '0.35rem',
-    verticalAlign: 'middle'
-  });
-  return (
-    <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-      <span><span style={dot('var(--note-root)')} />Root (home note)</span>
-      <span><span style={dot('var(--note-scale)')} />Notes in this {mode}</span>
-      <span><span style={dot('var(--note-active)')} />Playing right now</span>
-    </div>
-  );
-};
-
-// Instant Sun (Major) vs Moon (Minor) Mood Contrast Switcher
-const MoodSwitch: React.FC<{
-  rootName: string;
-  octave: number;
-  scale: ScaleFormula;
-  onScaleChange: (scale: ScaleFormula) => void;
-}> = ({ rootName, octave, scale, onScaleChange }) => {
-  const isMinor = /Minor|Blues/.test(scale.name);
-
-  const toggleMood = (target: 'major' | 'minor') => {
-    audio.init();
-    const rootMidi = noteNameToMidi(rootName, octave);
-    if (target === 'major') {
-      const majScale = SCALE_FORMULAS.find(s => s.name.startsWith('Major')) ?? SCALE_FORMULAS[0];
-      onScaleChange(majScale);
-      audio.playStrum([rootMidi, rootMidi + 4, rootMidi + 7, rootMidi + 12], 2.4, 0.05);
-    } else {
-      const minScale = SCALE_FORMULAS.find(s => s.name.startsWith('Natural Minor')) ?? SCALE_FORMULAS[1];
-      onScaleChange(minScale);
-      audio.playStrum([rootMidi, rootMidi + 3, rootMidi + 7, rootMidi + 12], 2.4, 0.05);
-    }
-  };
-
-  return (
-    <div className="mood-switch-strip">
-      <div className="mood-switch-info">
-        <span className="mood-switch-title">Major or minor</span>
-        <span className="mood-switch-desc">
-          The 3rd decides it: major sounds bright, minor sounds dark.
-        </span>
-      </div>
-      <div className="mood-switch-pills">
-        <button
-          type="button"
-          className={`mood-toggle-pill is-sun${!isMinor ? ' is-active' : ''}`}
-          onClick={() => toggleMood('major')}
-          title="Major: bright"
-        >
-          <span className="mood-pill-text">Major</span>
-        </button>
-
-        <button
-          type="button"
-          className={`mood-toggle-pill is-moon${isMinor ? ' is-active' : ''}`}
-          onClick={() => toggleMood('minor')}
-          title="Minor: dark"
-        >
-          <span className="mood-pill-text">Minor</span>
-        </button>
-      </div>
-    </div>
-  );
-};
+// What the colours on the neck and the keys mean.
+const HighlightLegend: React.FC = () => (
+  <div className="theory-legend">
+    <span><i style={{ background: 'var(--note-root)' }} />Home note</span>
+    <span><i style={{ background: 'var(--note-scale)' }} />In the scale</span>
+  </div>
+);
 
 // Interactive Whole vs Half Step Tone Ladder
 const ScaleStepLadder: React.FC<{
@@ -120,15 +51,6 @@ const ScaleStepLadder: React.FC<{
 
   return (
     <div className="scale-step-ladder">
-      <div className="step-ladder-header">
-        <span className="step-ladder-title">
-          Step Formula: <strong>{scale.name}</strong>
-        </span>
-        <span className="step-ladder-hint">
-          Tap any note to hear the distance · <strong>W</strong> (2 frets) vs <strong>H</strong> (1 fret)
-        </span>
-      </div>
-
       <div className="step-ladder-track">
         {steps.map((step, idx) => {
           const noteMidi = rootMidi + step;
@@ -173,46 +95,13 @@ const ScaleStepLadder: React.FC<{
 
 export const TheoryLab: React.FC = () => {
   const [selectedRoot, setSelectedRoot] = useState<string>('C');
-  const [selectedOctave, setSelectedOctave] = useState<number>(3);
+  const selectedOctave = OCTAVE;
   const [selectedScale, setSelectedScale] = useState<ScaleFormula>(SCALE_FORMULAS[0]);
-  const [selectedChordQuality, setSelectedChordQuality] = useState<number>(-1); // -1 means scale mode
+  const [tab, setTab] = useState<TheoryTab>('scale');
 
   const [activeMidis, setActiveMidis] = useState<number[]>([]);
   const [highlightedMidis, setHighlightedMidis] = useState<number[]>([]);
   const [rootMidis, setRootMidis] = useState<number[]>([]);
-
-  // "Start here" intro card, shown until the user dismisses it once
-  const [showIntro, setShowIntro] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(INTRO_DISMISSED_KEY) !== '1';
-    } catch {
-      return true;
-    }
-  });
-  const dismissIntro = () => {
-    setShowIntro(false);
-    try {
-      localStorage.setItem(INTRO_DISMISSED_KEY, '1');
-    } catch { /* private browsing, just hide for this session */ }
-  };
-
-  // Circle of Fifths, reference material folded away by default on a page
-  // this tall, but the preference sticks once you open it.
-  const [showCircle, setShowCircle] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(CIRCLE_OPEN_KEY) !== '0';
-    } catch {
-      return true;
-    }
-  });
-  const toggleCircle = () => {
-    setShowCircle(prev => {
-      try {
-        localStorage.setItem(CIRCLE_OPEN_KEY, prev ? '0' : '1');
-      } catch { /* private browsing, this session only */ }
-      return !prev;
-    });
-  };
 
   // The circle reflects the toolbar rather than remembering its own key.
   // It used to hold separate state, so picking F# Natural Minor up top left
@@ -233,25 +122,12 @@ export const TheoryLab: React.FC = () => {
       const rootMidi = noteNameToMidi(selectedRoot, selectedOctave);
       const highlighted: number[] = [];
 
-      if (selectedChordQuality !== -1) {
-        // Chord mode
-        const chord = CHORD_QUALITIES[selectedChordQuality];
-        chord.intervals.forEach((interval) => {
-          // Highlight across multiple octaves for piano/fretboard visibility
-          highlighted.push(rootMidi + interval);
-          highlighted.push(rootMidi + interval - 12);
-          highlighted.push(rootMidi + interval + 12);
-          highlighted.push(rootMidi + interval + 24);
-        });
-      } else {
-        // Scale mode
-        selectedScale.steps.forEach((step) => {
-          highlighted.push(rootMidi + step);
-          highlighted.push(rootMidi + step - 12);
-          highlighted.push(rootMidi + step + 12);
-          highlighted.push(rootMidi + step + 24);
-        });
-      }
+      selectedScale.steps.forEach((step) => {
+        highlighted.push(rootMidi + step);
+        highlighted.push(rootMidi + step - 12);
+        highlighted.push(rootMidi + step + 12);
+        highlighted.push(rootMidi + step + 24);
+      });
       setHighlightedMidis(highlighted.filter(midi => midi >= 40 && midi <= 84));
 
       // The root itself gets its own color in every visible octave
@@ -260,16 +136,7 @@ export const TheoryLab: React.FC = () => {
     } catch (e) {
       console.error(e);
     }
-  }, [selectedRoot, selectedOctave, selectedScale, selectedChordQuality]);
-
-  // Note names of the current selection, in playing order (for the caption)
-  const currentNoteNames = (): string[] => {
-    const rootIndex = NOTE_NAMES.indexOf(selectedRoot);
-    const offsets = selectedChordQuality !== -1
-      ? CHORD_QUALITIES[selectedChordQuality].intervals
-      : selectedScale.steps;
-    return offsets.map(off => NOTE_NAMES[(rootIndex + off) % 12]);
-  };
+  }, [selectedRoot, selectedOctave, selectedScale]);
 
   const handlePlayNote = (midi: number) => {
     audio.playMidi(midi, 1.5);
@@ -293,15 +160,24 @@ export const TheoryLab: React.FC = () => {
     setTimeout(() => setActiveMidis([]), 1100);
   };
 
+  // A sound that is not one of the key's own chords: no Journey credit.
+  const handleSound = (midis: number[]) => {
+    audio.init();
+    audio.playStrum(midis);
+    setActiveMidis(midis);
+    setTimeout(() => setActiveMidis([]), 1100);
+  };
+
   // Which instrument the section at the bottom shows. The chosen tab is also
   // the one your computer keyboard plays, so "which panel is listening" is no
   // longer a second control you have to keep in sync in your head.
   const [instrument, setInstrument] = useState<InstrumentView>(() => {
     try {
       const saved = localStorage.getItem(INSTRUMENT_KEY);
-      if (saved === 'piano' || saved === 'guitar' || saved === 'both') return saved;
+      if (saved === 'piano') return 'piano';
     } catch { /* private browsing, fall through to the default */ }
-    return 'both';
+    // A guitar app: the neck first. "Both" from before is read as guitar.
+    return 'guitar';
   });
   const chooseInstrument = (view: InstrumentView) => {
     setInstrument(view);
@@ -310,8 +186,6 @@ export const TheoryLab: React.FC = () => {
     } catch { /* private browsing, this session only */ }
   };
   const guitarMode = instrument === 'guitar';
-  const showPiano = instrument !== 'guitar';
-  const showGuitar = instrument !== 'piano';
 
   // The full key maps are reference material, not something you re-read every
   // visit, so they stay one click away instead of costing a screen of height.
@@ -352,38 +226,14 @@ export const TheoryLab: React.FC = () => {
     }, steps.length * 350);
   };
 
-  // Play selected chord
-  const playCurrentChord = () => {
-    if (selectedChordQuality === -1) return;
-    audio.init();
-    const rootMidi = noteNameToMidi(selectedRoot, selectedOctave);
-    const chord = CHORD_QUALITIES[selectedChordQuality];
-    
-    const midis = chord.intervals.map(interval => rootMidi + interval);
-    audio.playChord(midis, 2.5);
-
-    setActiveMidis(midis);
-    setTimeout(() => {
-      setActiveMidis([]);
-    }, 400);
-  };
-
-  // The toolbar's single Play button, whichever mode is active
-  const playSelection = () => {
-    if (selectedChordQuality !== -1) playCurrentChord();
-    else playScaleSweep();
-  };
-
   // Click on a key segment in the Circle of Fifths. `isMinorClick`
   // distinguishes the inner (relative minor) ring from the outer (major)
   // ring, they represent different home notes over the same note set.
   const handleCircleKeyClick = (keyInfo: CircleKeyInfo, isMinorClick: boolean = false) => {
     reportProgress('theory-circle-key-clicked');
-    setSelectedChordQuality(-1); // Switch to scale mode for key
 
     const rootName = isMinorClick ? keyInfo.relativeMinor.replace(/m$/, '') : keyInfo.name;
     setSelectedRoot(normalizeNoteName(rootName));
-    setSelectedOctave(3);
 
     // Clicking the inner ring means "the minor key", so the scale follows the
     // ring. An already-minor choice is left alone, someone exploring
@@ -400,40 +250,6 @@ export const TheoryLab: React.FC = () => {
     audio.playChord(chordMidis, 2.0);
     setActiveMidis(chordMidis);
     setTimeout(() => setActiveMidis([]), 300);
-  };
-
-  // Play a diatonic chord from the selected Circle of Fifths key
-  const playDiatonicChord = (chordName: string, _degreeIdx: number) => {
-    audio.init();
-    reportProgress('theory-diatonic-played');
-    
-    // Parse chord name, e.g. "Dm", "F#dim", "C"
-    let cleanRoot = chordName;
-    let isMinor = false;
-    let isDim = false;
-
-    if (chordName.endsWith('dim')) {
-      cleanRoot = chordName.replace('dim', '');
-      isDim = true;
-    } else if (chordName.endsWith('m')) {
-      cleanRoot = chordName.replace('m', '');
-      isMinor = true;
-    }
-
-    const rootMidi = noteNameToMidi(cleanRoot, selectedOctave);
-    
-    let intervals = [0, 4, 7]; // default major
-    if (isDim) {
-      intervals = [0, 3, 6];
-    } else if (isMinor) {
-      intervals = [0, 3, 7];
-    }
-
-    const chordMidis = intervals.map(i => rootMidi + i);
-    audio.playChord(chordMidis, 2.0);
-    
-    setActiveMidis(chordMidis);
-    setTimeout(() => setActiveMidis([]), 350);
   };
 
   // Helper to draw sector paths for Circle of Fifths
@@ -522,299 +338,153 @@ export const TheoryLab: React.FC = () => {
     });
   };
 
+  const feeling = SCALE_FEELINGS[selectedScale.name];
+  const relative = inMinorKey
+    ? { label: 'Relative major', value: `${activeCircleKey.name} major` }
+    : { label: 'Relative minor', value: activeCircleKey.relativeMinor };
+  const accidentals = activeCircleKey.sharps === 0
+    ? 'None'
+    : activeCircleKey.sharps > 0
+      ? `${activeCircleKey.sharps} ${activeCircleKey.sharps === 1 ? 'sharp' : 'sharps'}`
+      : `${-activeCircleKey.sharps} ${activeCircleKey.sharps === -1 ? 'flat' : 'flats'}`;
+
   return (
-    <div className="lab-stack">
-      
-      {/* Header */}
+    <div className="lab-stack theory">
       <div className="lab-header">
         <h2 className="lab-title"><LabIcon tab="theory" />Theory</h2>
       </div>
 
-      {/* Dismissible "Start here" guide for first-time visitors */}
-      {showIntro && (
-        <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', borderColor: 'var(--panel-border-hover)' }}>
-          <div style={{ flex: '1 1 380px', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <h3 style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>New here?</h3>
-            {[
-              ['1', 'Pick a feeling. "Happy & Bright" is the major scale.'],
-              ['2', 'Press Play and listen.'],
-              ['3', 'Orange is the home note.']
-            ].map(([num, text]) => (
-              <div key={num} style={{ display: 'flex', gap: '0.6rem', alignItems: 'baseline', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                <span style={{ flexShrink: 0, width: '20px', height: '20px', borderRadius: '50%', background: 'var(--surface-3)', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, alignSelf: 'center' }}>{num}</span>
-                <span>{text}</span>
-              </div>
-            ))}
-          </div>
-          <button onClick={dismissIntro} className="btn" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
-            Got it
-          </button>
-        </section>
-      )}
-
-      {/* Pinned controls, the whole page below reacts to these */}
+      {/* Key, mood, Play and the tabs, pinned together: every tab below
+          answers to the same key. */}
       <ScaleControlBar
         root={selectedRoot}
         onRootChange={setSelectedRoot}
-        octave={selectedOctave}
-        onOctaveChange={setSelectedOctave}
         scale={selectedScale}
-        onScaleChange={(sc) => { setSelectedScale(sc); setSelectedChordQuality(-1); }}
-        chordQuality={selectedChordQuality}
-        onChordQualityChange={setSelectedChordQuality}
-        onPlay={playSelection}
+        onScaleChange={setSelectedScale}
+        onPlay={playScaleSweep}
+        tab={tab}
+        onTab={setTab}
       />
 
-      {/* Plain-English read-out of whatever the toolbar currently has selected */}
-      {/* Name, notes, then what to listen for, each on its own line. Run
-          together, the notes wrapped mid-scale and left "C." alone on a line. */}
-      <div className="theory-sum">
-      {selectedChordQuality !== -1 ? (
-        <>
-          <p className="theory-sum-name">{selectedRoot} {CHORD_QUALITIES[selectedChordQuality].name}</p>
-          <p className="theory-sum-notes readout">{currentNoteNames().join('  ')}</p>
-          <p className="theory-sum-said">Sounds {(CHORD_FEELINGS[CHORD_QUALITIES[selectedChordQuality].name] ?? '').toLowerCase()}.</p>
-        </>
-      ) : (
-        <>
-          <p className="theory-sum-name">{selectedRoot} {selectedScale.name}</p>
-          <p className="theory-sum-notes readout">{currentNoteNames().join('  ')}</p>
-          <p className="theory-sum-said">Listen for {SCALE_FEELINGS[selectedScale.name]?.listenFor ?? 'its distinctive character.'}</p>
-        </>
-      )}
-      </div>
-
-      {/* Sensory Mood Flip & Step Ladder */}
-      {selectedChordQuality === -1 && (
-        <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <MoodSwitch
-            rootName={selectedRoot}
-            octave={selectedOctave}
-            scale={selectedScale}
-            onScaleChange={setSelectedScale}
-          />
-
-          <ScaleStepLadder
-            rootName={selectedRoot}
-            octave={selectedOctave}
-            scale={selectedScale}
-            onPlayNote={handlePlayNote}
-            activeMidis={activeMidis}
-          />
-        </section>
-      )}
-
-      {/* Every chord this scale contains, with playable fingerings */}
-      <ScaleChords
-        rootName={selectedRoot}
-        scale={selectedScale}
-        onStrum={handleStrumVoicing}
-      />
-
-      {/* Circle of Fifths, background reference, so it sits after the things
-          the toolbar actually drives rather than between them */}
-      <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-        <div style={{ width: '100%', borderBottom: showCircle ? '1px solid rgba(var(--surface-tint-rgb),0.08)' : 'none', paddingBottom: showCircle ? '0.5rem' : 0, display: 'flex', gap: '1rem', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-          <div>
-            <h3 style={{ fontSize: '1.15rem' }}>
-              <Term k="circleOfFifths">Circle of Fifths</Term>
-              <span style={{ fontWeight: 400, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                {': '}<strong style={{ color: inMinorKey ? 'var(--secondary)' : 'var(--primary)' }}>
-                  {inMinorKey ? activeCircleKey.relativeMinor : `${activeCircleKey.name} major`}
-                </strong>
-              </span>
-            </h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
-              All 12 <Term k="musicalKey">keys</Term>. Neighbours share almost every note. Tap one to hear it.
-            </p>
-          </div>
-          <button
-            onClick={toggleCircle}
-            className="btn"
-            aria-expanded={showCircle}
-            style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem', flexShrink: 0 }}
-          >
-            {showCircle ? 'Hide map ▴' : 'Show map ▾'}
-          </button>
-        </div>
-
-        {showCircle && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-          {/* SVG Circle */}
-          <svg width="320" height="320" viewBox="0 0 320 320" style={{ transform: 'rotate(0deg)' }}>
-            {renderCircleSectors()}
-            {/* Inner core empty space */}
-            <circle cx="160" cy="160" r="55" fill="var(--input-bg)" stroke="rgba(var(--surface-tint-rgb), 0.08)" strokeWidth="0.5" />
-            {/* Core Label */}
-            <text x="160" y="155" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">SELECTED KEY</text>
-            <text x="160" y="177" fill={inMinorKey ? 'var(--secondary)' : 'var(--primary)'} fontSize="18" fontWeight="bold" textAnchor="middle">
-              {inMinorKey ? activeCircleKey.relativeMinor : `${activeCircleKey.name} Maj`}
-            </text>
-          </svg>
-
-          {/* Key signature info */}
-          <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ background: 'var(--surface-2)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(var(--surface-tint-rgb),0.04)' }}>
-              <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.4rem' }}>About this key</h4>
-              <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <div><Term k="relativeMinor">Relative minor</Term>: <span style={{ color: 'var(--secondary)' }}>{activeCircleKey.relativeMinor}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(same notes, sad mood)</span></div>
-                <div><Term k="accidentals">Accidentals</Term>: <span>
-                  {activeCircleKey.sharps > 0 ? `${activeCircleKey.sharps} ♯ (Sharps)` :
-                   activeCircleKey.sharps < 0 ? `${Math.abs(activeCircleKey.sharps)} ♭ (Flats)` :
-                   'None, all natural notes'}
-                </span></div>
-              </div>
-            </div>
-
+      {tab === 'scale' && (
+        <div className="theory-panel" role="tabpanel" id="theory-panel-scale" aria-labelledby="theory-tab-scale">
+          <section className="glass-panel theory-card">
             <div>
-              <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                <Term k="diatonicChords">Chords that belong</Term> in the key of {activeCircleKey.name}
-              </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
-                {activeCircleKey.chords.map((chordName, i) => {
-                  const degrees = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
-                  return (
-                    <button
-                      key={chordName}
-                      onClick={() => playDiatonicChord(chordName, i)}
-                      className="btn"
-                      style={{ padding: '0.4rem', fontSize: '0.75rem', flexDirection: 'column', gap: '2px', background: 'var(--surface-2)' }}
-                    >
-                      <span style={{ fontWeight: 'bold' }}>{chordName}</span>
-                      <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{degrees[i]}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem', lineHeight: 1.5 }}>
-                <Term k="romanNumerals">Roman numerals</Term>: UPPERCASE major, lowercase minor, ° tense.
-                Play a few in a row and you have a progression.
-              </p>
+              <h3 className="theory-card-title">{selectedRoot.replace('#', '♯')} {shortScaleName(selectedScale.name)}</h3>
+              <p className="theory-listen">Listen for {feeling?.listenFor ?? 'its own character.'}</p>
             </div>
-          </div>
-        </div>
-        )}
-      </section>
-
-      {/* Sound-First Interactive Physical & Musical Micro-Explorations */}
-      <SonicConcepts />
-
-      {/* Instruments, one panel with tabs. Two full-height panels plus a
-          separate "which one listens to the keyboard" bar was over a screen
-          and a half of chrome for what is really a single choice. */}
-      <section className="glass-panel" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', justifyContent: 'space-between', paddingBottom: '0.85rem' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
-            {/* The one control that was still hand-rolled markup wearing the
-                segmented class. It looked right but could not slide, which was
-                conspicuous on the page's most prominent choice. */}
-            <Segmented
-              value={instrument}
-              onChange={chooseInstrument}
-              ariaLabel="Instrument"
-              options={[
-                { value: 'piano', label: 'Piano' },
-                { value: 'guitar', label: 'Guitar' },
-                { value: 'both', label: 'Both' }
-              ]}
+            <ScaleStepLadder
+              rootName={selectedRoot}
+              octave={selectedOctave}
+              scale={selectedScale}
+              onPlayNote={handlePlayNote}
+              activeMidis={activeMidis}
             />
-            <span className="keys-only" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-              your keyboard plays the <strong style={{ color: 'var(--text-secondary)' }}>{guitarMode ? 'guitar' : 'piano'}</strong>
-              {!guitarMode && <> · octave <strong className="readout" style={{ color: 'var(--text-secondary)' }}>{keyboardOctave}</strong></>}
-            </span>
-          </div>
+            <p className="theory-note"><strong>H</strong> is a half step, one fret. <strong>W</strong> is a whole step, two frets. Tap a note to hear it.</p>
+          </section>
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={() => setShowKeyMap(v => !v)}
-              className="btn keys-only"
-              aria-expanded={showKeyMap}
-              style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem' }}
-            >
-              Which keys? {showKeyMap ? '▴' : '▾'}
-            </button>
-            {showGuitar && (
-              <button
-                onClick={() => handlePlayNote(noteNameToMidi('E', 2))}
-                className="btn"
-                style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem' }}
-              >
-                Strum Guitar
-              </button>
-            )}
-          </div>
-        </div>
+          <section className="glass-panel theory-card">
+            <div className="theory-card-head">
+              <Segmented
+                value={instrument}
+                onChange={chooseInstrument}
+                ariaLabel="Instrument"
+                size="sm"
+                options={[
+                  { value: 'guitar', label: 'Guitar' },
+                  { value: 'piano', label: 'Piano' }
+                ]}
+              />
+              <HighlightLegend />
+            </div>
 
-        {showKeyMap && (
-          <div className="keys-only" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.78rem', color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: '8px', padding: '0.75rem 0.9rem' }}>
-            {guitarMode ? (
-              <>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
-                  Hold a chord shape:
-                  {GUITAR_CHORD_SHAPES.map((shape, i) => (
-                    <span key={shape.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
-                      <kbd className="key-hint">{i + 1}</kbd>
-                      <span>{shape.id}</span>
-                    </span>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
-                  Pick a string (low → high):
-                  <kbd className="key-hint">Z</kbd><kbd className="key-hint">X</kbd><kbd className="key-hint">C</kbd><kbd className="key-hint">V</kbd><kbd className="key-hint">B</kbd><kbd className="key-hint">N</kbd>
-                  <span>(no shape held: open strings)</span>
-                </div>
-              </>
+            {instrument === 'piano' ? (
+              <Keyboard
+                activeMidis={activeMidis}
+                highlightCorrectMidis={highlightedMidis}
+                rootMidis={rootMidis}
+                onPlayNote={handlePlayNote}
+              />
             ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
-                Play the piano with:
-                <kbd className="key-hint">A</kbd><kbd className="key-hint">S</kbd><kbd className="key-hint">D</kbd><kbd className="key-hint">F</kbd><kbd className="key-hint">G</kbd><kbd className="key-hint">H</kbd><kbd className="key-hint">J</kbd><kbd className="key-hint">K</kbd>
-                <span>+</span>
-                <kbd className="key-hint">W</kbd><kbd className="key-hint">E</kbd><kbd className="key-hint">T</kbd><kbd className="key-hint">Y</kbd><kbd className="key-hint">U</kbd>
-                <span>for sharps ·</span>
-                <kbd className="key-hint">Z</kbd><span>/</span><kbd className="key-hint">X</kbd>
-                <span>to change octave</span>
-              </div>
+              <>
+                {heldShape && <p className="theory-note"><strong>{heldShape.label}</strong></p>}
+                <Fretboard
+                  activeMidis={activeMidis}
+                  highlightCorrectMidis={heldShape ? heldShapeMidis : highlightedMidis}
+                  rootMidis={heldShape ? heldShapeRootMidis : rootMidis}
+                  onPlayNote={handlePlayNote}
+                  showAllNoteNames={true}
+                />
+              </>
             )}
-          </div>
-        )}
 
-        {/* One legend for the whole section, it was identical in both panels */}
-        <HighlightLegend mode={selectedChordQuality !== -1 ? 'chord' : 'scale'} />
+            {/* Typing to play, for a computer keyboard: reference, one tap away. */}
+            <div className="keys-only theory-keys">
+              <button type="button" className="btn" onClick={() => setShowKeyMap(v => !v)} aria-expanded={showKeyMap}>
+                Play with your keyboard {showKeyMap ? '▴' : '▾'}
+              </button>
+              {showKeyMap && (
+                <div className="theory-keymap">
+                  {guitarMode ? (
+                    <>
+                      <div>
+                        Hold a chord shape:
+                        {GUITAR_CHORD_SHAPES.map((shape, i) => (
+                          <span key={shape.id}><kbd className="key-hint">{i + 1}</kbd> {shape.id}</span>
+                        ))}
+                      </div>
+                      <div>
+                        Pick a string, low to high:
+                        <kbd className="key-hint">Z</kbd><kbd className="key-hint">X</kbd><kbd className="key-hint">C</kbd><kbd className="key-hint">V</kbd><kbd className="key-hint">B</kbd><kbd className="key-hint">N</kbd>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      Keys <kbd className="key-hint">A</kbd> to <kbd className="key-hint">K</kbd>, sharps on
+                      <kbd className="key-hint">W</kbd><kbd className="key-hint">E</kbd><kbd className="key-hint">T</kbd><kbd className="key-hint">Y</kbd><kbd className="key-hint">U</kbd>,
+                      octave <kbd className="key-hint">Z</kbd> / <kbd className="key-hint">X</kbd> (now <span className="readout">{keyboardOctave}</span>)
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
 
-        {showPiano && (
-          <div>
-            <h3 className="surface-label">Piano</h3>
-            <Keyboard
-              activeMidis={activeMidis}
-              highlightCorrectMidis={highlightedMidis}
-              rootMidis={rootMidis}
-              onPlayNote={handlePlayNote}
-            />
-          </div>
-        )}
+      {tab === 'chords' && (
+        <div className="theory-panel" role="tabpanel" id="theory-panel-chords" aria-labelledby="theory-tab-chords">
+          <ScaleChords
+            rootName={selectedRoot}
+            scale={selectedScale}
+            onStrum={handleStrumVoicing}
+            onSound={handleSound}
+          />
+        </div>
+      )}
 
-        {showGuitar && (
-          <div>
-            <h3 className="surface-label">
-              Fretboard <span className="readout">EADGBE</span>
-            </h3>
-            {guitarMode && (
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 0.6rem' }}>
-                <strong style={{ color: heldShape ? 'var(--primary)' : 'var(--text-muted)' }}>{heldShape ? heldShape.label : 'Open strings'}</strong>
-              </p>
-            )}
-            <Fretboard
-              activeMidis={activeMidis}
-              highlightCorrectMidis={guitarMode && heldShape ? heldShapeMidis : highlightedMidis}
-              rootMidis={guitarMode && heldShape ? heldShapeRootMidis : rootMidis}
-              onPlayNote={handlePlayNote}
-              showAllNoteNames={true}
-            />
-          </div>
-        )}
-      </section>
-
+      {tab === 'keys' && (
+        <div className="theory-panel" role="tabpanel" id="theory-panel-keys" aria-labelledby="theory-tab-keys">
+          <section className="glass-panel theory-card theory-keys-card">
+            <p className="theory-note">
+              <Term k="circleOfFifths">The circle of fifths</Term>: neighbours share all but one note. Tap a key to switch to it and hear its home chord.
+            </p>
+            <svg className="theory-circle" width="320" height="320" viewBox="0 0 320 320" role="group" aria-label="Circle of fifths">
+              {renderCircleSectors()}
+              <circle cx="160" cy="160" r="55" fill="var(--input-bg)" stroke="rgba(var(--surface-tint-rgb), 0.08)" strokeWidth="0.5" />
+              <text x="160" y="167" fill="var(--primary)" fontSize="20" fontWeight="bold" textAnchor="middle">
+                {inMinorKey ? activeCircleKey.relativeMinor : activeCircleKey.name}
+              </text>
+            </svg>
+            <div className="theory-facts">
+              <div><small><Term k="relativeMinor">{relative.label}</Term></small><strong>{relative.value}</strong></div>
+              <div><small><Term k="accidentals">Sharps or flats</Term></small><strong>{accidentals}</strong></div>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 };
+
 export default TheoryLab;

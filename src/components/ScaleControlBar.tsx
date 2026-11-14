@@ -1,133 +1,107 @@
 import React from 'react';
-import { Term } from './Term';
-import { Segmented } from './Segmented';
-import { NOTE_NAMES, CHORD_QUALITIES, SCALE_FORMULAS } from '../utils/musicTheory';
+import { NOTE_NAMES, SCALE_FORMULAS } from '../utils/musicTheory';
 import type { ScaleFormula } from '../utils/musicTheory';
-import { SCALE_FEELINGS, CHORD_FEELINGS } from '../utils/glossary';
+import { SCALE_FEELINGS, shortScaleName } from '../utils/glossary';
 import { prettyNote } from '../utils/chords';
+
+export type TheoryTab = 'scale' | 'chords' | 'keys';
+
+const TABS: { id: TheoryTab; label: string }[] = [
+  { id: 'scale', label: 'Scale' },
+  { id: 'chords', label: 'Chords' },
+  { id: 'keys', label: 'Keys' }
+];
 
 interface ScaleControlBarProps {
   root: string;
   onRootChange: (root: string) => void;
-  octave: number;
-  onOctaveChange: (octave: number) => void;
   scale: ScaleFormula;
   onScaleChange: (scale: ScaleFormula) => void;
-  chordQuality: number; // index into CHORD_QUALITIES, or -1 for scale mode
-  onChordQualityChange: (index: number) => void;
   onPlay: () => void;
+  tab: TheoryTab;
+  onTab: (tab: TheoryTab) => void;
 }
 
-const OCTAVES = [
-  { value: 2, label: 'Low' },
-  { value: 3, label: 'Mid' },
-  { value: 4, label: 'High' }
-];
-
 const PlayIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <polygon points="5 3 19 12 5 21 5 3" />
   </svg>
 );
 
-// Everything the rest of the page reacts to, in one bar that stays pinned to
-// the top of the viewport. The page below is several screens tall, so a
-// control you have to scroll back to is a control you stop using.
+// Three choices drive the whole page: the key, its mood, and Play. They stay
+// pinned with the tabs, so every tab answers to the same key.
 export const ScaleControlBar: React.FC<ScaleControlBarProps> = ({
   root,
   onRootChange,
-  octave,
-  onOctaveChange,
   scale,
   onScaleChange,
-  chordQuality,
-  onChordQualityChange,
-  onPlay
+  onPlay,
+  tab,
+  onTab
 }) => {
-  const chordMode = chordQuality !== -1;
-  const selectionName = chordMode
-    ? `${prettyNote(root)} ${CHORD_QUALITIES[chordQuality].name}`
-    : `${prettyNote(root)} ${scale.name}`;
+  const feeling = SCALE_FEELINGS[scale.name]?.feeling ?? scale.name;
 
   return (
-    <div className="lab-toolbar">
-      {/* Root note + octave + play */}
-      <div className="toolbar-row">
-        <span className="toolbar-label">
-          <Term k="rootNote">Key</Term>
-        </span>
-        <div className="note-strip" role="group" aria-label="Root note">
-          {NOTE_NAMES.map(note => (
-            <button
-              key={note}
-              type="button"
-              onClick={() => onRootChange(note)}
-              aria-pressed={root === note}
-              title={`Root note ${prettyNote(note)}`}
-              className={`note-key${note.includes('#') ? ' is-accidental' : ''}${root === note ? ' is-selected' : ''}`}
-            >
-              {prettyNote(note)}
-            </button>
-          ))}
-        </div>
+    <div className="theory-keybar">
+      <div className="note-strip" role="group" aria-label="Key">
+        {NOTE_NAMES.map(note => (
+          <button
+            key={note}
+            type="button"
+            onClick={() => onRootChange(note)}
+            aria-pressed={root === note}
+            className={`note-key${note.includes('#') ? ' is-accidental' : ''}${root === note ? ' is-selected' : ''}`}
+          >
+            {prettyNote(note)}
+          </button>
+        ))}
+      </div>
 
-        <span className="toolbar-label" style={{ marginLeft: 'auto' }}>
-          <Term k="octave">Octave</Term>
-        </span>
-        <Segmented value={octave} onChange={onOctaveChange} options={OCTAVES} ariaLabel="Octave" />
-
-        <button
-          type="button"
-          onClick={onPlay}
-          className="btn btn-primary"
-          style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem' }}
-          aria-label={`Play ${selectionName}`}
-        >
+      <div className="theory-keybar-row">
+        {/* A real select, so a phone shows its own picker. */}
+        <label className="theory-mood">
+          <span className="theory-mood-text">
+            {feeling} <small>{shortScaleName(scale.name)}</small>
+          </span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+          <select
+            value={scale.name}
+            aria-label="Mood"
+            onChange={e => {
+              const next = SCALE_FORMULAS.find(s => s.name === e.target.value);
+              if (next) onScaleChange(next);
+            }}
+          >
+            {SCALE_FORMULAS.map(s => (
+              <option key={s.name} value={s.name}>
+                {SCALE_FEELINGS[s.name]?.feeling ?? s.name} · {shortScaleName(s.name)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="button" onClick={onPlay} className="btn btn-primary theory-play" aria-label={`Play ${prettyNote(root)} ${shortScaleName(scale.name)}`}>
           <PlayIcon />
           Play
         </button>
       </div>
 
-      {/* Scale or chord, one list at a time, so the mode is never ambiguous */}
-      <div className="toolbar-row">
-        <Segmented
-          value={chordMode}
-          onChange={(wantChords) => onChordQualityChange(wantChords ? Math.max(0, chordQuality) : -1)}
-          tone={chordMode ? 'secondary' : 'primary'}
-          options={[
-            { value: false, label: <Term k="scale">Scale</Term> },
-            { value: true, label: <Term k="chordQuality">Chord</Term> }
-          ]}
-          ariaLabel="What to explore"
-        />
-
-        <div className="pill-row">
-          {chordMode
-            ? CHORD_QUALITIES.map((chord, idx) => (
-                <button
-                  key={chord.name}
-                  type="button"
-                  onClick={() => onChordQualityChange(idx)}
-                  aria-pressed={chordQuality === idx}
-                  title={`${chord.name} (${chord.symbols[0]})`}
-                  className={`pill is-secondary${chordQuality === idx ? ' is-selected' : ''}`}
-                >
-                  {CHORD_FEELINGS[chord.name] ?? chord.name}
-                </button>
-              ))
-            : SCALE_FORMULAS.map(s => (
-                <button
-                  key={s.name}
-                  type="button"
-                  onClick={() => onScaleChange(s)}
-                  aria-pressed={scale.name === s.name}
-                  title={s.name}
-                  className={`pill${scale.name === s.name ? ' is-selected' : ''}`}
-                >
-                  {SCALE_FEELINGS[s.name]?.feeling ?? s.name}
-                </button>
-              ))}
-        </div>
+      <div className="theory-tabs" role="tablist" aria-label="Theory">
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            id={`theory-tab-${t.id}`}
+            aria-selected={tab === t.id}
+            aria-controls={`theory-panel-${t.id}`}
+            className={`theory-tab${tab === t.id ? ' is-active' : ''}`}
+            onClick={() => onTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
     </div>
   );

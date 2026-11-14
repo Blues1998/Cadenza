@@ -221,3 +221,14 @@ export const SCALE_FEELINGS: Record<string, ScaleFeeling> = {
     listenFor: 'minor pentatonic plus one extra blue note.'
   }
 };
+
+/** The plain name under the feeling: "Major", "Minor pentatonic". */
+export const shortScaleName = (name: string): string =>
+  ({
+    'Major (Ionian)': 'Major',
+    'Natural Minor (Aeolian)': 'Minor',
+    'Harmonic Minor': 'Harmonic minor',
+    'Pentatonic Major': 'Major pentatonic',
+    'Pentatonic Minor': 'Minor pentatonic',
+    'Blues Scale': 'Blues'
+  } as Record<string, string>)[name] ?? name;
