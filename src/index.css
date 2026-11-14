@@ -13247,3 +13247,637 @@ button.dash-card:active,
   --toolbar-bg: rgba(245, 238, 226, 0.94);
   --input-bg: #FFFCF6;
 }
+
+/* ===== Song page: header, three tabs, docked player =====
+   One page, three jobs. Everything a song needs is still here; what you use
+   every visit is in front, the rest folds behind a chip, a row or the ⋯ menu. */
+.songpage {
+  max-width: 760px;
+}
+
+.song-head {
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+}
+
+.song-head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.song-head-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  margin-top: 0.45rem;
+}
+
+.song-head-meta .song-meta {
+  margin: 0;
+}
+
+/* Status as one chip. A real select underneath, so the phone's own picker
+   does the choosing. */
+.song-status {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.song-status select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: none;
+  padding: 0 1rem 0 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.song-status::after {
+  content: '';
+  position: absolute;
+  right: 0.7rem;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.song-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.song-status.is-playable .song-status-dot { background: color-mix(in srgb, var(--primary) 55%, var(--warning)); }
+.song-status.is-solid .song-status-dot { background: color-mix(in srgb, var(--success) 55%, var(--warning)); }
+.song-status.is-complete .song-status-dot { background: var(--success); }
+
+.song-revisit-badge {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--warning-glow);
+  font-size: 0.72rem;
+  color: var(--warning);
+}
+
+.song-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.song-menu-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.song-menu-btn:hover,
+.song-menu-btn[aria-expanded='true'] {
+  background: var(--surface-3);
+}
+
+.song-menu-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 13rem;
+  padding: 0.35rem;
+  border-radius: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.5);
+}
+
+.song-menu-list > button {
+  padding: 0.65rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.song-menu-list > button:hover,
+.song-menu-list > button:focus-visible {
+  background: var(--surface-2);
+}
+
+.song-menu-list > button.is-danger {
+  color: var(--danger);
+}
+
+.song-menu-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.5rem;
+  max-width: 16rem;
+}
+
+.song-menu-confirm p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.song-menu-confirm div {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.song-carry {
+  box-shadow: none;
+  padding: 0;
+  background: none;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+}
+
+.song-carry-label {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.song-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem;
+  background: var(--toolbar-bg);
+  border-bottom: 1px solid var(--panel-border);
+  backdrop-filter: blur(8px);
+}
+
+.song-tab {
+  padding: 0.75rem 0 0.7rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.song-tab.is-active {
+  color: var(--text-primary);
+  border-bottom-color: var(--primary);
+}
+
+.song-tabpanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Chords tab */
+.song-drill {
+  margin-top: 1rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  background: var(--primary-glow);
+  box-shadow: none;
+  flex-wrap: nowrap;
+}
+
+.song-drill-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.song-drill-chords {
+  color: var(--primary);
+}
+
+.song-drill-go {
+  flex-shrink: 0;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--text-on-primary);
+  cursor: pointer;
+}
+
+.song-easier {
+  display: flex;
+  flex-direction: column;
+}
+
+.song-easier-row {
+  border-top: 1px solid var(--panel-border);
+}
+
+.song-easier .surface-label + .song-easier-row {
+  border-top: none;
+}
+
+.song-easier-row summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.song-easier-row summary::-webkit-details-marker {
+  display: none;
+}
+
+.song-easier-row summary span {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.92rem;
+}
+
+.song-easier-row summary small {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.song-easier-row summary::after {
+  content: '';
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  margin-right: 0.3rem;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+
+.song-easier-row[open] summary::after {
+  transform: rotate(45deg);
+}
+
+/* The panels inside open flat, under their row: no card inside a card, and
+   no second title under the row that already names them. */
+.song-easier-row > .song-panel {
+  padding: 0 0 0.9rem;
+  background: none;
+  box-shadow: none;
+}
+
+.song-easier-row > .song-panel > .surface-label:first-child {
+  display: none;
+}
+
+/* Progress tab */
+.songpage .session-row {
+  grid-template-columns: 3.6rem 3.6rem minmax(0, 1fr) 1.4rem;
+}
+
+.songpage .session-mins {
+  white-space: nowrap;
+}
+
+.practice-panel .timer {
+  margin: 0;
+}
+
+.song-confidence {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--panel-border);
+}
+
+.song-confidence .confidence-range {
+  flex: 1;
+  min-width: 0;
+}
+
+.song-confidence-value {
+  min-width: 1.5rem;
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Play tab */
+.song-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Kept mounted on the other tabs so the song keeps playing; only hidden. */
+.song-sheet[hidden] {
+  display: none;
+}
+
+.sheet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.sheet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.sheet-chip svg {
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+
+.sheet-chip.is-open svg {
+  transform: rotate(180deg);
+}
+
+.sheet-chip.is-open,
+.sheet-chip.is-on {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.sheet-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.sheet-drawer .chart-tempo-studio,
+.sheet-drawer .chart-time-signature-studio {
+  flex: none;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.sheet-drawer .chart-audio-toggles,
+.sheet-drawer .chart-ramp-select {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.sheet-drawer .chart-audio-toggles .field-label,
+.sheet-drawer .chart-ramp-select .field-label {
+  min-width: 4.5rem;
+}
+
+.sheet-drawer .strum-studio-sub {
+  margin: 0;
+}
+
+.song-sheet .chart-lines {
+  max-height: none;
+  overflow: visible;
+  padding: 1rem 1.1rem;
+}
+
+.song-sheet .chart-line {
+  padding-left: 0.4rem;
+}
+
+.sheet-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sheet-empty p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.sheet-empty div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sheet-modebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-weight: 600;
+}
+
+/* The player. Docked at the end of the page and stuck to the bottom of the
+   screen, above the phone's tab bar, on every tab. */
+.song-dock {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 15;
+}
+
+.song-dock:empty {
+  display: none;
+}
+
+.song-player {
+  position: relative;
+  overflow: hidden;
+  padding: 0.55rem;
+  border-radius: 16px;
+  background: var(--surface-1);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.55);
+}
+
+.song-player-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 2px;
+  background: var(--primary);
+  transition: width 0.25s linear;
+}
+
+.song-player-go {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 48px;
+  border: none;
+  border-radius: 11px;
+  background: var(--primary);
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--text-on-primary);
+  cursor: pointer;
+}
+
+.song-player-go .readout {
+  font-size: 0.78rem;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.song-player-go:disabled {
+  background: var(--surface-3);
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.song-player-live {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 48px;
+}
+
+.song-player-chords {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.song-player-count {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.held-chord {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.held-chord.is-faint {
+  opacity: 0.55;
+}
+
+.held-chord svg {
+  flex-shrink: 0;
+}
+
+.held-chord-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.held-chord-label {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.held-chord-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .song-dock {
+    bottom: calc(var(--mtabs-h) + env(safe-area-inset-bottom, 0px) + 0.5rem);
+  }
+
+  .song-head .lab-title {
+    font-size: 1.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .song-player-progress { transition: none; }
+}
+
+/* A line of chords with no words: bars, one cell per chord. */
+.chart-bars {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0.2rem 0;
+}
+
+.chart-bar-cell {
+  display: grid;
+  place-items: center;
+  min-height: 46px;
+  padding: 0 0.25rem;
+  border-radius: 9px;
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+  text-align: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.chart-bar-cell.is-live {
+  background: var(--primary);
+  color: var(--text-on-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-bar-cell { transition: none; }
+}

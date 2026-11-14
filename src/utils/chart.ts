@@ -550,8 +550,10 @@ export function synthesizeChart(
 
     for (let c = 0; c < prog.length; c += 4) {
       const chunk = prog.slice(c, c + 4);
+      // No words to sing, so none are made up: written under the chord, the
+      // chord's own name only said it twice.
       const words: ChartWord[] = chunk.map((chord, i) => ({
-        text: chord,
+        text: '',
         chord: normalizeChordSymbol(chord),
         beat: i * beatsPerBar
       }));

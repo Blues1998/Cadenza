@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Segmented } from './Segmented';
+import { createPortal } from 'react-dom';
+import { ChordDiagram } from './ChordDiagram';
+import { StrumChip } from './StrumChip';
 import { StrumGrid } from './StrumGrid';
-import { IconPause, IconPlay, IconSection, IconStop } from './Icons';
+import { IconPause, IconPlay, IconStop } from './Icons';
 import { COMFORT_LABEL, comfortOf, preferredVoicing } from '../utils/chordbook';
-import { fitSong } from '../utils/fit';
 import { songChords, songProgressions, updateSong } from '../utils/library';
 import type { Song } from '../utils/library';
 import { useChartTransport } from '../hooks/useChartTransport';
 import { formatStrum, getPresetsForMeter, getTempoMarking, parseStrum, tokenize } from '../utils/strum';
-import { LiveGuitarNeck } from './LiveGuitarNeck';
+import type { ChordVoicing } from '../utils/chords';
 import {
-  chartDuration,
   chordsAtBeat,
   convertAboveLine,
   DEFAULT_CHART,
@@ -29,11 +29,19 @@ import {
 } from '../utils/chart';
 import type { ChartLine, ChartLineRecord, ChartWord, ParsedChart } from '../utils/chart';
 
+export type ChartMode = 'play' | 'edit' | 'import';
+
 interface SongChartPanelProps {
   song: Song;
+  /** The Play tab is open. The panel stays mounted on other tabs so the song keeps playing. */
+  visible: boolean;
+  mode: ChartMode;
+  onMode: (mode: ChartMode) => void;
+  /** Where the player docks: the end of the page, so it sticks to the bottom of the screen. */
+  dock: HTMLElement | null;
 }
 
-type Mode = 'play' | 'edit' | 'import';
+type Drawer = 'tempo' | 'strum' | null;
 
 const TIME_SIGNATURE_OPTIONS = [
   { value: 4, label: '4/4', desc: 'Common' },
@@ -47,11 +55,13 @@ const useVoicing = (symbol: string | null) =>
   useMemo(() => (symbol ? preferredVoicing(symbol) : null), [symbol]);
 
 /**
- * The words and the chord changes, in time.
- * Includes interactive real-time guitar fretboard neck, pick stroke animations,
- * and synchronized scrolling lyrics.
+ * The words and the chord changes, in time, and the player that runs them.
+ *
+ * The sheet is the page; tempo and strumming fold away behind two chips until
+ * they are wanted. The player docks at the bottom of the screen: stopped it is
+ * the one Play along button, playing it shows the shape to hold and the next.
  */
-export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
+export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song, visible, mode, onMode, dock }) => {
   const stored = song.chart;
   const settings = {
     tempo: stored?.tempo ?? DEFAULT_CHART.tempo,
@@ -73,7 +83,8 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     return synthesizeChart(progs, song.notes, settings.beatsPerBar);
   }, [stored, song, settings.beatsPerBar]);
 
-  const [mode, setMode] = useState<Mode>('play');
+  const [drawer, setDrawer] = useState<Drawer>(null);
+  const toggleDrawer = (d: Drawer) => setDrawer(open => (open === d ? null : d));
   const [playChords, setPlayChords] = useState(true);
   const [metronome, setMetronome] = useState(true);
 
@@ -109,15 +120,8 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     // Before it starts you hold the first chord, so what is next is the second.
     : { current: null, next: chordsAtBeat(chart, chart.lines[0]?.chords[0]?.beat ?? 0).next };
 
-  const fit = useMemo(() => fitSong(song), [song]);
-
   const currentVoicing = useVoicing(current?.symbol ?? (chart.chords[0] ?? null));
   const nextVoicing = useVoicing(next?.symbol ?? null);
-
-  const activeStroke = useMemo(() => {
-    if (!pattern || slot < 0 || !moving) return null;
-    return pattern.steps[slot % pattern.steps.length] ?? null;
-  }, [pattern, slot, moving]);
 
   // Automatically ramp tempo upon completing each full loop lap
   useEffect(() => {
@@ -139,19 +143,23 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
   const patch = (next: Partial<NonNullable<Song['chart']>>) =>
     void updateSong(song.id, { chart: { lines, ...settings, transpose, ...next } });
 
+  useEffect(() => {
+    if (mode !== 'play') stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
   const toDisplay = (symbol: string) => transposeSymbol(symbol, transpose);
   const toStored = (symbol: string) => transposeSymbol(symbol, -transpose);
 
-  // Auto-scroll lyrics smoothly keeping current line centered
+  // The sheet is the page, so the page follows the line being played, and
+  // only while you are looking at it: on another tab it leaves you be.
   const scroller = useRef<HTMLDivElement>(null);
+  const lineIndex = currentLine?.index ?? -1;
   useEffect(() => {
-    if (!running || !currentLine) return;
-    const box = scroller.current;
-    const el = box?.querySelector<HTMLElement>(`[data-line="${currentLine.index}"]`);
-    if (!el || !box) return;
-    const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
-    box.scrollTo({ top: top - box.clientHeight / 2 + el.offsetHeight / 2, behavior: 'smooth' });
-  }, [running, currentLine]);
+    if (!running || !visible || lineIndex < 0) return;
+    const el = scroller.current?.querySelector<HTMLElement>(`[data-line="${lineIndex}"]`);
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [running, visible, lineIndex]);
 
   // Tap tempo
   const [tapPulsing, setTapPulsing] = useState(false);
@@ -199,379 +207,192 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
     void updateSong(song.id, { strumming: formatStrum({ ...pattern, steps }) });
   };
 
-  const modes: { value: Mode; label: string }[] = [
-    { value: 'play', label: 'Play along' },
-    { value: 'edit', label: 'Edit' },
-    { value: 'import', label: 'Import' }
-  ];
+  const sigLabel = TIME_SIGNATURE_OPTIONS.find(o => o.value === settings.beatsPerBar)?.label ?? `${settings.beatsPerBar}/4`;
+  const progress = Math.max(0, Math.min(1, beat / Math.max(1, chart.totalBeats)));
+  const canPlay = chart.totalBeats > 0;
 
-  return (
-    <section className="song-panel chart-panel" id="song-player-panel">
-      <div className="surface-label">
-        <IconSection kind="chart" /><span>Chart</span>
-        {lines.length > 0 && (
-          <span className="readout">
-            {chart.lines.length} {chart.lines.length === 1 ? 'line' : 'lines'} · {chart.chords.length} {chart.chords.length === 1 ? 'chord' : 'chords'} · {chartDuration(chart.totalBeats, settings.tempo)}
-          </span>
-        )}
-        <span className="chart-modes">
-          <Segmented<Mode>
-            value={mode}
-            onChange={m => { if (running) stop(); setMode(m); }}
-            options={modes}
-            ariaLabel="Chart mode"
-            size="sm"
-          />
-        </span>
-      </div>
-
-      {mode === 'import' && (
-        <ChartImport
-          song={song}
-          hasChart={lines.length > 0}
-          beatsPerBar={settings.beatsPerBar}
-          onApply={(next, append, meta) => {
-            const merged = append ? [...lines, ...next] : next;
-            void updateSong(song.id, {
-              chart: { lines: merged, ...settings, transpose, ...(meta.tempo ? { tempo: meta.tempo } : {}) },
-              ...(meta.capo !== undefined ? { capo: meta.capo } : {}),
-              ...(meta.key ? { key: meta.key } : {})
-            });
-            setMode('edit');
-          }}
-        />
-      )}
-
-      {mode === 'play' && (
-        <>
-          {fit?.improves && (
-            <div className="chart-fit">
-              <span>
-                Capo <strong>{fit.best.capo}</strong> would put{' '}
-                {fit.best.playable ? 'every chord' : `${fit.best.chords.length - fit.best.missing} of ${fit.best.chords.length}`}{' '}
-                inside what you can play. Same pitch.
-              </span>
-              <button
-                type="button"
-                className="btn chart-key-preset"
-                onClick={() => void updateSong(song.id, {
-                  capo: fit.best.capo,
-                  chart: { lines, ...settings, transpose: transpose + fit.best.shift }
-                })}
-              >
-                Fit to capo {fit.best.capo}
-              </button>
+  const player = (
+    <div className={`song-player${running ? ' is-live' : ''}`}>
+      <span className="song-player-progress" style={{ width: `${running ? progress * 100 : 0}%` }} aria-hidden="true" />
+      {!running ? (
+        <button type="button" className="song-player-go" onClick={start} disabled={!canPlay}>
+          <IconPlay size={15} fill="currentColor" strokeWidth={1.5} />
+          {!canPlay ? 'Add chords to play along' : phase === 'done' ? 'Play again' : 'Play along'}
+          {canPlay && <span className="readout">{settings.tempo} bpm</span>}
+        </button>
+      ) : (
+        <div className="song-player-live">
+          <button
+            type="button"
+            className={`transport-btn is-main${moving ? ' is-moving' : ''}${phase === 'paused' ? ' is-held' : ''}`}
+            onClick={moving ? pause : resume}
+            aria-label={moving ? 'Pause' : 'Resume'}
+          >
+            <span className="transport-icons" aria-hidden="true">
+              <IconPlay size={16} className="transport-play" fill="currentColor" strokeWidth={1.5} />
+              <IconPause size={16} className="transport-pause" fill="currentColor" strokeWidth={1} />
+            </span>
+            {moving && <span key={beat} className="transport-beat" aria-hidden="true" />}
+          </button>
+          <button type="button" className="transport-btn is-stop" onClick={stop} aria-label="Stop">
+            <IconStop size={13} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
+          </button>
+          {counting ? (
+            <span className="song-player-count readout">Count in {countInBeats + beat + 1}</span>
+          ) : (
+            <div className="song-player-chords">
+              <HeldChord label="Hold" symbol={current?.symbol ?? chart.chords[0] ?? null} voicing={currentVoicing} />
+              <HeldChord label="Next" symbol={next?.symbol ?? null} voicing={nextVoicing} faint />
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
 
-          {/* Transport Controls Bar */}
-          <div className="chart-transport">
-            <div className="transport-play-group">
+  return (
+    <>
+      <section
+        className="song-sheet"
+        hidden={!visible}
+        role="tabpanel"
+        id="song-panel-play"
+        aria-labelledby="song-tab-play"
+      >
+        {mode === 'play' && (
+          <>
+            <div className="sheet-chips">
               <button
                 type="button"
-                className={`transport-btn is-main${moving ? ' is-moving' : ''}${phase === 'paused' ? ' is-held' : ''}`}
-                onClick={moving ? pause : phase === 'paused' ? resume : start}
-                aria-label={moving ? 'Pause' : phase === 'paused' ? 'Resume' : phase === 'done' ? 'Play again' : 'Play along'}
-                title={moving ? 'Pause' : phase === 'paused' ? 'Resume' : phase === 'done' ? 'Play again' : 'Play along'}
+                className={`sheet-chip${drawer === 'tempo' ? ' is-open' : ''}`}
+                onClick={() => toggleDrawer('tempo')}
+                aria-expanded={drawer === 'tempo'}
               >
-                <span className="transport-icons" aria-hidden="true">
-                  <IconPlay size={18} className="transport-play" fill="currentColor" strokeWidth={1.5} />
-                  <IconPause size={18} className="transport-pause" fill="currentColor" strokeWidth={1} />
-                </span>
-                {moving && <span key={beat} className="transport-beat" aria-hidden="true" />}
+                <span className="readout">{settings.tempo} bpm · {sigLabel}</span>
+                <Chevron />
               </button>
               <button
                 type="button"
-                className="transport-btn is-stop"
-                onClick={stop}
-                disabled={!running && phase !== 'done'}
-                aria-label="Stop"
-                title="Stop"
+                className={`sheet-chip${drawer === 'strum' ? ' is-open' : ''}`}
+                onClick={() => toggleDrawer('strum')}
+                aria-expanded={drawer === 'strum'}
+                aria-label="Strumming pattern"
               >
-                <IconStop size={15} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
+                {song.strumming ? <StrumChip text={song.strumming} beatsPerBar={settings.beatsPerBar} /> : <span>Add a strum</span>}
+                <Chevron />
               </button>
-            </div>
-
-            {/* Intuitive Tempo Studio */}
-            <div className="chart-tempo-studio">
-              <div className="tempo-top-line">
-                <span className="field-label">Tempo</span>
-                <span className="tempo-italian-badge readout">
-                  {getTempoMarking(settings.tempo)}
-                </span>
-              </div>
-              <div className="tempo-controls-row">
-                <button
-                  type="button"
-                  className="btn tempo-nudge-btn"
-                  onClick={() => patch({ tempo: Math.max(TEMPO_MIN, settings.tempo - 1) })}
-                  title="Slow down 1 BPM"
-                  aria-label="Decrease tempo 1 BPM"
-                >
-                  −
-                </button>
-                <span className="chart-bpm readout">
-                  <strong>{settings.tempo}</strong>
-                  <span className="bpm-unit">bpm</span>
-                </span>
-                <button
-                  type="button"
-                  className="btn tempo-nudge-btn"
-                  onClick={() => patch({ tempo: Math.min(TEMPO_MAX, settings.tempo + 1) })}
-                  title="Speed up 1 BPM"
-                  aria-label="Increase tempo 1 BPM"
-                >
-                  +
-                </button>
-
-                <input
-                  type="range"
-                  className="chart-tempo-range"
-                  min={TEMPO_MIN}
-                  max={TEMPO_MAX}
-                  step={1}
-                  value={settings.tempo}
-                  onChange={e => patch({ tempo: Number(e.target.value) })}
-                  aria-label="Tempo slider"
-                />
-
-                <div className="tempo-jump-group">
-                  <button
-                    type="button"
-                    className="btn tempo-jump-btn"
-                    onClick={() => patch({ tempo: Math.max(TEMPO_MIN, settings.tempo - 5) })}
-                    title="Slow down 5 BPM"
-                  >
-                    −5
-                  </button>
-                  <button
-                    type="button"
-                    className="btn tempo-jump-btn"
-                    onClick={() => patch({ tempo: Math.min(TEMPO_MAX, settings.tempo + 5) })}
-                    title="Speed up 5 BPM"
-                  >
-                    +5
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn chart-tap${tapPulsing ? ' is-tapped' : ''}`}
-                    onClick={tapTempo}
-                    title="Tap beat to set BPM"
-                  >
-                    Tap
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Time Signature / Meter Selector (e.g. 4/4, 3/4, 2/4, 6/8) */}
-            <div className="chart-time-signature-studio">
-              <span className="field-label">Time</span>
-              <div className="signature-chips-row">
-                {TIME_SIGNATURE_OPTIONS.map(sig => (
-                  <button
-                    key={sig.value}
-                    type="button"
-                    className={`sig-chip-btn${settings.beatsPerBar === sig.value ? ' is-active' : ''}`}
-                    onClick={() => patch({ beatsPerBar: sig.value })}
-                    title={`${sig.label} (${sig.desc})`}
-                  >
-                    <span className="sig-num readout">{sig.label}</span>
-                    <span className="sig-name">{sig.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Audio Quick Toggles & Practice Looper */}
-            <div className="chart-audio-toggles">
               <button
                 type="button"
-                className={`btn chart-sound-toggle${playChords ? ' is-active' : ''}`}
-                onClick={() => setPlayChords(p => !p)}
-                title={playChords ? 'Mute the guitar' : 'Play the guitar with the strum pattern'}
-                aria-pressed={playChords}
-              >
-                Guitar
-              </button>
-
-              <button
-                type="button"
-                className={`btn chart-click-toggle${metronome ? ' is-active' : ''}`}
-                onClick={() => setMetronome(m => !m)}
-                title={metronome ? 'Mute the click' : 'Turn on the click'}
-                aria-pressed={metronome}
-              >
-                Click
-              </button>
-
-              <button
-                type="button"
-                className={`btn chart-loop-toggle${isLooping ? ' is-active' : ''}`}
+                className={`sheet-chip${isLooping ? ' is-on' : ''}`}
                 onClick={() => setIsLooping(l => !l)}
-                title={isLooping ? 'Stop looping' : 'Loop the song'}
                 aria-pressed={isLooping}
               >
                 Loop
               </button>
-
-              {isLooping && (
-                <div className="chart-ramp-select" title="Speed up automatically upon completing each loop">
-                  <span className="ramp-label">Ramp:</span>
-                  <button
-                    type="button"
-                    className={`btn ramp-btn${speedRamp === 0 ? ' is-active' : ''}`}
-                    onClick={() => setSpeedRamp(0)}
-                  >
-                    Hold
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn ramp-btn${speedRamp === 1 ? ' is-active' : ''}`}
-                    onClick={() => setSpeedRamp(1)}
-                  >
-                    +1 bpm
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn ramp-btn${speedRamp === 2 ? ' is-active' : ''}`}
-                    onClick={() => setSpeedRamp(2)}
-                  >
-                    +2 bpm
-                  </button>
-                </div>
-              )}
             </div>
-          </div>
 
-          {/* Interactive Live Guitar Neck with Fingering and Strumming Animation */}
-          <LiveGuitarNeck
-            voicing={currentVoicing}
-            nextVoicing={nextVoicing}
-            chordSymbol={current?.symbol ?? (chart.chords[0] ?? null)}
-            nextChordSymbol={next?.symbol ?? null}
-            capo={song.capo}
-            activeSlot={slot}
-            pattern={pattern}
-            isPlaying={moving}
-            stroke={activeStroke}
-            beat={beat}
-            beatsPerBar={settings.beatsPerBar}
-          />
-
-          {/* Strumming Pattern Studio */}
-          {playChords && (
-            <div className="chart-strum-studio">
-              <div className="strum-studio-header">
-                <div>
-                  <span className="surface-label">Strum pattern</span>
-                  <p className="strum-studio-sub">
-                    {pattern ? 'Tap a slot to change it: down, up, chuck, rest.' : 'Pick a preset below or type one in.'}
-                  </p>
+            {drawer === 'tempo' && (
+              <div className="sheet-drawer">
+                <div className="chart-tempo-studio">
+                  <div className="tempo-top-line">
+                    <span className="field-label">Tempo</span>
+                    <span className="tempo-italian-badge readout">{getTempoMarking(settings.tempo)}</span>
+                  </div>
+                  <div className="tempo-controls-row">
+                    <button type="button" className="btn tempo-nudge-btn" onClick={() => patch({ tempo: Math.max(TEMPO_MIN, settings.tempo - 1) })} aria-label="Decrease tempo 1 BPM">−</button>
+                    <span className="chart-bpm readout"><strong>{settings.tempo}</strong><span className="bpm-unit">bpm</span></span>
+                    <button type="button" className="btn tempo-nudge-btn" onClick={() => patch({ tempo: Math.min(TEMPO_MAX, settings.tempo + 1) })} aria-label="Increase tempo 1 BPM">+</button>
+                    <input
+                      type="range"
+                      className="chart-tempo-range"
+                      min={TEMPO_MIN}
+                      max={TEMPO_MAX}
+                      step={1}
+                      value={settings.tempo}
+                      onChange={e => patch({ tempo: Number(e.target.value) })}
+                      aria-label="Tempo"
+                    />
+                    <button type="button" className={`btn chart-tap${tapPulsing ? ' is-tapped' : ''}`} onClick={tapTempo} title="Tap the beat to set the tempo">Tap</button>
+                  </div>
                 </div>
-                {pattern && (
-                  <span className="readout strum-summary-chip">
-                    {pattern.bars} bar{pattern.bars > 1 ? 's' : ''} · {pattern.steps.length} slots
-                  </span>
+
+                <div className="chart-time-signature-studio">
+                  <span className="field-label">Time</span>
+                  <div className="signature-chips-row">
+                    {TIME_SIGNATURE_OPTIONS.map(sig => (
+                      <button
+                        key={sig.value}
+                        type="button"
+                        className={`sig-chip-btn${settings.beatsPerBar === sig.value ? ' is-active' : ''}`}
+                        onClick={() => patch({ beatsPerBar: sig.value })}
+                        title={`${sig.label} (${sig.desc})`}
+                      >
+                        <span className="sig-num readout">{sig.label}</span>
+                        <span className="sig-name">{sig.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="chart-audio-toggles">
+                  <span className="field-label">Sound</span>
+                  <button type="button" className={`btn chart-sound-toggle${playChords ? ' is-active' : ''}`} onClick={() => setPlayChords(p => !p)} aria-pressed={playChords}>Guitar</button>
+                  <button type="button" className={`btn chart-click-toggle${metronome ? ' is-active' : ''}`} onClick={() => setMetronome(m => !m)} aria-pressed={metronome}>Click</button>
+                </div>
+
+                {isLooping && (
+                  <div className="chart-ramp-select" title="Speed up a little every time the loop comes round">
+                    <span className="field-label">Each loop</span>
+                    <button type="button" className={`btn ramp-btn${speedRamp === 0 ? ' is-active' : ''}`} onClick={() => setSpeedRamp(0)}>Same speed</button>
+                    <button type="button" className={`btn ramp-btn${speedRamp === 1 ? ' is-active' : ''}`} onClick={() => setSpeedRamp(1)}>+1 bpm</button>
+                    <button type="button" className={`btn ramp-btn${speedRamp === 2 ? ' is-active' : ''}`} onClick={() => setSpeedRamp(2)}>+2 bpm</button>
+                  </div>
                 )}
               </div>
+            )}
 
-              {pattern ? (
-                <StrumGrid
-                  pattern={pattern}
-                  live={slot}
-                  onChange={text => void updateSong(song.id, { strumming: text })}
-                />
-              ) : (
-                null
-              )}
-
-              {/* Direct Quick-Add Buttons */}
-              <div className="strum-quick-palette">
-                <span className="field-label">Add</span>
+            {drawer === 'strum' && (
+              <div className="sheet-drawer chart-strum-studio">
+                <p className="strum-studio-sub">
+                  {pattern ? 'Tap a slot to change it: down, up, chuck, rest.' : 'Pick a pattern to start with, or build one.'}
+                </p>
+                {pattern && (
+                  <StrumGrid pattern={pattern} live={slot} onChange={text => void updateSong(song.id, { strumming: text })} />
+                )}
+                <div className="strum-preset-chips">
+                  {getPresetsForMeter(settings.beatsPerBar).map(preset => (
+                    <button
+                      key={preset.pattern}
+                      type="button"
+                      className="chip-btn strum-preset-chip"
+                      onClick={() => void updateSong(song.id, { strumming: preset.pattern })}
+                      title={preset.pattern}
+                    >
+                      <span className="preset-name">{preset.name}</span>
+                      <span className="preset-pat readout">{preset.pattern}</span>
+                    </button>
+                  ))}
+                </div>
                 <div className="palette-buttons">
-                  <button
-                    type="button"
-                    className="btn palette-stroke-btn is-d"
-                    onClick={() => appendStroke('D')}
-                    title="Add a downstroke"
-                  >
-                    ↓ Down
-                  </button>
-                  <button
-                    type="button"
-                    className="btn palette-stroke-btn is-u"
-                    onClick={() => appendStroke('U')}
-                    title="Add an upstroke"
-                  >
-                    ↑ Up
-                  </button>
-                  <button
-                    type="button"
-                    className="btn palette-stroke-btn is-x"
-                    onClick={() => appendStroke('X')}
-                    title="Add a chuck"
-                  >
-                    ✕ Mute
-                  </button>
-                  <button
-                    type="button"
-                    className="btn palette-stroke-btn is-rest"
-                    onClick={() => appendStroke('-')}
-                    title="Add a rest"
-                  >
-                    · Rest
-                  </button>
+                  <button type="button" className="btn palette-stroke-btn is-d" onClick={() => appendStroke('D')}>↓ Down</button>
+                  <button type="button" className="btn palette-stroke-btn is-u" onClick={() => appendStroke('U')}>↑ Up</button>
+                  <button type="button" className="btn palette-stroke-btn is-x" onClick={() => appendStroke('X')}>✕ Mute</button>
+                  <button type="button" className="btn palette-stroke-btn is-rest" onClick={() => appendStroke('-')}>· Rest</button>
                   {pattern && pattern.steps.length > 0 && (
                     <>
-                      <button
-                        type="button"
-                        className="btn palette-stroke-btn is-shift"
-                        onClick={() => shiftStrum(-1)}
-                        title="Nudge / Shift pattern left by 1 subdivision (←)"
-                        aria-label="Shift left"
-                      >
-                        ← Shift
-                      </button>
-                      <button
-                        type="button"
-                        className="btn palette-stroke-btn is-shift"
-                        onClick={() => shiftStrum(1)}
-                        title="Nudge / Shift pattern right by 1 subdivision (→)"
-                        aria-label="Shift right"
-                      >
-                        Shift →
-                      </button>
+                      <button type="button" className="btn palette-stroke-btn is-shift" onClick={() => shiftStrum(-1)} aria-label="Shift left">← Shift</button>
+                      <button type="button" className="btn palette-stroke-btn is-shift" onClick={() => shiftStrum(1)} aria-label="Shift right">Shift →</button>
                     </>
                   )}
                   {song.strumming && (
                     <>
-                      <button
-                        type="button"
-                        className="btn palette-stroke-btn is-pop"
-                        onClick={popStroke}
-                        title="Delete last stroke (⌫)"
-                        aria-label="Delete last stroke"
-                      >
-                        ⌫ Undo
-                      </button>
-                      <button
-                        type="button"
-                        className="btn palette-stroke-btn is-clear"
-                        onClick={() => void updateSong(song.id, { strumming: '' })}
-                        title="Clear entire pattern"
-                      >
-                        Clear
-                      </button>
+                      <button type="button" className="btn palette-stroke-btn is-pop" onClick={popStroke} aria-label="Delete last stroke">⌫ Undo</button>
+                      <button type="button" className="btn palette-stroke-btn is-clear" onClick={() => void updateSong(song.id, { strumming: '' })}>Clear</button>
                     </>
                   )}
                 </div>
-              </div>
-
-              {/* Shorthand Text Field + Meter-Specific Presets */}
-              <div className="strum-text-edit-cluster">
                 <label className="strum-input-field">
-                  <span className="field-label">Pattern</span>
+                  <span className="field-label">Or type it</span>
                   <input
                     type="text"
                     className="text-field strum-text-input readout"
@@ -581,80 +402,100 @@ export const SongChartPanel: React.FC<SongChartPanelProps> = ({ song }) => {
                     aria-label="Strumming pattern shorthand"
                   />
                 </label>
+              </div>
+            )}
 
-                <div className="strum-presets-group">
-                  <span className="field-label">Presets</span>
-                  <div className="strum-preset-chips">
-                    {getPresetsForMeter(settings.beatsPerBar).map(preset => (
-                      <button
-                        key={preset.pattern}
-                        type="button"
-                        className="chip-btn strum-preset-chip"
-                        onClick={() => void updateSong(song.id, { strumming: preset.pattern })}
-                        title={preset.pattern}
-                      >
-                        <span className="preset-name">{preset.name}</span>
-                        <span className="preset-pat readout">{preset.pattern}</span>
-                      </button>
-                    ))}
-                  </div>
+            {chart.lines.length > 0 ? (
+              <div className="song-panel chart-lines" ref={scroller}>
+                {chart.lines.map(line => (
+                  <SheetLine
+                    key={line.id}
+                    line={line}
+                    chart={chart}
+                    isNow={currentLine?.index === line.index}
+                    beat={beat}
+                    live={holding ? current : null}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="song-panel sheet-empty">
+                <p>No chart yet. Paste a chord sheet, or write the chords in yourself.</p>
+                <div>
+                  <button type="button" className="btn btn-primary" onClick={() => onMode('import')}>Import a chord sheet</button>
+                  <button type="button" className="btn" onClick={() => onMode('edit')}>Write it</button>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </>
+        )}
 
-          {/* Moving Lyrics (Karaoke / Teleprompter Display) */}
-          <div className="chart-lyrics-stage">
-            <div className="chart-lyrics-header">
-              <span className="surface-label">Lyrics</span>
-              <span className="chart-position readout">
-                {counting
-                  ? `Count in: ${countInBeats + beat + 1}`
-                  : moving
-                  ? `Bar ${Math.max(1, Math.floor(beat / settings.beatsPerBar) + 1)} · Beat ${((beat % settings.beatsPerBar) + settings.beatsPerBar) % settings.beatsPerBar + 1}`
-                  : `${chart.totalBeats / settings.beatsPerBar} bars total`}
-              </span>
-            </div>
-
-            <div className="chart-lines" ref={scroller}>
-              {chart.lines.map(line => (
-                <SheetLine
-                  key={line.id}
-                  line={line}
-                  chart={chart}
-                  isNow={currentLine?.index === line.index}
-                  beat={beat}
-                  live={holding ? current : null}
-                  beatsPerBar={settings.beatsPerBar}
-                />
-              ))}
-            </div>
-
-            <div className="chart-progress-bottom" aria-hidden="true">
-              <span style={{ width: `${Math.max(0, Math.min(1, beat / Math.max(1, chart.totalBeats))) * 100}%` }} />
-            </div>
+        {mode !== 'play' && (
+          <div className="sheet-modebar">
+            <span>{mode === 'edit' ? 'Editing the chart' : 'Import a chord sheet'}</span>
+            <button type="button" className="btn" onClick={() => onMode('play')}>{mode === 'edit' ? 'Done' : 'Cancel'}</button>
           </div>
-        </>
-      )}
+        )}
 
-      {mode === 'edit' && (
-        <ChartEditor
-          lines={lines}
-          chart={chart}
-          beatsPerBar={settings.beatsPerBar}
-          transpose={transpose}
-          capo={song.capo}
-          capoShift={capoShift}
-          suggestions={[...new Set([...chart.chords, ...songChords(song).map(toDisplay)])]}
-          onTranspose={t => patch({ transpose: t })}
-          onChange={next => patch({ lines: next })}
-          toDisplay={toDisplay}
-          toStored={toStored}
-        />
-      )}
-    </section>
+        {mode === 'import' && (
+          <div className="song-panel">
+            <ChartImport
+              song={song}
+              hasChart={lines.length > 0}
+              beatsPerBar={settings.beatsPerBar}
+              onApply={(next, append, meta) => {
+                const merged = append ? [...lines, ...next] : next;
+                void updateSong(song.id, {
+                  chart: { lines: merged, ...settings, transpose, ...(meta.tempo ? { tempo: meta.tempo } : {}) },
+                  ...(meta.capo !== undefined ? { capo: meta.capo } : {}),
+                  ...(meta.key ? { key: meta.key } : {})
+                });
+                onMode('edit');
+              }}
+            />
+          </div>
+        )}
+
+        {mode === 'edit' && (
+          <div className="song-panel">
+            <ChartEditor
+              lines={lines}
+              chart={chart}
+              beatsPerBar={settings.beatsPerBar}
+              transpose={transpose}
+              capo={song.capo}
+              capoShift={capoShift}
+              suggestions={[...new Set([...chart.chords, ...songChords(song).map(toDisplay)])]}
+              onTranspose={t => patch({ transpose: t })}
+              onChange={next => patch({ lines: next })}
+              toDisplay={toDisplay}
+              toStored={toStored}
+            />
+          </div>
+        )}
+      </section>
+
+      {dock && mode === 'play' && createPortal(player, dock)}
+    </>
   );
 };
+
+const Chevron: React.FC = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
+
+/** A chord in the player: its shape, small, and its name. */
+const HeldChord: React.FC<{ label: string; symbol: string | null; voicing: ChordVoicing | null; faint?: boolean }> = ({ label, symbol, voicing, faint }) => (
+  <div className={`held-chord${faint ? ' is-faint' : ''}`}>
+    {voicing && <ChordDiagram frets={voicing.frets} fingers={voicing.fingers} scale={0.4} />}
+    <span className="held-chord-text">
+      <span className="held-chord-label">{label}</span>
+      <span className="held-chord-name">{symbol ?? '–'}</span>
+    </span>
+  </div>
+);
 
 // ---------------------------------------------------------------------------
 // One line of the sheet, with real-time moving beat and chord highlights
@@ -666,9 +507,33 @@ const SheetLine: React.FC<{
   isNow: boolean;
   beat: number;
   live: { beat: number } | null;
-  beatsPerBar: number;
-}> = ({ line, chart, isNow, beat, live, beatsPerBar }) => {
+}> = ({ line, chart, isNow, beat, live }) => {
   const showSection = line.section && (line.index === 0 || chart.lines[line.index - 1].section !== line.section);
+
+  // Chords with no words under them, an intro or a song with no lyrics
+  // written, read as bars: one cell per chord, lit while it plays.
+  if (line.instrumental) {
+    return (
+      <>
+        {showSection && <p className="chart-section">{line.section}</p>}
+        <div className={`chart-bars${isNow ? ' is-now' : ''}`} data-line={line.index}>
+          {line.chords.map((chord, i) => {
+            const isLive = live && Math.abs(chord.beat - live.beat) < 1e-6;
+            return (
+              <span
+                key={i}
+                className={`chart-bar-cell is-${comfortOf(chord.symbol)}${isLive ? ' is-live' : ''}`}
+                title={`${chord.symbol} · ${COMFORT_LABEL[comfortOf(chord.symbol)]}`}
+              >
+                {chord.symbol}
+              </span>
+            );
+          })}
+        </div>
+      </>
+    );
+  }
+
   let cursor = 0;
   const beatInLine = isNow ? beat - line.startBeat : -1;
   const totalSegs = line.segments.length;
@@ -677,7 +542,6 @@ const SheetLine: React.FC<{
     <>
       {showSection && <p className="chart-section">{line.section}</p>}
       <p className={`chart-line${isNow ? ' is-now' : ''}${line.instrumental ? ' is-instrumental' : ''}`} data-line={line.index}>
-        <span className="chart-bar-count readout">{line.beats / beatsPerBar}</span>
         {line.segments.map((seg, i) => {
           const chord = seg.chord ? line.chords[cursor++] : null;
           const isLiveChord = live && chord && Math.abs(chord.beat - live.beat) < 1e-6;
