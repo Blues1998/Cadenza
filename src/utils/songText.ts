@@ -39,7 +39,22 @@ const SUFFIX_ALIASES: [RegExp, string][] = [
   [/^(dim|diminished|o)$/i, 'dim'],
   [/^(dim7|o7)$/i, 'dim7'],
   [/^(aug|augmented|\+)$/i, 'aug'],
-  [/^(m7b5|ø7?|halfdim)$/i, 'm7b5']
+  [/^(m7b5|ø7?|halfdim)$/i, 'm7b5'],
+  // Bare "sus" is sus4 on every chord sheet that writes it.
+  [/^sus4?$/i, 'sus4'],
+  [/^sus2$/i, 'sus2'],
+  [/^(madd9|madd2|minadd9|m2)$/i, 'madd9'],
+  [/^(add9|add2|2)$/i, 'add9'],
+  [/^5$/, '5'],
+  [/^M6$/, '6'],
+  [/^(m6|min6|minor6)$/i, 'm6'],
+  [/^(6|maj6|major6)$/i, '6'],
+  [/^7sus4?$/i, '7sus4'],
+  [/^M9$/, 'maj9'],
+  [/^(maj9|major9)$/i, 'maj9'],
+  [/^(m9|min9|minor9)$/i, 'm9'],
+  [/^(9|dom9)$/i, '9'],
+  [/^7#9$/i, '7#9']
 ];
 
 /** Suffixes we don't model but that are still chord qualities, not words. */
@@ -52,7 +67,9 @@ const TYPE_BY_SUFFIX: Record<string, ChordTypeId> = {
   // the symbol could be written but never read back, and a chord you cannot
   // read back is one the chord book cannot file.
   mMaj7: 'mMaj7', augMaj7: 'augMaj7',
-  sus2: 'sus2', sus4: 'sus4'
+  sus2: 'sus2', sus4: 'sus4',
+  add9: 'add9', madd9: 'madd9', '5': 'pow5', '6': 'maj6', m6: 'min6',
+  '7sus4': 'dom7sus4', '9': 'dom9', m9: 'min9', maj9: 'maj9', '7#9': 'dom7s9'
 };
 
 /** "A min" → "Am", "F maj" → "F", "B7" → "B7". Unreadable input comes back trimmed. */
@@ -74,8 +91,9 @@ export function normalizeChordSymbol(raw: string): string {
   if (bracketed) {
     const inner = bracketed[2].trim();
     const isQuality = QUALITY_LIKE.test(inner) || SUFFIX_ALIASES.some(([pattern]) => pattern.test(inner));
-    if (!isQuality) rest = bracketed[1].trim();
-    else if (!bracketed[1].trim()) rest = inner;
+    // "Cm(maj7)", "Am(add9)", "E7(#9)": the brackets only group what is
+    // written straight after them.
+    rest = isQuality ? bracketed[1].trim() + inner : bracketed[1].trim();
   }
   // "A min/C maj" is two chords offered as alternatives, a quality word
   // after the slash says so, where a slash chord ("Am/C", "D/F#") has only a
@@ -83,6 +101,13 @@ export function normalizeChordSymbol(raw: string): string {
   // chord called "Amin/C maj".
   const alternative = /^([^/]*)\/\s*[A-Ga-g][#b]?\s*(maj|min|major|minor|m|M|7|dim|aug|sus)/.exec(rest);
   if (alternative) rest = alternative[1].trim();
+  // A slash chord, "D/F#", "Am7/G": the chord is read as usual and the bass
+  // note comes along, spelled the same way.
+  const slash = /^(.*?)\s*\/\s*([A-Ga-g])\s*([#b]?)$/.exec(rest);
+  if (slash) {
+    const bass = slash[2].toUpperCase() + slash[3];
+    if (NOTE_INDEX[bass] !== undefined) return `${normalizeChordSymbol(root + slash[1])}/${bass}`;
+  }
   if (!rest) return root;
   for (const [pattern, suffix] of SUFFIX_ALIASES) {
     if (pattern.test(rest)) return root + suffix;
@@ -183,14 +208,28 @@ export function uniqueChords(progressions: string[][]): string[] {
 }
 
 /** What a symbol needs to be drawn as a shape, or null if we cannot place it. */
-export function chordShape(symbol: string): { rootPc: number; typeId: ChordTypeId; rootName: string } | null {
-  const m = /^([A-G][#b]?)(.*)$/.exec(symbol.trim());
+export interface ChordShape {
+  rootPc: number;
+  typeId: ChordTypeId;
+  rootName: string;
+  /** A slash chord's bass note, when it has one. */
+  bassPc?: number;
+  bassName?: string;
+}
+
+export function chordShape(symbol: string): ChordShape | null {
+  const m = /^([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?$/.exec(symbol.trim());
   if (!m) return null;
   const rootPc = NOTE_INDEX[m[1]];
   if (rootPc === undefined) return null;
   const typeId = TYPE_BY_SUFFIX[m[2].trim()];
   if (!typeId) return null;
-  return { rootPc, typeId, rootName: m[1] };
+  if (!m[3]) return { rootPc, typeId, rootName: m[1] };
+  const bassPc = NOTE_INDEX[m[3]];
+  if (bassPc === undefined) return null;
+  // "C/C" is just C.
+  if (bassPc === rootPc) return { rootPc, typeId, rootName: m[1] };
+  return { rootPc, typeId, rootName: m[1], bassPc, bassName: m[3] };
 }
 
 /** "5th fret" → 5, "0th fret" → 0, "" → null. */

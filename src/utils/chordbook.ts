@@ -17,7 +17,7 @@
 // one shape. Everything that draws or sounds a chord asks here first.
 
 import { STORE_CHANGE_EVENT, putRecords, readAll, clearStore, deleteRecord } from './db';
-import { CHORD_TYPES, getVoicings, type ChordVoicing } from './chords';
+import { CHORD_TYPES, getSlashVoicings, getVoicings, type ChordVoicing } from './chords';
 import { NOTE_NAMES } from './musicTheory';
 import { chordShape, normalizeChordSymbol } from './songText';
 
@@ -95,7 +95,8 @@ export const chordKey = (symbol: string): string => {
   const normalised = normalizeChordSymbol(symbol);
   const shape = chordShape(normalised);
   if (!shape) return normalised;
-  return normalizeChordSymbol(NOTE_NAMES[shape.rootPc] + CHORD_TYPES[shape.typeId].suffix);
+  const chord = normalizeChordSymbol(NOTE_NAMES[shape.rootPc] + CHORD_TYPES[shape.typeId].suffix);
+  return shape.bassPc === undefined ? chord : `${chord}/${NOTE_NAMES[shape.bassPc]}`;
 };
 
 export const getChordSkills = (): ChordSkill[] => [...skills.values()];
@@ -121,7 +122,9 @@ export function voicingsFor(symbol: string): ChordVoicing[] {
   const hit = voicingCache.get(key);
   if (hit) return hit;
   const shape = chordShape(key);
-  const list = shape ? getVoicings(shape.rootPc, shape.typeId, shape.rootName) : [];
+  const list = !shape ? []
+    : shape.bassPc === undefined ? getVoicings(shape.rootPc, shape.typeId, shape.rootName)
+    : getSlashVoicings(shape.rootPc, shape.typeId, shape.bassPc, shape.rootName, shape.bassName);
   voicingCache.set(key, list);
   return list;
 }

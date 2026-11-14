@@ -206,7 +206,7 @@ export function chartDuration(totalBeats: number, tempo: number): string {
 // supported.
 
 const CHORD_TOKEN_STRICT =
-  /^[A-G][#b]?(?:maj7|maj9|maj|M7|min7|min|m7b5|m7|m9|m6|m|sus2|sus4|sus|add9|dim7|dim|aug|11|13|7|9|6|5)?(?:\/[A-G][#b]?)?$/;
+  /^[A-G][#b]?(?:mMaj7|augMaj7|maj7|maj9|maj|M7|min7|min|m7b5|madd9|m7|m9|m6|m|7sus4|7#9|sus2|sus4|sus|add9|add2|dim7|dim|aug|11|13|7|9|6|5|2)?(?:\/[A-G][#b]?)?$/;
 
 export const isChordSymbol = (token: string): boolean => {
   const t = token.trim();

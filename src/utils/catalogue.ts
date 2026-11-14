@@ -52,7 +52,9 @@ export const noteLabel = (name: string): string =>
  * catalogue that the chord book could not file.
  */
 export const CATALOGUE_TYPES: ChordTypeId[] = [
-  'maj', 'min', 'dom7', 'maj7', 'min7', 'dim', 'm7b5', 'dim7', 'aug', 'mMaj7', 'augMaj7'
+  'maj', 'min', 'dom7', 'maj7', 'min7', 'pow5', 'sus2', 'sus4', 'add9', 'dom7sus4',
+  'maj6', 'min6', 'madd9', 'dom9', 'min9', 'maj9', 'dim', 'm7b5', 'dim7', 'aug',
+  'dom7s9', 'mMaj7', 'augMaj7'
 ];
 
 export interface CatalogueChord {

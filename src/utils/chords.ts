@@ -89,7 +89,9 @@ export function prettyNote(name: string): string {
 export type ChordTypeId =
   | 'maj' | 'min' | 'dim' | 'aug'
   | 'maj7' | 'min7' | 'dom7' | 'm7b5' | 'dim7' | 'mMaj7' | 'augMaj7'
-  | 'sus2' | 'sus4';
+  | 'sus2' | 'sus4'
+  | 'add9' | 'madd9' | 'pow5' | 'maj6' | 'min6'
+  | 'dom7sus4' | 'dom9' | 'min9' | 'maj9' | 'dom7s9';
 
 export interface ChordType {
   id: ChordTypeId;
@@ -99,6 +101,12 @@ export interface ChordType {
   major: boolean;      // drives Roman numeral casing
   mark: string;        // numeral decoration: '', '°', '+', 'ø'
   triadId?: ChordTypeId; // the plainer triad a beginner can substitute
+  /**
+   * Tones a shape may leave out. Six strings and four fingers cannot hold
+   * every note of a ninth chord, and guitarists drop the fifth first: it adds
+   * the least to what the chord is.
+   */
+  optional?: number[];
 }
 
 export const CHORD_TYPES: Record<ChordTypeId, ChordType> = {
@@ -114,7 +122,17 @@ export const CHORD_TYPES: Record<ChordTypeId, ChordType> = {
   mMaj7:   { id: 'mMaj7',   name: 'Minor-Major 7th',    suffix: 'mMaj7', intervals: [0, 3, 7, 11],  major: false, mark: '',        triadId: 'min' },
   augMaj7: { id: 'augMaj7', name: 'Augmented Major 7th', suffix: 'augMaj7', intervals: [0, 4, 8, 11], major: true, mark: '+',      triadId: 'aug' },
   sus2:    { id: 'sus2',    name: 'Suspended 2nd',      suffix: 'sus2',  intervals: [0, 2, 7],      major: true,  mark: '',        triadId: 'maj' },
-  sus4:    { id: 'sus4',    name: 'Suspended 4th',      suffix: 'sus4',  intervals: [0, 5, 7],      major: true,  mark: '',        triadId: 'maj' }
+  sus4:    { id: 'sus4',    name: 'Suspended 4th',      suffix: 'sus4',  intervals: [0, 5, 7],      major: true,  mark: '',        triadId: 'maj' },
+  add9:    { id: 'add9',    name: 'Added 9th',          suffix: 'add9',  intervals: [0, 2, 4, 7],   major: true,  mark: '',        triadId: 'maj' },
+  madd9:   { id: 'madd9',   name: 'Minor added 9th',    suffix: 'madd9', intervals: [0, 2, 3, 7],   major: false, mark: '',        triadId: 'min' },
+  pow5:    { id: 'pow5',    name: 'Power chord',        suffix: '5',     intervals: [0, 7],         major: true,  mark: '' },
+  maj6:    { id: 'maj6',    name: 'Major 6th',          suffix: '6',     intervals: [0, 4, 7, 9],   major: true,  mark: '',        triadId: 'maj',  optional: [7] },
+  min6:    { id: 'min6',    name: 'Minor 6th',          suffix: 'm6',    intervals: [0, 3, 7, 9],   major: false, mark: '',        triadId: 'min',  optional: [7] },
+  dom7sus4: { id: 'dom7sus4', name: '7th suspended 4th', suffix: '7sus4', intervals: [0, 5, 7, 10], major: true,  mark: '',        triadId: 'sus4', optional: [7] },
+  dom9:    { id: 'dom9',    name: 'Dominant 9th',       suffix: '9',     intervals: [0, 2, 4, 7, 10], major: true, mark: '',       triadId: 'dom7', optional: [7] },
+  min9:    { id: 'min9',    name: 'Minor 9th',          suffix: 'm9',    intervals: [0, 2, 3, 7, 10], major: false, mark: '',      triadId: 'min7', optional: [7] },
+  maj9:    { id: 'maj9',    name: 'Major 9th',          suffix: 'maj9',  intervals: [0, 2, 4, 7, 11], major: true, mark: '',       triadId: 'maj7', optional: [7] },
+  dom7s9:  { id: 'dom7s9',  name: '7th sharp 9',        suffix: '7#9',   intervals: [0, 3, 4, 7, 10], major: true, mark: '',       triadId: 'dom7', optional: [7] }
 };
 
 const TYPE_BY_INTERVALS = new Map<string, ChordType>(
@@ -303,6 +321,50 @@ const MOVABLE_FORMS: Record<ChordTypeId, MovableForm[]> = {
     { label: 'D-shape',       rootString: 2, offsets: [null, null, 0, 2, 3, 3],    fingers: [null, null, 1, 2, 3, 4] },
     { label: 'A-shape barre', rootString: 1, offsets: [null, 0, 2, 2, 3, 0],       fingers: [null, 1, 2, 3, 4, 1] },
     { label: 'E-shape barre', rootString: 0, offsets: [0, 2, 2, 2, 0, 0],          fingers: [1, 2, 3, 4, 1, 1] }
+  ],
+  add9: [
+    { label: 'C-shape',       rootString: 1, offsets: [null, 0, -1, -3, 0, null],  fingers: [null, 3, 2, 1, 4, null] },
+    { label: 'D-string root', rootString: 2, offsets: [null, null, 0, -1, -2, 0],  fingers: [null, null, 3, 2, 1, 4] },
+    { label: 'G-shape',       rootString: 0, offsets: [0, -1, -3, -1, null, null], fingers: [4, 2, 1, 3, null, null] }
+  ],
+  madd9: [
+    { label: 'A-string root', rootString: 1, offsets: [null, 0, -2, -3, 0, null],  fingers: [null, 3, 2, 1, 4, null] },
+    { label: 'D-string root', rootString: 2, offsets: [null, null, 0, -2, -2, 0],  fingers: [null, null, 3, 1, 2, 4] }
+  ],
+  pow5: [
+    { label: 'E-string root', rootString: 0, offsets: [0, 2, 2, null, null, null], fingers: [1, 3, 4, null, null, null] },
+    { label: 'A-string root', rootString: 1, offsets: [null, 0, 2, 2, null, null], fingers: [null, 1, 3, 4, null, null] }
+  ],
+  maj6: [
+    { label: 'A-shape',       rootString: 1, offsets: [null, 0, 2, 2, 2, 2],       fingers: [null, 1, 3, 3, 3, 3] },
+    { label: 'D-string root', rootString: 2, offsets: [null, null, 0, 2, 0, 2],    fingers: [null, null, 1, 3, 1, 4] },
+    { label: 'E-string root', rootString: 0, offsets: [0, null, -1, 1, 0, null],   fingers: [2, null, 1, 4, 3, null] }
+  ],
+  min6: [
+    { label: 'A-string root', rootString: 1, offsets: [null, 0, 2, -1, 1, null],   fingers: [null, 2, 4, 1, 3, null] },
+    { label: 'D-string root', rootString: 2, offsets: [null, null, 0, 2, 0, 1],    fingers: [null, null, 1, 3, 1, 2] },
+    { label: 'E-string root', rootString: 0, offsets: [0, null, -1, 0, 0, null],   fingers: [2, null, 1, 3, 4, null] }
+  ],
+  dom7sus4: [
+    { label: 'A-string root', rootString: 1, offsets: [null, 0, 2, 0, 3, null],    fingers: [null, 1, 3, 1, 4, null] },
+    { label: 'D-string root', rootString: 2, offsets: [null, null, 0, 2, 1, 3],    fingers: [null, null, 1, 3, 2, 4] },
+    { label: 'A-shape barre', rootString: 1, offsets: [null, 0, 2, 0, 3, 0],       fingers: [null, 1, 3, 1, 4, 1] },
+    { label: 'E-shape barre', rootString: 0, offsets: [0, 2, 0, 2, 0, 0],          fingers: [1, 3, 1, 4, 1, 1] }
+  ],
+  dom9: [
+    { label: 'A-string root', rootString: 1, offsets: [null, 0, -1, 0, 0, 0],      fingers: [null, 2, 1, 3, 3, 3] },
+    { label: 'E-string root', rootString: 0, offsets: [0, null, 0, 1, 0, 2],       fingers: [2, null, 1, 3, 1, 4] }
+  ],
+  min9: [
+    { label: 'A-string root', rootString: 1, offsets: [null, 0, -2, 0, 0, 0],      fingers: [null, 2, 1, 3, 3, 3] },
+    { label: 'E-string root', rootString: 0, offsets: [0, null, 0, 0, 0, 2],       fingers: [1, null, 1, 1, 1, 3] }
+  ],
+  maj9: [
+    { label: 'A-string root', rootString: 1, offsets: [null, 0, -1, 1, 0, null],   fingers: [null, 2, 1, 4, 3, null] },
+    { label: 'E-string root', rootString: 0, offsets: [0, null, 1, 1, 0, 2],       fingers: [1, null, 2, 3, 1, 4] }
+  ],
+  dom7s9: [
+    { label: 'A-string root', rootString: 1, offsets: [null, 0, -1, 0, 1, null],   fingers: [null, 2, 1, 3, 4, null] }
   ]
 };
 
@@ -350,7 +412,25 @@ const OPEN_CHORDS: OpenChord[] = [
   { rootPc: 4,  type: 'sus4', label: 'Open Esus4', frets: [0, 2, 2, 2, 0, 0],       fingers: [0, 2, 3, 4, 0, 0] },
   { rootPc: 7,  type: 'sus4', label: 'Open Gsus4', frets: [3, 3, 0, 0, 1, 3],       fingers: [2, 3, 0, 0, 1, 4] },
   { rootPc: 9,  type: 'sus2', label: 'Open Asus2', frets: [null, 0, 2, 2, 0, 0],    fingers: [null, 0, 1, 2, 0, 0] },
-  { rootPc: 9,  type: 'sus4', label: 'Open Asus4', frets: [null, 0, 2, 2, 3, 0],    fingers: [null, 0, 1, 2, 3, 0] }
+  { rootPc: 9,  type: 'sus4', label: 'Open Asus4', frets: [null, 0, 2, 2, 3, 0],    fingers: [null, 0, 1, 2, 3, 0] },
+  { rootPc: 0,  type: 'add9', label: 'Open Cadd9', frets: [null, 3, 2, 0, 3, 3],    fingers: [null, 2, 1, 0, 3, 4] },
+  { rootPc: 7,  type: 'add9', label: 'Open Gadd9', frets: [3, 2, 0, 2, 0, 3],       fingers: [2, 1, 0, 3, 0, 4] },
+  { rootPc: 4,  type: 'add9', label: 'Open Eadd9', frets: [0, 2, 4, 1, 0, 0],       fingers: [0, 2, 4, 1, 0, 0] },
+  { rootPc: 9,  type: 'add9', label: 'Open Aadd9', frets: [null, 0, 2, 4, 2, 0],    fingers: [null, 0, 1, 4, 2, 0] },
+  { rootPc: 2,  type: 'add9', label: 'Open Dadd9', frets: [null, 5, 4, 2, 3, 0],    fingers: [null, 4, 3, 1, 2, 0] },
+  { rootPc: 5,  type: 'add9', label: 'Fadd9 on 4 strings', frets: [null, null, 3, 2, 1, 3], fingers: [null, null, 3, 2, 1, 4] },
+  { rootPc: 4,  type: 'madd9', label: 'Open Emadd9', frets: [0, 2, 4, 0, 0, 0],     fingers: [0, 1, 3, 0, 0, 0] },
+  { rootPc: 9,  type: 'madd9', label: 'Open Amadd9', frets: [null, 0, 2, 4, 1, 0],  fingers: [null, 0, 2, 4, 1, 0] },
+  { rootPc: 0,  type: 'maj6', label: 'Open C6',    frets: [null, 3, 2, 2, 1, 0],    fingers: [null, 4, 2, 3, 1, 0] },
+  { rootPc: 7,  type: 'maj6', label: 'Open G6',    frets: [3, 2, 0, 0, 0, 0],       fingers: [2, 1, 0, 0, 0, 0] },
+  { rootPc: 4,  type: 'maj6', label: 'Open E6',    frets: [0, 2, 2, 1, 2, 0],       fingers: [0, 2, 3, 1, 4, 0] },
+  { rootPc: 9,  type: 'min6', label: 'Open Am6',   frets: [null, 0, 2, 2, 1, 2],    fingers: [null, 0, 2, 3, 1, 4] },
+  { rootPc: 4,  type: 'min6', label: 'Open Em6',   frets: [0, 2, 2, 0, 2, 0],       fingers: [0, 1, 2, 0, 3, 0] },
+  { rootPc: 4,  type: 'dom9', label: 'Open E9',    frets: [0, 2, 0, 1, 0, 2],       fingers: [0, 2, 0, 1, 0, 3] },
+  { rootPc: 9,  type: 'min9', label: 'Open Am9',   frets: [null, 0, 5, 5, 0, 0],    fingers: [null, 0, 2, 3, 0, 0] },
+  { rootPc: 4,  type: 'min9', label: 'Open Em9',   frets: [0, 2, 0, 0, 0, 2],       fingers: [0, 1, 0, 0, 0, 2] },
+  { rootPc: 0,  type: 'maj9', label: 'Open Cmaj9', frets: [null, 3, 2, 4, 3, 0],    fingers: [null, 2, 1, 4, 3, 0] },
+  { rootPc: 4,  type: 'dom7s9', label: 'Hendrix E7#9', frets: [0, 7, 6, 7, 8, 0],   fingers: [0, 2, 1, 3, 4, 0] }
 ];
 
 export type DifficultyTier = 'easy' | 'medium' | 'hard';
@@ -377,11 +457,16 @@ function voicingMidis(frets: (number | null)[]): number[] {
 
 // Guard against typos in the tables above: the sounding notes must be exactly
 // the chord's pitch classes, with the root present somewhere.
-function soundsLike(frets: (number | null)[], rootPc: number, type: ChordType): boolean {
+//
+// A tone the type marks optional may be missing, never wrong: nothing outside
+// the chord sounds. A slash chord's bass is the one note allowed in from
+// outside, the G under Am/G.
+function soundsLike(frets: (number | null)[], rootPc: number, type: ChordType, bassPc?: number): boolean {
   const want = new Set(type.intervals.map(i => (rootPc + i) % 12));
+  const optional = new Set((type.optional ?? []).map(i => (rootPc + i) % 12));
   const got = new Set(voicingMidis(frets).map(m => m % 12));
-  if (got.size !== want.size) return false;
-  for (const pc of got) if (!want.has(pc)) return false;
+  for (const pc of got) if (!want.has(pc) && pc !== bassPc) return false;
+  for (const pc of want) if (!got.has(pc) && !optional.has(pc)) return false;
   return got.has(rootPc);
 }
 
@@ -508,13 +593,181 @@ export function getVoicings(rootPc: number, typeId: ChordTypeId, rootName?: stri
   if (type.triadId) {
     const label = (rootName ?? NOTE_NAMES[rootPc]) + CHORD_TYPES[type.triadId].suffix;
     const simpler = getVoicings(rootPc, type.triadId, rootName)
-      .filter(v => v.tier === 'easy')
+      .filter(v => v.tier === 'easy' && !v.substituteFor)
       .slice(0, 2)
       .map(v => ({ ...v, id: `sub-${v.id}`, substituteFor: label }));
     unique.push(...simpler);
   }
 
   return unique;
+}
+
+// ---------------------------------------------------------------------------
+// Slash chords: a chord over a chosen bass note, D/F#, G/B, Am/G
+// ---------------------------------------------------------------------------
+
+interface SlashShape {
+  rootPc: number;
+  type: ChordTypeId;
+  bassPc: number;
+  label: string;
+  frets: (number | null)[];   // low→high
+  fingers: (number | null)[]; // low→high
+}
+
+// The ones everybody plays the same way. Anything not here is built from the
+// plain chord's shapes below.
+const SLASH_SHAPES: SlashShape[] = [
+  { rootPc: 2, type: 'maj', bassPc: 6,  label: 'Open D/F#',  frets: [2, 0, 0, 2, 3, 2],       fingers: [1, 0, 0, 2, 4, 3] },
+  { rootPc: 2, type: 'maj', bassPc: 9,  label: 'Open D/A',   frets: [null, 0, 0, 2, 3, 2],    fingers: [null, 0, 0, 1, 3, 2] },
+  { rootPc: 2, type: 'maj', bassPc: 0,  label: 'Open D/C',   frets: [null, 3, 0, 2, 3, 2],    fingers: [null, 3, 0, 1, 4, 2] },
+  { rootPc: 7, type: 'maj', bassPc: 11, label: 'Open G/B',   frets: [null, 2, 0, 0, 0, 3],    fingers: [null, 1, 0, 0, 0, 3] },
+  { rootPc: 7, type: 'maj', bassPc: 6,  label: 'Open G/F#',  frets: [2, null, 0, 0, 0, 3],    fingers: [1, null, 0, 0, 0, 3] },
+  { rootPc: 7, type: 'maj', bassPc: 2,  label: 'Open G/D',   frets: [null, null, 0, 0, 0, 3], fingers: [null, null, 0, 0, 0, 3] },
+  { rootPc: 0, type: 'maj', bassPc: 7,  label: 'Open C/G',   frets: [3, 3, 2, 0, 1, 0],       fingers: [3, 4, 2, 0, 1, 0] },
+  { rootPc: 0, type: 'maj', bassPc: 4,  label: 'Open C/E',   frets: [0, 3, 2, 0, 1, 0],       fingers: [0, 3, 2, 0, 1, 0] },
+  { rootPc: 0, type: 'maj', bassPc: 11, label: 'Open C/B',   frets: [null, 2, 2, 0, 1, 0],    fingers: [null, 2, 3, 0, 1, 0] },
+  { rootPc: 9, type: 'min', bassPc: 7,  label: 'Open Am/G',  frets: [3, 0, 2, 2, 1, 0],       fingers: [4, 0, 2, 3, 1, 0] },
+  { rootPc: 9, type: 'min', bassPc: 4,  label: 'Open Am/E',  frets: [0, 0, 2, 2, 1, 0],       fingers: [0, 0, 2, 3, 1, 0] },
+  { rootPc: 9, type: 'min', bassPc: 6,  label: 'Open Am/F#', frets: [2, 0, 2, 2, 1, 0],       fingers: [1, 0, 3, 4, 2, 0] },
+  { rootPc: 5, type: 'maj', bassPc: 0,  label: 'F/C',        frets: [null, 3, 3, 2, 1, 1],    fingers: [null, 3, 4, 2, 1, 1] },
+  { rootPc: 5, type: 'maj', bassPc: 7,  label: 'F/G',        frets: [3, null, 3, 2, 1, 1],    fingers: [3, null, 4, 2, 1, 1] },
+  { rootPc: 4, type: 'min', bassPc: 2,  label: 'Open Em/D',  frets: [null, null, 0, 0, 0, 0], fingers: [null, null, 0, 0, 0, 0] },
+  { rootPc: 9, type: 'maj', bassPc: 1,  label: 'A/C#',       frets: [null, 4, 2, 2, 2, null], fingers: [null, 4, 1, 1, 1, null] },
+  { rootPc: 4, type: 'maj', bassPc: 11, label: 'Open E/B',   frets: [null, 2, 2, 1, 0, 0],    fingers: [null, 2, 3, 1, 0, 0] }
+];
+
+/** The bass is the lowest note sounding, and the chord is all there above or with it. */
+function slashSoundsRight(frets: (number | null)[], rootPc: number, type: ChordType, bassPc: number): boolean {
+  if (!soundsLike(frets, rootPc, type, bassPc)) return false;
+  const midis = voicingMidis(frets);
+  const lowest = Math.min(...midis);
+  return lowest % 12 === bassPc && midis.filter(m => m === lowest).length === 1;
+}
+
+// Which finger goes on the new bass note: a free one, in the order the frets
+// ask for, so a lower fret never gets a higher finger than a note above it.
+// None when no free finger fits that order.
+function fingerFor(fret: number, frets: (number | null)[], fingers: (number | null)[]): number | null {
+  if (fret === 0) return 0;
+  const used = new Set(fingers.filter((f): f is number => f !== null && f > 0));
+  let best: number | null = null;
+  let bestClash = Infinity;
+  for (const candidate of [1, 2, 3, 4]) {
+    if (used.has(candidate)) continue;
+    let clash = 0;
+    frets.forEach((f, i) => {
+      const other = fingers[i];
+      if (f === null || f === 0 || other === null || other === 0) return;
+      if ((f < fret && other > candidate) || (f > fret && other < candidate)) clash++;
+    });
+    if (clash < bestClash) { best = candidate; bestClash = clash; }
+  }
+  // Fingers crossed over each other is not a grip anyone would use.
+  return bestClash === 0 ? best : null;
+}
+
+// Finger a grip from nothing, low→high: the index takes the lowest fret, as a
+// bar when several strings share it and nothing between them is left open or
+// muted, and every other note gets the finger its distance from the index
+// asks for. Null when that takes more than four fingers.
+function fingerFresh(frets: (number | null)[]): (number | null)[] | null {
+  const fingers: (number | null)[] = frets.map(f => (f === null ? null : f === 0 ? 0 : -1));
+  const fretted = frets.map((f, i) => [f, i] as const).filter(([f]) => f !== null && f > 0) as [number, number][];
+  if (!fretted.length) return fingers;
+  const minFret = Math.min(...fretted.map(([f]) => f));
+  let next = 1;
+  for (const fret of [...new Set(fretted.map(([f]) => f))].sort((a, b) => a - b)) {
+    const strings = fretted.filter(([f]) => f === fret).map(([, i]) => i);
+    const first = Math.max(next, 1 + fret - minFret);
+    const lo = Math.min(...strings);
+    const hi = Math.max(...strings);
+    const barrable = fret === minFret && strings.length >= 2 &&
+      frets.slice(lo, hi + 1).every(f => f !== null && f >= fret);
+    if (barrable) {
+      strings.forEach(i => { fingers[i] = first; });
+      next = first + 1;
+    } else {
+      strings.forEach((i, k) => { fingers[i] = first + k; });
+      next = first + strings.length;
+    }
+    if (next - 1 > 4) return null;
+  }
+  return fingers;
+}
+
+/**
+ * Every way to play a chord over a given bass note, easiest first.
+ *
+ * Built from the plain chord's own shapes: the bass goes on the low E or A
+ * string, anything below it is muted, and a string left between them rings
+ * open when its note belongs to the chord. A shape whose new note is out of
+ * the hand's reach, or lands above the chord, is dropped. When nothing fits,
+ * the plain chord is offered instead, marked as standing in.
+ */
+export function getSlashVoicings(rootPc: number, typeId: ChordTypeId, bassPc: number, rootName?: string, bassName?: string): ChordVoicing[] {
+  const type = CHORD_TYPES[typeId];
+  const root = rootName ?? NOTE_NAMES[rootPc];
+  const bass = bassName ?? NOTE_NAMES[bassPc];
+  const out: ChordVoicing[] = [];
+
+  for (const shape of SLASH_SHAPES) {
+    if (shape.rootPc !== rootPc || shape.type !== typeId || shape.bassPc !== bassPc) continue;
+    const frets = toAppOrder(shape.frets);
+    if (!slashSoundsRight(frets, rootPc, type, bassPc)) continue;
+    out.push(finish(`slash-${shape.label}`, shape.label, frets, toAppOrder(shape.fingers)));
+  }
+
+  const plain = getVoicings(rootPc, typeId, rootName).filter(v => !v.substituteFor);
+  for (const base of plain) {
+    const baseFrets = toAppOrder(base.frets);     // back to low→high
+    const baseFingers = toAppOrder(base.fingers);
+    const firstSounding = baseFrets.findIndex(f => f !== null);
+    for (const string of [0, 1]) {
+      const openPc = GUITAR_STRINGS[APP_STRING_INDEX(string)].midi % 12;
+      const low = (bassPc - openPc + 12) % 12;
+      for (const fret of [low, low + 12]) {
+        if (fret > MAX_FRET) continue;
+        const frets = baseFrets.map((f, i) => (i < string ? null : f));
+        const fingers = baseFingers.map((f, i) => (i <= string ? null : f));
+        frets[string] = fret;
+        // A string between the bass and the chord rings open if it can.
+        const chordPcs = new Set(type.intervals.map(iv => (rootPc + iv) % 12));
+        for (let i = string + 1; i < firstSounding; i++) {
+          const pc = GUITAR_STRINGS[APP_STRING_INDEX(i)].midi % 12;
+          if (chordPcs.has(pc) || pc === bassPc) { frets[i] = 0; fingers[i] = 0; }
+        }
+        const fretted = frets.filter((f): f is number => f !== null && f > 0);
+        if (fretted.length && Math.max(...fretted) - Math.min(...fretted) > 3) continue;
+        // Open strings under a shape high on the neck only sound wrong.
+        if (frets.some(f => f === 0) && fretted.length && Math.max(...fretted) > 5) continue;
+        const finger = fingerFor(fret, frets, fingers);
+        let grip: (number | null)[] | null = fingers;
+        if (finger === null) grip = fingerFresh(frets);
+        else fingers[string] = finger;
+        if (!grip) continue;
+        const app = toAppOrder(frets);
+        if (!slashSoundsRight(app, rootPc, type, bassPc)) continue;
+        out.push(finish(`slash-${bassPc}-${string}-${base.id}`, `${base.label}, ${bass} in the bass`, app, toAppOrder(grip)));
+      }
+    }
+  }
+
+  const seen = new Set<string>();
+  const unique = out.filter(v => {
+    const key = v.frets.join(',');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  unique.sort((a, b) => a.sortKey - b.sortKey);
+  if (unique.length) return unique;
+
+  const symbol = root + type.suffix;
+  return getVoicings(rootPc, typeId, rootName)
+    .filter(v => !v.substituteFor)
+    .slice(0, 2)
+    .map(v => ({ ...v, id: `sub-${v.id}`, substituteFor: symbol }));
 }
 
 /** How many strings one finger is asked to cover at once. */
